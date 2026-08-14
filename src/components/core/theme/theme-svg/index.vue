@@ -42,12 +42,12 @@
     '#DEEBFC': 'var(--el-color-primary-light-7)'
   } as const
 
-  // 将主题色应用到 SVG 内容
+  // 将主题色应用到 SVG 内容（兼容 Vite data-URL 解码后的单引号属性）
   const applyThemeToSvg = (content: string): string => {
     return Object.entries(COLOR_MAPPINGS).reduce(
       (processedContent, [originalColor, themeColor]) => {
-        const fillRegex = new RegExp(`fill="${originalColor}"`, 'gi')
-        const strokeRegex = new RegExp(`stroke="${originalColor}"`, 'gi')
+        const fillRegex = new RegExp(`fill=["']${originalColor}["']`, 'gi')
+        const strokeRegex = new RegExp(`stroke=["']${originalColor}["']`, 'gi')
 
         return processedContent
           .replace(fillRegex, `fill="${themeColor}"`)

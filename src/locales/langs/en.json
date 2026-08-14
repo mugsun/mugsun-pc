@@ -142,8 +142,8 @@
   },
   "login": {
     "leftView": {
-      "title": "A backend system of beauty and efficiency",
-      "subTitle": "A sleek and practical interface for a great user experience"
+      "title": "Rapid development, ship your way",
+      "subTitle": "Backend scaffold plus admin UI — permissions, workflows and modules ready out of the box"
     },
     "title": "Welcome back",
     "subTitle": "Please enter your account and password to login",
