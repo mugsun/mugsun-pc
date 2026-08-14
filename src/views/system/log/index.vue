@@ -212,9 +212,11 @@
               : h(ElTag, { type: 'danger' }, () => t('pages.system.log.statusFail'))
         },
         {
+          // 与操作列右固定：窄视口默认可见完整时间
           prop: 'createTime',
           label: t('pages.system.log.colTime'),
-          minWidth: 180,
+          width: 170,
+          fixed: 'right',
           formatter: (row: any) => formatTableTime(row.createTime)
         },
         {

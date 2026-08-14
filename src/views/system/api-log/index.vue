@@ -139,9 +139,11 @@
             ])
         },
         {
+          // 与操作列右固定：窄视口下默认不横滚也能读到完整时间
           prop: 'createTime',
           label: t('pages.system.apiLog.colTime'),
-          minWidth: 170,
+          width: 170,
+          fixed: 'right',
           formatter: (row: any) => formatTableTime(row.createTime)
         },
         {
