@@ -10,22 +10,22 @@
 
       <div class="apikey-table-scroll">
         <ElTable :data="tableData" border v-loading="loading">
-          <ElTableColumn type="index" :label="$t('pages.system.apiKey.colIndex')" width="60" />
+          <ElTableColumn type="index" :label="$t('pages.system.apiKey.colIndex')" width="55" />
           <ElTableColumn
             prop="name"
             :label="$t('pages.system.apiKey.colName')"
-            min-width="140"
+            min-width="110"
             show-overflow-tooltip
           />
-          <ElTableColumn prop="accessKey" label="AccessKey" min-width="200" show-overflow-tooltip />
-          <ElTableColumn prop="secretKey" label="SecretKey" min-width="160" show-overflow-tooltip />
+          <ElTableColumn prop="accessKey" label="AccessKey" min-width="140" show-overflow-tooltip />
+          <ElTableColumn prop="secretKey" label="SecretKey" min-width="110" show-overflow-tooltip />
           <ElTableColumn
             prop="scope"
             :label="$t('pages.system.apiKey.colScope')"
-            min-width="140"
+            min-width="100"
             show-overflow-tooltip
           />
-          <ElTableColumn :label="$t('pages.system.apiKey.colStatus')" width="90">
+          <ElTableColumn :label="$t('pages.system.apiKey.colStatus')" width="72">
             <template #default="{ row }">
               <ElTag :type="row.status === 1 ? 'success' : 'info'">
                 {{
@@ -36,7 +36,8 @@
               </ElTag>
             </template>
           </ElTableColumn>
-          <ElTableColumn :label="$t('pages.system.apiKey.colOperation')" width="180" fixed="right">
+          <!-- 双操作按钮：收窄列宽使常见视口下状态+操作同屏，避免半截「删除」 -->
+          <ElTableColumn :label="$t('pages.system.apiKey.colOperation')" width="120">
             <template #default="{ row }">
               <!-- 语义配色：启用用主题色，停用才用 warning -->
               <ElButton

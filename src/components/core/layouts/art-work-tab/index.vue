@@ -60,7 +60,26 @@
       </ul>
     </div>
 
-    <div class="flex">
+    <div class="flex items-center gap-1 shrink-0">
+      <!-- 页签过多时提供显式左右滚动，避免只能滚轮且左侧页签被裁成半截 -->
+      <div
+        v-show="canScrollLeft"
+        class="flex-cc art-card-xs relative size-8 leading-8 text-center c-p tad-200 hover:!bg-hover-color"
+        :style="{ borderRadius: 'calc(var(--custom-radius) / 2.5 + 0px)' }"
+        :title="t('worktab.btn.scrollLeft')"
+        @click="scrollTabs(-1)"
+      >
+        <ArtSvgIcon icon="ri:arrow-left-s-line" class="text-xl text-g-700" />
+      </div>
+      <div
+        v-show="canScrollRight"
+        class="flex-cc art-card-xs relative size-8 leading-8 text-center c-p tad-200 hover:!bg-hover-color"
+        :style="{ borderRadius: 'calc(var(--custom-radius) / 2.5 + 0px)' }"
+        :title="t('worktab.btn.scrollRight')"
+        @click="scrollTabs(1)"
+      >
+        <ArtSvgIcon icon="ri:arrow-right-s-line" class="text-xl text-g-700" />
+      </div>
       <div
         class="flex-cc art-card-xs relative top-0 size-8 leading-8 text-center c-p tad-200 hover:!bg-hover-color"
         :style="{
@@ -232,6 +251,38 @@
       }, 250)
     }
 
+    const getScrollBounds = () => {
+      if (!scrollRef.value || !tabsRef.value) return null
+      const scrollWidth = scrollRef.value.offsetWidth
+      const ulWidth = tabsRef.value.offsetWidth
+      const xMin = Math.min(0, scrollWidth - ulWidth)
+      return { scrollWidth, ulWidth, xMin }
+    }
+
+    /** 将 translateX 钳到合法区间，并避免左侧页签半截露出 */
+    const clampAndSnapLeft = (rawTx: number): number => {
+      const bounds = getScrollBounds()
+      if (!bounds || !tabsRef.value) return 0
+      const { xMin } = bounds
+      if (xMin >= 0) return 0
+
+      let tx = Math.min(0, Math.max(rawTx, xMin))
+      const leftEdge = -tx
+      const children = Array.from(tabsRef.value.children) as HTMLElement[]
+      for (let i = 0; i < children.length; i++) {
+        const start = children[i].offsetLeft
+        const end = start + children[i].offsetWidth
+        // 视口左缘落在某个页签内部 → 半截裁切，对齐到该签起点或下一签起点
+        if (leftEdge > start + 2 && leftEdge < end - 2) {
+          const nextStart = children[i + 1]?.offsetLeft ?? end
+          const snapTo = leftEdge - start < end - leftEdge ? start : nextStart
+          tx = Math.min(0, Math.max(-snapTo, xMin))
+          break
+        }
+      }
+      return tx
+    }
+
     const getCurrentTabElement = (): HTMLElement | null => {
       return document.getElementById(`scroll-li-${activeTabIndex.value}`)
     }
@@ -269,14 +320,20 @@
         (offsetLeft > Math.abs(scrollState.value.translateX) && curTabRight <= scrollWidth) ||
         (scrollState.value.translateX < targetLeft && targetLeft < 0)
       ) {
+        // 已可见时仍纠正左侧半截裁切
+        scrollState.value.translateX = clampAndSnapLeft(scrollState.value.translateX)
         return
       }
 
       requestAnimationFrame(() => {
         if (curTabRight > scrollWidth) {
-          scrollState.value.translateX = Math.max(targetLeft - 6, scrollWidth - ulWidth)
+          scrollState.value.translateX = clampAndSnapLeft(
+            Math.max(targetLeft - 6, scrollWidth - ulWidth)
+          )
         } else if (offsetLeft < Math.abs(scrollState.value.translateX)) {
-          scrollState.value.translateX = -offsetLeft
+          scrollState.value.translateX = clampAndSnapLeft(-offsetLeft)
+        } else {
+          scrollState.value.translateX = clampAndSnapLeft(scrollState.value.translateX)
         }
       })
     }
@@ -289,20 +346,53 @@
       const curTabLeft = offsetLeft + clientWidth
 
       requestAnimationFrame(() => {
-        scrollState.value.translateX = curTabLeft > scrollWidth ? scrollWidth - ulWidth : 0
+        scrollState.value.translateX = clampAndSnapLeft(
+          curTabLeft > scrollWidth ? scrollWidth - ulWidth : 0
+        )
       })
+    }
+
+    /** 按方向滚动到相邻页签，并保证左缘对齐整签 */
+    const scrollTabs = (direction: -1 | 1) => {
+      if (!scrollRef.value || !tabsRef.value) return
+      const bounds = getScrollBounds()
+      if (!bounds || bounds.xMin >= 0) return
+
+      const leftEdge = -scrollState.value.translateX
+      const children = Array.from(tabsRef.value.children) as HTMLElement[]
+      let targetOffset = leftEdge
+
+      if (direction > 0) {
+        // 向右：把当前视口内第一个未完全露出的页签滚入，或推进下一签
+        const next = children.find((li) => li.offsetLeft > leftEdge + 2)
+        if (next) targetOffset = next.offsetLeft
+      } else {
+        // 向左：对齐到当前左缘之前的一签
+        for (let i = children.length - 1; i >= 0; i--) {
+          if (children[i].offsetLeft < leftEdge - 2) {
+            targetOffset = children[i].offsetLeft
+            break
+          }
+        }
+      }
+
+      setTransition()
+      scrollState.value.translateX = clampAndSnapLeft(-targetOffset)
     }
 
     return {
       setTransition,
       autoPositionTab,
-      adjustPositionAfterClose
+      adjustPositionAfterClose,
+      clampAndSnapLeft,
+      getScrollBounds,
+      scrollTabs
     }
   }
 
   // 事件处理逻辑
   const useEventHandlers = () => {
-    const { setTransition, adjustPositionAfterClose } = useScrolling()
+    const { setTransition, adjustPositionAfterClose, clampAndSnapLeft } = useScrolling()
 
     const handleWheelScroll = (event: WheelEvent) => {
       if (!scrollRef.value || !tabsRef.value) return
@@ -341,6 +431,7 @@
 
     const handleTouchEnd = () => {
       setTransition()
+      scrollState.value.translateX = clampAndSnapLeft(scrollState.value.translateX)
     }
 
     const setupEventListeners = () => {
@@ -443,11 +534,18 @@
 
   // 组合所有逻辑
   const { menuItems } = useContextMenu()
-  const { setTransition, autoPositionTab } = useScrolling()
+  const { setTransition, autoPositionTab, scrollTabs, getScrollBounds } = useScrolling()
   const { setupEventListeners, cleanupEventListeners, adjustPositionAfterClose } =
     useEventHandlers()
   const { clickTab, closeWorktab, showMenu, handleSelect } =
     useTabOperations(adjustPositionAfterClose)
+
+  const canScrollLeft = computed(() => scrollState.value.translateX < -1)
+  const canScrollRight = computed(() => {
+    const bounds = getScrollBounds()
+    if (!bounds || bounds.xMin >= 0) return false
+    return scrollState.value.translateX > bounds.xMin + 1
+  })
 
   // 生命周期
   onMounted(() => {

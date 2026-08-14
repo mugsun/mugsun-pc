@@ -11,39 +11,47 @@
         </div>
 
         <ElTable :data="tableData" border v-loading="loading">
-          <ElTableColumn type="index" :label="$t('table.column.index')" width="60" />
-          <ElTableColumn prop="name" :label="$t('pages.system.oauthClient.name')" min-width="100" />
-          <ElTableColumn prop="clientId" label="ClientId" min-width="160" show-overflow-tooltip />
+          <ElTableColumn type="index" :label="$t('table.column.index')" width="55" />
+          <ElTableColumn
+            prop="name"
+            :label="$t('pages.system.oauthClient.name')"
+            min-width="110"
+            show-overflow-tooltip
+          />
+          <ElTableColumn prop="clientId" label="ClientId" min-width="150" show-overflow-tooltip />
           <ElTableColumn
             prop="clientSecret"
             label="ClientSecret"
-            min-width="130"
+            min-width="120"
             show-overflow-tooltip
           />
-          <ElTableColumn :label="$t('pages.system.oauthClient.grantTypes')" min-width="180">
+          <ElTableColumn :label="$t('pages.system.oauthClient.grantTypes')" min-width="150">
             <template #default="{ row }">
-              <ElTag
-                v-for="g in (row.grantTypes || '').split(',').filter(Boolean)"
-                :key="g"
-                size="small"
-                class="oauth-tag"
-              >
-                {{ grantLabel(g) }}
-              </ElTag>
+              <!-- 多授权类型时允许折行，避免被右侧固定操作列横切半截标签 -->
+              <div class="oauth-grant-tags">
+                <ElTag
+                  v-for="g in (row.grantTypes || '').split(',').filter(Boolean)"
+                  :key="g"
+                  size="small"
+                  class="oauth-tag"
+                >
+                  {{ grantLabel(g) }}
+                </ElTag>
+              </div>
             </template>
           </ElTableColumn>
           <ElTableColumn
             prop="scopes"
             :label="$t('pages.system.oauthClient.scopes')"
-            min-width="85"
+            min-width="90"
             show-overflow-tooltip
           />
           <ElTableColumn
             :label="$t('pages.system.oauthClient.validity')"
-            width="100"
+            width="96"
             prop="accessTokenValidity"
           />
-          <ElTableColumn :label="$t('pages.system.oauthClient.status')" width="80">
+          <ElTableColumn :label="$t('pages.system.oauthClient.status')" width="72">
             <template #default="{ row }">
               <ElTag :type="row.status === 1 ? 'success' : 'info'">
                 {{
@@ -54,24 +62,40 @@
               </ElTag>
             </template>
           </ElTableColumn>
-          <ElTableColumn :label="$t('pages.system.oauthClient.actions')" width="230" fixed="right">
+          <!-- 操作已收窄为「编辑 + 更多」；不再 fixed，避免窄视口下遮挡授权范围/状态半截字 -->
+          <ElTableColumn :label="$t('pages.system.oauthClient.actions')" width="128">
             <template #default="{ row }">
               <ElButton v-perm="'sys:oauth:manage'" link type="primary" @click="showEdit(row)">{{
                 $t('pages.system.oauthClient.edit')
               }}</ElButton>
-              <ElButton v-perm="'sys:oauth:manage'" link type="warning" @click="resetSecret(row)">{{
-                $t('pages.system.oauthClient.resetSecret')
-              }}</ElButton>
-              <ElButton v-perm="'sys:oauth:manage'" link type="info" @click="toggle(row)">
-                {{
-                  row.status === 1
-                    ? $t('pages.system.oauthClient.disabled')
-                    : $t('pages.system.oauthClient.enabled')
-                }}
-              </ElButton>
-              <ElButton v-perm="'sys:oauth:manage'" link type="danger" @click="remove(row)">{{
-                $t('pages.system.oauthClient.delete')
-              }}</ElButton>
+              <ElDropdown
+                v-perm="'sys:oauth:manage'"
+                trigger="click"
+                class="oauth-more"
+                @command="(c: string) => onMoreCommand(c, row)"
+              >
+                <ElButton link type="info">
+                  {{ $t('pages.system.oauthClient.more') }}
+                  <ElIcon class="oauth-more-icon"><ArrowDown /></ElIcon>
+                </ElButton>
+                <template #dropdown>
+                  <ElDropdownMenu>
+                    <ElDropdownItem command="resetSecret">{{
+                      $t('pages.system.oauthClient.resetSecret')
+                    }}</ElDropdownItem>
+                    <ElDropdownItem command="toggle">
+                      {{
+                        row.status === 1
+                          ? $t('pages.system.oauthClient.disabled')
+                          : $t('pages.system.oauthClient.enabled')
+                      }}
+                    </ElDropdownItem>
+                    <ElDropdownItem command="remove" divided>{{
+                      $t('pages.system.oauthClient.delete')
+                    }}</ElDropdownItem>
+                  </ElDropdownMenu>
+                </template>
+              </ElDropdown>
             </template>
           </ElTableColumn>
         </ElTable>
@@ -177,6 +201,7 @@
   import { useI18n } from 'vue-i18n'
   import type { FormInstance, FormRules } from 'element-plus'
   import { ElMessage, ElMessageBox } from 'element-plus'
+  import { ArrowDown } from '@element-plus/icons-vue'
   import {
     fetchOauthClientPage,
     fetchSaveOauthClient,
@@ -369,6 +394,12 @@
       loadData()
     })
   }
+
+  const onMoreCommand = (command: string, row: any): void => {
+    if (command === 'resetSecret') resetSecret(row)
+    else if (command === 'toggle') toggle(row)
+    else if (command === 'remove') remove(row)
+  }
 </script>
 
 <style scoped>
@@ -391,6 +422,24 @@
 
   .oauth-tag {
     margin-right: 6px;
+    margin-bottom: 2px;
+  }
+
+  .oauth-grant-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 2px 0;
+    align-items: center;
+    line-height: 1.6;
+  }
+
+  .oauth-more {
+    margin-left: 4px;
+    vertical-align: middle;
+  }
+
+  .oauth-more-icon {
+    margin-left: 2px;
   }
 
   .oauth-result {

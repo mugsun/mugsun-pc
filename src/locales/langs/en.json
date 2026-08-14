@@ -137,7 +137,9 @@
       "closeLeft": "Close left",
       "closeRight": "Close right",
       "closeOther": "Close other",
-      "closeAll": "Close all"
+      "closeAll": "Close all",
+      "scrollLeft": "Scroll tabs left",
+      "scrollRight": "Scroll tabs right"
     }
   },
   "login": {
@@ -2170,6 +2172,7 @@
         "enabled": "Enabled",
         "disabled": "Disabled",
         "edit": "Edit",
+        "more": "More",
         "resetSecret": "Reset Secret",
         "delete": "Delete",
         "editTitle": "Edit Client",

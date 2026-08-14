@@ -37,16 +37,12 @@
               <ElTag v-else type="info">{{ $t('pages.system.tenant.noLimitFeature') }}</ElTag>
             </template>
           </ElTableColumn>
-          <ElTableColumn
-            prop="contactUser"
-            :label="$t('pages.system.tenant.contactUser')"
-            min-width="100"
-          />
-          <ElTableColumn
-            prop="contactPhone"
-            :label="$t('pages.system.tenant.contactPhone')"
-            min-width="110"
-          />
+          <ElTableColumn :label="$t('pages.system.tenant.contactUser')" min-width="100">
+            <template #default="{ row }">{{ row.contactUser || '—' }}</template>
+          </ElTableColumn>
+          <ElTableColumn :label="$t('pages.system.tenant.contactPhone')" min-width="110">
+            <template #default="{ row }">{{ row.contactPhone || '—' }}</template>
+          </ElTableColumn>
           <ElTableColumn
             :label="$t('pages.system.tenant.accountLimit')"
             width="90"

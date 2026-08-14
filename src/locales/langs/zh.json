@@ -137,7 +137,9 @@
       "closeLeft": "关闭左侧",
       "closeRight": "关闭右侧",
       "closeOther": "关闭其他",
-      "closeAll": "关闭全部"
+      "closeAll": "关闭全部",
+      "scrollLeft": "向左滚动页签",
+      "scrollRight": "向右滚动页签"
     }
   },
   "login": {
@@ -2170,6 +2172,7 @@
         "enabled": "启用",
         "disabled": "停用",
         "edit": "编辑",
+        "more": "更多",
         "resetSecret": "重置密钥",
         "delete": "删除",
         "editTitle": "编辑客户端",
