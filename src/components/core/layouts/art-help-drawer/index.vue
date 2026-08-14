@@ -97,8 +97,10 @@
 <style lang="scss" scoped>
   .help-trigger {
     position: fixed;
-    top: 50%;
+
+    /* 贴右下而非垂直居中，避免挡住表格右固定列与横向滚动条 */
     right: 0;
+    bottom: 96px;
     z-index: 999;
     display: flex;
     flex-direction: column;
@@ -112,7 +114,6 @@
     border-radius: 8px 0 0 8px;
     box-shadow: 0 2px 12px rgb(0 0 0 / 15%);
     transition: opacity 0.2s;
-    transform: translateY(-50%);
 
     &:hover {
       opacity: 0.88;

@@ -97,12 +97,12 @@
       paginationKey: { current: 'pageNum', size: 'pageSize' },
       columnsFactory: () => [
         { type: 'index', width: 60, label: t('table.column.index') },
-        { prop: 'username', label: t('pages.system.loginLog.username'), minWidth: 120 },
-        { prop: 'ip', label: 'IP', minWidth: 130 },
+        { prop: 'username', label: t('pages.system.loginLog.username'), minWidth: 110 },
+        { prop: 'ip', label: 'IP', minWidth: 120, showOverflowTooltip: true },
         {
           prop: 'loginLocation',
           label: t('pages.system.loginLog.location'),
-          minWidth: 130,
+          minWidth: 100,
           showOverflowTooltip: true,
           // ip2region 关闭/内网/未命中时为空，统一占位
           formatter: (row: any) => row.loginLocation || '-'
@@ -110,13 +110,13 @@
         {
           prop: 'browser',
           label: t('pages.system.loginLog.browser'),
-          minWidth: 110,
+          minWidth: 90,
           showOverflowTooltip: true
         },
         {
           prop: 'os',
           label: t('pages.system.loginLog.os'),
-          minWidth: 130,
+          minWidth: 100,
           showOverflowTooltip: true
         },
         {
@@ -130,13 +130,15 @@
         {
           prop: 'msg',
           label: t('pages.system.loginLog.msg'),
-          minWidth: 160,
+          minWidth: 140,
           showOverflowTooltip: true
         },
         {
+          // 与操作列一并右固定：矮/窄视口下横向溢出时仍可见完整时间（否则只露出「202…」）
           prop: 'loginTime',
           label: t('pages.system.loginLog.loginTime'),
-          minWidth: 170,
+          width: 170,
+          fixed: 'right',
           formatter: (row: any) => formatTableTime(row.loginTime)
         },
         {
