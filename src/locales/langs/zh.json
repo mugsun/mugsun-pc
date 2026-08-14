@@ -29,7 +29,8 @@
       "title": "点击这里查看",
       "theme": "主题风格",
       "menu": "开启顶栏菜单",
-      "description": "等更多配置"
+      "description": "等更多配置",
+      "gotIt": "知道了"
     }
   },
   "common": {

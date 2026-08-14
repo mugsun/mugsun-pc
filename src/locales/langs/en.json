@@ -29,7 +29,8 @@
       "title": "Click here to view",
       "theme": "Theme style",
       "menu": "Open top menu",
-      "description": "More configurations"
+      "description": "More configurations",
+      "gotIt": "Got it"
     }
   },
   "common": {

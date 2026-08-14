@@ -124,7 +124,7 @@
 
         <!-- 设置按钮 -->
         <div v-if="shouldShowSettings">
-          <ElPopover :visible="showSettingGuide" placement="bottom-start" :width="190" :offset="0">
+          <ElPopover :visible="showSettingGuide" placement="bottom-start" :width="200" :offset="0">
             <template #reference>
               <div class="flex-cc">
                 <ArtIconButton icon="ri:settings-line" class="setting-btn" @click="openSetting" />
@@ -137,6 +137,12 @@
                 >、 <span :style="{ color: systemThemeColor }"> {{ $t('topBar.guide.menu') }} </span
                 >{{ $t('topBar.guide.description') }}
               </p>
+              <!-- 受控 visible 时点空白不关；提供显式关闭，避免气泡常驻挡视线 -->
+              <div class="mt-2 flex justify-end">
+                <ElButton link type="primary" size="small" @click="dismissSettingGuide">
+                  {{ $t('topBar.guide.gotIt') }}
+                </ElButton>
+              </div>
             </template>
           </ElPopover>
         </div>
@@ -284,6 +290,11 @@
     if (showSettingGuide.value) {
       settingStore.hideSettingGuide()
     }
+  }
+
+  /** 仅关闭引导气泡（不打开设置面板），并持久化到 localStorage */
+  const dismissSettingGuide = (): void => {
+    settingStore.hideSettingGuide()
   }
 
   /**

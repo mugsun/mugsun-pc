@@ -16,9 +16,9 @@
       </ElCol>
     </ElRow>
 
-    <!-- 图表 -->
+    <!-- 图表：租户分布仅平台超管/查看全部下发；普通租户不渲染该卡，饼图占满行 -->
     <ElRow :gutter="16" class="mt-4">
-      <ElCol :xs="24" :lg="12">
+      <ElCol :xs="24" :lg="showTenantChart ? 12 : 24">
         <div class="art-card chart-card" v-loading="overviewLoading">
           <p class="card-title">{{ $t('pages.dashboard.console.userStatusChart') }}</p>
           <!-- 与柱状图同款：空数据时 echarts 只画空环，以 ElEmpty 替代；v-show 保挂载 -->
@@ -30,7 +30,7 @@
           <div v-show="!pieEmpty" ref="pieRef" class="chart-box"></div>
         </div>
       </ElCol>
-      <ElCol :xs="24" :lg="12" class="mt-4 mt-lg-0">
+      <ElCol v-if="showTenantChart" :xs="24" :lg="12" class="mt-4 mt-lg-0">
         <div class="art-card chart-card" v-loading="overviewLoading">
           <p class="card-title">{{ $t('pages.dashboard.console.tenantUserChart') }}</p>
           <!-- 空数据时 echarts 只画一条轴线，以 ElEmpty 替代；图表容器 v-show 保挂载，有数据后再 init -->
@@ -270,6 +270,8 @@
   const barRef = ref<HTMLElement>()
   const pieEmpty = ref(false)
   const barEmpty = ref(false)
+  /** 后端未下发 tenantUser（普通租户）时隐藏整卡，避免「暂无数据」误导 */
+  const showTenantChart = ref(false)
   let pieChart: echarts.ECharts | null = null
   let barChart: echarts.ECharts | null = null
   // 缓存最近一次图表数据：主题切换时按明暗重建 option（track/funnel 同款）
@@ -346,12 +348,14 @@
         noticeUnread: d.noticeUnread ?? 0
       })
       pieData = d.charts?.userStatus || []
-      barData = d.charts?.tenantUser || []
+      // 键缺失=无权限看平台分布；键存在但空数组才走空态
+      showTenantChart.value = Object.prototype.hasOwnProperty.call(d.charts || {}, 'tenantUser')
+      barData = showTenantChart.value ? d.charts.tenantUser || [] : []
       pieEmpty.value = pieData.length === 0
-      barEmpty.value = barData.length === 0
+      barEmpty.value = showTenantChart.value && barData.length === 0
       await nextTick()
       if (!pieEmpty.value) renderPie(pieData)
-      if (!barEmpty.value) renderBar(barData)
+      if (showTenantChart.value && !barEmpty.value) renderBar(barData)
     } finally {
       overviewLoading.value = false
     }
