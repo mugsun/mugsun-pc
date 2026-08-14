@@ -582,6 +582,10 @@ export function fetchKickoutOnline(data: {
 }) {
   return request.post<void>({ url: '/api/system/online/kickout', data })
 }
+/** 清理失效会话：用户已删/不存在的 Redis 会话整账号踢出，返回清理终端数 */
+export function fetchCleanupStaleOnline() {
+  return request.post<number>({ url: '/api/system/online/cleanup-stale' })
+}
 
 // ===== API 密钥 =====
 export function fetchApiKeyPage(params: Record<string, any>) {

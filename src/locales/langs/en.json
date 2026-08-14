@@ -1352,6 +1352,12 @@
         "colOperation": "Actions",
         "kickoutBtn": "Force Offline",
         "totalText": "{count} online terminals in total",
+        "staleText": "{count} with deleted/missing accounts",
+        "staleTag": "Stale",
+        "cleanupStaleBtn": "Clean stale ({count})",
+        "cleanupStaleTitle": "Clean stale sessions",
+        "cleanupStaleConfirm": "Force offline {count} terminals whose users were deleted or no longer exist?",
+        "cleanupStaleSuccess": "Cleaned {count} stale terminals",
         "kickoutConfirm": "Force this terminal of \"{name}\" offline?",
         "kickoutSuccess": "Forced offline"
       },

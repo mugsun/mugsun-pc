@@ -1,13 +1,23 @@
-<!-- 在线会话管理：枚举当前所有在线终端（多端），支持强制下线；会话落 Redis，重启不失效 -->
+<!-- 在线会话管理：枚举当前所有在线终端（多端），支持强制下线 / 清理失效会话；会话落 Redis，重启不失效 -->
 <template>
   <div class="online-page art-full-height">
     <ElCard class="art-table-card">
       <div class="online-toolbar">
         <span class="online-title">{{ $t('pages.system.online.pageTitle') }}</span>
-        <div>
+        <div class="online-actions">
           <ElTag type="info" size="small" class="online-hint">{{
             $t('pages.system.online.redisHint')
           }}</ElTag>
+          <ElButton
+            v-if="staleCount > 0"
+            v-perm="'sys:session:kickout'"
+            type="warning"
+            plain
+            :loading="cleaning"
+            @click="cleanupStale"
+          >
+            {{ $t('pages.system.online.cleanupStaleBtn', { count: staleCount }) }}
+          </ElButton>
           <ElButton :loading="loading" @click="loadData">{{
             $t('pages.system.online.refreshBtn')
           }}</ElButton>
@@ -20,9 +30,16 @@
           <ElTableColumn
             prop="username"
             :label="$t('pages.system.online.colUsername')"
-            min-width="150"
+            min-width="160"
             show-overflow-tooltip
-          />
+          >
+            <template #default="{ row }">
+              <span>{{ row.username }}</span>
+              <ElTag v-if="row.stale" type="danger" size="small" class="stale-tag">{{
+                $t('pages.system.online.staleTag')
+              }}</ElTag>
+            </template>
+          </ElTableColumn>
           <ElTableColumn
             prop="nickname"
             :label="$t('pages.system.online.colNickname')"
@@ -74,17 +91,20 @@
         </ElTable>
       </div>
 
-      <div class="online-count">{{
-        $t('pages.system.online.totalText', { count: tableData.length })
-      }}</div>
+      <div class="online-count">
+        {{ $t('pages.system.online.totalText', { count: tableData.length }) }}
+        <template v-if="staleCount > 0">
+          · {{ $t('pages.system.online.staleText', { count: staleCount }) }}
+        </template>
+      </div>
     </ElCard>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue'
+  import { computed, ref, onMounted } from 'vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
-  import { fetchOnlineList, fetchKickoutOnline } from '@/api/system-manage'
+  import { fetchOnlineList, fetchKickoutOnline, fetchCleanupStaleOnline } from '@/api/system-manage'
   import { formatTableTime } from '@/utils/date'
   import { useI18n } from 'vue-i18n'
 
@@ -94,6 +114,11 @@
 
   const tableData = ref<any[]>([])
   const loading = ref(false)
+  const cleaning = ref(false)
+
+  const staleCount = computed(
+    () => tableData.value.filter((r) => r.stale === true || r.stale === 1).length
+  )
 
   const loadData = async (): Promise<void> => {
     loading.value = true
@@ -104,9 +129,12 @@
     }
   }
 
+  const displayName = (row: any): string =>
+    row.stale ? String(row.loginId || row.username || '') : row.nickname || row.username || ''
+
   const kickout = (row: any): void => {
     ElMessageBox.confirm(
-      t('pages.system.online.kickoutConfirm', { name: row.nickname }),
+      t('pages.system.online.kickoutConfirm', { name: displayName(row) }),
       t('pages.system.online.kickoutBtn'),
       { type: 'warning' }
     ).then(async () => {
@@ -117,6 +145,23 @@
       })
       ElMessage.success(t('pages.system.online.kickoutSuccess'))
       loadData()
+    })
+  }
+
+  const cleanupStale = (): void => {
+    ElMessageBox.confirm(
+      t('pages.system.online.cleanupStaleConfirm', { count: staleCount.value }),
+      t('pages.system.online.cleanupStaleTitle'),
+      { type: 'warning' }
+    ).then(async () => {
+      cleaning.value = true
+      try {
+        const n = (await fetchCleanupStaleOnline()) ?? 0
+        ElMessage.success(t('pages.system.online.cleanupStaleSuccess', { count: n }))
+        await loadData()
+      } finally {
+        cleaning.value = false
+      }
     })
   }
 
@@ -144,8 +189,20 @@
     font-weight: 500;
   }
 
+  .online-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
   .online-hint {
-    margin-right: 12px;
+    margin-right: 4px;
+  }
+
+  .stale-tag {
+    margin-left: 6px;
+    vertical-align: middle;
   }
 
   .online-table-scroll {

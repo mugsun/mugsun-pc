@@ -1352,6 +1352,12 @@
         "colOperation": "操作",
         "kickoutBtn": "强制下线",
         "totalText": "共 {count} 个在线终端",
+        "staleText": "其中 {count} 个账号已失效",
+        "staleTag": "已失效",
+        "cleanupStaleBtn": "清理失效会话（{count}）",
+        "cleanupStaleTitle": "清理失效会话",
+        "cleanupStaleConfirm": "将踢出 {count} 个对应用户已删除/不存在的在线终端，确定继续？",
+        "cleanupStaleSuccess": "已清理 {count} 个失效终端",
         "kickoutConfirm": "确定将「{name}」的该终端强制下线吗？",
         "kickoutSuccess": "已强制下线"
       },
