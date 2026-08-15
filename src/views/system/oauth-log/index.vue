@@ -50,7 +50,8 @@
           <ElTableColumn
             prop="createTime"
             :label="$t('pages.system.oauthLog.time')"
-            min-width="170"
+            width="170"
+            fixed="right"
           >
             <template #default="{ row }">{{ formatTableTime(row.createTime) }}</template>
           </ElTableColumn>
