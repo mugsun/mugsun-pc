@@ -13,7 +13,14 @@ const routerModulesDir = path.resolve(
 )
 
 /** 参与巡访的应用路由模块（顶级应用分组） */
-const MODULE_FILES = ['dashboard.ts', 'track.ts', 'system.ts', 'saas.ts', 'openPlatform.ts']
+const MODULE_FILES = [
+  'dashboard.ts',
+  'gis.ts',
+  'track.ts',
+  'system.ts',
+  'saas.ts',
+  'openPlatform.ts'
+]
 
 /**
  * 从 src/router/modules 静态解析路由清单——巡访范围随路由文件自动保持同步，

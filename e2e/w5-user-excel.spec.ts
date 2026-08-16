@@ -1,8 +1,8 @@
 import { execSync } from 'node:child_process'
 import type { Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
-import * as XLSX from 'xlsx'
 import { login, logout, readAccessToken } from './fixtures/auth'
+import { XLSX_MIME, buildXlsx, parseXlsxAoa } from './fixtures/xlsx'
 
 /**
  * W5 用户导入导出完整化：
@@ -13,7 +13,6 @@ import { login, logout, readAccessToken } from './fixtures/auth'
  * - 字段级权限裁决：无明文权角色（fronttest/datatest）导出手机号为脱敏值
  */
 
-const XLSX_MIME = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
 const STATUS_HEADER = '状态(1启用/0禁用)'
 const suffix = `${Date.now() % 100000}`
 const baseUser = `e2e_w5_${suffix}`
@@ -59,18 +58,8 @@ async function exportFile(page: Page, params: Record<string, string> = {}) {
 }
 
 /** 构造导入 xlsx（表头与模板一致：用户名/昵称/部门/岗位/邮箱/手机/状态(1启用/0禁用)） */
-function buildUserXlsx(rows: Array<Record<string, unknown>>): Buffer {
-  const worksheet = XLSX.utils.json_to_sheet(rows)
-  const workbook = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(workbook, worksheet, '用户导入')
-  return XLSX.write(workbook, { bookType: 'xlsx', type: 'buffer' }) as Buffer
-}
-
-/** 解析 xlsx 首 sheet 为二维数组（首行为表头） */
-function parseXlsxAoa(body: Buffer): unknown[][] {
-  const workbook = XLSX.read(body, { type: 'buffer' })
-  const worksheet = workbook.Sheets[workbook.SheetNames[0]]
-  return XLSX.utils.sheet_to_json(worksheet, { header: 1 }) as unknown[][]
+function buildUserXlsx(rows: Array<Record<string, unknown>>): Promise<Buffer> {
+  return buildXlsx('用户导入', rows)
 }
 
 /** 清理 W5 产生的用户（中间表 + 主表） */
@@ -103,7 +92,7 @@ test('W5-1 导入模板下载：表头齐全 + 一行示例', async () => {
   })
   expect(resp.status(), '模板下载须 200').toBe(200)
   expect(resp.headers()['content-type']).toContain('spreadsheetml')
-  const aoa = parseXlsxAoa(await resp.body())
+  const aoa = await parseXlsxAoa(await resp.body())
   expect(aoa[0], '模板表头').toEqual([
     '用户名',
     '昵称',
@@ -118,7 +107,7 @@ test('W5-1 导入模板下载：表头齐全 + 一行示例', async () => {
 })
 
 test('W5-2 含错误行导入：成功/失败计数与明细（空用户名跳过不计）', async () => {
-  const buffer = buildUserXlsx([
+  const buffer = await buildUserXlsx([
     {
       用户名: baseUser,
       昵称: 'W5导入用户',
@@ -156,7 +145,7 @@ test('W5-3 按条件导出：列补全 + 条件过滤 + 富化值', async () => 
   // 按用户名过滤导出：仅目标行
   const filtered = await exportFile(page, { username: baseUser })
   expect(filtered.status(), '导出须 200').toBe(200)
-  const aoa = parseXlsxAoa(await filtered.body())
+  const aoa = await parseXlsxAoa(await filtered.body())
   expect(aoa[0], '导出表头补全').toEqual([
     '用户名',
     '昵称',
@@ -178,13 +167,13 @@ test('W5-3 按条件导出：列补全 + 条件过滤 + 富化值', async () => 
 
   // 无条件导出：含 admin 行（全量）
   const all = await exportFile(page)
-  const allAoa = parseXlsxAoa(await all.body())
+  const allAoa = await parseXlsxAoa(await all.body())
   const usernames = allAoa.slice(1).map((r) => r[0])
   expect(usernames).toContain('admin')
 })
 
 test('W5-4 updateSupport 覆盖导入：更新昵称/状态/邮箱，不动密码与手机号', async () => {
-  const buffer = buildUserXlsx([
+  const buffer = await buildUserXlsx([
     { 用户名: baseUser, 昵称: 'W5覆盖昵称', 邮箱: 'w5new@test.com', [STATUS_HEADER]: 0 }
   ])
 
@@ -216,7 +205,7 @@ test('W5-4 updateSupport 覆盖导入：更新昵称/状态/邮箱，不动密�
 
 test('W5-5 字段级权限裁决：无明文权角色导出手机号为脱敏值', async () => {
   // 造一个带手机号用户（admin 导入）
-  const buffer = buildUserXlsx([
+  const buffer = await buildUserXlsx([
     { 用户名: maskUser, 昵称: 'W5脱敏验证', 手机: uniquePhone2, [STATUS_HEADER]: 1 }
   ])
   const importResp = await importFile(page, buffer, false)
@@ -241,7 +230,7 @@ test('W5-5 字段级权限裁决：无明文权角色导出手机号为脱敏值
 
   const resp = await exportFile(page, { username: maskUser })
   expect(resp.status(), 'fronttest 导出须 200').toBe(200)
-  const aoa = parseXlsxAoa(await resp.body())
+  const aoa = await parseXlsxAoa(await resp.body())
   expect(aoa.length, 'fronttest 按条件导出可见目标行').toBe(2)
   const phoneCell = `${aoa[1][5] ?? ''}`
   expect(phoneCell, '无明文权导出脱敏手机号').toContain('*')

@@ -135,7 +135,7 @@
   } from '@/api/system-manage'
   import { fetchSocialRender, fetchSocialUnbind, fetchSocialSources } from '@/api/auth'
   import { fetchRoleCodeSelect } from '@/api/role'
-  import { encryptPassword } from '@/utils/gm'
+  import { encryptPassword, isGmEncryptError } from '@/utils/gm'
   import { ElMessage } from 'element-plus'
   import { useI18n } from 'vue-i18n'
 
@@ -267,6 +267,10 @@
         setTimeout(() => {
           userStore.logOut()
         }, 800)
+      } catch (error) {
+        if (isGmEncryptError(error)) {
+          ElMessage.error(t('pages.auth.login.gmEncryptFailed'))
+        }
       } finally {
         pwdSaving.value = false
       }

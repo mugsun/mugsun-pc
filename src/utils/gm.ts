@@ -1,33 +1,35 @@
-// 国密传输：登录/改密/注册前用后端 SM2 公钥加密密码，抓包非明文
+// 国密传输：登录/改密/注册前用后端 SM2 公钥加密密码，抓包非明文。
+// 国密开启时加密失败必须 fail-closed，禁止降级明文。
 import { sm2 } from 'sm-crypto'
 import { fetchSm2PublicKey } from '@/api/auth'
 
-let cache: { gmEnabled: boolean; publicKey: string | null; at: number } | null = null
+/** 与页面 i18n `pages.auth.login.gmEncryptFailed` 配对，catch 时按此 message 识别 */
+export const GM_ENCRYPT_FAILED = 'GM_ENCRYPT_FAILED'
 
-/** 公钥缓存 TTL：后端未配固定密钥时重启即换钥，缓存带时限避免长期持旧钥 */
-const CACHE_TTL = 10 * 60 * 1000
-
-/** 取国密配置（公钥 + 开关），进程内限时缓存 */
-async function gmConfig(): Promise<{ gmEnabled: boolean; publicKey: string | null }> {
-  if (!cache || Date.now() - cache.at > CACHE_TTL) {
-    const cfg = await fetchSm2PublicKey()
-    cache = { ...cfg, at: Date.now() }
-  }
-  return cache
+export function isGmEncryptError(e: unknown): boolean {
+  return e instanceof Error && e.message === GM_ENCRYPT_FAILED
 }
 
 /**
- * 加密传输密码：国密开关开启时用 SM2 公钥加密（sm-crypto cipherMode=1 → C1C3C2，与后端 Hutool 配对），
- * 否则原样返回。取公钥失败则降级明文（不阻断登录）。
+ * 加密传输密码：国密开关开启时用 SM2 公钥加密（sm-crypto cipherMode=1 → C1C3C2，与后端 Hutool 配对）。
+ * 每次现取公钥（避免重启换钥后缓存旧钥）；取钥/加密失败抛错，不回传明文。
  */
 export async function encryptPassword(pwd: string): Promise<string> {
+  let cfg: { gmEnabled: boolean; publicKey: string | null }
   try {
-    const cfg = await gmConfig()
-    if (!cfg.gmEnabled || !cfg.publicKey) {
-      return pwd
-    }
+    cfg = await fetchSm2PublicKey()
+  } catch {
+    throw new Error(GM_ENCRYPT_FAILED)
+  }
+  if (!cfg.gmEnabled) {
+    return pwd
+  }
+  if (!cfg.publicKey) {
+    throw new Error(GM_ENCRYPT_FAILED)
+  }
+  try {
     return sm2.doEncrypt(pwd, cfg.publicKey, 1)
   } catch {
-    return pwd
+    throw new Error(GM_ENCRYPT_FAILED)
   }
 }

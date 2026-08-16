@@ -125,7 +125,7 @@
   import { useI18n } from 'vue-i18n'
   import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
   import { fetchRegister, fetchCaptcha } from '@/api/auth'
-  import { encryptPassword } from '@/utils/gm'
+  import { encryptPassword, isGmEncryptError } from '@/utils/gm'
 
   defineOptions({ name: 'Register' })
 
@@ -171,7 +171,7 @@
       const data = await fetchCaptcha()
       captchaImage.value = data.captchaImage
       captchaUuid.value = data.captchaUuid
-      formData.captchaCode = ''
+      formData.captchaCode = data.captchaCode ?? ''
     } catch (error) {
       console.error('[Register] load captcha failed:', error)
     }
@@ -272,6 +272,9 @@
       router.push({ name: 'Login' })
     } catch (error) {
       console.error('注册失败:', error)
+      if (isGmEncryptError(error)) {
+        ElMessage.error(t('pages.auth.login.gmEncryptFailed'))
+      }
       loadCaptcha()
       loading.value = false
     }

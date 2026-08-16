@@ -1,5 +1,6 @@
 import { AppRouteRecord } from '@/types/router'
 import { dashboardRoutes } from './dashboard'
+import { gisRoutes } from './gis'
 import { trackRoutes } from './track'
 import { systemRoutes } from './system'
 import { openPlatformRoutes } from './openPlatform'
@@ -11,6 +12,7 @@ import { saasRoutes } from './saas'
  */
 export const routeModules: AppRouteRecord[] = [
   dashboardRoutes,
+  gisRoutes,
   trackRoutes,
   systemRoutes,
   openPlatformRoutes,

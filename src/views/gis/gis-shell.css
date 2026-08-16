@@ -1,0 +1,164 @@
+/* GIS 共用壳：全幅地图 + 浮层 HUD，与工作台同一套视觉。 */
+.gis-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.gis-map-shell {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
+  background: var(--el-fill-color-darker);
+  border-radius: 8px;
+}
+
+.gis-map {
+  position: absolute;
+  inset: 0;
+}
+
+.gis-map .ol-zoom,
+.gis-map-shell .ol-zoom {
+  top: auto;
+  bottom: 52px;
+  left: 12px;
+}
+
+.gis-hud {
+  position: absolute;
+  z-index: 5;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  padding: 6px 8px;
+  background: color-mix(in srgb, var(--el-bg-color) 92%, transparent);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--el-border-color-extra-light);
+  border-radius: 10px;
+  box-shadow: var(--el-box-shadow-light);
+}
+
+.gis-hud-tl {
+  top: 12px;
+  left: 12px;
+}
+
+.gis-hud-tc {
+  top: 12px;
+  left: 50%;
+  width: min(360px, calc(100% - 520px));
+  transform: translateX(-50%);
+}
+
+.gis-hud-tr {
+  top: 12px;
+  right: 12px;
+}
+
+.gis-hud-panel {
+  top: 12px;
+  bottom: 52px;
+  left: 12px;
+  flex-direction: column;
+  align-items: stretch;
+  width: 280px;
+  padding: 10px;
+  overflow: hidden;
+}
+
+.gis-hud-panel-wide {
+  width: 300px;
+}
+
+.gis-hud-status {
+  right: 12px;
+  bottom: 12px;
+  left: 304px;
+  max-width: none;
+  font-size: 12px;
+  color: var(--el-text-color-regular);
+}
+
+.gis-empty {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+}
+
+.gis-empty-desc {
+  max-width: 480px;
+  margin: 0 0 16px;
+  line-height: 1.6;
+  color: var(--el-text-color-secondary);
+}
+
+.gis-list {
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+  margin: 0;
+  overflow: auto;
+  list-style: none;
+}
+
+.gis-list-row {
+  display: flex;
+  gap: 6px;
+  align-items: center;
+  padding: 8px 6px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--el-border-color-extra-light);
+  border-radius: 6px;
+}
+
+.gis-list-row:hover,
+.gis-list-row.is-on {
+  background: var(--el-color-primary-light-9);
+}
+
+.gis-list-name {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  font-size: 13px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gis-list-meta {
+  flex-shrink: 0;
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+}
+
+.gis-hud-search {
+  width: 160px;
+}
+
+.gis-hud-head {
+  display: flex;
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.gis-hud-pager {
+  display: flex;
+  flex-shrink: 0;
+  justify-content: flex-end;
+  padding-top: 8px;
+}
+
+.gis-w-full {
+  width: 100%;
+}
+
+.gis-w-full .el-input-number {
+  width: 100%;
+}

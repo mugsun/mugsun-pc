@@ -217,7 +217,7 @@
   import { useI18n } from 'vue-i18n'
   import { HttpError } from '@/utils/http/error'
   import { fetchLogin, fetchCaptcha, fetchTwoFactor, fetchSmsCode, fetchSmsLogin } from '@/api/auth'
-  import { encryptPassword } from '@/utils/gm'
+  import { encryptPassword, isGmEncryptError } from '@/utils/gm'
   import { fetchSocialRender, fetchSocialSources } from '@/api/auth'
   import { connectMessageSocket } from '@/utils/socket'
   import { trackIdentify } from '@/plugins/track'
@@ -387,11 +387,13 @@
       })
       applyToken(resp.token, resp.refreshToken)
     } catch (error) {
-      // 失败刷新图形验证码（答案已在后端消费）
+      // 失败刷新图形验证码（答案已在后端消费；show-code 时 loadCaptcha 会回填）
       loadCaptcha()
-      smsForm.captchaCode = ''
       if (!(error instanceof HttpError)) {
         console.error('[Login] sms login error:', error)
+        if (isGmEncryptError(error)) {
+          ElMessage.error(t('pages.auth.login.gmEncryptFailed'))
+        }
       }
     } finally {
       loading.value = false
@@ -408,7 +410,9 @@
       const data = await fetchCaptcha()
       captchaImage.value = data.captchaImage
       formData.captchaUuid = data.captchaUuid
-      formData.captchaCode = ''
+      const echo = data.captchaCode ?? ''
+      formData.captchaCode = echo
+      smsForm.captchaCode = echo
     } catch (error) {
       console.error('[Login] load captcha failed:', error)
     }
@@ -482,12 +486,12 @@
     } catch (error) {
       // 登录失败刷新验证码（答案已在后端消费）
       loadCaptcha()
-      // 处理 HttpError
       if (error instanceof HttpError) {
-        // console.log(error.code)
-      } else {
-        // 处理非 HttpError
-        console.error('[Login] Unexpected error:', error)
+        return
+      }
+      console.error('[Login] Unexpected error:', error)
+      if (isGmEncryptError(error)) {
+        ElMessage.error(t('pages.auth.login.gmEncryptFailed'))
       }
     } finally {
       loading.value = false

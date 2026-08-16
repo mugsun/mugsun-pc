@@ -97,6 +97,8 @@ declare namespace Api {
       userName: string
       email: string
       avatar?: string
+      /** 地理信息模块开关（默认开） */
+      gisEnabled?: boolean
     }
   }
 

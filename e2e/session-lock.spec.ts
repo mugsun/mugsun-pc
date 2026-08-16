@@ -2,6 +2,7 @@ import { execSync } from 'node:child_process'
 import type { Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
 import { login, logout, readCaptchaCode, readAccessToken } from './fixtures/auth'
+import { buildXlsx } from './fixtures/xlsx'
 
 /**
  * 会话与锁定链路口径验证：
@@ -129,12 +130,11 @@ test('SEC-2 导入幂等：同一文件二次导入零新增', async () => {
   await login(page)
   // 构造最小导入文件（复用导入模板结构）
   const uname = `e2e_idem_${Date.now() % 100000}`
-  const XLSX = await import('xlsx')
-  const rows = [{ 用户名: uname, 昵称: '幂等验证', 邮箱: '', 手机: '', 状态: 1 }]
-  const ws = XLSX.utils.json_to_sheet(rows, { header: ['用户名', '昵称', '邮箱', '手机', '状态'] })
-  const wb = XLSX.utils.book_new()
-  XLSX.utils.book_append_sheet(wb, ws, '用户')
-  const buf = XLSX.write(wb, { type: 'buffer', bookType: 'xlsx' })
+  const buf = await buildXlsx(
+    '用户',
+    [{ 用户名: uname, 昵称: '幂等验证', 邮箱: '', 手机: '', 状态: 1 }],
+    ['用户名', '昵称', '邮箱', '手机', '状态']
+  )
 
   const token = await readAccessToken(page)
   const importOnce = async () => {

@@ -135,7 +135,7 @@
   import { useI18n } from 'vue-i18n'
   import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
   import { fetchCaptcha, fetchForgetCode, fetchForgetReset } from '@/api/auth'
-  import { encryptPassword } from '@/utils/gm'
+  import { encryptPassword, isGmEncryptError } from '@/utils/gm'
 
   defineOptions({ name: 'ForgetPassword' })
 
@@ -178,7 +178,7 @@
       const data = await fetchCaptcha()
       captchaImage.value = data.captchaImage
       captchaUuid.value = data.captchaUuid
-      formData.captchaCode = ''
+      formData.captchaCode = data.captchaCode ?? ''
     } catch (error) {
       console.error('[ForgetPassword] load captcha failed:', error)
     }
@@ -284,6 +284,9 @@
       router.push({ name: 'Login' })
     } catch (error) {
       console.error('[ForgetPassword] reset failed:', error)
+      if (isGmEncryptError(error)) {
+        ElMessage.error(t('pages.auth.login.gmEncryptFailed'))
+      }
     } finally {
       loading.value = false
     }

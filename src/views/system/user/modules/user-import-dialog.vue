@@ -89,7 +89,6 @@
 </template>
 
 <script setup lang="ts">
-  import * as XLSX from 'xlsx'
   import FileSaver from 'file-saver'
   import { useI18n } from 'vue-i18n'
   import { UploadFilled } from '@element-plus/icons-vue'
@@ -170,22 +169,28 @@
     }
   }
 
-  // 失败明细前端生成 xlsx（复用 xlsx + file-saver，与 art-excel-export 同链路）
+  // 失败明细前端生成 CSV（不引入已停更且有 CVE 的 xlsx）
   const downloadFailList = (): void => {
     if (!result.value?.failList.length) return
-    const rows = result.value.failList.map((f) => ({
-      行号: f.rowIndex,
-      用户名: f.username,
-      失败原因: f.reason
-    }))
-    const worksheet = XLSX.utils.json_to_sheet(rows)
-    const workbook = XLSX.utils.book_new()
-    XLSX.utils.book_append_sheet(workbook, worksheet, '导入失败明细')
-    const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' })
-    const blob = new Blob([buffer], {
-      type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-    })
-    FileSaver.saveAs(blob, '用户导入失败明细.xlsx')
+    const header = [
+      t('pages.system.user.importDialog.rowIndex'),
+      t('pages.system.user.fields.username'),
+      t('pages.system.user.importDialog.reason')
+    ]
+    const lines = [
+      header.join(','),
+      ...result.value.failList.map((f) => [f.rowIndex, f.username, f.reason].map(csvCell).join(','))
+    ]
+    const blob = new Blob(['\uFEFF' + lines.join('\r\n')], { type: 'text/csv;charset=utf-8' })
+    FileSaver.saveAs(blob, '用户导入失败明细.csv')
+  }
+
+  const csvCell = (value: string | number | undefined): string => {
+    const text = String(value ?? '')
+    if (/[",\r\n]/.test(text)) {
+      return `"${text.replace(/"/g, '""')}"`
+    }
+    return text
   }
 </script>
 
