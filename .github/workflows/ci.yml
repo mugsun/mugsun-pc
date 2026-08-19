@@ -17,6 +17,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Checkout analytics SDK (mugsun-track)
+        run: git clone --depth 1 https://github.com/curdx/mugsun-track.git ../mugsun-track
+
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
 
@@ -25,6 +28,9 @@ jobs:
         with:
           node-version: 22
           cache: pnpm
+
+      - name: Build analytics SDK
+        run: pnpm --dir ../mugsun-track install && pnpm --dir ../mugsun-track build
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
