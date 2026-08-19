@@ -35,6 +35,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      # 为 ESLint 生成 auto-import 的全局声明文件，避免缺失导致 Lint 读取失败
+      - name: Generate ESLint auto-imports
+        run: pnpm exec vite build --emptyOutDir=false
+
       - name: Lint
         run: pnpm run lint
 
