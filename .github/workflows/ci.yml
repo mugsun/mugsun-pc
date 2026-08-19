@@ -17,6 +17,9 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Checkout analytics SDK (mugsun-track)
+        run: git clone --depth 1 https://github.com/mugsun/mugsun-track.git ../mugsun-track
+
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
 
@@ -26,8 +29,15 @@ jobs:
           node-version: 22
           cache: pnpm
 
+      - name: Build analytics SDK
+        run: pnpm --dir ../mugsun-track install && pnpm --dir ../mugsun-track build
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+
+      # 为 ESLint 生成 auto-import 的全局声明文件，避免缺失导致 Lint 读取失败
+      - name: Generate ESLint auto-imports
+        run: pnpm exec vite build --emptyOutDir=false
 
       - name: Lint
         run: pnpm run lint
