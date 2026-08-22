@@ -122,6 +122,10 @@ src/
 
 语言包位于 `src/locales/langs/{zh,en}.json`，由 vue-i18n 加载，界面语言可在运行时切换；Element Plus 组件库文案随语言联动。
 
+## ⭐ Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=mugsun/mugsun-pc&type=Date)](https://star-history.com/#mugsun/mugsun-pc&Date)
+
 ## 📄 许可证
 
 本项目基于 [MIT License](./LICENSE) 开源。

@@ -125,6 +125,10 @@ src/
 
 Language packs live in `src/locales/langs/{zh,en}.json` and are loaded through vue-i18n; the UI language can be switched at runtime, with Element Plus locale text following along.
 
+## ⭐ Star History
+
+[![Star History Chart](https://api.star-history.com/svg?repos=mugsun/mugsun-pc&type=Date)](https://star-history.com/#mugsun/mugsun-pc&Date)
+
 ## 📄 License
 
 Released under the [MIT License](./LICENSE).
