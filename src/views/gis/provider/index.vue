@@ -91,6 +91,7 @@
     type GisProviderStatus
   } from '@/api/gis'
   import { bootLabMap, type LabMapBag } from '@/gis/labBoot'
+  import { rememberedOrFirst } from '@/gis/preferProvider'
   import { applyOlBasemap } from '@/gis/olMap'
   import type { GisProviderCode, GisStyleCode } from '@/gis/types'
 
@@ -184,8 +185,7 @@
 
   onMounted(async () => {
     const status = await fetchGisStatus()
-    const first = status.providers.find((p) => p.enabled && p.configured)
-    const provider = (first?.provider || 'tianditu') as GisProviderCode
+    const provider = rememberedOrFirst(status.providers)
     selected.value = provider
     await nextTick()
     if (mapHost.value) {

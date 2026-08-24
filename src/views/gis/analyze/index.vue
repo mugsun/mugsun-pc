@@ -106,7 +106,7 @@
   } from '@/api/gis'
   import { collectionToSketch } from '@/gis/olOverlay'
   import { bootLabMap, type LabMapBag } from '@/gis/labBoot'
-  import type { GisProviderCode } from '@/gis/types'
+  import { rememberedOrFirst } from '@/gis/preferProvider'
 
   defineOptions({ name: 'GisAnalyze' })
 
@@ -268,8 +268,7 @@
       (row) => row.kind !== 'xyz' && row.kind !== 'wms'
     )
     const status = await fetchGisStatus()
-    const first = status.providers.find((p) => p.enabled && p.configured)
-    const provider = (first?.provider || 'tianditu') as GisProviderCode
+    const provider = rememberedOrFirst(status.providers)
     await nextTick()
     if (mapHost.value) {
       bag = await bootLabMap(mapHost.value, provider)

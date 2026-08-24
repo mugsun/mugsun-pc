@@ -182,3 +182,12 @@ export function fetchSaveTrackVisualRule(data: Record<string, any>) {
 export function fetchRemoveTrackVisualRule(id: number | string) {
   return request.post<void>({ url: '/api/system/track/visual/rule/remove', data: { id } })
 }
+
+/** 地域分布 + 精确热力点（G106） */
+export function fetchTrackGeo(params: Record<string, any>) {
+  return request.get<{
+    regions: { region: string; pv: number; uv: number; eventCount: number }[]
+    points: { lon: number; lat: number; eventName?: string; ts?: number; urlPath?: string }[]
+    geoCount: number
+  }>({ url: '/api/system/track/geo', params, showErrorMessage: false })
+}

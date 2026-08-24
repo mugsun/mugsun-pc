@@ -21,6 +21,8 @@
  * 圈选埋点（G104）：visual-track 同不在默认插件集，显式注册；URL 带 __mst_inspect 令牌即进
  * 圈选模式（不依赖远端配置），常态按 config 下发的 visualRules 命中上报自定义事件。
  *
+ * 精确位置（G106）：geo 插件显式注册；是否征求定位由 /track/config geoEnabled 自决（默认关，下次启动生效）。
+ *
  * @module plugins/track
  * @author Mugsun
  */
@@ -31,6 +33,7 @@ import {
   autocapturePlugin,
   errorPlugin,
   exposurePlugin,
+  geoPlugin,
   pageleavePlugin,
   pageviewPlugin,
   visualTrack,
@@ -94,10 +97,9 @@ export function setupTrack(app: App): void {
       exposurePlugin(),
       webVitalsPlugin(),
       errorPlugin(),
-      // 接口监控（G102）：不在 SDK 默认插件集，显式注册；启停/body 采集由 /track/config 下发自决
       apiMonitorPlugin(),
-      // 圈选埋点（G104）：__mst_inspect 令牌进圈选模式；常态按 config 下发 visualRules 命中上报
       visualTrack(),
+      geoPlugin(),
       replayBridgePlugin()
     ],
     // 上报携带登录 token 供服务端身份裁定；beacon 冲刷场景无法自定义头，按匿名处理，不阻断采集

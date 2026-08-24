@@ -107,8 +107,9 @@
             <button
               type="button"
               class="gis-tool"
-              :class="{ 'is-on': !!extraActiveLabel }"
+              :class="{ 'is-on': moreToolsOn }"
               :title="$t('pages.gis.more')"
+              :aria-label="$t('pages.gis.more')"
             >
               <ArtSvgIcon icon="ri:more-2-line" />
             </button>
@@ -119,6 +120,9 @@
                 </ElDropdownItem>
                 <ElDropdownItem command="heatmap" divided>
                   {{ heatmapOn ? '✓ ' : '' }}{{ $t('pages.gis.heatmap') }}
+                </ElDropdownItem>
+                <ElDropdownItem command="trackHeat">
+                  {{ trackHeatOn ? '✓ ' : '' }}{{ $t('pages.gis.trackHeat') }}
                 </ElDropdownItem>
                 <ElDropdownItem command="cluster">
                   {{ clusterOn ? '✓ ' : '' }}{{ $t('pages.gis.cluster') }}
@@ -354,6 +358,9 @@
     type GisProviderStatus,
     type GisScene
   } from '@/api/gis'
+  import { fetchTrackAppPage, fetchTrackGeo } from '@/api/track'
+  import { geoPointsToSketch } from '@/gis/trackHeat'
+  import { rememberGisProvider, rememberedOrFirst } from '@/gis/preferProvider'
   import {
     DEFAULT_SCENE,
     featuresFromImportJson,
@@ -404,6 +411,14 @@
     }
     return t(`pages.gis.tool${capTool(tool.value)}`)
   })
+  const moreToolsOn = computed(
+    () =>
+      !!extraActiveLabel.value ||
+      heatmapOn.value ||
+      trackHeatOn.value ||
+      clusterOn.value ||
+      overviewOn.value
+  )
   const sideTab = ref('overlay')
   const panelOpen = ref(false)
 
@@ -430,6 +445,8 @@
   const canUndo = ref(false)
   const canRedo = ref(false)
   const heatmapOn = ref(false)
+  const trackHeatOn = ref(false)
+  const TRACK_HEAT_ID = 'track-heat'
   const clusterOn = ref(false)
   const overviewOn = ref(false)
   const overlayRows = ref<OverlayEntry[]>([])
@@ -592,7 +609,7 @@
       if (tool.value !== 'pan') return
       const wgs = olApi.pointerWgs84(olMap, evt.pixel, baseProvider.value)
       if (!wgs) return
-      void fetchGisReverse(wgs[0], wgs[1])
+      void fetchGisReverse(wgs[0], wgs[1], baseProvider.value)
         .then((rev) => {
           placeText.value = [rev.address, rev.poi].filter(Boolean).join(' · ')
         })
@@ -697,10 +714,11 @@
   }
 
   const pickDefaultProvider = (): void => {
-    const first = readyProviders.value[0]
-    if (first) {
-      baseProvider.value = first.provider as GisProviderCode
-      lastProvider.value = baseProvider.value
+    const code = rememberedOrFirst(status.value.providers)
+    if (hasReadyProvider.value) {
+      baseProvider.value = code
+      lastProvider.value = code
+      rememberGisProvider(code)
     }
   }
 
@@ -714,6 +732,7 @@
     }
     sketch?.importFeatures(feats, baseProvider.value)
     lastProvider.value = baseProvider.value
+    rememberGisProvider(baseProvider.value)
     void applyOverlays(
       overlays?.list().map((row) => ({
         id: row.id,
@@ -853,9 +872,59 @@
   }
 
   const dropOverlay = (id: string): void => {
+    if (id === TRACK_HEAT_ID) {
+      trackHeatOn.value = false
+    }
     overlays?.remove(id)
     syncOverlayRows()
     void refreshCesiumSketch()
+  }
+
+  const toggleTrackHeat = async (): Promise<void> => {
+    if (trackHeatOn.value) {
+      overlays?.remove(TRACK_HEAT_ID)
+      trackHeatOn.value = false
+      syncOverlayRows()
+      return
+    }
+    try {
+      const preferred = localStorage.getItem('track:appKey') || ''
+      const page = await fetchTrackAppPage({ pageNum: 1, pageSize: 20 })
+      const records = (page?.records || []) as { appKey?: string }[]
+      if (!records.length) {
+        ElMessage.info(t('pages.gis.trackHeatEmpty'))
+        return
+      }
+      const ordered = [...records]
+      if (preferred) {
+        ordered.sort((a, b) => {
+          if (a.appKey === preferred) return -1
+          if (b.appKey === preferred) return 1
+          return 0
+        })
+      }
+      let feats: ReturnType<typeof geoPointsToSketch> = []
+      for (const row of ordered) {
+        if (!row.appKey) continue
+        const geo = await fetchTrackGeo({ appKey: row.appKey, days: 7 })
+        feats = geoPointsToSketch(geo?.points || [])
+        if (feats.length) break
+      }
+      if (!feats.length) {
+        ElMessage.info(t('pages.gis.trackHeatEmpty'))
+        return
+      }
+      overlays?.set(TRACK_HEAT_ID, feats, baseProvider.value, {
+        name: t('pages.gis.trackHeat'),
+        kind: 'heatmap',
+        color: '#ef4444'
+      })
+      overlays?.fit(TRACK_HEAT_ID)
+      trackHeatOn.value = true
+      syncOverlayRows()
+    } catch {
+      ElMessage.info(t('pages.gis.trackHeatEmpty'))
+    }
   }
 
   const onMoreTool = (cmd: string | number): void => {
@@ -867,6 +936,10 @@
     if (key === 'heatmap') {
       heatmapOn.value = !heatmapOn.value
       onHeatmapChange(heatmapOn.value)
+      return
+    }
+    if (key === 'trackHeat') {
+      void toggleTrackHeat()
       return
     }
     if (key === 'cluster') {
@@ -1009,7 +1082,12 @@
         olMap && olApi
           ? olApi.readOlView(olMap, baseProvider.value).center
           : DEFAULT_SCENE.view2d.center
-      const list = await fetchGisSearch({ q: keyword, lon: center[0], lat: center[1] })
+      const list = await fetchGisSearch({
+        q: keyword,
+        lon: center[0],
+        lat: center[1],
+        provider: baseProvider.value
+      })
       return (list ?? []).map((item) => ({
         ...item,
         value: item.name

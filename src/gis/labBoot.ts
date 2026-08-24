@@ -70,7 +70,7 @@ distance 单位：米。`,
     radius: `GET /api/system/gis/demo/radius
 
 单击地图改圆心，前端按 800 米过滤。`,
-    geocode: `GET /api/system/gis/reverse?lon=116.397428&lat=39.90923
+    geocode: `GET /api/system/gis/reverse?lon=116.397428&lat=39.90923&provider=tianditu
 
 单击地图会带上当前点的经纬度。`,
     measure: `POST /api/system/gis/geo/analyze

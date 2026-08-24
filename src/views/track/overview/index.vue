@@ -127,16 +127,63 @@
         </div>
       </ElCol>
     </ElRow>
+
+    <ElRow :gutter="16" class="track-row">
+      <ElCol :xs="24" :lg="12">
+        <div class="art-card track-chart-card">
+          <p class="track-card-title">{{ $t('pages.track.overview.regionDist') }}</p>
+          <ArtBarChart
+            :data="regionValues"
+            :x-axis-data="regionLabels"
+            :loading="loading"
+            height="280px"
+          />
+          <ElTable :data="regions" size="default" max-height="220" class="track-region-table">
+            <ElTableColumn
+              prop="region"
+              :label="$t('pages.track.overview.region')"
+              min-width="100"
+              show-overflow-tooltip
+            />
+            <ElTableColumn prop="pv" label="PV" width="80" align="right" />
+            <ElTableColumn prop="uv" label="UV" width="80" align="right" />
+            <ElTableColumn
+              prop="eventCount"
+              :label="$t('pages.track.shared.eventCount')"
+              width="90"
+              align="right"
+            />
+            <template #empty
+              ><ElEmpty :description="$t('pages.track.overview.geoEmpty')" :image-size="48"
+            /></template>
+          </ElTable>
+        </div>
+      </ElCol>
+      <ElCol :xs="24" :lg="12">
+        <div class="art-card track-chart-card">
+          <p class="track-card-title">
+            {{ $t('pages.track.overview.geoHeat') }}
+            <span class="track-geo-count">{{
+              $t('pages.track.overview.geoCount', { n: geoCount })
+            }}</span>
+          </p>
+          <GisHeatMap v-if="geoPoints.length" :points="geoPoints" />
+          <ElEmpty v-else :description="$t('pages.track.overview.geoEmpty')" :image-size="72" />
+        </div>
+      </ElCol>
+    </ElRow>
   </div>
 </template>
 
 <script setup lang="ts">
   import {
+    fetchTrackGeo,
     fetchTrackOnline,
     fetchTrackOverview,
     fetchTrackPages,
     fetchTrackTrend
   } from '@/api/track'
+  import GisHeatMap from '@/components/gis/GisHeatMap.vue'
   import { useI18n } from 'vue-i18n'
   import { fmtTrackClock, fmtTrackDuration, useTrackApp } from '@/views/track/shared/useTrackApp'
   import { useChartOps } from '@/hooks/core/useChart'
@@ -170,6 +217,11 @@
   const referrerDist = ref<PieDataItem[]>([])
   const deviceDist = ref<PieDataItem[]>([])
   const browserTop = ref<PieDataItem[]>([])
+  const regions = ref<{ region: string; pv: number; uv: number; eventCount: number }[]>([])
+  const geoPoints = ref<{ lon: number; lat: number }[]>([])
+  const geoCount = ref(0)
+  const regionLabels = computed(() => regions.value.map((r) => r.region))
+  const regionValues = computed(() => regions.value.map((r) => Number(r.eventCount) || 0))
 
   const statCards = computed(() => [
     {
@@ -277,10 +329,11 @@
     if (!appKey.value) return
     loading.value = true
     try {
-      const [ov, trendRows, pageRows] = await Promise.all([
+      const [ov, trendRows, pageRows, geo] = await Promise.all([
         fetchTrackOverview({ appKey: appKey.value, days: days.value }),
         fetchTrackTrend({ appKey: appKey.value, days: days.value, dimType: 'overview' }),
-        fetchTrackPages({ appKey: appKey.value, days: days.value, limit: 10 })
+        fetchTrackPages({ appKey: appKey.value, days: days.value, limit: 10 }),
+        fetchTrackGeo({ appKey: appKey.value, days: days.value }).catch(() => null)
       ])
       Object.assign(cards, {
         pv: ov?.cards?.pv ?? 0,
@@ -295,6 +348,9 @@
       browserTop.value = ov?.browserTop ?? []
       applyTrend(trendRows ?? [])
       topPages.value = pageRows ?? []
+      regions.value = geo?.regions ?? []
+      geoPoints.value = geo?.points ?? []
+      geoCount.value = geo?.geoCount ?? 0
     } finally {
       loading.value = false
     }
@@ -334,6 +390,17 @@
     .track-card-title {
       font-size: 16px;
       font-weight: 500;
+    }
+
+    .track-geo-count {
+      margin-left: 8px;
+      font-size: 12px;
+      font-weight: 400;
+      color: var(--el-text-color-secondary);
+    }
+
+    .track-region-table {
+      margin-top: 12px;
     }
 
     .track-stat-card {

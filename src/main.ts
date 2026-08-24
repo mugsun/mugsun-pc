@@ -13,6 +13,7 @@ import '@utils/sys/console.ts'                      // 控制台输出内容
 import { setupGlobDirectives } from './directives'
 import { setupErrorHandle } from './utils/sys/error-handle'
 import { setupTrack } from './plugins/track'         // 埋点（自监控）
+import { registerGisPick } from '@/components/gis/registerGisPick'
 
 document.addEventListener(
   'touchstart',
@@ -31,5 +32,6 @@ setupTrack(app)
 app.use(ElementPlus)
 app.use(formCreate)
 app.use(FcDesigner)
+registerGisPick()
 app.use(language)
 app.mount('#app')

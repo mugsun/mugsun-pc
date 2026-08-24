@@ -89,6 +89,7 @@
     fetchGisStatus,
     type GisDemoMeta
   } from '@/api/gis'
+  import { rememberedOrFirst } from '@/gis/preferProvider'
   import { collectionToSketch } from '@/gis/olOverlay'
   import { attachOlPlayback, samplesFromTrack, type OlPlaybackHandle } from '@/gis/olPlayback'
   import {
@@ -99,7 +100,6 @@
     type LabMapBag
   } from '@/gis/labBoot'
   import { pointerWgs84 } from '@/gis/olMap'
-  import type { GisProviderCode } from '@/gis/types'
 
   const props = defineProps<{ code: string; catalog: GisDemoMeta[] }>()
   const { t } = useI18n()
@@ -330,7 +330,7 @@
       return
     }
     if (props.code === 'geocode') {
-      const info = await fetchGisReverse(wgs[0], wgs[1])
+      const info = await fetchGisReverse(wgs[0], wgs[1], bag.provider)
       lines.value = [
         `${wgs[0].toFixed(6)}, ${wgs[1].toFixed(6)}`,
         info.address || [info.province, info.city, info.county, info.poi].filter(Boolean).join(' ')
@@ -355,8 +355,7 @@
       return
     }
     const status = await fetchGisStatus()
-    const first = status.providers.find((p) => p.enabled && p.configured)
-    const provider = (first?.provider || 'tianditu') as GisProviderCode
+    const provider = rememberedOrFirst(status.providers)
     bag = await bootLabMap(mapHost.value, provider)
     extraLayer = new VectorLayer({
       zIndex: 22,

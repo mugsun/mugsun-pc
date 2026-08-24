@@ -119,7 +119,7 @@
     <ElDialog
       v-model="fillVisible"
       :title="$t('pages.system.formDesigner.fillTitle', { name: current?.name || '' })"
-      width="640px"
+      width="720px"
       align-center
       class="form-fill-dialog"
       :destroy-on-close="true"

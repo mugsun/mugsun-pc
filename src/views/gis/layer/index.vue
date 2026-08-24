@@ -124,8 +124,8 @@
     type GisLayerRow
   } from '@/api/gis'
   import { bootLabMap, type LabMapBag } from '@/gis/labBoot'
+  import { rememberedOrFirst } from '@/gis/preferProvider'
   import { paintLayerOnMap } from '@/gis/paintLayer'
-  import type { GisProviderCode } from '@/gis/types'
 
   defineOptions({ name: 'GisLayer' })
 
@@ -290,8 +290,7 @@
 
   onMounted(async () => {
     const status = await fetchGisStatus()
-    const first = status.providers.find((p) => p.enabled && p.configured)
-    const provider = (first?.provider || 'tianditu') as GisProviderCode
+    const provider = rememberedOrFirst(status.providers)
     await nextTick()
     if (mapHost.value) {
       bag = await bootLabMap(mapHost.value, provider)

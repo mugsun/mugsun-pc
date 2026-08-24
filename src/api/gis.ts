@@ -83,12 +83,17 @@ export interface GisReverse {
   poi?: string
 }
 
-export function fetchGisSearch(params: { q: string; lon?: number; lat?: number }) {
+export function fetchGisSearch(params: {
+  q: string
+  lon?: number
+  lat?: number
+  provider: string
+}) {
   return request.get<GisPoi[]>({ url: '/api/system/gis/search', params })
 }
 
-export function fetchGisReverse(lon: number, lat: number) {
-  return request.get<GisReverse>({ url: '/api/system/gis/reverse', params: { lon, lat } })
+export function fetchGisReverse(lon: number, lat: number, provider: string) {
+  return request.get<GisReverse>({ url: '/api/system/gis/reverse', params: { lon, lat, provider } })
 }
 
 export interface GisLayerRow {

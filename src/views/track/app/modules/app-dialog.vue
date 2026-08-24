@@ -76,6 +76,10 @@
           </ElFormItem>
         </template>
       </template>
+      <ElFormItem :label="$t('pages.track.app.geoEnabled')" prop="geoEnabled">
+        <ElSwitch v-model="formData.geoEnabled" :active-value="1" :inactive-value="0" />
+        <span class="track-form-hint">{{ $t('pages.track.app.geoHint') }}</span>
+      </ElFormItem>
       <ElFormItem :label="$t('pages.track.app.alertEnabled')" prop="alertEnabled">
         <ElSwitch v-model="formData.alertEnabled" :active-value="1" :inactive-value="0" />
         <span class="track-form-hint">{{ $t('pages.track.app.alertHint') }}</span>
@@ -147,6 +151,7 @@
     apiBodyEnabled: 0,
     apiBodyMaskEnabled: 0,
     apiBodyRetentionDays: 7,
+    geoEnabled: 0,
     alertEnabled: 0,
     alertThreshold: 10,
     remark: ''
@@ -194,6 +199,7 @@
             apiBodyEnabled: 0,
             apiBodyMaskEnabled: 0,
             apiBodyRetentionDays: 7,
+            geoEnabled: 0,
             alertEnabled: 0,
             alertThreshold: 10,
             remark: ''
