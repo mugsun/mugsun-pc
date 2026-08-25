@@ -48,6 +48,7 @@
 
         <div class="gis-hud gis-hud-tc">
           <ElAutocomplete
+            ref="searchRef"
             v-model="searchText"
             class="gis-search"
             clearable
@@ -204,7 +205,7 @@
                       :max="100"
                       :step="1"
                       size="small"
-                      :format-tooltip="formatOpacityTip"
+                      :show-tooltip="false"
                       class="gis-opacity"
                       @update:model-value="(v: number | number[]) => setOverlayOpacity(row.id, v)"
                     />
@@ -452,6 +453,7 @@
   const overlayRows = ref<OverlayEntry[]>([])
   const catalogLayers = ref<GisLayerRow[]>([])
   const searchText = ref('')
+  const searchRef = ref<{ blur?: () => void } | null>(null)
   const gotoOpen = ref(false)
   const gotoText = ref('116.397428, 39.90923')
   const placeText = ref('')
@@ -781,8 +783,6 @@
     overlayRows.value = overlays?.list() ?? []
   }
 
-  const formatOpacityTip = (v: number): string => `${v}%`
-
   const setOverlayVisible = (id: string, visible: boolean): void => {
     overlays?.setVisible(id, visible)
     const row = overlayRows.value.find((item) => item.id === id)
@@ -1109,6 +1109,8 @@
     sketch?.addWgs84Point([lon, lat], baseProvider.value, name, String(item.address ?? ''))
     placeText.value = [name, item.address].filter(Boolean).join(' · ')
     ElMessage.success(t('pages.gis.located'))
+    // 选中后收起建议浮层，避免挡住地图点击（逆地理 / 标绘）
+    void nextTick(() => searchRef.value?.blur?.())
   }
 
   const applyGoto = (): void => {

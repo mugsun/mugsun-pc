@@ -37,7 +37,7 @@ test('W17-1 示例页侧栏可切到地图 / 图层 / 底图', async () => {
 
   await clickGisMenu('底图')
   await expect(page).toHaveURL(/#\/gis\/provider/)
-  await expect(page.getByText('天地图')).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByText('天地图', { exact: true })).toBeVisible({ timeout: 15_000 })
 
   await clickGisMenu('示例')
   await expect(page).toHaveURL(/#\/gis\/lab/)
@@ -48,7 +48,7 @@ test('W17-2 工作台图层 HUD 点目录叠加，无弹窗表格', async () => 
   await page.goto('/#/gis/workspace')
   await expect(page.getByRole('button', { name: '保存场景' })).toBeVisible({ timeout: 15_000 })
   await page.getByRole('button', { name: '图层', exact: true }).click()
-  await expect(page.getByText('叠加图层')).toBeVisible({ timeout: 10_000 })
+  await expect(page.getByText('叠加图层', { exact: true })).toBeVisible({ timeout: 10_000 })
   await expect(page.getByRole('dialog')).toHaveCount(0)
   const catalog = page.locator('.gis-hud-panel .gis-feat-row').first()
   if ((await catalog.count()) > 0) {
@@ -61,12 +61,13 @@ test('W17-2 工作台图层 HUD 点目录叠加，无弹窗表格', async () => 
     await expect(slider).toHaveAttribute('aria-valuenow', '0')
     await page.keyboard.press('ArrowRight')
     await expect(slider).toHaveAttribute('aria-valuenow', '1')
+    await page.keyboard.press('Escape')
 
     const box = page.locator('.gis-ov-card .el-checkbox').first()
     await expect(box).toHaveClass(/is-checked/)
-    await box.click()
+    await box.click({ force: true })
     await expect(box).not.toHaveClass(/is-checked/)
-    await box.click()
+    await box.click({ force: true })
     await expect(box).toHaveClass(/is-checked/)
   }
 })
