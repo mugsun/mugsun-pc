@@ -5,6 +5,7 @@
     :title="isEdit ? $t('pages.system.tenant.editTitle') : $t('pages.system.tenant.create')"
     width="500px"
     align-center
+    destroy-on-close
   >
     <ElForm ref="formRef" :model="formData" :rules="rules" label-width="90px">
       <ElFormItem :label="$t('pages.system.tenant.tenantName')" prop="tenantName">

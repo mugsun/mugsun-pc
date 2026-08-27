@@ -97,6 +97,7 @@
       v-model="designerVisible"
       :title="$t('pages.system.flowGraph.designerTitle')"
       fullscreen
+      destroy-on-close
     >
       <ElForm :model="design" inline label-width="80px" class="fg-form">
         <ElFormItem :label="$t('pages.system.flowGraph.flowCode')" required>
@@ -145,7 +146,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, provide, onMounted } from 'vue'
+  import { ref, reactive, provide, onMounted, onDeactivated } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import GraphChain from './GraphChain.vue'
@@ -231,6 +232,11 @@
     reg.depts = (await fetchDeptSelect()) || []
   })
 
+  const closeDialogs = (): void => {
+    designerVisible.value = false
+    ElMessageBox.close()
+  }
+
   const openDesigner = (): void => {
     Object.assign(design, {
       flowCode: '',
@@ -244,6 +250,7 @@
   }
 
   const submitDesign = async (): Promise<void> => {
+    if (submitting.value) return
     if (!design.flowCode || !design.flowName) {
       ElMessage.warning(t('pages.system.flowGraph.msgCodeNameRequired'))
       return
@@ -307,6 +314,8 @@
     })[String(s)] || t('pages.system.flowGraph.publishUnknown')
   const publishTag = (s: any): 'success' | 'info' | 'warning' =>
     String(s) === '1' ? 'success' : String(s) === '9' ? 'warning' : 'info'
+
+  onDeactivated(closeDialogs)
 </script>
 
 <style scoped>

@@ -5,6 +5,7 @@
     :title="$t('pages.track.app.uploadSourcemap')"
     width="520px"
     align-center
+    destroy-on-close
     @closed="resetState"
   >
     <ElForm label-width="96px">

@@ -235,6 +235,7 @@
         :title="$t('pages.track.app.createdTitle')"
         width="560px"
         align-center
+        destroy-on-close
       >
         <ElAlert
           type="success"
@@ -261,8 +262,9 @@
 </template>
 
 <script setup lang="ts">
-  import { h, ref } from 'vue'
+  import { h, onActivated, onDeactivated, ref } from 'vue'
   import { useI18n } from 'vue-i18n'
+  import { onBeforeRouteLeave } from 'vue-router'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { useCrud } from '@/hooks/core/useCrud'
   import { useTable } from '@/hooks/core/useTable'
@@ -417,7 +419,14 @@
               ? h(ArtButtonTable, { type: 'edit', onClick: () => showDialog('edit', row) })
               : null,
             hasPerm('sys:track-app:edit')
-              ? h(ArtButtonTable, { type: 'delete', onClick: () => handleDelete(row) })
+              ? h(ArtButtonTable, {
+                  type: 'delete',
+                  onClick: () => {
+                    Promise.resolve(handleDelete(row)).catch(() => {
+                      /* cancel */
+                    })
+                  }
+                })
               : null
           ])
       }
@@ -667,15 +676,22 @@ const track = createTracker({
   }
 
   const handleSmDelete = async (row: Record<string, any>): Promise<void> => {
-    await ElMessageBox.confirm(
-      t('pages.track.app.deleteSourcemapConfirm', { filename: row.filename, release: row.release }),
-      t('pages.track.shared.deleteConfirmTitle'),
-      {
-        type: 'warning',
-        confirmButtonText: t('pages.track.shared.del'),
-        cancelButtonText: t('common.cancel')
-      }
-    )
+    try {
+      await ElMessageBox.confirm(
+        t('pages.track.app.deleteSourcemapConfirm', {
+          filename: row.filename,
+          release: row.release
+        }),
+        t('pages.track.shared.deleteConfirmTitle'),
+        {
+          type: 'warning',
+          confirmButtonText: t('pages.track.shared.del'),
+          cancelButtonText: t('common.cancel')
+        }
+      )
+    } catch {
+      return
+    }
     await fetchRemoveTrackSourcemap(row.id)
     ElMessage.success(t('pages.track.shared.deletedSuccess'))
     await fetchSourcemaps()
@@ -759,12 +775,6 @@ const track = createTracker({
     visualDrafts.value = []
   }
 
-  // keepAlive 切走暂停轮询，切回且令牌仍在时恢复（到期由下一轮 pollDrafts 自行清理）
-  onDeactivated(pauseDraftPoll)
-  onActivated(() => {
-    if (visualToken.value) resumeDraftPoll()
-  })
-
   const confirmDraft = async (draft: Record<string, any>): Promise<void> => {
     let eventName: string
     try {
@@ -795,17 +805,21 @@ const track = createTracker({
   }
 
   const discardDraft = async (draft: Record<string, any>): Promise<void> => {
-    await ElMessageBox.confirm(
-      t('pages.track.app.discardConfirm', {
-        name: draft.eventName || t('pages.track.app.unnamed')
-      }),
-      t('pages.track.app.discardConfirmTitle'),
-      {
-        type: 'warning',
-        confirmButtonText: t('pages.track.app.discardDraft'),
-        cancelButtonText: t('common.cancel')
-      }
-    )
+    try {
+      await ElMessageBox.confirm(
+        t('pages.track.app.discardConfirm', {
+          name: draft.eventName || t('pages.track.app.unnamed')
+        }),
+        t('pages.track.app.discardConfirmTitle'),
+        {
+          type: 'warning',
+          confirmButtonText: t('pages.track.app.discardDraft'),
+          cancelButtonText: t('common.cancel')
+        }
+      )
+    } catch {
+      return
+    }
     await fetchTrackVisualDiscard({ token: visualToken.value, draftId: draft.draftId })
     visualDrafts.value = visualDrafts.value.filter((d) => d.draftId !== draft.draftId)
     ElMessage.success(t('pages.track.app.discarded'))
@@ -960,19 +974,43 @@ const track = createTracker({
   }
 
   const handleRuleDelete = async (row: Record<string, any>): Promise<void> => {
-    await ElMessageBox.confirm(
-      t('pages.track.app.deleteRuleConfirm', { name: row.eventName }),
-      t('pages.track.shared.deleteConfirmTitle'),
-      {
-        type: 'warning',
-        confirmButtonText: t('pages.track.shared.del'),
-        cancelButtonText: t('common.cancel')
-      }
-    )
+    try {
+      await ElMessageBox.confirm(
+        t('pages.track.app.deleteRuleConfirm', { name: row.eventName }),
+        t('pages.track.shared.deleteConfirmTitle'),
+        {
+          type: 'warning',
+          confirmButtonText: t('pages.track.shared.del'),
+          cancelButtonText: t('common.cancel')
+        }
+      )
+    } catch {
+      return
+    }
     await fetchRemoveTrackVisualRule(row.id)
     ElMessage.success(t('pages.track.shared.deletedSuccess'))
     await refreshVisualRules()
   }
+
+  const closeOverlays = (): void => {
+    dialogVisible.value = false
+    defDialogVisible.value = false
+    smUploadVisible.value = false
+    vrDialogVisible.value = false
+    createdVisible.value = false
+    ElMessageBox.close()
+  }
+
+  onDeactivated(() => {
+    pauseDraftPoll()
+    closeOverlays()
+  })
+  onBeforeRouteLeave(() => {
+    closeOverlays()
+  })
+  onActivated(() => {
+    if (visualToken.value) resumeDraftPoll()
+  })
 </script>
 
 <style lang="scss" scoped>

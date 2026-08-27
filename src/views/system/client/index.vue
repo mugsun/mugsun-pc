@@ -107,6 +107,7 @@
           : $t('pages.system.client.editTitle')
       "
       width="480px"
+      destroy-on-close
     >
       <ElForm ref="formRef" :model="form" :rules="rules" label-width="120px">
         <ElFormItem :label="$t('pages.system.client.colClientId')" prop="clientId">
@@ -131,14 +132,16 @@
       </ElForm>
       <template #footer>
         <ElButton @click="dialogVisible = false">{{ $t('common.cancel') }}</ElButton>
-        <ElButton type="primary" @click="submit">{{ $t('pages.system.client.saveBtn') }}</ElButton>
+        <ElButton type="primary" :loading="submitLoading" @click="submit">{{
+          $t('pages.system.client.saveBtn')
+        }}</ElButton>
       </template>
     </ElDialog>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { nextTick, onMounted, reactive, ref } from 'vue'
+  import { nextTick, onDeactivated, onMounted, reactive, ref } from 'vue'
   import type { FormInstance, FormRules } from 'element-plus'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import {
@@ -163,6 +166,7 @@
 
   const dialogVisible = ref(false)
   const dialogType = ref<'add' | 'edit'>('add')
+  const submitLoading = ref(false)
   const formRef = ref<FormInstance>()
   const form = reactive<any>({
     id: undefined,
@@ -194,6 +198,10 @@
     loadData()
   }
 
+  const closeDialog = (): void => {
+    dialogVisible.value = false
+  }
+
   const openCreate = (): void => {
     dialogType.value = 'add'
     Object.assign(form, {
@@ -216,13 +224,18 @@
   }
 
   const submit = async (): Promise<void> => {
-    if (!formRef.value) return
+    if (!formRef.value || submitLoading.value) return
     await formRef.value.validate(async (valid) => {
       if (!valid) return
-      await fetchSaveClient(form)
-      ElMessage.success(t('pages.system.client.saveSuccess'))
-      dialogVisible.value = false
-      loadData()
+      submitLoading.value = true
+      try {
+        await fetchSaveClient(form)
+        ElMessage.success(t('pages.system.client.saveSuccess'))
+        dialogVisible.value = false
+        loadData()
+      } finally {
+        submitLoading.value = false
+      }
     })
   }
 
@@ -240,11 +253,13 @@
       {
         type: 'warning'
       }
-    ).then(async () => {
-      await fetchDisableClient(row.id)
-      ElMessage.success(t('pages.system.client.operateSuccess'))
-      loadData()
-    })
+    )
+      .then(async () => {
+        await fetchDisableClient(row.id)
+        ElMessage.success(t('pages.system.client.operateSuccess'))
+        loadData()
+      })
+      .catch(() => {})
   }
 
   const remove = (row: any): void => {
@@ -254,12 +269,19 @@
       {
         type: 'warning'
       }
-    ).then(async () => {
-      await fetchRemoveClient([row.id])
-      ElMessage.success(t('pages.system.client.deleteSuccess'))
-      loadData()
-    })
+    )
+      .then(async () => {
+        await fetchRemoveClient([row.id])
+        ElMessage.success(t('pages.system.client.deleteSuccess'))
+        loadData()
+      })
+      .catch(() => {})
   }
+
+  onDeactivated(() => {
+    ElMessageBox.close()
+    closeDialog()
+  })
 
   onMounted(loadData)
 </script>

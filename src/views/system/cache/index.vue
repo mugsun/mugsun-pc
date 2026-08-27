@@ -12,11 +12,13 @@
             }}</ElButton>
           </div>
           <ElTable
+            ref="groupTableRef"
             v-loading="groupLoading"
             :data="groups"
             border
+            row-key="name"
             highlight-current-row
-            @current-change="onGroupSelect"
+            @row-click="onGroupSelect"
           >
             <ElTableColumn prop="name" :label="$t('pages.system.cache.colName')" min-width="160" />
             <ElTableColumn prop="count" :label="$t('pages.system.cache.colCount')" width="90">
@@ -75,7 +77,14 @@
       </ElCol>
     </ElRow>
 
-    <ElDialog v-model="viewVisible" :title="$t('pages.system.cache.detailTitle')" width="560px">
+    <ElDialog
+      v-if="viewVisible"
+      v-model="viewVisible"
+      :title="$t('pages.system.cache.detailTitle')"
+      width="560px"
+      destroy-on-close
+      @closed="viewVisible = false"
+    >
       <ElDescriptions :column="1" border>
         <ElDescriptionsItem :label="$t('pages.system.cache.colKey')"
           ><span class="cache-key">{{ detail.key }}</span></ElDescriptionsItem
@@ -95,7 +104,7 @@
 </template>
 
 <script setup lang="ts">
-  import { reactive } from 'vue'
+  import { reactive, ref, onMounted, onDeactivated } from 'vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import { fetchCacheGroups, fetchCacheKeys, fetchCacheValue, fetchRemoveCache } from '@/api/cache'
   import { useI18n } from 'vue-i18n'
@@ -104,6 +113,7 @@
 
   const { t } = useI18n()
 
+  const groupTableRef = ref<any>(null)
   const groups = ref<any[]>([])
   const groupLoading = ref(false)
   const selectedGroup = ref<any>(null)
@@ -116,6 +126,15 @@
     groupLoading.value = true
     try {
       groups.value = (await fetchCacheGroups()) || []
+      if (groups.value.length) {
+        const keep = selectedGroup.value
+          ? groups.value.find((g) => g.name === selectedGroup.value.name)
+          : null
+        onGroupSelect(keep || groups.value[0])
+      } else {
+        selectedGroup.value = null
+        keys.value = []
+      }
     } finally {
       groupLoading.value = false
     }
@@ -124,6 +143,7 @@
   const onGroupSelect = (row: any) => {
     if (!row) return
     selectedGroup.value = row
+    groupTableRef.value?.setCurrentRow(row)
     loadKeys()
   }
 
@@ -148,12 +168,14 @@
       t('pages.system.cache.clearKeyConfirm', { name: key }),
       t('pages.system.cache.clearTitle'),
       { type: 'warning' }
-    ).then(async () => {
-      await fetchRemoveCache([key])
-      ElMessage.success(t('pages.system.cache.clearSuccess'))
-      loadKeys()
-      loadGroups()
-    })
+    )
+      .then(async () => {
+        await fetchRemoveCache([key])
+        ElMessage.success(t('pages.system.cache.clearSuccess'))
+        loadKeys()
+        loadGroups()
+      })
+      .catch(() => {})
   }
 
   const clearGroup = () => {
@@ -166,15 +188,22 @@
       {
         type: 'warning'
       }
-    ).then(async () => {
-      await fetchRemoveCache([...keys.value])
-      ElMessage.success(t('pages.system.cache.clearAllSuccess'))
-      loadKeys()
-      loadGroups()
-    })
+    )
+      .then(async () => {
+        await fetchRemoveCache([...keys.value])
+        ElMessage.success(t('pages.system.cache.clearAllSuccess'))
+        loadKeys()
+        loadGroups()
+      })
+      .catch(() => {})
   }
 
   onMounted(loadGroups)
+
+  onDeactivated(() => {
+    viewVisible.value = false
+    ElMessageBox.close()
+  })
 </script>
 
 <style lang="scss" scoped>
@@ -188,6 +217,10 @@
       .panel-title {
         font-weight: 500;
       }
+    }
+
+    :deep(.el-table__body tr) {
+      cursor: pointer;
     }
 
     .cache-key {

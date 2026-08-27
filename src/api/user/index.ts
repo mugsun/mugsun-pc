@@ -64,3 +64,24 @@ export function importUser(file: File, updateSupport: boolean) {
   form.append('updateSupport', String(updateSupport))
   return request.post<UserImportResult>({ url: '/api/system/user/import', data: form })
 }
+
+/** 切换是否主管（is_leader 0↔1）；须走 query（后端 @RequestParam，不可被 http 层 params→body 转换） */
+export function setUserLeader(userId: number | string) {
+  return request.post<void>({ url: `/api/system/user/set-leader?userId=${userId}` })
+}
+
+/** 当前用户的直属主管信息 */
+export function fetchLeaderInfo(userId: number | string) {
+  return request.get<UserVO[]>({
+    url: '/api/system/user/leader-info',
+    params: { userId }
+  })
+}
+
+/** 主管候选列表（is_leader=1，供选直属主管） */
+export function fetchLeaderList(realName?: string) {
+  return request.get<Array<{ value: number | string; label: string; realName?: string }>>({
+    url: '/api/system/user/leader-list',
+    params: realName ? { realName } : undefined
+  })
+}

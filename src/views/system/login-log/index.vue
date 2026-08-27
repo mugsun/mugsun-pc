@@ -27,7 +27,7 @@
 </template>
 
 <script setup lang="ts">
-  import { h, ref } from 'vue'
+  import { computed, h, onDeactivated, ref } from 'vue'
   import ArtStatusTag from '@/components/core/base/art-status-tag/index.vue'
   import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
   import { useTable } from '@/hooks/core/useTable'
@@ -180,13 +180,19 @@
         cancelButtonText: t('common.cancel'),
         type: 'warning'
       }
-    ).then(async () => {
-      await unlockLoginAccount(row.id)
-      ElMessage.success(t('pages.system.loginLog.unlockSuccess'))
-      // 解锁后刷新行级锁定标记（按钮随之隐藏）
-      refreshData()
-    })
+    )
+      .then(async () => {
+        await unlockLoginAccount(row.id)
+        ElMessage.success(t('pages.system.loginLog.unlockSuccess'))
+        // 解锁后刷新行级锁定标记（按钮随之隐藏）
+        refreshData()
+      })
+      .catch(() => {})
   }
+
+  onDeactivated(() => {
+    ElMessageBox.close()
+  })
 
   // ===== 查询栏联动 =====
   const handleSearch = async (params: Record<string, any>): Promise<void> => {

@@ -28,6 +28,8 @@
         :title="$t('pages.system.apiLog.detailTitle')"
         width="680px"
         align-center
+        destroy-on-close
+        @closed="current = {}"
       >
         <ElDescriptions :column="1" border>
           <ElDescriptionsItem :label="$t('pages.system.apiLog.traceId')">
@@ -69,7 +71,7 @@
 </template>
 
 <script setup lang="ts">
-  import { h, ref } from 'vue'
+  import { h, onDeactivated, ref } from 'vue'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { useTable } from '@/hooks/core/useTable'
   import { fetchApiLogPage } from '@/api/system-manage'
@@ -184,10 +186,17 @@
     getData()
   }
 
+  const closeDetail = (): void => {
+    detailVisible.value = false
+    current.value = {}
+  }
+
   const showDetail = (row: Record<string, any>): void => {
     current.value = row
     detailVisible.value = true
   }
+
+  onDeactivated(closeDetail)
 </script>
 
 <style scoped>

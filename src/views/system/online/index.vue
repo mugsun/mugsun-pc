@@ -102,7 +102,7 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, ref, onMounted } from 'vue'
+  import { computed, onDeactivated, onMounted, ref } from 'vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import { fetchOnlineList, fetchKickoutOnline, fetchCleanupStaleOnline } from '@/api/system-manage'
   import { formatTableTime } from '@/utils/date'
@@ -137,15 +137,17 @@
       t('pages.system.online.kickoutConfirm', { name: displayName(row) }),
       t('pages.system.online.kickoutBtn'),
       { type: 'warning' }
-    ).then(async () => {
-      await fetchKickoutOnline({
-        loginId: row.loginId,
-        deviceType: row.deviceType,
-        tokenMask: row.tokenMask
+    )
+      .then(async () => {
+        await fetchKickoutOnline({
+          loginId: row.loginId,
+          deviceType: row.deviceType,
+          tokenMask: row.tokenMask
+        })
+        ElMessage.success(t('pages.system.online.kickoutSuccess'))
+        loadData()
       })
-      ElMessage.success(t('pages.system.online.kickoutSuccess'))
-      loadData()
-    })
+      .catch(() => {})
   }
 
   const cleanupStale = (): void => {
@@ -153,17 +155,23 @@
       t('pages.system.online.cleanupStaleConfirm', { count: staleCount.value }),
       t('pages.system.online.cleanupStaleTitle'),
       { type: 'warning' }
-    ).then(async () => {
-      cleaning.value = true
-      try {
-        const n = (await fetchCleanupStaleOnline()) ?? 0
-        ElMessage.success(t('pages.system.online.cleanupStaleSuccess', { count: n }))
-        await loadData()
-      } finally {
-        cleaning.value = false
-      }
-    })
+    )
+      .then(async () => {
+        cleaning.value = true
+        try {
+          const n = (await fetchCleanupStaleOnline()) ?? 0
+          ElMessage.success(t('pages.system.online.cleanupStaleSuccess', { count: n }))
+          await loadData()
+        } finally {
+          cleaning.value = false
+        }
+      })
+      .catch(() => {})
   }
+
+  onDeactivated(() => {
+    ElMessageBox.close()
+  })
 
   onMounted(loadData)
 </script>

@@ -30,7 +30,8 @@
         v-model:visible="dialogVisible"
         :type="dialogType"
         :param-data="currentRow"
-        @submit="handleSubmit"
+        :saving="dialogSaving"
+        @submit="onDialogSubmit"
       />
     </ElCard>
   </div>
@@ -38,6 +39,7 @@
 
 <script setup lang="ts">
   import { h, ref } from 'vue'
+  import { ElMessage } from 'element-plus'
   import { useI18n } from 'vue-i18n'
   import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
   import { useCrud } from '@/hooks/core/useCrud'
@@ -50,6 +52,7 @@
   defineOptions({ name: 'SysParam' })
 
   const { t } = useI18n()
+  const dialogSaving = ref(false)
 
   // ===== 查询栏 =====
   const searchForm = ref({
@@ -131,8 +134,9 @@
     currentRow,
     showDialog,
     handleDelete,
-    handleSubmit,
     fetchData,
+    refreshCreate,
+    refreshUpdate,
     replaceSearchParams,
     resetSearchParams
   } = useCrud({
@@ -158,6 +162,18 @@
     }
     resetSearchParams()
     await fetchData()
+  }
+
+  const onDialogSubmit = async (form: Record<string, any>): Promise<void> => {
+    dialogSaving.value = true
+    try {
+      await fetchSaveParam(form)
+      dialogVisible.value = false
+      ElMessage.success(t('common.saveSuccess'))
+      await (dialogType.value === 'add' ? refreshCreate() : refreshUpdate())
+    } finally {
+      dialogSaving.value = false
+    }
   }
 </script>
 

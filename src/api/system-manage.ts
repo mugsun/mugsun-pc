@@ -188,7 +188,12 @@ export function fetchOperLogPage(params: Record<string, any>) {
 }
 /** 审计完整性验签：重算哈希链 + SM2 验签，定位首个被篡改记录（limit>0 只校最近 N 条） */
 export function fetchOperLogVerify(limit?: number) {
-  return request.get<any>({ url: '/api/system/oper-log/verify', params: { limit } })
+  return request.get<any>({
+    url: '/api/system/oper-log/verify',
+    params: { limit },
+    // 全量验签可能遍历数千条 SM3/SM2，默认 15s 易超时
+    timeout: 120_000
+  })
 }
 
 // ===== 访问日志 =====
@@ -293,7 +298,10 @@ export function fetchSaveGenMeta(data: { table: any; columns: any[] }) {
   return request.post<void>({ url: '/api/system/gen/meta/save', data })
 }
 export function fetchGenSync(tableId: number | string) {
-  return request.post<void>({ url: '/api/system/gen/sync', params: { tableId } })
+  // 后端 @RequestParam：POST 仅 params 时 axios 封装会误写入 JSON body，须走 query
+  return request.post<void>({
+    url: `/api/system/gen/sync?tableId=${encodeURIComponent(String(tableId))}`
+  })
 }
 export function fetchGenPreviewMeta(tableId: number | string) {
   return request.get<Record<string, string>>({
@@ -342,11 +350,12 @@ export function fetchDdlPreview(tableId: number | string, force = false) {
 export function fetchDdlCreate(tableId: number | string) {
   return request.post<void>({ url: '/api/system/gen/ddl/create', params: { tableId }, data: {} })
 }
-export function fetchDdlSync(tableId: number | string, force = false) {
+export function fetchDdlSync(tableId: number | string, force = false, showSuccessMessage = false) {
   return request.post<void>({
     url: '/api/system/gen/ddl/sync',
     params: { tableId, force },
-    data: {}
+    data: {},
+    showSuccessMessage
   })
 }
 export function fetchAiDraft(description: string) {

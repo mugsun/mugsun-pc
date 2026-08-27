@@ -132,6 +132,7 @@
           : $t('pages.system.helpDoc.addCatalog')
       "
       width="460px"
+      destroy-on-close
     >
       <ElForm :model="catalogForm" label-width="90px">
         <ElFormItem :label="$t('pages.system.helpDoc.catalogName')" required>
@@ -159,6 +160,7 @@
       width="780px"
       top="6vh"
       class="help-doc-dialog"
+      destroy-on-close
     >
       <ElForm :model="docForm" label-width="70px">
         <ElFormItem :label="$t('pages.system.helpDoc.title')" required>
@@ -188,6 +190,7 @@
       :title="$t('pages.system.helpDoc.bindPage')"
       width="560px"
       class="help-doc-dialog"
+      destroy-on-close
     >
       <div class="binding-add">
         <ElInput
@@ -214,6 +217,7 @@
 </template>
 
 <script setup lang="ts">
+  import { onDeactivated, onMounted, reactive, ref } from 'vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import ArtWangEditor from '@/components/core/forms/art-wang-editor/index.vue'
   import {
@@ -259,7 +263,15 @@
   const catalogDialog = ref(false)
   const catalogForm = reactive<any>({ id: undefined, parentId: 0, name: '', sort: 0 })
 
+  const closeDialogs = (): void => {
+    catalogDialog.value = false
+    docDialog.value = false
+    bindingDialog.value = false
+  }
+
   const showCatalogDialog = (type: 'add' | 'edit', row?: any) => {
+    docDialog.value = false
+    bindingDialog.value = false
     if (type === 'add') {
       Object.assign(catalogForm, { id: undefined, parentId: row?.id ?? 0, name: '', sort: 0 })
     } else {
@@ -292,15 +304,17 @@
       t('pages.system.helpDoc.removeCatalogConfirm', { name: row.name }),
       t('pages.system.helpDoc.removeTitle'),
       { type: 'warning' }
-    ).then(async () => {
-      await fetchRemoveHelpCatalog(row.id)
-      ElMessage.success(t('pages.system.helpDoc.removeSuccess'))
-      if (selectedCatalog.value?.id === row.id) {
-        selectedCatalog.value = null
-        docList.value = []
-      }
-      loadCatalogTree()
-    })
+    )
+      .then(async () => {
+        await fetchRemoveHelpCatalog(row.id)
+        ElMessage.success(t('pages.system.helpDoc.removeSuccess'))
+        if (selectedCatalog.value?.id === row.id) {
+          selectedCatalog.value = null
+          docList.value = []
+        }
+        loadCatalogTree()
+      })
+      .catch(() => {})
   }
 
   // ---------------- 文档 ----------------
@@ -332,6 +346,8 @@
   })
 
   const showDocDialog = async (type: 'add' | 'edit', row?: any) => {
+    catalogDialog.value = false
+    bindingDialog.value = false
     if (type === 'add') {
       Object.assign(docForm, {
         id: undefined,
@@ -373,11 +389,13 @@
       t('pages.system.helpDoc.removeDocConfirm', { title: row.title }),
       t('pages.system.helpDoc.removeTitle'),
       { type: 'warning' }
-    ).then(async () => {
-      await fetchRemoveHelpDoc([row.id])
-      ElMessage.success(t('pages.system.helpDoc.removeSuccess'))
-      loadDocs()
-    })
+    )
+      .then(async () => {
+        await fetchRemoveHelpDoc([row.id])
+        ElMessage.success(t('pages.system.helpDoc.removeSuccess'))
+        loadDocs()
+      })
+      .catch(() => {})
   }
 
   // ---------------- 页面绑定 ----------------
@@ -391,6 +409,8 @@
   }
 
   const showBindingDialog = async (row: any) => {
+    catalogDialog.value = false
+    docDialog.value = false
     bindingDocId.value = row.id
     newRoutePath.value = ''
     await loadBindings()
@@ -418,12 +438,19 @@
       {
         type: 'warning'
       }
-    ).then(async () => {
-      await fetchRemoveHelpBinding(row.id)
-      ElMessage.success(t('pages.system.helpDoc.unbindSuccess'))
-      loadBindings()
-    })
+    )
+      .then(async () => {
+        await fetchRemoveHelpBinding(row.id)
+        ElMessage.success(t('pages.system.helpDoc.unbindSuccess'))
+        loadBindings()
+      })
+      .catch(() => {})
   }
+
+  onDeactivated(() => {
+    ElMessageBox.close()
+    closeDialogs()
+  })
 
   onMounted(loadCatalogTree)
 </script>

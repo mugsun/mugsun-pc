@@ -34,6 +34,7 @@
       width="780px"
       top="6vh"
       class="changelog-dialog"
+      destroy-on-close
     >
       <ElForm :model="form" label-width="80px">
         <ElFormItem :label="$t('pages.system.changelog.version')" required>
@@ -80,7 +81,7 @@
 </template>
 
 <script setup lang="ts">
-  import { h, reactive } from 'vue'
+  import { h, onDeactivated, reactive } from 'vue'
   import { ElButton, ElTag, ElMessage, ElMessageBox } from 'element-plus'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtWangEditor from '@/components/core/forms/art-wang-editor/index.vue'
@@ -205,6 +206,10 @@
     sort: 0
   })
 
+  const closeDialog = (): void => {
+    dialogVisible.value = false
+  }
+
   const showDialog = async (type: 'add' | 'edit', row?: any) => {
     if (type === 'add') {
       Object.assign(form, {
@@ -253,12 +258,19 @@
       {
         type: 'warning'
       }
-    ).then(async () => {
-      await fetchRemoveChangelog([row.id])
-      ElMessage.success(t('pages.system.changelog.removeSuccess'))
-      refreshData()
-    })
+    )
+      .then(async () => {
+        await fetchRemoveChangelog([row.id])
+        ElMessage.success(t('pages.system.changelog.removeSuccess'))
+        refreshData()
+      })
+      .catch(() => {})
   }
+
+  onDeactivated(() => {
+    ElMessageBox.close()
+    closeDialog()
+  })
 </script>
 
 <!-- 弹窗内容 teleport 到 body，表单项+富文本叠加超高时需非 scoped 类限定滚动（同 notice-dialog 范式），防矮视口下操作按钮挤出视口 -->

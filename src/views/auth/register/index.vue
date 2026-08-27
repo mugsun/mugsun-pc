@@ -3,7 +3,7 @@
   <div class="flex w-full h-screen">
     <LoginLeftView />
 
-    <div class="relative flex-1">
+    <div class="relative flex flex-1 items-center justify-center overflow-hidden">
       <AuthTopBar />
 
       <div class="auth-right-wrap">

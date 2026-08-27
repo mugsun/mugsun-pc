@@ -77,9 +77,11 @@
       </div>
 
       <SmsDialog
+        v-if="dialogVisible"
         v-model:visible="dialogVisible"
         :type="dialogType"
         :sms-data="currentData"
+        :saving="dialogSaving"
         @submit="handleDialogSubmit"
       />
     </ElCard>
@@ -87,7 +89,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue'
+  import { ref, onMounted, onDeactivated } from 'vue'
   import { fetchSmsPage, fetchSaveSms, fetchRemoveSms, fetchEnableSms } from '@/api/system-manage'
   import SmsDialog from './modules/sms-dialog.vue'
   import { ElMessageBox, ElMessage } from 'element-plus'
@@ -102,6 +104,7 @@
   const loading = ref(false)
   const dialogType = ref<DialogType>('add')
   const dialogVisible = ref(false)
+  const dialogSaving = ref(false)
   const currentData = ref<Record<string, any>>({})
 
   const loadData = async (): Promise<void> => {
@@ -115,6 +118,10 @@
   }
 
   onMounted(loadData)
+
+  onDeactivated(() => {
+    dialogVisible.value = false
+  })
 
   const showDialog = (type: DialogType, row?: Record<string, any>): void => {
     dialogType.value = type
@@ -163,10 +170,15 @@
   }
 
   const handleDialogSubmit = async (form: Record<string, any>): Promise<void> => {
-    await fetchSaveSms(form)
-    dialogVisible.value = false
-    ElMessage.success(t('pages.system.sms.saveSuccess'))
-    loadData()
+    dialogSaving.value = true
+    try {
+      await fetchSaveSms(form)
+      dialogVisible.value = false
+      ElMessage.success(t('pages.system.sms.saveSuccess'))
+      loadData()
+    } finally {
+      dialogSaving.value = false
+    }
   }
 </script>
 

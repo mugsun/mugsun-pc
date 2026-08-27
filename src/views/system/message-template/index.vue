@@ -68,8 +68,12 @@
         </ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="dialogVisible = false">{{ $t('common.cancel') }}</ElButton>
-        <ElButton type="primary" @click="submit">{{ $t('common.confirm') }}</ElButton>
+        <ElButton :disabled="dialogSaving" @click="dialogVisible = false">{{
+          $t('common.cancel')
+        }}</ElButton>
+        <ElButton type="primary" :loading="dialogSaving" @click="submit">{{
+          $t('common.confirm')
+        }}</ElButton>
       </template>
     </ElDialog>
   </div>
@@ -78,7 +82,6 @@
 <script setup lang="ts">
   import { h, reactive } from 'vue'
   import { ElButton, ElMessage, ElMessageBox } from 'element-plus'
-  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { useTable } from '@/hooks/core/useTable'
   import { hasPerm } from '@/utils/permission'
   import {
@@ -124,12 +127,30 @@
           fixed: 'right',
           // 操作列由 h() 渲染（指令够不到），用 hasPerm() 函数按真实权限码门控
           formatter: (row: any) =>
-            h('div', [
+            h('div', { class: 'flex gap-1' }, [
               hasPerm('sys:message:manage')
-                ? h(ArtButtonTable, { type: 'edit', onClick: () => showDialog('edit', row) })
+                ? h(
+                    ElButton,
+                    {
+                      size: 'small',
+                      link: true,
+                      type: 'primary',
+                      onClick: () => showDialog('edit', row)
+                    },
+                    () => t('common.edit')
+                  )
                 : null,
               hasPerm('sys:message:manage')
-                ? h(ArtButtonTable, { type: 'delete', onClick: () => remove(row) })
+                ? h(
+                    ElButton,
+                    {
+                      size: 'small',
+                      link: true,
+                      type: 'danger',
+                      onClick: () => remove(row)
+                    },
+                    () => t('common.delete')
+                  )
                 : null
             ])
         }
@@ -146,6 +167,7 @@
   })
 
   const dialogVisible = ref(false)
+  const dialogSaving = ref(false)
   const form = reactive<any>({ id: undefined, code: '', title: '', content: '' })
 
   const showDialog = async (type: 'add' | 'edit', row?: any) => {
@@ -167,10 +189,15 @@
     if (!form.code?.trim() || !form.title?.trim()) {
       return ElMessage.warning(t('pages.system.messageTemplate.requiredWarning'))
     }
-    await fetchSaveMsgTemplate({ ...form })
-    ElMessage.success(t('pages.system.messageTemplate.saveSuccess'))
-    dialogVisible.value = false
-    refreshData()
+    dialogSaving.value = true
+    try {
+      await fetchSaveMsgTemplate({ ...form })
+      ElMessage.success(t('pages.system.messageTemplate.saveSuccess'))
+      dialogVisible.value = false
+      refreshData()
+    } finally {
+      dialogSaving.value = false
+    }
   }
 
   const remove = (row: any) => {

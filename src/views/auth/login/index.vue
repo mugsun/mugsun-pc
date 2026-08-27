@@ -3,7 +3,7 @@
   <div class="flex w-full h-screen">
     <LoginLeftView />
 
-    <div class="relative flex-1">
+    <div class="relative flex flex-1 items-center justify-center overflow-hidden">
       <AuthTopBar />
 
       <div class="auth-right-wrap">
@@ -90,7 +90,7 @@
               }}</RouterLink>
             </div>
 
-            <div style="margin-top: 30px">
+            <div class="login-submit-wrap">
               <ElButton
                 class="w-full custom-height"
                 type="primary"
@@ -164,7 +164,7 @@
               </div>
             </ElFormItem>
 
-            <div style="margin-top: 30px">
+            <div class="login-submit-wrap">
               <ElButton
                 class="w-full custom-height"
                 type="primary"
@@ -199,7 +199,7 @@
             </ElButton>
           </div>
 
-          <div class="mt-5 text-sm text-g-600">
+          <div class="mt-5 text-sm text-g-600 register-hint">
             <span>{{ $t('login.noAccount') }}</span>
             <RouterLink class="text-theme" :to="{ name: 'Register' }">{{
               $t('login.register')
@@ -221,6 +221,7 @@
   import { fetchSocialRender, fetchSocialSources } from '@/api/auth'
   import { connectMessageSocket } from '@/utils/socket'
   import { trackIdentify } from '@/plugins/track'
+  import { resetRouterStateImmediate } from '@/router/guards/beforeEach'
   import {
     ElNotification,
     ElMessage,
@@ -324,6 +325,8 @@
     if (!token) throw new Error('Login failed - no token received')
     userStore.setToken(token, refreshToken)
     userStore.setLoginStatus(true)
+    // 取消登出延迟清理并重置动态路由，确保守卫重新拉菜单注册（避免重登后 404）
+    resetRouterStateImmediate()
     // 埋点身份绑定兜底：快速路径（动态路由已注册时守卫不再拉取用户信息）用已缓存信息即时绑定；
     // 常规路径由路由守卫 fetchUserInfo 后 identify（SDK 幂等，重复绑定无副作用）
     const cachedUserId = userStore.getUserInfo.userId

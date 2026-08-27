@@ -61,6 +61,7 @@
       :title="$t('pages.system.flowDef.designerTitle')"
       width="880px"
       align-center
+      destroy-on-close
       class="flow-designer-dialog"
     >
       <ElForm :model="design" label-width="90px">
@@ -197,6 +198,7 @@
       :title="$t('pages.system.flowDef.fieldPermsTitle')"
       width="480px"
       align-center
+      destroy-on-close
     >
       <ElAlert
         type="info"
@@ -236,6 +238,7 @@
       "
       width="600px"
       align-center
+      destroy-on-close
     >
       <ElForm label-width="90px">
         <ElFormItem :label="$t('pages.system.flowDef.businessId')" required>
@@ -263,7 +266,8 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, onMounted } from 'vue'
+  import { ref, reactive, onMounted, onDeactivated } from 'vue'
+  import { ElMessageBox } from 'element-plus'
   import { useI18n } from 'vue-i18n'
   import formCreate from '@form-create/element-ui'
   import ApprovalForm from '../flow-center/components/ApprovalForm.vue'
@@ -353,9 +357,18 @@
     forms.value = (page?.records || []).map((f: any) => ({ label: f.name, value: f.formKey }))
   })
 
+  const closeDialogs = (): void => {
+    designerVisible.value = false
+    permsVisible.value = false
+    startVisible.value = false
+    ElMessageBox.close()
+  }
+
   // ==================== 发起（带表单） ====================
 
   const start = async (row: { flowCode: string; flowName?: string }): Promise<void> => {
+    designerVisible.value = false
+    permsVisible.value = false
     startCtx.flowCode = row.flowCode
     startCtx.flowName = row.flowName || ''
     startBusinessId.value = row.flowCode.toUpperCase() + '-' + Date.now()
@@ -372,6 +385,7 @@
   }
 
   const submitStart = async (): Promise<void> => {
+    if (starting.value) return
     if (!startBusinessId.value) {
       ElMessage.warning(t('pages.system.flowDef.msgBusinessIdRequired'))
       return
@@ -409,6 +423,8 @@
   })
 
   const openDesigner = (): void => {
+    permsVisible.value = false
+    startVisible.value = false
     Object.assign(design, {
       flowCode: '',
       flowName: '',
@@ -452,6 +468,7 @@
   }
 
   const openPerms = async (node: DesignNode): Promise<void> => {
+    startVisible.value = false
     permNode.value = node
     const detail = await fetchFormByKey(design.formKey)
     fields.value = parseFields(detail?.formSchema || '')
@@ -511,6 +528,8 @@
       deploying.value = false
     }
   }
+
+  onDeactivated(closeDialogs)
 </script>
 
 <style scoped>

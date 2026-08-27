@@ -16,7 +16,7 @@
 </template>
 
 <script setup lang="ts">
-  import { h } from 'vue'
+  import { h, onDeactivated } from 'vue'
   import { ElButton, ElMessage, ElMessageBox, ElTooltip } from 'element-plus'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictTag from '@/components/core/base/art-dict-tag/index.vue'
@@ -155,10 +155,16 @@
       t('pages.system.feedback.removeConfirm'),
       t('pages.system.feedback.removeTitle'),
       { type: 'warning' }
-    ).then(async () => {
-      await fetchRemoveFeedback([row.id])
-      ElMessage.success(t('pages.system.feedback.removeSuccess'))
-      refreshData()
-    })
+    )
+      .then(async () => {
+        await fetchRemoveFeedback([row.id])
+        ElMessage.success(t('pages.system.feedback.removeSuccess'))
+        refreshData()
+      })
+      .catch(() => {})
   }
+
+  onDeactivated(() => {
+    ElMessageBox.close()
+  })
 </script>

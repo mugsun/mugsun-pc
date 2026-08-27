@@ -19,6 +19,7 @@
         :title="$t('pages.system.dataAudit.detailTitle')"
         width="820px"
         align-center
+        destroy-on-close
       >
         <ElDescriptions :column="2" border size="small">
           <ElDescriptionsItem :label="$t('pages.system.dataAudit.bizObject')">{{
@@ -71,7 +72,7 @@
 </template>
 
 <script setup lang="ts">
-  import { h, ref } from 'vue'
+  import { h, onDeactivated, ref } from 'vue'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { useTable } from '@/hooks/core/useTable'
   import { fetchDataAuditPage, fetchDataAuditDetail } from '@/api/system-manage'
@@ -132,6 +133,13 @@
       matching: 'lines',
       outputFormat: 'side-by-side'
     })
+  }
+
+  const closeDetail = (): void => {
+    detailVisible.value = false
+    current.value = {}
+    changes.value = []
+    diffHtmlStr.value = ''
   }
 
   const showDetail = async (row: Record<string, any>): Promise<void> => {
@@ -209,6 +217,8 @@
       })
     }
   })
+
+  onDeactivated(closeDetail)
 </script>
 
 <style scoped>

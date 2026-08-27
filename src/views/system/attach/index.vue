@@ -40,7 +40,6 @@
 
 <script setup lang="ts">
   import { h, ref, watch, onBeforeUnmount } from 'vue'
-  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
   import { useTable } from '@/hooks/core/useTable'
   import { fetchAttachPage } from '@/api/attach'
@@ -195,13 +194,22 @@
           width: 130,
           fixed: 'right',
           formatter: (row: any) =>
-            h('div', [
+            h('div', { class: 'flex gap-1' }, [
               h(
                 ElButton,
                 { link: true, type: 'primary', size: 'small', onClick: () => download(row) },
                 () => t('pages.system.attach.downloadBtn')
               ),
-              h(ArtButtonTable, { type: 'delete', onClick: () => deleteRow(row) })
+              h(
+                ElButton,
+                {
+                  link: true,
+                  type: 'danger',
+                  size: 'small',
+                  onClick: () => deleteRow(row)
+                },
+                () => t('common.delete')
+              )
             ])
         }
       ]

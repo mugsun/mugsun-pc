@@ -6,6 +6,7 @@
     :title="$t('pages.track.app.editRuleTitle')"
     width="520px"
     align-center
+    destroy-on-close
     class="track-visual-rule-dialog"
   >
     <ElForm ref="formRef" :model="formData" :rules="rules" label-width="96px">

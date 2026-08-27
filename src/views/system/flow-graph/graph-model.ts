@@ -40,7 +40,7 @@ export const newNode = (type: string): GNode => {
     id: uid(),
     type: type as GNode['type'],
     name: '',
-    candidates: [{ type: 'role', value: '' }],
+    candidates: [{ type: 'role', value: 'admin' }],
     nodeRatio: '0',
     branches: []
   }

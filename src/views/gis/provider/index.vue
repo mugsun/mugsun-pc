@@ -81,8 +81,17 @@
 </template>
 
 <script setup lang="ts">
-  import { nextTick, onActivated, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+  import {
+    nextTick,
+    onActivated,
+    onBeforeUnmount,
+    onDeactivated,
+    onMounted,
+    reactive,
+    ref
+  } from 'vue'
   import { useI18n } from 'vue-i18n'
+  import { onBeforeRouteLeave } from 'vue-router'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import {
     fetchGisStatus,
@@ -176,11 +185,15 @@
       t('pages.gis.removeConfirm', { name: t(`pages.gis.provider${cap(card.provider)}`) }),
       t('pages.gis.removeTitle'),
       { type: 'warning' }
-    ).then(async () => {
-      await fetchRemoveGisProvider([card.id!])
-      ElMessage.success(t('pages.gis.removeSuccess'))
-      await load()
-    })
+    )
+      .then(async () => {
+        await fetchRemoveGisProvider([card.id!])
+        ElMessage.success(t('pages.gis.removeSuccess'))
+        await load()
+      })
+      .catch(() => {
+        /* cancel */
+      })
   }
 
   onMounted(async () => {
@@ -198,7 +211,16 @@
     bag?.map.updateSize()
   })
 
+  onDeactivated(() => {
+    ElMessageBox.close()
+  })
+
+  onBeforeRouteLeave(() => {
+    ElMessageBox.close()
+  })
+
   onBeforeUnmount(() => {
+    ElMessageBox.close()
     bag?.destroy()
     bag = undefined
   })

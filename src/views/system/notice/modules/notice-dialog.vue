@@ -61,8 +61,10 @@
     </ElForm>
     <template #footer>
       <div class="dialog-footer">
-        <ElButton @click="dialogVisible = false">{{ $t('common.cancel') }}</ElButton>
-        <ElButton type="primary" @click="handleSubmit">{{
+        <ElButton :disabled="saving" @click="dialogVisible = false">{{
+          $t('common.cancel')
+        }}</ElButton>
+        <ElButton type="primary" :loading="saving" @click="handleSubmit">{{
           $t('pages.system.notice.submitBtn')
         }}</ElButton>
       </div>
@@ -83,6 +85,7 @@
     visible: boolean
     type: string
     noticeData?: Record<string, any>
+    saving?: boolean
   }
 
   interface Emits {
@@ -90,7 +93,7 @@
     (e: 'submit', form: Record<string, any>): void
   }
 
-  const props = defineProps<Props>()
+  const props = withDefaults(defineProps<Props>(), { saving: false })
   const emit = defineEmits<Emits>()
 
   const { t } = useI18n()
@@ -192,7 +195,7 @@
   }
 
   const handleSubmit = async () => {
-    if (!formRef.value) return
+    if (props.saving || !formRef.value) return
     await formRef.value.validate((valid) => {
       if (!valid) return
       if (formData.allVisible === 0 && selectedKeys.value.length === 0) {

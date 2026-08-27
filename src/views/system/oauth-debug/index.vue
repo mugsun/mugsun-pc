@@ -109,6 +109,7 @@
   import { useI18n } from 'vue-i18n'
   import { useRoute } from 'vue-router'
   import { ElMessage } from 'element-plus'
+  import { buildOpenApiSignHeaders } from '@/utils/open-api-sign'
 
   defineOptions({ name: 'OauthDebug' })
 
@@ -206,15 +207,32 @@
 
   /** 用令牌调用开放接口 */
   const callApi = async (): Promise<void> => {
+    if (!form.clientSecret) {
+      ElMessage.warning(t('pages.system.oauthDebug.secretPlaceholder'))
+      return
+    }
     apiLoading.value = true
     try {
-      const [method, path] = apiPath.value.split(' ')
+      const [method, rawPath] = apiPath.value.split(' ')
+      const [pathOnly, query = ''] = rawPath.split('?')
+      const bodyStr = method === 'POST' ? JSON.stringify({ demo: 'hello' }) : ''
+      const signHeaders = buildOpenApiSignHeaders(
+        method,
+        pathOnly,
+        query,
+        bodyStr,
+        form.clientSecret
+      )
       const options: { method: string; headers: Record<string, string>; body?: string } = {
         method,
-        headers: { Authorization: `Bearer ${token.value}`, 'Content-Type': 'application/json' }
+        headers: {
+          Authorization: `Bearer ${token.value}`,
+          'Content-Type': 'application/json',
+          ...signHeaders
+        }
       }
-      if (method === 'POST') options.body = JSON.stringify({ demo: 'hello' })
-      const resp = await fetch(`/api${path}`, options)
+      if (method === 'POST') options.body = bodyStr
+      const resp = await fetch(`/api${rawPath}`, options)
       apiStatus.value = resp.status
       const data = await resp.json()
       apiResult.value = pretty(data)

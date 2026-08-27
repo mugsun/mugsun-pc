@@ -37,6 +37,7 @@
       v-model="detailVisible"
       size="760px"
       :title="$t('pages.track.error.detailTitle', { msg: currentMessage })"
+      destroy-on-close
     >
       <div class="track-detail-meta">
         <ElTag size="small" type="danger" effect="plain"
@@ -68,8 +69,9 @@
 </template>
 
 <script setup lang="ts">
-  import { h, ref } from 'vue'
+  import { h, onDeactivated, ref } from 'vue'
   import { useI18n } from 'vue-i18n'
+  import { onBeforeRouteLeave } from 'vue-router'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { useTable } from '@/hooks/core/useTable'
   import { fetchTrackErrorDetail, fetchTrackErrorPage } from '@/api/track'
@@ -306,6 +308,16 @@
     replaySessionId.value = sessionId
     replayVisible.value = true
   }
+
+  const closeOverlays = (): void => {
+    detailVisible.value = false
+    replayVisible.value = false
+  }
+
+  onDeactivated(closeOverlays)
+  onBeforeRouteLeave(() => {
+    closeOverlays()
+  })
 </script>
 
 <style lang="scss" scoped>

@@ -8,6 +8,7 @@
     v-model="drawerVisible"
     size="960px"
     :title="$t('pages.track.shared.drawerTitle', { id: sessionId })"
+    destroy-on-close
     @opened="onOpened"
     @closed="onClosed"
   >

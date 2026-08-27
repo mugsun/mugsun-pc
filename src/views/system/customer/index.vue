@@ -50,6 +50,7 @@
       :title="$t('pages.system.customer.create')"
       width="500px"
       align-center
+      destroy-on-close
     >
       <ElForm ref="formRef" :model="form" :rules="rules" label-width="90px">
         <ElFormItem :label="$t('pages.system.customer.name')" prop="name">
@@ -80,8 +81,9 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, onMounted } from 'vue'
+  import { ref, reactive, onMounted, onDeactivated, onBeforeUnmount } from 'vue'
   import { useI18n } from 'vue-i18n'
+  import { onBeforeRouteLeave } from 'vue-router'
   import type { FormInstance, FormRules } from 'element-plus'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import { fetchCustomerPage, fetchSubmitCustomer, fetchRemoveCustomer } from '@/api/datasource'
@@ -148,12 +150,27 @@
         cancelButtonText: t('common.cancel'),
         type: 'warning'
       }
-    ).then(async () => {
-      await fetchRemoveCustomer(row.id)
-      ElMessage.success(t('pages.system.customer.msgDeleted'))
-      loadData()
-    })
+    )
+      .then(async () => {
+        await fetchRemoveCustomer(row.id)
+        ElMessage.success(t('pages.system.customer.msgDeleted'))
+        loadData()
+      })
+      .catch(() => {
+        /* cancel */
+      })
   }
+
+  const closeOverlays = (): void => {
+    dialogVisible.value = false
+    ElMessageBox.close()
+  }
+
+  onDeactivated(closeOverlays)
+  onBeforeRouteLeave(() => {
+    closeOverlays()
+  })
+  onBeforeUnmount(closeOverlays)
 </script>
 
 <style scoped>

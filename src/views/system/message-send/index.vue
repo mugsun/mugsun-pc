@@ -189,6 +189,11 @@
     .send-form-wrap {
       height: 100%;
       overflow-y: auto;
+
+      /* 仅占位文字不拦截点击，避免点空白处无法展开下拉 */
+      :deep(.el-select .el-select__placeholder) {
+        pointer-events: none;
+      }
     }
 
     .var-list {

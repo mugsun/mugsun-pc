@@ -124,7 +124,7 @@
       </ElTabs>
 
       <!-- 统一动作对话框 -->
-      <ElDialog v-model="opVisible" :title="opTitle" width="480px" align-center>
+      <ElDialog v-model="opVisible" :title="opTitle" width="480px" align-center destroy-on-close>
         <ElForm label-width="72px">
           <ElFormItem v-if="opKind === 'node'" :label="$t('pages.system.flowTodo.rejectNodeLabel')">
             <ElSelect
@@ -177,6 +177,7 @@
         :title="$t('pages.system.flowTodo.historyTitle')"
         width="520px"
         align-center
+        destroy-on-close
         class="flow-history-dialog"
       >
         <ElTimeline>
@@ -202,10 +203,10 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, computed, onMounted } from 'vue'
+  import { ref, reactive, computed, onMounted, onDeactivated } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { ArrowDown } from '@element-plus/icons-vue'
-  import { ElMessage } from 'element-plus'
+  import { ElMessage, ElMessageBox } from 'element-plus'
   import ArtDictTag from '@/components/core/base/art-dict-tag/index.vue'
   import { useDictStore } from '@/store/modules/dict'
   import { DICT_CODE } from '@/utils/constants'
@@ -316,6 +317,12 @@
   )
   const opKind = computed(() => ACTIONS[opAction.value]?.kind)
 
+  const closeDialogs = (): void => {
+    opVisible.value = false
+    historyVisible.value = false
+    ElMessageBox.close()
+  }
+
   const loadTodo = async (): Promise<void> => {
     loading.value = true
     try {
@@ -338,6 +345,7 @@
   }
 
   const open = async (action: string, row: any): Promise<void> => {
+    historyVisible.value = false
     opAction.value = action
     opRow.value = row
     opForm.message = ''
@@ -352,6 +360,7 @@
   }
 
   const submitOp = async (): Promise<void> => {
+    if (submitting.value) return
     submitting.value = true
     try {
       await ACTIONS[opAction.value].run(opRow.value)
@@ -364,6 +373,7 @@
   }
 
   const showHistory = async (row: any): Promise<void> => {
+    opVisible.value = false
     history.value = (await fetchFlowHistory(row.instanceId)) || []
     historyVisible.value = true
   }
@@ -386,6 +396,8 @@
     dictStore.ensure([DICT_CODE.FLOW_STATUS])
     loadTodo()
   })
+
+  onDeactivated(closeDialogs)
 </script>
 
 <style scoped>

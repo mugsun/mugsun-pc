@@ -62,7 +62,14 @@
   import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
   import { useTable } from '@/hooks/core/useTable'
   import { useTableColumnPersist } from '@/hooks/core/useTableColumnPersist'
-  import { fetchUserPage, saveUser, removeUser, exportUser, resetUserPassword } from '@/api/user'
+  import {
+    fetchUserPage,
+    saveUser,
+    removeUser,
+    exportUser,
+    resetUserPassword,
+    setUserLeader
+  } from '@/api/user'
   import { fetchDeptTree } from '@/api/system-manage'
   import UserDialog from './modules/user-dialog.vue'
   import UserRoleDialog from './modules/user-role-dialog.vue'
@@ -70,6 +77,7 @@
   import { ElButton, ElMessageBox, ElMessage } from 'element-plus'
   import { DICT_CODE } from '@/utils/constants'
   import { hasPerm } from '@/utils/permission'
+  import { formatTableTime } from '@/utils/date'
   import { DialogType } from '@/types'
   import type { ColumnOption } from '@/types/component'
 
@@ -160,6 +168,27 @@
     })
   }
 
+  const toggleLeader = (row: any): void => {
+    const isLeader = row.isLeader === 1
+    ElMessageBox.confirm(
+      t(isLeader ? 'pages.system.user.unsetLeaderConfirm' : 'pages.system.user.setLeaderConfirm', {
+        name: row.realName || row.nickname || row.username
+      }),
+      t(isLeader ? 'pages.system.user.unsetLeader' : 'pages.system.user.setLeader'),
+      {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
+        type: 'warning'
+      }
+    ).then(async () => {
+      await setUserLeader(row.id)
+      ElMessage.success(
+        t(isLeader ? 'pages.system.user.unsetLeaderSuccess' : 'pages.system.user.setLeaderSuccess')
+      )
+      refreshData()
+    })
+  }
+
   // 导出用户：按当前生效的查询条件导出（剔除分页参数；空值由后端忽略）
   const exporting = ref(false)
   const handleExport = async (): Promise<void> => {
@@ -178,7 +207,15 @@
   const columnsFactory = (): ColumnOption[] => [
     { type: 'index', width: 60, label: t('table.column.index') },
     { prop: 'username', label: t('pages.system.user.fields.username'), minWidth: 120 },
-    { prop: 'nickname', label: t('pages.system.user.fields.nickname'), minWidth: 120 },
+    { prop: 'realName', label: t('pages.system.user.fields.realName'), minWidth: 110 },
+    { prop: 'nickname', label: t('pages.system.user.fields.nickname'), minWidth: 110 },
+    { prop: 'code', label: t('pages.system.user.fields.code'), minWidth: 100 },
+    {
+      prop: 'sex',
+      label: t('pages.system.user.fields.sex'),
+      width: 80,
+      formatter: (row: any) => h(ArtDictTag, { code: DICT_CODE.USER_SEX, value: row.sex })
+    },
     {
       prop: 'deptName',
       label: t('pages.system.user.fields.dept'),
@@ -190,6 +227,18 @@
       label: t('pages.system.user.fields.post'),
       minWidth: 110,
       showOverflowTooltip: true
+    },
+    {
+      prop: 'leaderName',
+      label: t('pages.system.user.fields.leader'),
+      minWidth: 110,
+      showOverflowTooltip: true
+    },
+    {
+      prop: 'isLeader',
+      label: t('pages.system.user.fields.isLeader'),
+      width: 80,
+      formatter: (row: any) => (Number(row.isLeader) === 1 ? '✓' : '—')
     },
     {
       prop: 'roleNames',
@@ -205,11 +254,16 @@
       // 字典运行时驱动：改用 ArtDictTag，不再硬编码 h(ElSwitch)/手写 options（状态切换归编辑弹窗）
       formatter: (row: any) => h(ArtDictTag, { code: DICT_CODE.USER_STATUS, value: row.status })
     },
-    { prop: 'createTime', label: t('pages.system.user.fields.createTime'), minWidth: 180 },
+    {
+      prop: 'createTime',
+      label: t('pages.system.user.fields.createTime'),
+      minWidth: 180,
+      formatter: (row: any) => formatTableTime(row.createTime)
+    },
     {
       prop: 'operation',
       label: t('pages.system.user.fields.operation'),
-      width: 220,
+      width: 280,
       fixed: 'right',
       // 操作列由 h() 渲染（指令够不到），用 hasPerm() 函数按真实权限码门控
       formatter: (row: any) =>
@@ -238,6 +292,23 @@
                 ElButton,
                 { link: true, type: 'warning', size: 'small', onClick: () => resetPwd(row) },
                 () => t('pages.system.user.resetPassword')
+              )
+            : null,
+          hasPerm('sys:user:edit')
+            ? h(
+                ElButton,
+                {
+                  link: true,
+                  type: row.isLeader === 1 ? 'info' : 'success',
+                  size: 'small',
+                  onClick: () => toggleLeader(row)
+                },
+                () =>
+                  t(
+                    row.isLeader === 1
+                      ? 'pages.system.user.unsetLeader'
+                      : 'pages.system.user.setLeader'
+                  )
               )
             : null
         ])

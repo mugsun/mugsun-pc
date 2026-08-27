@@ -120,6 +120,7 @@
       "
       width="560px"
       align-center
+      destroy-on-close
     >
       <ElForm ref="formRef" :model="form" :rules="rules" label-width="90px">
         <ElFormItem :label="$t('pages.system.oauthClient.name')" prop="name">
@@ -181,6 +182,7 @@
       :title="$t('pages.system.oauthClient.secretTitle')"
       width="600px"
       align-center
+      destroy-on-close
     >
       <ElAlert type="warning" :closable="false" :title="$t('pages.system.oauthClient.secretTip')" />
       <ElDescriptions :column="1" border class="oauth-result">
@@ -197,8 +199,9 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, onMounted } from 'vue'
+  import { ref, reactive, onDeactivated, onBeforeUnmount, onMounted } from 'vue'
   import { useI18n } from 'vue-i18n'
+  import { onBeforeRouteLeave } from 'vue-router'
   import type { FormInstance, FormRules } from 'element-plus'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import { ArrowDown } from '@element-plus/icons-vue'
@@ -348,11 +351,15 @@
         cancelButtonText: t('common.cancel'),
         type: 'warning'
       }
-    ).then(async () => {
-      generated.value = (await fetchResetOauthSecret(row.id)) || {}
-      resultVisible.value = true
-      loadData()
-    })
+    )
+      .then(async () => {
+        generated.value = (await fetchResetOauthSecret(row.id)) || {}
+        resultVisible.value = true
+        loadData()
+      })
+      .catch(() => {
+        /* cancel */
+      })
   }
 
   const toggle = (row: any): void => {
@@ -366,11 +373,15 @@
           cancelButtonText: t('common.cancel'),
           type: 'warning'
         }
-      ).then(async () => {
-        await fetchDisableOauthClient(row.id)
-        ElMessage.success(t('pages.system.oauthClient.msgDisabled'))
-        loadData()
-      })
+      )
+        .then(async () => {
+          await fetchDisableOauthClient(row.id)
+          ElMessage.success(t('pages.system.oauthClient.msgDisabled'))
+          loadData()
+        })
+        .catch(() => {
+          /* cancel */
+        })
     } else {
       fetchEnableOauthClient(row.id).then(() => {
         ElMessage.success(t('pages.system.oauthClient.msgEnabled'))
@@ -388,11 +399,15 @@
         cancelButtonText: t('common.cancel'),
         type: 'warning'
       }
-    ).then(async () => {
-      await fetchRemoveOauthClient(row.id)
-      ElMessage.success(t('pages.system.oauthClient.msgDeleted'))
-      loadData()
-    })
+    )
+      .then(async () => {
+        await fetchRemoveOauthClient(row.id)
+        ElMessage.success(t('pages.system.oauthClient.msgDeleted'))
+        loadData()
+      })
+      .catch(() => {
+        /* cancel */
+      })
   }
 
   const onMoreCommand = (command: string, row: any): void => {
@@ -400,6 +415,20 @@
     else if (command === 'toggle') toggle(row)
     else if (command === 'remove') remove(row)
   }
+
+  const closeOverlays = (): void => {
+    dialogVisible.value = false
+    resultVisible.value = false
+    ElMessageBox.close()
+  }
+
+  onDeactivated(closeOverlays)
+
+  onBeforeRouteLeave(() => {
+    closeOverlays()
+  })
+
+  onBeforeUnmount(closeOverlays)
 </script>
 
 <style scoped>

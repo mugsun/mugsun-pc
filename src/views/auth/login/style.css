@@ -1,14 +1,18 @@
 @reference '@styles/core/tailwind.css';
 
-/* 授权页右侧区域（高度不超过视口，矮视口下表单内部滚动） */
+/*
+ * 授权页右侧表单区：
+ * - 高度跟内容走，勿写死（字段一多就会溢出出现多余滚动条）；
+ * - 仅用 max-h 限制矮视口，溢出时由本层滚动（勿再套一层 .form overflow）。
+ */
 .auth-right-wrap {
-  @apply absolute inset-0 w-[440px] h-[650px] max-h-[calc(100vh-32px)] py-[5px] m-auto overflow-hidden
+  @apply relative w-[440px] max-h-[calc(100vh-32px)] py-[5px] overflow-y-auto
     max-sm:px-7 max-sm:w-full
     animate-[slideInRight_0.6s_cubic-bezier(0.25,0.46,0.45,0.94)_forwards]
     max-md:animate-none;
 
   .form {
-    @apply h-full overflow-y-auto py-[40px];
+    @apply py-[40px];
   }
 
   .title {
@@ -22,6 +26,61 @@
   .custom-height {
     @apply !h-[40px];
   }
+}
+
+/* 矮视口：压缩间距使表单一屏可达，避免 auth-right-wrap 出现多余滚动条 */
+@media (height <= 700px) {
+  .auth-right-wrap {
+    @apply py-0;
+
+    .form {
+      @apply py-3;
+    }
+
+    .title {
+      @apply text-2xl max-sm:pt-0;
+    }
+
+    .sub-title {
+      @apply mt-1 text-xs;
+    }
+
+    .custom-height {
+      @apply !h-[36px];
+    }
+
+    :deep(.el-form-item) {
+      margin-bottom: 14px;
+    }
+
+    :deep(.login-tabs) {
+      margin-top: 8px;
+    }
+
+    :deep(.login-tabs .el-tabs__header) {
+      margin-bottom: 8px;
+    }
+
+    :deep(.social-login) {
+      margin-top: 4px;
+    }
+
+    :deep(.social-login .el-divider) {
+      margin: 12px 0;
+    }
+
+    .login-submit-wrap {
+      margin-top: 12px;
+    }
+
+    .register-hint {
+      @apply mt-2;
+    }
+  }
+}
+
+.login-submit-wrap {
+  margin-top: 30px;
 }
 
 /* 图形验证码图片（登录/注册/忘记密码共用） */

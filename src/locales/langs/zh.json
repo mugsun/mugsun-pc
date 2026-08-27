@@ -750,6 +750,12 @@
         "fields": {
           "username": "用户名",
           "nickname": "昵称",
+          "realName": "真实姓名",
+          "sex": "性别",
+          "birthday": "生日",
+          "code": "工号",
+          "leader": "直属主管",
+          "isLeader": "主管",
           "dept": "部门",
           "post": "岗位",
           "role": "角色",
@@ -764,6 +770,11 @@
         "placeholder": {
           "username": "请输入用户名",
           "nickname": "请输入昵称",
+          "realName": "请输入真实姓名",
+          "sex": "请选择性别",
+          "birthday": "请选择生日",
+          "code": "请输入工号",
+          "leader": "请选择直属主管（需先标记为主管）",
           "phone": "请输入手机号",
           "status": "请选择状态",
           "dept": "请选择部门",
@@ -774,6 +785,12 @@
           "idCard": "请输入身份证号（加密存储）",
           "password": "留空则为初始密码"
         },
+        "setLeader": "设为主管",
+        "unsetLeader": "取消主管",
+        "setLeaderConfirm": "确定将用户\"{name}\"设为主管吗？设为主管后可被选为直属主管。",
+        "unsetLeaderConfirm": "确定取消用户\"{name}\"的主管标记吗？",
+        "setLeaderSuccess": "已设为主管",
+        "unsetLeaderSuccess": "已取消主管",
         "status": {
           "enabled": "启用",
           "disabled": "停用"
@@ -1292,7 +1309,8 @@
         "labelDecrypted": "④ 前端解密结果",
         "defaultText": "你好，Mugsun 国密加解密！",
         "inputRequired": "请输入文本",
-        "cryptoFailed": "加解密失败"
+        "cryptoFailed": "加解密失败",
+        "noEncryptData": "（响应未加密或 data 为空）"
       },
       "apiKey": {
         "generateBtn": "生成密钥",
@@ -1404,7 +1422,8 @@
         "colRequestUri": "请求地址",
         "colDuration": "耗时(ms)",
         "colTime": "时间",
-        "verifyChainOk": "审计链完整"
+        "verifyChainOk": "审计链完整",
+        "verifyFailed": "验签请求失败，请稍后重试"
       },
       "loginLog": {
         "username": "账号",
@@ -1473,6 +1492,7 @@
         "removeConfirm": "确定删除该错误日志吗？",
         "removeTitle": "删除确认",
         "removed": "已删除",
+        "handleSuccess": "处理成功",
         "handleDetail": "{user}（{time}）：{note}"
       },
       "monitor": {
@@ -2035,6 +2055,7 @@
         "rejectNodeLabel": "退回节点",
         "selectHistoryNode": "选择历史节点",
         "selectUser": "选择人员",
+        "selectUserWarn": "请选择人员",
         "userSearchPlaceholder": "输入用户名/昵称搜索",
         "titleHandle": "办理 - {name}",
         "titleDetail": "详情 - {name}",

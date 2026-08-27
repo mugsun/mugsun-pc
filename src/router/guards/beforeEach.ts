@@ -71,6 +71,9 @@ let routeInitFailed = false
 // 路由初始化进行中标记，防止并发请求
 let routeInitInProgress = false
 
+// 登出延迟清理定时器（登录成功须取消，避免清掉新会话动态路由）
+let resetRouterTimer: ReturnType<typeof setTimeout> | null = null
+
 /**
  * 获取 pendingLoading 状态
  */
@@ -175,7 +178,15 @@ async function handleRouteGuard(
     return
   }
 
-  // 3. 处理动态路由注册
+  // 3. 处理动态路由注册（含登出延迟清理与重登竞态：registered 但菜单已空则强制重初始化）
+  if (routeRegistry?.isRegistered() && userStore.isLogin) {
+    const menuStore = useMenuStore()
+    if (menuStore.menuList.length === 0) {
+      routeRegistry.unregister()
+      resetRouteInitState()
+    }
+  }
+
   if (!routeRegistry?.isRegistered() && userStore.isLogin) {
     // 防止并发请求（快速连续导航场景）
     if (routeInitInProgress) {
@@ -387,19 +398,41 @@ async function fetchUserInfo(): Promise<void> {
 }
 
 /**
- * 重置路由相关状态
+ * 立即重置路由相关状态（登录成功前调用，取消尚未执行的登出延迟清理）
+ */
+export function resetRouterStateImmediate(): void {
+  if (resetRouterTimer) {
+    clearTimeout(resetRouterTimer)
+    resetRouterTimer = null
+  }
+
+  routeRegistry?.unregister()
+  IframeRouteManager.getInstance().clear()
+
+  const menuStore = useMenuStore()
+  menuStore.removeAllDynamicRoutes()
+  menuStore.setMenuList([])
+
+  resetRouteInitState()
+}
+
+/**
+ * 重置路由相关状态（登出时延迟执行，避免跳转登录页瞬间白屏）
  */
 export function resetRouterState(delay: number): void {
-  setTimeout(() => {
-    routeRegistry?.unregister()
-    IframeRouteManager.getInstance().clear()
+  if (resetRouterTimer) {
+    clearTimeout(resetRouterTimer)
+    resetRouterTimer = null
+  }
 
-    const menuStore = useMenuStore()
-    menuStore.removeAllDynamicRoutes()
-    menuStore.setMenuList([])
+  if (delay <= 0) {
+    resetRouterStateImmediate()
+    return
+  }
 
-    // 重置路由初始化状态，允许重新登录后再次初始化
-    resetRouteInitState()
+  resetRouterTimer = setTimeout(() => {
+    resetRouterTimer = null
+    resetRouterStateImmediate()
   }, delay)
 }
 

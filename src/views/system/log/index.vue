@@ -37,6 +37,7 @@
         :title="$t('pages.system.log.verifyTitle')"
         width="480px"
         align-center
+        destroy-on-close
       >
         <ElAlert
           :type="verifyResult.valid ? 'success' : 'error'"
@@ -62,6 +63,8 @@
         :title="$t('pages.system.log.detailTitle')"
         width="640px"
         align-center
+        destroy-on-close
+        @closed="current = {}"
       >
         <ElDescriptions :column="1" border>
           <ElDescriptionsItem :label="$t('pages.system.log.fieldTitle')">
@@ -100,7 +103,7 @@
 </template>
 
 <script setup lang="ts">
-  import { h, ref } from 'vue'
+  import { computed, h, onDeactivated, ref } from 'vue'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
   import { useTable } from '@/hooks/core/useTable'
@@ -239,7 +242,14 @@
     }
   })
 
+  const closeDialogs = (): void => {
+    verifyVisible.value = false
+    detailVisible.value = false
+    current.value = {}
+  }
+
   const showDetail = (row: Record<string, any>): void => {
+    closeDialogs()
     current.value = row
     detailVisible.value = true
   }
@@ -271,6 +281,7 @@
 
   /** 审计完整性验签：全量校验（不传 limit），检出篡改精确定位首个被篡改记录 */
   const verify = async (): Promise<void> => {
+    closeDialogs()
     verifyLoading.value = true
     try {
       verifyResult.value = (await fetchOperLogVerify()) ?? {}
@@ -278,10 +289,14 @@
       if (verifyResult.value.valid) {
         ElMessage.success(verifyResult.value.message || t('pages.system.log.verifyChainOk'))
       }
+    } catch {
+      ElMessage.error(t('pages.system.log.verifyFailed'))
     } finally {
       verifyLoading.value = false
     }
   }
+
+  onDeactivated(closeDialogs)
 </script>
 
 <style scoped>

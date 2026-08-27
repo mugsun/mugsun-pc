@@ -44,6 +44,8 @@
         :title="$t('pages.system.monitor.dbDoc')"
         width="820px"
         align-center
+        destroy-on-close
+        @closed="dbDoc = ''"
       >
         <div class="monitor-docbar">
           <ElButton size="small" type="primary" @click="downloadDoc" v-ripple>{{
@@ -57,7 +59,7 @@
 </template>
 
 <script setup lang="ts">
-  import { onMounted, ref } from 'vue'
+  import { onDeactivated, onMounted, ref } from 'vue'
   import { ElMessage } from 'element-plus'
   import { fetchActuatorMetric, fetchDbDoc } from '@/api/system-manage'
   import { useI18n } from 'vue-i18n'
@@ -149,6 +151,11 @@
     }
   }
 
+  const closeDocDialog = (): void => {
+    docVisible.value = false
+    dbDoc.value = ''
+  }
+
   const openDbDoc = async (): Promise<void> => {
     docLoading.value = true
     try {
@@ -169,6 +176,7 @@
   }
 
   onMounted(loadAll)
+  onDeactivated(closeDocDialog)
 </script>
 
 <style scoped>

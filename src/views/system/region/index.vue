@@ -54,10 +54,12 @@
     </ElCard>
 
     <ElDialog
+      v-if="dialogVisible"
       v-model="dialogVisible"
       :title="$t('pages.system.region.addRegion')"
       width="460px"
       align-center
+      destroy-on-close
     >
       <ElForm ref="formRef" :model="form" :rules="rules" label-width="90px">
         <ElFormItem :label="$t('pages.system.region.fields.parent')">
@@ -71,15 +73,19 @@
         </ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="dialogVisible = false">{{ $t('common.cancel') }}</ElButton>
-        <ElButton type="primary" @click="submit">{{ $t('table.form.submit') }}</ElButton>
+        <ElButton :disabled="dialogSaving" @click="dialogVisible = false">{{
+          $t('common.cancel')
+        }}</ElButton>
+        <ElButton type="primary" :loading="dialogSaving" :disabled="dialogSaving" @click="submit">{{
+          $t('table.form.submit')
+        }}</ElButton>
       </template>
     </ElDialog>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, onMounted } from 'vue'
+  import { ref, reactive, computed, onMounted, onDeactivated } from 'vue'
   import { useI18n } from 'vue-i18n'
   import type { FormInstance, FormRules } from 'element-plus'
   import {
@@ -101,6 +107,7 @@
   const importing = ref(false)
   const exporting = ref(false)
   const dialogVisible = ref(false)
+  const dialogSaving = ref(false)
   const parentName = ref(t('pages.system.region.topLevel'))
   const formRef = ref<FormInstance>()
   const fileInput = ref<HTMLInputElement>()
@@ -143,6 +150,11 @@
 
   onMounted(loadRoot)
 
+  onDeactivated(() => {
+    dialogVisible.value = false
+    ElMessageBox.close()
+  })
+
   const showDialog = (row: any): void => {
     parentRow.value = row
     parentName.value = row ? row.name : t('pages.system.region.topLevel')
@@ -156,14 +168,21 @@
   }
 
   const submit = async (): Promise<void> => {
-    if (!formRef.value) return
-    await formRef.value.validate(async (valid) => {
-      if (!valid) return
+    if (!formRef.value || dialogSaving.value) return
+    try {
+      await formRef.value.validate()
+    } catch {
+      return
+    }
+    dialogSaving.value = true
+    try {
       await fetchSaveRegion({ ...form })
       dialogVisible.value = false
       ElMessage.success(t('pages.system.region.saveSuccess'))
-      loadRoot()
-    })
+      await loadRoot()
+    } finally {
+      dialogSaving.value = false
+    }
   }
 
   const remove = (row: any): void => {
@@ -175,11 +194,13 @@
         cancelButtonText: t('common.cancel'),
         type: 'warning'
       }
-    ).then(async () => {
-      await fetchRemoveRegion(row.id)
-      ElMessage.success(t('pages.system.region.deleteSuccess'))
-      loadRoot()
-    })
+    )
+      .then(async () => {
+        await fetchRemoveRegion(row.id)
+        ElMessage.success(t('pages.system.region.deleteSuccess'))
+        loadRoot()
+      })
+      .catch(() => {})
   }
 
   const doExport = async (): Promise<void> => {

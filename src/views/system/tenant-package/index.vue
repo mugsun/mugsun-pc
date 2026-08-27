@@ -81,6 +81,7 @@
       "
       width="600px"
       align-center
+      destroy-on-close
       class="tpkg-dialog"
     >
       <ElForm ref="formRef" :model="form" :rules="rules" label-width="90px">
@@ -123,8 +124,9 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, onMounted, nextTick } from 'vue'
+  import { ref, reactive, onMounted, nextTick, onDeactivated, onBeforeUnmount } from 'vue'
   import { useI18n } from 'vue-i18n'
+  import { onBeforeRouteLeave } from 'vue-router'
   import type { FormInstance, FormRules } from 'element-plus'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
@@ -275,12 +277,27 @@
         cancelButtonText: t('common.cancel'),
         type: 'warning'
       }
-    ).then(async () => {
-      await fetchRemoveTenantPackage(row.id)
-      ElMessage.success(t('pages.system.tenantPackage.msgDeleted'))
-      loadData()
-    })
+    )
+      .then(async () => {
+        await fetchRemoveTenantPackage(row.id)
+        ElMessage.success(t('pages.system.tenantPackage.msgDeleted'))
+        loadData()
+      })
+      .catch(() => {
+        /* cancel */
+      })
   }
+
+  const closeOverlays = (): void => {
+    dialogVisible.value = false
+    ElMessageBox.close()
+  }
+
+  onDeactivated(closeOverlays)
+  onBeforeRouteLeave(() => {
+    closeOverlays()
+  })
+  onBeforeUnmount(closeOverlays)
 </script>
 
 <style scoped>

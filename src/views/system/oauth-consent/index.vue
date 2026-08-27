@@ -94,11 +94,18 @@
   /** 跳转协议白名单：仅 http(s)（防 javascript: 伪协议经 location.href 在本源执行脚本） */
   const safeRedirect = (uri: string): string | null => (/^https?:\/\//i.test(uri) ? uri : null)
 
+  /** 确认授权时使用客户端登记范围（与 info 展示一致），避免 URL scope 与客户端不匹配导致 invalid_scope */
+  const confirmScope = () => {
+    const fromInfo = info.value?.scopes?.filter(Boolean) ?? []
+    if (fromInfo.length > 0) return fromInfo.join(' ')
+    return q().scope || ''
+  }
+
   const approve = async () => {
     submitting.value = true
     try {
       const p = q()
-      const resp = await fetchOauthAuthorizeConfirm(p)
+      const resp = await fetchOauthAuthorizeConfirm({ ...p, scope: confirmScope() })
       const redirect = safeRedirect(p.redirectUri || '')
       if (redirect) {
         const sep = redirect.includes('?') ? '&' : '?'

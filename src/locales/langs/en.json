@@ -750,6 +750,12 @@
         "fields": {
           "username": "Username",
           "nickname": "Nickname",
+          "realName": "Real Name",
+          "sex": "Gender",
+          "birthday": "Birthday",
+          "code": "Employee No.",
+          "leader": "Direct Manager",
+          "isLeader": "Manager",
           "dept": "Department",
           "post": "Position",
           "role": "Role",
@@ -764,6 +770,11 @@
         "placeholder": {
           "username": "Please enter username",
           "nickname": "Please enter nickname",
+          "realName": "Please enter real name",
+          "sex": "Please select gender",
+          "birthday": "Please select birthday",
+          "code": "Please enter employee number",
+          "leader": "Select a manager (must be marked as leader first)",
           "phone": "Please enter phone number",
           "status": "Please select status",
           "dept": "Please select department",
@@ -774,6 +785,12 @@
           "idCard": "Please enter ID number (stored encrypted)",
           "password": "Leave blank to use the initial password"
         },
+        "setLeader": "Set as Manager",
+        "unsetLeader": "Unset Manager",
+        "setLeaderConfirm": "Mark user \"{name}\" as a manager? They can then be selected as a direct manager.",
+        "unsetLeaderConfirm": "Remove the manager flag from user \"{name}\"?",
+        "setLeaderSuccess": "Marked as manager",
+        "unsetLeaderSuccess": "Manager flag removed",
         "status": {
           "enabled": "Enabled",
           "disabled": "Disabled"
@@ -1292,7 +1309,8 @@
         "labelDecrypted": "④ Frontend Decryption Result",
         "defaultText": "Hello, Mugsun SM4 encryption!",
         "inputRequired": "Enter text",
-        "cryptoFailed": "Encryption/decryption failed"
+        "cryptoFailed": "Encryption/decryption failed",
+        "noEncryptData": "(Response not encrypted or data is empty)"
       },
       "apiKey": {
         "generateBtn": "Generate Key",
@@ -1404,7 +1422,8 @@
         "colRequestUri": "Request URI",
         "colDuration": "Duration (ms)",
         "colTime": "Time",
-        "verifyChainOk": "Audit chain is intact"
+        "verifyChainOk": "Audit chain is intact",
+        "verifyFailed": "Verification request failed, please try again later"
       },
       "loginLog": {
         "username": "Account",
@@ -1473,6 +1492,7 @@
         "removeConfirm": "Delete this error log?",
         "removeTitle": "Delete Confirmation",
         "removed": "Deleted",
+        "handleSuccess": "Handled successfully",
         "handleDetail": "{user} ({time}): {note}"
       },
       "monitor": {
@@ -2035,6 +2055,7 @@
         "rejectNodeLabel": "Return To Node",
         "selectHistoryNode": "Select a history node",
         "selectUser": "Select User",
+        "selectUserWarn": "Please select at least one user",
         "userSearchPlaceholder": "Type username/nickname to search",
         "titleHandle": "Handle - {name}",
         "titleDetail": "Details - {name}",

@@ -35,8 +35,12 @@
     </ElForm>
     <template #footer>
       <div class="dialog-footer">
-        <ElButton @click="dialogVisible = false">{{ $t('common.cancel') }}</ElButton>
-        <ElButton type="primary" @click="handleSubmit">{{ $t('table.form.submit') }}</ElButton>
+        <ElButton :disabled="saving" @click="dialogVisible = false">{{
+          $t('common.cancel')
+        }}</ElButton>
+        <ElButton type="primary" :loading="saving" @click="handleSubmit">{{
+          $t('table.form.submit')
+        }}</ElButton>
       </div>
     </template>
   </ElDialog>
@@ -50,6 +54,7 @@
     visible: boolean
     type: string
     paramData?: Record<string, any>
+    saving?: boolean
   }
 
   interface Emits {

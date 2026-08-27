@@ -54,9 +54,9 @@
 </template>
 
 <script setup lang="ts">
-  import { nextTick, onActivated, onBeforeUnmount, onMounted, ref } from 'vue'
+  import { nextTick, onActivated, onBeforeUnmount, onDeactivated, onMounted, ref } from 'vue'
   import { useI18n } from 'vue-i18n'
-  import { useRouter } from 'vue-router'
+  import { useRouter, onBeforeRouteLeave } from 'vue-router'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import { fetchGisScenePage, fetchGisStatus, fetchRemoveGisScene, type GisScene } from '@/api/gis'
   import { bootLabMap, type LabMapBag } from '@/gis/labBoot'
@@ -134,9 +134,13 @@
     if (!row.id) {
       return
     }
-    await ElMessageBox.confirm(t('pages.gis.deleteSceneConfirm'), t('pages.gis.deleteScene'), {
-      type: 'warning'
-    })
+    try {
+      await ElMessageBox.confirm(t('pages.gis.deleteSceneConfirm'), t('pages.gis.deleteScene'), {
+        type: 'warning'
+      })
+    } catch {
+      return
+    }
     await fetchRemoveGisScene([row.id])
     ElMessage.success(t('pages.gis.deletedScene'))
     await load()
@@ -156,7 +160,16 @@
     bag?.map.updateSize()
   })
 
+  onDeactivated(() => {
+    ElMessageBox.close()
+  })
+
+  onBeforeRouteLeave(() => {
+    ElMessageBox.close()
+  })
+
   onBeforeUnmount(() => {
+    ElMessageBox.close()
     bag?.destroy()
     bag = undefined
   })

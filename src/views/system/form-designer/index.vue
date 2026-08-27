@@ -69,8 +69,15 @@
       :title="$t('pages.system.formDesigner.createForm')"
       width="500px"
       align-center
+      destroy-on-close
     >
-      <ElForm ref="createRef" :model="createForm" :rules="createRules" label-width="90px">
+      <ElForm
+        v-if="createVisible"
+        ref="createRef"
+        :model="createForm"
+        :rules="createRules"
+        label-width="90px"
+      >
         <ElFormItem :label="$t('pages.system.formDesigner.formName')" prop="name">
           <ElInput
             v-model="createForm.name"
@@ -140,8 +147,9 @@
       :title="$t('pages.system.formDesigner.recordsTitle', { name: current?.name || '' })"
       width="720px"
       align-center
+      destroy-on-close
     >
-      <ElTable :data="records" border max-height="420">
+      <ElTable v-if="recordsVisible" :data="records" border max-height="420">
         <ElTableColumn type="index" :label="$t('table.column.index')" width="60" />
         <ElTableColumn :label="$t('pages.system.formDesigner.recordData')" min-width="360">
           <template #default="{ row }">
@@ -157,6 +165,7 @@
           prop="createTime"
           :label="$t('pages.system.formDesigner.time')"
           min-width="170"
+          :formatter="(_, __, v) => formatTableTime(v)"
         />
       </ElTable>
     </ElDialog>
@@ -164,7 +173,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, onMounted, nextTick } from 'vue'
+  import { ref, reactive, onMounted, onDeactivated, nextTick } from 'vue'
   import type { FormInstance, FormRules } from 'element-plus'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import formCreate from '@form-create/element-ui'
@@ -176,6 +185,7 @@
     fetchSubmitFormData,
     fetchFormData
   } from '@/api/form'
+  import { formatTableTime } from '@/utils/date'
   import { useI18n } from 'vue-i18n'
 
   defineOptions({ name: 'FormDesigner' })
@@ -235,7 +245,18 @@
 
   onMounted(loadData)
 
+  const closeDialogs = (): void => {
+    createVisible.value = false
+    designerVisible.value = false
+    fillVisible.value = false
+    recordsVisible.value = false
+    ElMessageBox.close()
+  }
+
   const showCreate = (): void => {
+    designerVisible.value = false
+    fillVisible.value = false
+    recordsVisible.value = false
     Object.assign(createForm, { name: '', formKey: '', remark: '' })
     createVisible.value = true
   }
@@ -262,6 +283,9 @@
   }
 
   const openDesigner = async (row: any): Promise<void> => {
+    createVisible.value = false
+    fillVisible.value = false
+    recordsVisible.value = false
     current.value = row
     designerVisible.value = true
     const detail = await fetchFormDetail(row.id)
@@ -302,7 +326,12 @@
     }
   }
 
+  const fillSubmitting = ref(false)
+
   const openFill = async (row: any): Promise<void> => {
+    createVisible.value = false
+    designerVisible.value = false
+    recordsVisible.value = false
     current.value = row
     const detail = await fetchFormDetail(row.id)
     if (!detail?.formSchema) {
@@ -319,12 +348,21 @@
   }
 
   const onFillSubmit = async (formData: Record<string, any>): Promise<void> => {
-    await fetchSubmitFormData(current.value.formKey, formData)
-    ElMessage.success(t('pages.system.formDesigner.submitSuccess'))
-    fillVisible.value = false
+    if (fillSubmitting.value) return
+    fillSubmitting.value = true
+    try {
+      await fetchSubmitFormData(current.value.formKey, formData)
+      ElMessage.success(t('pages.system.formDesigner.submitSuccess'))
+      fillVisible.value = false
+    } finally {
+      fillSubmitting.value = false
+    }
   }
 
   const openRecords = async (row: any): Promise<void> => {
+    createVisible.value = false
+    designerVisible.value = false
+    fillVisible.value = false
     current.value = row
     const resp = await fetchFormData(row.formKey, { pageNum: 1, pageSize: 50 })
     records.value = resp?.records ?? []
@@ -354,6 +392,8 @@
       loadData()
     })
   }
+
+  onDeactivated(closeDialogs)
 </script>
 
 <style scoped>

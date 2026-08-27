@@ -321,7 +321,7 @@
         accept=".json,.geojson,application/geo+json"
         @change="onImportFile"
       />
-      <ElDialog v-model="gotoOpen" :title="$t('pages.gis.goto')" width="420px">
+      <ElDialog v-model="gotoOpen" :title="$t('pages.gis.goto')" width="420px" destroy-on-close>
         <ElInput
           v-model="gotoText"
           :placeholder="$t('pages.gis.gotoPlaceholder')"
@@ -337,9 +337,18 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, nextTick, onActivated, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+  import {
+    computed,
+    nextTick,
+    onActivated,
+    onBeforeUnmount,
+    onDeactivated,
+    onMounted,
+    ref,
+    watch
+  } from 'vue'
   import { useI18n } from 'vue-i18n'
-  import { useRoute, useRouter } from 'vue-router'
+  import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import type Map from 'ol/Map'
   import {
@@ -1237,9 +1246,13 @@
 
   const removeScene = async (): Promise<void> => {
     if (!sceneId.value) return
-    await ElMessageBox.confirm(t('pages.gis.deleteSceneConfirm'), t('pages.gis.deleteScene'), {
-      type: 'warning'
-    })
+    try {
+      await ElMessageBox.confirm(t('pages.gis.deleteSceneConfirm'), t('pages.gis.deleteScene'), {
+        type: 'warning'
+      })
+    } catch {
+      return
+    }
     await fetchRemoveGisScene([sceneId.value])
     ElMessage.success(t('pages.gis.deletedScene'))
     await newScene()
@@ -1247,9 +1260,13 @@
   }
 
   const clearSketch = async (): Promise<void> => {
-    await ElMessageBox.confirm(t('pages.gis.featClearConfirm'), t('pages.gis.featClearTitle'), {
-      type: 'warning'
-    })
+    try {
+      await ElMessageBox.confirm(t('pages.gis.featClearConfirm'), t('pages.gis.featClearTitle'), {
+        type: 'warning'
+      })
+    } catch {
+      return
+    }
     sketch?.clear()
   }
 
@@ -1339,6 +1356,19 @@
     void applyRouteQuery()
   })
 
+  const closeOverlays = (): void => {
+    gotoOpen.value = false
+    panelOpen.value = false
+    searchRef.value?.blur?.()
+    ElMessageBox.close()
+  }
+
+  onDeactivated(closeOverlays)
+
+  onBeforeRouteLeave(() => {
+    closeOverlays()
+  })
+
   watch(panelOpen, (open) => {
     if (open) {
       void loadCatalog()
@@ -1355,6 +1385,7 @@
   })
 
   onBeforeUnmount(() => {
+    closeOverlays()
     document.removeEventListener('keydown', onSketchKey)
     resizeObs?.disconnect()
     overlays?.destroy()

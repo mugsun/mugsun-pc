@@ -4956,6 +4956,17 @@ export interface components {
       username?: string
       password?: string
       nickname?: string
+      realName?: string
+      /** Format: int32 */
+      sex?: number
+      /** Format: date */
+      birthday?: string
+      avatar?: string
+      code?: string
+      /** Format: int64 */
+      leaderId?: number
+      /** Format: int32 */
+      isLeader?: number
       /** Format: int32 */
       status?: number
       /** Format: int64 */
@@ -4969,6 +4980,7 @@ export interface components {
       deptName?: string
       postName?: string
       roleNames?: string
+      leaderName?: string
       roleIds?: number[]
     }
     StatusParam: {

@@ -39,7 +39,13 @@
       </div>
       <p v-if="hint" class="gis-hud gis-lab-float">{{ hint }}</p>
     </div>
-    <ElDrawer v-model="srcOpen" :title="meta?.title || code" direction="btt" size="42%">
+    <ElDrawer
+      v-model="srcOpen"
+      :title="meta?.title || code"
+      direction="btt"
+      size="42%"
+      destroy-on-close
+    >
       <p class="gis-lab-sum">{{ meta?.summary }}</p>
       <ElTabs v-model="tab">
         <ElTabPane :label="$t('pages.gis.labCode')" name="code">
@@ -69,8 +75,18 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, nextTick, onActivated, onBeforeUnmount, onMounted, ref, watch } from 'vue'
+  import {
+    computed,
+    nextTick,
+    onActivated,
+    onBeforeUnmount,
+    onDeactivated,
+    onMounted,
+    ref,
+    watch
+  } from 'vue'
   import { useI18n } from 'vue-i18n'
+  import { onBeforeRouteLeave } from 'vue-router'
   import { ElMessage } from 'element-plus'
   import Feature from 'ol/Feature'
   import { circular } from 'ol/geom/Polygon'
@@ -245,6 +261,7 @@
   }
 
   const mountScene = async (): Promise<void> => {
+    srcOpen.value = false
     playback?.destroy()
     playback = undefined
     playing.value = false
@@ -378,7 +395,18 @@
     bag?.map.updateSize()
   })
 
+  const closeOverlays = (): void => {
+    srcOpen.value = false
+  }
+
+  onDeactivated(closeOverlays)
+
+  onBeforeRouteLeave(() => {
+    closeOverlays()
+  })
+
   onBeforeUnmount(() => {
+    closeOverlays()
     playback?.destroy()
     if (draw && bag) {
       bag.map.removeInteraction(draw)

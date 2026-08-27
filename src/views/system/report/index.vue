@@ -51,6 +51,7 @@
       "
       width="640px"
       align-center
+      destroy-on-close
       class="report-design-dialog"
     >
       <ElForm ref="formRef" :model="form" :rules="rules" label-width="90px">
@@ -113,6 +114,7 @@
       :title="$t('pages.system.report.previewTitle', { name: previewName })"
       width="880px"
       align-center
+      destroy-on-close
       class="report-preview-dialog"
       @closed="disposeCharts"
     >
@@ -127,7 +129,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, onMounted, nextTick } from 'vue'
+  import { ref, reactive, onMounted, onDeactivated, nextTick } from 'vue'
   import type { FormInstance, FormRules } from 'element-plus'
   import { storeToRefs } from 'pinia'
   import { echarts } from '@/plugins/echarts'
@@ -208,7 +210,15 @@
     loadData()
   })
 
+  const closeDialogs = (): void => {
+    dialogVisible.value = false
+    previewVisible.value = false
+    disposeCharts()
+  }
+
   const showDialog = (row?: any): void => {
+    closeDialogs()
+    formRef.value?.clearValidate()
     Object.assign(form, { id: undefined, reportName: '', charts: [], remark: '' })
     if (row) {
       form.id = row.id
@@ -287,6 +297,7 @@
   }
 
   const preview = async (row: any): Promise<void> => {
+    dialogVisible.value = false
     previewName.value = row.reportName
     previewCharts.value = parseCharts(row)
     chartEls.value = {}
@@ -327,6 +338,8 @@
     charts.forEach((c) => c.dispose())
     charts = []
   }
+
+  onDeactivated(closeDialogs)
 </script>
 
 <style scoped>

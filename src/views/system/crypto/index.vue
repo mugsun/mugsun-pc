@@ -52,8 +52,9 @@
 
   const { t } = useI18n()
 
-  // 与后端 mugsun.crypto.api-key 一致的 16 字节密钥
-  const apiKey = Array.from(new TextEncoder().encode('mugsun-api-key16'))
+  // 与后端 mugsun.crypto.api-key 一致（开发环境见 .env.development VITE_CRYPTO_API_KEY）
+  const apiKeyStr = import.meta.env.VITE_CRYPTO_API_KEY || 'mugsun-api-key16'
+  const apiKey = Array.from(new TextEncoder().encode(apiKeyStr))
 
   const inputText = ref(t('pages.system.crypto.defaultText'))
   const requestCipher = ref('')
@@ -101,9 +102,17 @@
       })
       if (json.dataType === 'ENCRYPT') {
         responseCipher.value = json.data || ''
-        decrypted.value = decryptCbc(json.data || '')
+        const plain = decryptCbc(json.data || '')
+        try {
+          decrypted.value = JSON.stringify(JSON.parse(plain), null, 2)
+        } catch {
+          decrypted.value = plain
+        }
       } else {
-        decrypted.value = JSON.stringify(json.data)
+        decrypted.value =
+          json.data != null
+            ? JSON.stringify(json.data, null, 2)
+            : t('pages.system.crypto.noEncryptData')
       }
     } catch (e) {
       // 网络/服务端错误已由请求层统一弹提示，这里仅兜底本地加解密异常，避免双重 toast

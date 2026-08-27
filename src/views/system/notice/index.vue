@@ -24,7 +24,8 @@
         v-model:visible="dialogVisible"
         :type="dialogType"
         :notice-data="currentData"
-        @submit="handleDialogSubmit"
+        :saving="dialogSaving"
+        @submit="onDialogSubmit"
       />
 
       <ReadRecordDialog v-model:visible="readVisible" :notice="currentData" />
@@ -34,7 +35,6 @@
 
 <script setup lang="ts">
   import { h, ref, nextTick } from 'vue'
-  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictTag from '@/components/core/base/art-dict-tag/index.vue'
   import { useTable } from '@/hooks/core/useTable'
   import { fetchNoticePage, fetchSaveNotice, fetchRemoveNotice } from '@/api/system-manage'
@@ -53,6 +53,7 @@
 
   const dialogType = ref<DialogType>('add')
   const dialogVisible = ref(false)
+  const dialogSaving = ref(false)
   const readVisible = ref(false)
   const currentData = ref<Record<string, any>>({})
 
@@ -116,7 +117,16 @@
           formatter: (row: any) =>
             h('div', [
               hasPerm('sys:notice:manage')
-                ? h(ArtButtonTable, { type: 'edit', onClick: () => showDialog('edit', row) })
+                ? h(
+                    ElButton,
+                    {
+                      size: 'small',
+                      link: true,
+                      type: 'primary',
+                      onClick: () => showDialog('edit', row)
+                    },
+                    () => t('common.edit')
+                  )
                 : null,
               hasPerm('sys:notice:manage')
                 ? h(
@@ -126,7 +136,16 @@
                   )
                 : null,
               hasPerm('sys:notice:manage')
-                ? h(ArtButtonTable, { type: 'delete', onClick: () => deleteRow(row) })
+                ? h(
+                    ElButton,
+                    {
+                      size: 'small',
+                      link: true,
+                      type: 'danger',
+                      onClick: () => deleteRow(row)
+                    },
+                    () => t('common.delete')
+                  )
                 : null
             ])
         }
@@ -173,10 +192,15 @@
     })
   }
 
-  const handleDialogSubmit = async (form: Record<string, any>): Promise<void> => {
-    await fetchSaveNotice(form)
-    dialogVisible.value = false
-    ElMessage.success(t('pages.system.notice.saveSuccess'))
-    refreshData()
+  const onDialogSubmit = async (form: Record<string, any>): Promise<void> => {
+    dialogSaving.value = true
+    try {
+      await fetchSaveNotice(form)
+      dialogVisible.value = false
+      ElMessage.success(t('pages.system.notice.saveSuccess'))
+      await refreshData()
+    } finally {
+      dialogSaving.value = false
+    }
   }
 </script>

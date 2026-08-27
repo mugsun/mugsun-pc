@@ -94,6 +94,7 @@
       v-model="trendVisible"
       :title="$t('pages.track.event.trendTitle', { name: trendEventName })"
       size="560px"
+      destroy-on-close
     >
       <ArtLineChart
         :data="trendSeries"
@@ -109,8 +110,9 @@
 </template>
 
 <script setup lang="ts">
-  import { h, ref } from 'vue'
+  import { h, onActivated, onDeactivated, ref } from 'vue'
   import { useI18n } from 'vue-i18n'
+  import { onBeforeRouteLeave } from 'vue-router'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { useTable } from '@/hooks/core/useTable'
   import { fetchTrackEventPage, fetchTrackEventRealtime, fetchTrackTrend } from '@/api/track'
@@ -292,8 +294,18 @@
 
   const shortId = (id?: string): string => (id ? `${id.slice(0, 8)}…` : '-')
 
+  const closeOverlays = (): void => {
+    trendVisible.value = false
+  }
+
   // keepAlive 页面切走暂停轮询，切回且未手动暂停时恢复并立即拉一次
-  onDeactivated(pause)
+  onDeactivated(() => {
+    pause()
+    closeOverlays()
+  })
+  onBeforeRouteLeave(() => {
+    closeOverlays()
+  })
   onActivated(() => {
     if (!paused.value) {
       loadRealtime()

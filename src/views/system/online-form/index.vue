@@ -82,7 +82,9 @@
             :prop="col.columnName"
             :label="col.columnComment || col.javaField"
             min-width="140"
-          />
+          >
+            <template #default="{ row }">{{ formatCell(row, col) }}</template>
+          </ElTableColumn>
           <ElTableColumn
             v-if="tableId"
             :label="$t('pages.system.onlineForm.colOperation')"
@@ -122,11 +124,14 @@
       </div>
 
       <ElDialog
+        v-if="dialogVisible"
         v-model="dialogVisible"
         :title="form.id ? $t('pages.system.onlineForm.edit') : $t('pages.system.onlineForm.add')"
         width="560px"
         align-center
+        destroy-on-close
         class="online-form-dialog"
+        @closed="dialogVisible = false"
       >
         <ElForm :model="form" label-width="110px">
           <ElFormItem
@@ -185,7 +190,9 @@
         </ElForm>
         <template #footer>
           <ElButton @click="dialogVisible = false">{{ $t('common.cancel') }}</ElButton>
-          <ElButton type="primary" @click="submit">{{ $t('table.form.submit') }}</ElButton>
+          <ElButton type="primary" :loading="submitting" @click="submit">{{
+            $t('table.form.submit')
+          }}</ElButton>
         </template>
       </ElDialog>
     </ElCard>
@@ -193,7 +200,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, computed, onMounted } from 'vue'
+  import { ref, reactive, computed, onMounted, onDeactivated } from 'vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import {
     fetchOnlineForms,
@@ -205,6 +212,7 @@
   } from '@/api/system-manage'
   import { useDictStore } from '@/store/modules/dict'
   import { useI18n } from 'vue-i18n'
+  import { formatTableTime } from '@/utils/date'
 
   defineOptions({ name: 'OnlineForm' })
 
@@ -231,6 +239,20 @@
     dictType
       ? dictStore.getItems(dictType).map((it: any) => ({ label: it.dictValue, value: it.dictKey }))
       : []
+
+  const formatCell = (row: Record<string, any>, col: any): string => {
+    const v = row[col.columnName]
+    if (v == null || v === '') return ''
+    if (col.htmlType === 'datetime' || /time$/i.test(col.columnName)) {
+      return formatTableTime(v) || String(v)
+    }
+    return String(v)
+  }
+
+  const closeDialogs = (): void => {
+    dialogVisible.value = false
+    ElMessageBox.close()
+  }
 
   // 切换表单：重取元数据（改配置即时生效、零发布）
   const onSelect = async (): Promise<void> => {
@@ -308,6 +330,7 @@
   onMounted(async () => {
     forms.value = (await fetchOnlineForms()) || []
   })
+  onDeactivated(closeDialogs)
 </script>
 
 <style scoped>

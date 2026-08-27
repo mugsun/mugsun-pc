@@ -135,15 +135,19 @@
       </ElTabs>
 
       <ElDialog
+        v-if="ddlVisible"
         v-model="ddlVisible"
         :title="$t('pages.system.genModeling.ddlPreviewTitle')"
         width="660px"
         align-center
+        destroy-on-close
+        @closed="ddlVisible = false"
       >
         <pre class="ddl-pre">{{ ddlText }}</pre>
       </ElDialog>
 
       <ElDialog
+        v-if="colVisible"
         v-model="colVisible"
         :title="
           $t('pages.system.genModeling.columnsConfigTitle', {
@@ -152,6 +156,8 @@
         "
         width="760px"
         align-center
+        destroy-on-close
+        @closed="colVisible = false"
       >
         <div class="modeling-tip">{{ $t('pages.system.genModeling.columnsTip') }}</div>
         <ElTable
@@ -193,12 +199,20 @@
         </ElTable>
         <template #footer>
           <ElButton @click="addEditCol">{{ $t('pages.system.genModeling.addColumn') }}</ElButton>
-          <ElButton v-perm="'sys:gen:edit'" type="primary" @click="saveColumns(false)">{{
-            $t('pages.system.genModeling.saveConfig')
-          }}</ElButton>
-          <ElButton v-perm="'sys:gen:ddl'" type="warning" @click="saveColumns(true)">{{
-            $t('pages.system.genModeling.saveAndSync')
-          }}</ElButton>
+          <ElButton
+            v-perm="'sys:gen:edit'"
+            type="primary"
+            :loading="colSaving"
+            @click="saveColumns(false)"
+            >{{ $t('pages.system.genModeling.saveConfig') }}</ElButton
+          >
+          <ElButton
+            v-perm="'sys:gen:ddl'"
+            type="warning"
+            :loading="colSaving"
+            @click="saveColumns(true)"
+            >{{ $t('pages.system.genModeling.saveAndSync') }}</ElButton
+          >
         </template>
       </ElDialog>
     </ElCard>
@@ -206,7 +220,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue'
+  import { ref, onMounted, onDeactivated } from 'vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import {
     fetchGenList,
@@ -301,7 +315,14 @@
     }
   }
 
+  const closeDialogs = (): void => {
+    ddlVisible.value = false
+    colVisible.value = false
+    ElMessageBox.close()
+  }
+
   const preview = async (row: any): Promise<void> => {
+    colVisible.value = false
     const stmts = (await fetchDdlPreview(row.id, false)) || []
     ddlText.value = stmts.length
       ? stmts.join(';\n\n') + ';'
@@ -329,14 +350,12 @@
         : t('pages.system.genModeling.syncIncremental'),
       { type: force ? 'error' : 'warning' }
     )
-    await fetchDdlSync(row.id, force)
-    ElMessage.success(
-      force ? t('pages.system.genModeling.forceSuccess') : t('pages.system.genModeling.syncSuccess')
-    )
+    await fetchDdlSync(row.id, force, true)
   }
 
   // 打开字段配置：拉元数据并快照原列名，用于改名追踪
   const openColumns = async (row: any): Promise<void> => {
+    ddlVisible.value = false
     const meta: any = await fetchGenMeta(row.id)
     ;(meta.columns || []).forEach((c: any) => (c._origName = c.columnName))
     editing.value = meta
@@ -384,6 +403,7 @@
   }
 
   onMounted(loadTables)
+  onDeactivated(closeDialogs)
 </script>
 
 <style scoped>

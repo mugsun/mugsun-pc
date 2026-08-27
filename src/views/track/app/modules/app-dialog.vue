@@ -5,6 +5,7 @@
     :title="type === 'add' ? $t('pages.track.app.addApp') : $t('pages.track.app.editApp')"
     width="520px"
     align-center
+    destroy-on-close
     class="track-app-dialog"
   >
     <ElForm ref="formRef" :model="formData" :rules="rules" label-width="96px">

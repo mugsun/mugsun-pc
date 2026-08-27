@@ -122,8 +122,12 @@
         </ElForm>
         <template #footer>
           <div class="dialog-footer">
-            <ElButton @click="dialogVisible = false">{{ $t('common.cancel') }}</ElButton>
-            <ElButton type="primary" @click="handleSubmit">{{ $t('table.form.submit') }}</ElButton>
+            <ElButton :disabled="dialogSaving" @click="dialogVisible = false">{{
+              $t('common.cancel')
+            }}</ElButton>
+            <ElButton type="primary" :loading="dialogSaving" @click="handleSubmit">{{
+              $t('table.form.submit')
+            }}</ElButton>
           </div>
         </template>
       </ElDialog>
@@ -179,6 +183,7 @@
   const topOptions = ref<Array<{ label: string; value: any }>>([])
   const dialogVisible = ref(false)
   const dialogType = ref<'add' | 'edit'>('add')
+  const dialogSaving = ref(false)
   const formRef = ref<FormInstance>()
 
   const defaultForm = () => ({
@@ -249,13 +254,18 @@
     if (!formRef.value) return
     await formRef.value.validate(async (valid) => {
       if (!valid) return
-      await props.saveApi({ ...formData })
-      dialogVisible.value = false
-      ElMessage.success(t('pages.system.dict.saveSuccess'))
-      // 字典维护变更后重载运行时缓存，业务页即时生效
-      if (formData.code) dictStore.reload(formData.code)
-      loadTopOptions()
-      loadData()
+      dialogSaving.value = true
+      try {
+        await props.saveApi({ ...formData })
+        dialogVisible.value = false
+        ElMessage.success(t('pages.system.dict.saveSuccess'))
+        // 字典维护变更后重载运行时缓存，业务页即时生效
+        if (formData.code) dictStore.reload(formData.code)
+        loadTopOptions()
+        loadData()
+      } finally {
+        dialogSaving.value = false
+      }
     })
   }
 

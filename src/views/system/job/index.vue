@@ -80,6 +80,7 @@
       :title="form.id ? $t('pages.system.job.editJob') : $t('pages.system.job.createJob')"
       width="500px"
       align-center
+      destroy-on-close
     >
       <ElForm ref="formRef" :model="form" :rules="rules" label-width="90px">
         <ElFormItem :label="$t('pages.system.job.jobName')" prop="jobName">
@@ -129,7 +130,9 @@
       </ElForm>
       <template #footer>
         <ElButton @click="dialogVisible = false">{{ $t('common.cancel') }}</ElButton>
-        <ElButton type="primary" @click="submit">{{ $t('table.form.submit') }}</ElButton>
+        <ElButton type="primary" :loading="saving" @click="submit">{{
+          $t('table.form.submit')
+        }}</ElButton>
       </template>
     </ElDialog>
 
@@ -139,6 +142,7 @@
       :title="$t('pages.system.job.logsTitle')"
       width="680px"
       align-center
+      destroy-on-close
     >
       <ElTable :data="logs" border size="small" max-height="420">
         <ElTableColumn
@@ -166,7 +170,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, onMounted } from 'vue'
+  import { ref, reactive, onMounted, onDeactivated } from 'vue'
   import type { FormInstance, FormRules } from 'element-plus'
   import {
     fetchJobList,
@@ -212,7 +216,16 @@
       { required: true, message: t('pages.system.job.processorPlaceholder'), trigger: 'change' }
     ],
     timeExpression: [
-      { required: true, message: t('pages.system.job.cronRequired'), trigger: 'blur' }
+      {
+        validator: (_rule, value, callback) => {
+          if (form.timeExpressionType === 'CRON' && (!value || !String(value).trim())) {
+            callback(new Error(t('pages.system.job.cronRequired')))
+          } else {
+            callback()
+          }
+        },
+        trigger: 'blur'
+      }
     ]
   }
 
@@ -234,7 +247,14 @@
     processorOptions.value = (await fetchJobProcessors()) || []
   })
 
+  const closeDialogs = (): void => {
+    dialogVisible.value = false
+    logsVisible.value = false
+  }
+
   const showDialog = (row?: any): void => {
+    closeDialogs()
+    formRef.value?.clearValidate()
     Object.assign(form, {
       id: undefined,
       jobName: '',
@@ -310,9 +330,12 @@
   }
 
   const showLogs = async (row: any): Promise<void> => {
+    dialogVisible.value = false
     logs.value = (await fetchJobInstances(row.id)) || []
     logsVisible.value = true
   }
+
+  onDeactivated(closeDialogs)
 
   const instStatus = (s: number): string => {
     const map: Record<number, string> = {

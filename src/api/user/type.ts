@@ -37,5 +37,20 @@ export interface UserImportResult {
 
 /** 用户新增/编辑表单 */
 export type UserForm = Partial<
-  Pick<UserVO, 'id' | 'username' | 'nickname' | 'phone' | 'idCard' | 'password' | 'status'>
+  Pick<
+    UserVO,
+    | 'id'
+    | 'username'
+    | 'nickname'
+    | 'realName'
+    | 'sex'
+    | 'birthday'
+    | 'code'
+    | 'leaderId'
+    | 'isLeader'
+    | 'phone'
+    | 'idCard'
+    | 'password'
+    | 'status'
+  >
 >

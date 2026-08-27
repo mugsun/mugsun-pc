@@ -36,6 +36,7 @@
         :title="$t('pages.system.errorLog.detailTitle')"
         width="720px"
         align-center
+        destroy-on-close
       >
         <ElDescriptions :column="1" border>
           <ElDescriptionsItem :label="$t('pages.system.errorLog.traceId')">
@@ -81,6 +82,7 @@
         :title="$t('pages.system.errorLog.handleTitle')"
         width="480px"
         align-center
+        destroy-on-close
       >
         <ElForm label-width="80px">
           <ElFormItem :label="$t('pages.system.errorLog.handleStatus')">
@@ -112,7 +114,7 @@
 </template>
 
 <script setup lang="ts">
-  import { h, reactive, ref } from 'vue'
+  import { h, onDeactivated, reactive, ref } from 'vue'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictTag from '@/components/core/base/art-dict-tag/index.vue'
   import { useTable } from '@/hooks/core/useTable'
@@ -230,12 +232,20 @@
     getData()
   }
 
+  const closeDialogs = (): void => {
+    detailVisible.value = false
+    handleVisible.value = false
+    current.value = {}
+  }
+
   const showDetail = (row: Record<string, any>): void => {
+    handleVisible.value = false
     current.value = row
     detailVisible.value = true
   }
 
   const showHandle = (row: Record<string, any>): void => {
+    detailVisible.value = false
     handleForm.id = row.id
     handleForm.status = 1
     handleForm.note = ''
@@ -250,7 +260,7 @@
         status: handleForm.status,
         note: handleForm.note
       })
-      ElMessage.success(t('pages.system.errorLog.statusHandled'))
+      ElMessage.success(t('pages.system.errorLog.handleSuccess'))
       handleVisible.value = false
       refreshUpdate()
     } finally {
@@ -263,12 +273,19 @@
       t('pages.system.errorLog.removeConfirm'),
       t('pages.system.errorLog.removeTitle'),
       { type: 'warning' }
-    ).then(async () => {
-      await fetchRemoveErrorLog(row.id)
-      ElMessage.success(t('pages.system.errorLog.removed'))
-      refreshRemove()
-    })
+    )
+      .then(async () => {
+        await fetchRemoveErrorLog(row.id)
+        ElMessage.success(t('pages.system.errorLog.removed'))
+        refreshRemove()
+      })
+      .catch(() => {})
   }
+
+  onDeactivated(() => {
+    ElMessageBox.close()
+    closeDialogs()
+  })
 </script>
 
 <style scoped>

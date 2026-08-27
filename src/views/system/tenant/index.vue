@@ -104,8 +104,9 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue'
+  import { ref, onMounted, onDeactivated, onBeforeUnmount } from 'vue'
   import { useI18n } from 'vue-i18n'
+  import { onBeforeRouteLeave } from 'vue-router'
   import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
   import {
     fetchTenantList,
@@ -205,14 +206,18 @@
     await loadData()
   }
 
-  const openCreate = (): void => {
-    current.value = null
+  const openDialog = async (row: Record<string, any> | null): Promise<void> => {
+    await loadPackages()
+    current.value = row
     dialogVisible.value = true
   }
 
+  const openCreate = (): void => {
+    void openDialog(null)
+  }
+
   const openEdit = (row: any): void => {
-    current.value = { ...row }
-    dialogVisible.value = true
+    void openDialog({ ...row })
   }
 
   const handleSubmit = async (form: Record<string, any>): Promise<void> => {
@@ -241,12 +246,27 @@
         cancelButtonText: t('common.cancel'),
         type: 'warning'
       }
-    ).then(async () => {
-      await fetchRemoveTenant(row.id)
-      ElMessage.success(t('pages.system.tenant.msgDeleted'))
-      loadData()
-    })
+    )
+      .then(async () => {
+        await fetchRemoveTenant(row.id)
+        ElMessage.success(t('pages.system.tenant.msgDeleted'))
+        loadData()
+      })
+      .catch(() => {
+        /* cancel */
+      })
   }
+
+  const closeOverlays = (): void => {
+    dialogVisible.value = false
+    ElMessageBox.close()
+  }
+
+  onDeactivated(closeOverlays)
+  onBeforeRouteLeave(() => {
+    closeOverlays()
+  })
+  onBeforeUnmount(closeOverlays)
 </script>
 
 <style scoped>

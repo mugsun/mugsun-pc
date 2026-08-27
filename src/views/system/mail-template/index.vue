@@ -97,6 +97,7 @@
         v-model:visible="dialogVisible"
         :type="dialogType"
         :template-data="currentData"
+        :saving="dialogSaving"
         @submit="handleDialogSubmit"
       />
     </ElCard>
@@ -127,6 +128,7 @@
   const total = ref(0)
   const dialogType = ref<DialogType>('add')
   const dialogVisible = ref(false)
+  const dialogSaving = ref(false)
   const currentData = ref<Record<string, any>>({})
 
   const loadData = async (): Promise<void> => {
@@ -186,10 +188,15 @@
   }
 
   const handleDialogSubmit = async (form: Record<string, any>): Promise<void> => {
-    await fetchSaveMailTemplate(form)
-    dialogVisible.value = false
-    ElMessage.success(t('pages.system.mailTemplate.saveSuccess'))
-    loadData()
+    dialogSaving.value = true
+    try {
+      await fetchSaveMailTemplate(form)
+      dialogVisible.value = false
+      ElMessage.success(t('pages.system.mailTemplate.saveSuccess'))
+      loadData()
+    } finally {
+      dialogSaving.value = false
+    }
   }
 </script>
 

@@ -489,10 +489,21 @@
     replaySessionId.value = sessionId
     replayVisible.value = true
   }
+
+  const closeOverlays = (): void => {
+    replayVisible.value = false
+  }
+
+  onDeactivated(closeOverlays)
+  onBeforeRouteLeave(() => {
+    closeOverlays()
+  })
 </script>
 
 <style lang="scss" scoped>
   .track-user-page {
+    overflow-y: auto;
+
     .track-toolbar {
       display: flex;
       flex-wrap: wrap;

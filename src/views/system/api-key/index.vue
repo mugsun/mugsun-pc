@@ -67,6 +67,7 @@
       :title="$t('pages.system.apiKey.generateBtn')"
       width="500px"
       align-center
+      destroy-on-close
     >
       <ElForm ref="formRef" :model="form" :rules="rules" label-width="80px">
         <ElFormItem :label="$t('pages.system.apiKey.colName')" prop="name">
@@ -85,7 +86,7 @@
       </ElForm>
       <template #footer>
         <ElButton @click="dialogVisible = false">{{ $t('common.cancel') }}</ElButton>
-        <ElButton type="primary" @click="submit">{{
+        <ElButton type="primary" :loading="submitting" @click="submit">{{
           $t('pages.system.apiKey.generateSubmitBtn')
         }}</ElButton>
       </template>
@@ -97,6 +98,7 @@
       :title="$t('pages.system.apiKey.resultTitle')"
       width="560px"
       align-center
+      destroy-on-close
     >
       <ElAlert type="warning" :closable="false" :title="$t('pages.system.apiKey.resultWarning')" />
       <ElDescriptions :column="1" border class="apikey-result">
@@ -113,7 +115,8 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, onMounted } from 'vue'
+  import { ref, reactive, onDeactivated, onBeforeUnmount, onMounted } from 'vue'
+  import { onBeforeRouteLeave } from 'vue-router'
   import type { FormInstance, FormRules } from 'element-plus'
   import {
     fetchApiKeyPage,
@@ -131,6 +134,7 @@
 
   const tableData = ref<any[]>([])
   const loading = ref(false)
+  const submitting = ref(false)
   const dialogVisible = ref(false)
   const resultVisible = ref(false)
   const generated = ref<Record<string, any>>({})
@@ -160,13 +164,18 @@
   }
 
   const submit = async (): Promise<void> => {
-    if (!formRef.value) return
+    if (!formRef.value || submitting.value) return
     await formRef.value.validate(async (valid) => {
       if (!valid) return
-      generated.value = (await fetchGenerateApiKey({ ...form })) || {}
-      dialogVisible.value = false
-      resultVisible.value = true
-      loadData()
+      submitting.value = true
+      try {
+        generated.value = (await fetchGenerateApiKey({ ...form })) || {}
+        dialogVisible.value = false
+        resultVisible.value = true
+        loadData()
+      } finally {
+        submitting.value = false
+      }
     })
   }
 
@@ -186,11 +195,15 @@
         cancelButtonText: t('common.cancel'),
         type: 'warning'
       }
-    ).then(async () => {
-      await fetchDisableApiKey(row.id)
-      ElMessage.success(t('pages.system.apiKey.disableSuccess'))
-      loadData()
-    })
+    )
+      .then(async () => {
+        await fetchDisableApiKey(row.id)
+        ElMessage.success(t('pages.system.apiKey.disableSuccess'))
+        loadData()
+      })
+      .catch(() => {
+        /* cancel */
+      })
   }
 
   const remove = (row: any): void => {
@@ -202,12 +215,30 @@
         cancelButtonText: t('common.cancel'),
         type: 'warning'
       }
-    ).then(async () => {
-      await fetchRemoveApiKey(row.id)
-      ElMessage.success(t('pages.system.apiKey.deleteSuccess'))
-      loadData()
-    })
+    )
+      .then(async () => {
+        await fetchRemoveApiKey(row.id)
+        ElMessage.success(t('pages.system.apiKey.deleteSuccess'))
+        loadData()
+      })
+      .catch(() => {
+        /* cancel */
+      })
   }
+
+  const closeOverlays = (): void => {
+    dialogVisible.value = false
+    resultVisible.value = false
+    ElMessageBox.close()
+  }
+
+  onDeactivated(closeOverlays)
+
+  onBeforeRouteLeave(() => {
+    closeOverlays()
+  })
+
+  onBeforeUnmount(closeOverlays)
 </script>
 
 <style scoped>

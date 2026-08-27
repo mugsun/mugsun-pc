@@ -23,6 +23,8 @@ export interface DictItem {
 export const DICT_CODE = {
   /** 用户状态：1 正常 / 0 停用 */
   USER_STATUS: 'user_status',
+  /** 用户性别：0 未知 / 1 男 / 2 女 */
+  USER_SEX: 'user_sex',
   /** 登录结果：1 成功 / 0 失败 */
   LOGIN_RESULT: 'login_result',
   /** 通知公告分类：notice 通知 / announcement 公告 / warning 预警 */

@@ -52,7 +52,7 @@
       <p class="gis-hud gis-hud-status">{{ $t('pages.gis.layerCoach') }}</p>
     </div>
 
-    <ElDialog v-model="dialog" :title="$t('pages.gis.layerAdd')" width="640px">
+    <ElDialog v-model="dialog" :title="$t('pages.gis.layerAdd')" width="640px" destroy-on-close>
       <p class="gis-layer-hint">{{ $t('pages.gis.layerHint') }}</p>
       <ElForm label-position="top">
         <ElFormItem :label="$t('pages.gis.layerName')" required>
@@ -111,9 +111,18 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, nextTick, onActivated, onBeforeUnmount, onMounted, reactive, ref } from 'vue'
+  import {
+    computed,
+    nextTick,
+    onActivated,
+    onBeforeUnmount,
+    onDeactivated,
+    onMounted,
+    reactive,
+    ref
+  } from 'vue'
   import { useI18n } from 'vue-i18n'
-  import { useRouter } from 'vue-router'
+  import { useRouter, onBeforeRouteLeave } from 'vue-router'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import {
     fetchGisLayerIngest,
@@ -277,12 +286,16 @@
     if (!row.id) {
       return
     }
-    await ElMessageBox.confirm(
-      t('hooks.crud.deleteConfirmMessage', { label: t('pages.gis.layerName'), name: row.name }),
-      {
-        type: 'warning'
-      }
-    )
+    try {
+      await ElMessageBox.confirm(
+        t('hooks.crud.deleteConfirmMessage', { label: t('pages.gis.layerName'), name: row.name }),
+        {
+          type: 'warning'
+        }
+      )
+    } catch {
+      return
+    }
     await fetchRemoveGisLayer([row.id])
     ElMessage.success(t('pages.gis.removeSuccess'))
     await load()
@@ -302,7 +315,19 @@
     bag?.map.updateSize()
   })
 
+  const closeOverlays = (): void => {
+    dialog.value = false
+    ElMessageBox.close()
+  }
+
+  onDeactivated(closeOverlays)
+
+  onBeforeRouteLeave(() => {
+    closeOverlays()
+  })
+
   onBeforeUnmount(() => {
+    closeOverlays()
     bag?.destroy()
     bag = undefined
   })

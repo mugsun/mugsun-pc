@@ -15,24 +15,22 @@
     </div>
 
     <RouterView v-if="isRefresh" v-slot="{ Component, route }" :style="contentStyle">
-      <!-- 缓存路由动画 -->
-      <Transition :name="showTransitionMask ? '' : actualTransition" mode="out-in" appear>
-        <KeepAlive :max="10" :exclude="keepAliveExclude">
-          <component
-            class="art-page-view"
-            :is="Component"
-            :key="route.path"
-            v-if="route.meta.keepAlive"
-          />
-        </KeepAlive>
-      </Transition>
+      <!-- 缓存路由：KeepAlive 与 Transition 同用会导致 Tab 切换时旧页残留，故不加过渡 -->
+      <KeepAlive :max="10" :exclude="keepAliveExclude">
+        <component
+          class="art-page-view"
+          :is="Component"
+          :key="route.fullPath"
+          v-if="route.meta.keepAlive"
+        />
+      </KeepAlive>
 
       <!-- 非缓存路由动画 -->
       <Transition :name="showTransitionMask ? '' : actualTransition" mode="out-in" appear>
         <component
           class="art-page-view"
           :is="Component"
-          :key="route.path"
+          :key="route.fullPath"
           v-if="!route.meta.keepAlive"
         />
       </Transition>

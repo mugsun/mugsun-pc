@@ -5,6 +5,7 @@
     :title="$t('pages.track.app.editDefTitle')"
     width="520px"
     align-center
+    destroy-on-close
   >
     <ElForm ref="formRef" :model="formData" label-width="96px">
       <ElFormItem :label="$t('pages.track.shared.eventName')">

@@ -37,8 +37,9 @@
 </template>
 
 <script setup lang="ts">
-  import { h, ref } from 'vue'
+  import { h, onDeactivated, ref } from 'vue'
   import { useI18n } from 'vue-i18n'
+  import { onBeforeRouteLeave } from 'vue-router'
   import { useTable } from '@/hooks/core/useTable'
   import { fetchTrackReplayPage } from '@/api/track'
   import {
@@ -190,6 +191,15 @@
     currentSessionId.value = String(row.sessionId ?? '')
     playerVisible.value = true
   }
+
+  const closeOverlays = (): void => {
+    playerVisible.value = false
+  }
+
+  onDeactivated(closeOverlays)
+  onBeforeRouteLeave(() => {
+    closeOverlays()
+  })
 </script>
 
 <style lang="scss" scoped>

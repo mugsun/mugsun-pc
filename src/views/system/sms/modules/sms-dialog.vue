@@ -5,6 +5,7 @@
     :title="type === 'add' ? $t('pages.system.sms.addBtn') : $t('pages.system.sms.editTitle')"
     width="520px"
     align-center
+    destroy-on-close
   >
     <ElForm ref="formRef" :model="formData" :rules="rules" label-width="90px">
       <ElFormItem :label="$t('pages.system.sms.colName')" prop="name">
@@ -54,8 +55,10 @@
     </ElForm>
     <template #footer>
       <div class="dialog-footer">
-        <ElButton @click="dialogVisible = false">{{ $t('common.cancel') }}</ElButton>
-        <ElButton type="primary" @click="handleSubmit">{{
+        <ElButton :disabled="saving" @click="dialogVisible = false">{{
+          $t('common.cancel')
+        }}</ElButton>
+        <ElButton type="primary" :loading="saving" @click="handleSubmit">{{
           $t('pages.system.sms.submitBtn')
         }}</ElButton>
       </div>
@@ -71,6 +74,7 @@
     visible: boolean
     type: string
     smsData?: Record<string, any>
+    saving?: boolean
   }
 
   interface Emits {
@@ -78,7 +82,7 @@
     (e: 'submit', form: Record<string, any>): void
   }
 
-  const props = defineProps<Props>()
+  const props = withDefaults(defineProps<Props>(), { saving: false })
   const emit = defineEmits<Emits>()
 
   const { t } = useI18n()
@@ -122,11 +126,10 @@
   )
 
   const handleSubmit = async () => {
-    if (!formRef.value) return
-    await formRef.value.validate((valid) => {
-      if (valid) {
-        emit('submit', { ...formData })
-      }
-    })
+    if (!formRef.value || props.saving) return
+    const valid = await formRef.value.validate().catch(() => false)
+    if (valid) {
+      emit('submit', { ...formData })
+    }
   }
 </script>

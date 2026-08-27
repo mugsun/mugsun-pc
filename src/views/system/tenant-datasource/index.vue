@@ -98,6 +98,7 @@
       "
       width="560px"
       align-center
+      destroy-on-close
       class="tds-dialog"
     >
       <ElForm ref="formRef" :model="form" :rules="rules" label-width="100px">
@@ -163,8 +164,9 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, onMounted } from 'vue'
+  import { ref, reactive, onMounted, onDeactivated, onBeforeUnmount } from 'vue'
   import { useI18n } from 'vue-i18n'
+  import { onBeforeRouteLeave } from 'vue-router'
   import type { FormInstance, FormRules } from 'element-plus'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import {
@@ -282,12 +284,27 @@
         cancelButtonText: t('common.cancel'),
         type: 'warning'
       }
-    ).then(async () => {
-      await fetchRemoveTenantDatasource(row.id)
-      ElMessage.success(t('pages.system.tenantDatasource.msgDeleted'))
-      loadData()
-    })
+    )
+      .then(async () => {
+        await fetchRemoveTenantDatasource(row.id)
+        ElMessage.success(t('pages.system.tenantDatasource.msgDeleted'))
+        loadData()
+      })
+      .catch(() => {
+        /* cancel */
+      })
   }
+
+  const closeOverlays = (): void => {
+    dialogVisible.value = false
+    ElMessageBox.close()
+  }
+
+  onDeactivated(closeOverlays)
+  onBeforeRouteLeave(() => {
+    closeOverlays()
+  })
+  onBeforeUnmount(closeOverlays)
 </script>
 
 <style scoped>

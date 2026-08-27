@@ -23,6 +23,7 @@ import { ApiStatus } from './status'
 import { HttpError, handleError, showError, showSuccess } from './error'
 import { $t } from '@/locales'
 import { BaseResponse } from '@/types'
+import { parseJsonSafe } from '@/utils/json'
 
 /** 请求配置常量 */
 const REQUEST_TIMEOUT = 15000
@@ -66,7 +67,7 @@ const axiosInstance = axios.create({
       const contentType = headers['content-type']
       if (contentType?.includes('application/json')) {
         try {
-          return JSON.parse(data)
+          return typeof data === 'string' ? parseJsonSafe(data) : data
         } catch {
           return data
         }

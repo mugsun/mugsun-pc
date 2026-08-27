@@ -128,10 +128,13 @@
 
     <!-- 字段级配置 -->
     <ElDialog
+      v-if="configVisible"
       v-model="configVisible"
       :title="$t('pages.system.gen.configTitle')"
       width="920px"
       align-center
+      destroy-on-close
+      @closed="configVisible = false"
     >
       <div v-if="configTable" class="gen-form" style="margin-bottom: 12px">
         <span class="gen-label">{{ $t('pages.system.gen.tpl') }}</span>
@@ -205,7 +208,7 @@
       </ElTable>
       <template #footer>
         <ElButton @click="configVisible = false">{{ $t('common.cancel') }}</ElButton>
-        <ElButton type="primary" @click="saveConfig">{{
+        <ElButton type="primary" :loading="configSaving" @click="saveConfig">{{
           $t('pages.system.gen.saveConfig')
         }}</ElButton>
       </template>
@@ -213,10 +216,13 @@
 
     <!-- 代码预览 -->
     <ElDialog
+      v-if="previewVisible"
       v-model="previewVisible"
       :title="$t('pages.system.gen.previewTitle')"
       width="1000px"
       align-center
+      destroy-on-close
+      @closed="previewVisible = false"
     >
       <ElTabs v-model="activeTab">
         <ElTabPane v-for="tab in codeTabs" :key="tab.key" :label="tab.label" :name="tab.key">
@@ -234,7 +240,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, onMounted } from 'vue'
+  import { ref, reactive, computed, onMounted, onDeactivated } from 'vue'
   import {
     fetchGenDatasource,
     fetchGenTables,
@@ -246,7 +252,7 @@
     fetchGenPreviewMeta,
     downloadGenZip
   } from '@/api/system-manage'
-  import { ElMessage } from 'element-plus'
+  import { ElMessage, ElMessageBox } from 'element-plus'
   import { useI18n } from 'vue-i18n'
 
   defineOptions({ name: 'Gen' })
@@ -323,7 +329,14 @@
     }
   }
 
+  const closeDialogs = () => {
+    configVisible.value = false
+    previewVisible.value = false
+    ElMessageBox.close()
+  }
+
   const openConfig = async (row: any): Promise<void> => {
+    previewVisible.value = false
     const meta = await fetchGenMeta(row.id)
     configTable.value = meta?.table ?? null
     configColumns.value = meta?.columns ?? []
@@ -347,6 +360,7 @@
   }
 
   const openPreview = async (row: any): Promise<void> => {
+    configVisible.value = false
     previewRow.value = row
     code.value = (await fetchGenPreviewMeta(row.id)) || {}
     activeTab.value = 'entity'
@@ -362,6 +376,8 @@
     tables.value = (await fetchGenTables()) || []
     await loadList()
   })
+
+  onDeactivated(closeDialogs)
 </script>
 
 <style scoped>

@@ -309,7 +309,7 @@
     </ElDrawer>
 
     <!-- 二级动作对话框（退回/转办/委派/加减签/抄送/作废） -->
-    <ElDialog v-model="opVisible" :title="opTitle" width="460px" align-center>
+    <ElDialog v-model="opVisible" :title="opTitle" width="460px" align-center destroy-on-close>
       <ElForm label-width="72px">
         <ElFormItem v-if="opKind === 'node'" :label="$t('pages.system.flowCenter.rejectNodeLabel')">
           <ElSelect
@@ -363,7 +363,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, computed, onMounted } from 'vue'
+  import { ref, reactive, computed, onMounted, onDeactivated } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { ArrowDown } from '@element-plus/icons-vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
@@ -460,10 +460,18 @@
     }
   }
   const onTabChange = (): void => {
+    closeDialogs()
     load()
   }
 
+  const closeDialogs = (): void => {
+    detailVisible.value = false
+    opVisible.value = false
+    ElMessageBox.close()
+  }
+
   const openDetail = async (row: any, m: 'todo' | 'view'): Promise<void> => {
+    opVisible.value = false
     current.value = row
     mode.value = m
     opinion.value = ''
@@ -505,6 +513,7 @@
   // ==================== 待办动作 ====================
 
   const doPass = async (): Promise<void> => {
+    if (submitting.value) return
     let variable: Record<string, any> | undefined
     if (form.schema && formRef.value) {
       try {
@@ -591,6 +600,15 @@
   }
 
   const submitOp = async (): Promise<void> => {
+    if (submitting.value) return
+    if (opKind.value === 'user' && !opForm.handlers.length) {
+      ElMessage.warning(t('pages.system.flowCenter.selectUserWarn'))
+      return
+    }
+    if (opKind.value === 'node' && !opForm.nodeCode) {
+      ElMessage.warning(t('pages.system.flowCenter.selectHistoryNode'))
+      return
+    }
     submitting.value = true
     try {
       await OP[opAction.value].run(current.value)
@@ -661,6 +679,8 @@
   onMounted(() => {
     load()
   })
+
+  onDeactivated(closeDialogs)
 </script>
 
 <style scoped>
