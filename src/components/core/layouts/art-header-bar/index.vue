@@ -124,7 +124,13 @@
 
         <!-- 设置按钮 -->
         <div v-if="shouldShowSettings">
-          <ElPopover :visible="showSettingGuide" placement="bottom-start" :width="200" :offset="0">
+          <ElPopover
+            :visible="showSettingGuide"
+            placement="bottom-start"
+            :width="200"
+            :offset="0"
+            popper-class="setting-guide-popper"
+          >
             <template #reference>
               <div class="flex-cc">
                 <ArtIconButton icon="ri:settings-line" class="setting-btn" @click="openSetting" />
@@ -226,7 +232,22 @@
 
   onMounted(() => {
     initLanguage()
+    document.addEventListener('pointerdown', dismissGuideOnInteraction, true)
   })
+
+  onBeforeUnmount(() => {
+    document.removeEventListener('pointerdown', dismissGuideOnInteraction, true)
+  })
+
+  /**
+   * 用户一开始操作页面就收起引导气泡。
+   * 气泡是受控 visible，点空白不会自动关，常驻时会盖住下方页面的查询等按钮。
+   */
+  const dismissGuideOnInteraction = (e: PointerEvent): void => {
+    if (!showSettingGuide.value) return
+    if ((e.target as HTMLElement | null)?.closest('.el-popover')) return
+    settingStore.hideSettingGuide()
+  }
 
   /**
    * 切换全屏状态
@@ -445,6 +466,17 @@
   @media screen and (width <= 640px) {
     .btn-box {
       width: 40px;
+    }
+  }
+</style>
+
+<style lang="scss">
+  /* 引导气泡是受控常驻的，若吃掉指针事件会盖住下方页面的查询等按钮：整体穿透，只留「知道了」可点 */
+  .setting-guide-popper {
+    pointer-events: none;
+
+    .el-button {
+      pointer-events: auto;
     }
   }
 </style>
