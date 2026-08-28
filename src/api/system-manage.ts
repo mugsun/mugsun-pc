@@ -54,8 +54,8 @@ export function fetchRemoveMenu(ids: (number | string)[] | number | string) {
 }
 
 // ===== 参数 =====
-export function fetchParamList(params?: Record<string, any>) {
-  return request.get<any[]>({ url: '/api/system/param/list', params })
+export function fetchParamPage(params?: Record<string, any>) {
+  return request.get<any>({ url: '/api/system/param/page', params })
 }
 export function fetchSaveParam(data: Record<string, any>) {
   return request.post<void>({ url: '/api/system/param/submit', data })

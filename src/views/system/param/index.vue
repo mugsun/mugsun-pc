@@ -43,7 +43,7 @@
   import { useI18n } from 'vue-i18n'
   import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
   import { useCrud } from '@/hooks/core/useCrud'
-  import { fetchParamList, fetchSaveParam, fetchRemoveParam } from '@/api/system-manage'
+  import { fetchParamPage, fetchSaveParam, fetchRemoveParam } from '@/api/system-manage'
   import ParamDialog from './modules/param-dialog.vue'
   import { ElButton } from 'element-plus'
   import { hasPerm } from '@/utils/permission'
@@ -140,7 +140,7 @@
     replaceSearchParams,
     resetSearchParams
   } = useCrud({
-    listApi: fetchParamList,
+    listApi: fetchParamPage,
     saveApi: fetchSaveParam,
     removeApi: fetchRemoveParam,
     columnsFactory,

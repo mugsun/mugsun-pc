@@ -100,12 +100,17 @@ export function useCrud<TApiFn extends (params: any) => Promise<any>>(
         cancelButtonText: $t('common.cancel'),
         type: 'warning'
       }
-    ).then(async () => {
-      if (!removeApi) return
-      await removeApi(row[idKey])
-      ElMessage.success($t('common.deleteSuccess'))
-      await table.refreshRemove()
-    })
+    ).then(
+      async () => {
+        if (!removeApi) return
+        await removeApi(row[idKey])
+        ElMessage.success($t('common.deleteSuccess'))
+        await table.refreshRemove()
+      },
+      () => {
+        // 取消时 ElMessageBox 以 'cancel' 拒绝；只吞确认框的拒绝，删除接口的错误仍交由请求层提示
+      }
+    )
   }
 
   /** 保存（新增回首页 / 编辑保持当前页） */
