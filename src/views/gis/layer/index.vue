@@ -298,13 +298,22 @@
     }
     saving.value = true
     try {
-      await fetchSaveGisLayer({
+      const row = await fetchSaveGisLayer({
         name: form.name.trim(),
         kind: form.kind,
         remark: form.remark,
         payload: parsedPayload()
       })
-      ElMessage.success(t('pages.gis.saveSuccess'))
+      // 后端修过几何（未闭合环、自相交）就逐条说明，不能让用户以为原样存进去了
+      const warnings = row?.warnings ?? []
+      if (warnings.length) {
+        ElMessage.warning({
+          message: t('pages.gis.layerFixed', { count: warnings.length }) + warnings.join('；'),
+          duration: 8000
+        })
+      } else {
+        ElMessage.success(t('pages.gis.saveSuccess'))
+      }
       dialog.value = false
       await load()
     } finally {

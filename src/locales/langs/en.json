@@ -2409,6 +2409,7 @@
       "layerKind": "Render",
       "layerCount": "Features",
       "layerHint": "Paste GeoJSON, lon/lat records, or WKT / CSV / KML / GPX. Stored as WGS84; extra properties are kept. XYZ/WMS needs a service URL.",
+      "layerFixed": "Saved, but {count} geometries were repaired: ",
       "layerPayload": "Payload",
       "layerPayloadHint": "GeoJSON / [{\"lon\":116.39,\"lat\":39.91,\"bizId\":\"A1\"}] / POINT (116.397428 39.90923)",
       "kindXyz": "XYZ",

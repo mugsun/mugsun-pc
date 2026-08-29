@@ -168,6 +168,8 @@ export function attachOlOverlays(map: OlMap): OlOverlayHandle {
       const vector = new VectorLayer({
         className: `gis-ol-ov-${id}`,
         zIndex: 18,
+        // 与瓦片路径一致：不开的话万级要素的标注会互相压成一片糊字，点本身都看不见
+        declutter: true,
         source,
         style: (feature) => overlayStyle(feature, color),
         visible: meta.visible !== false && meta.kind !== 'heatmap',
@@ -528,7 +530,9 @@ function overlayStyle(feature: FeatureLike, fallback: string): Style[] {
       image: new CircleStyle({
         radius: 6,
         fill: new Fill({ color }),
-        stroke: new Stroke({ color: '#ffffff', width: 2 })
+        stroke: new Stroke({ color: '#ffffff', width: 2 }),
+        // 图层开了 declutter，点符号要显式退出避让，否则密集图层会连点一起被藏掉
+        declutterMode: 'none'
       }),
       text: label
         ? new Text({

@@ -111,6 +111,8 @@ export interface GisLayerRow {
   bbox?: string
   status?: number
   remark?: string
+  /** 入库时被自动修复的几何说明，仅 submit 响应带回，不落库 */
+  warnings?: string[]
 }
 
 export function fetchGisLayerPage(params: Record<string, unknown>) {

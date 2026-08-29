@@ -2409,6 +2409,7 @@
       "layerKind": "渲染",
       "layerCount": "要素数",
       "layerHint": "粘贴或导入 GeoJSON，或带 lon/lat 的业务数组，也可直接贴 WKT / CSV / KML / GPX。坐标按 WGS84 入库，其它字段原样保留。XYZ/WMS 填服务地址即可叠加。",
+      "layerFixed": "已保存，但有 {count} 处几何被修复：",
       "layerPayload": "数据",
       "layerPayloadHint": "GeoJSON / [{\"lon\":116.39,\"lat\":39.91,\"bizId\":\"A1\"}] / POINT (116.397428 39.90923)",
       "kindXyz": "XYZ",
