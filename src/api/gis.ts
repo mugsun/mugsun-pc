@@ -12,6 +12,10 @@ export interface GisProviderStatus {
 export interface GisStatus {
   enabled: boolean
   providers: GisProviderStatus[]
+  /** quantized-mesh 地形服务地址，空串表示未配置，三维地形开关应置灰 */
+  terrainUrl?: string
+  /** 随包发布的内置三维切片 code */
+  tilesets?: string[]
 }
 
 export interface GisProviderRow {

@@ -56,7 +56,7 @@ export interface GisView3d {
   pitch: number
 }
 
-export type OverlayKind = 'vector' | 'heatmap' | 'xyz' | 'wms'
+export type OverlayKind = 'vector' | 'heatmap' | 'xyz' | 'wms' | '3dtiles'
 
 export interface GisOverlayRef {
   id: string
@@ -154,7 +154,7 @@ export function overlayRefsFromUnknown(raw: unknown): GisOverlayRef[] {
 }
 
 function overlayKind(raw?: string): OverlayKind {
-  if (raw === 'heatmap' || raw === 'xyz' || raw === 'wms') {
+  if (raw === 'heatmap' || raw === 'xyz' || raw === 'wms' || raw === '3dtiles') {
     return raw
   }
   return 'vector'

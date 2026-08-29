@@ -64,6 +64,7 @@
             <ElRadioButton value="heatmap">{{ $t('pages.gis.heatmap') }}</ElRadioButton>
             <ElRadioButton value="xyz">{{ $t('pages.gis.kindXyz') }}</ElRadioButton>
             <ElRadioButton value="wms">{{ $t('pages.gis.kindWms') }}</ElRadioButton>
+            <ElRadioButton value="3dtiles">{{ $t('pages.gis.kind3dtiles') }}</ElRadioButton>
           </ElRadioGroup>
         </ElFormItem>
         <ElFormItem :label="$t('pages.gis.featRemark')">
@@ -72,10 +73,33 @@
         <ElFormItem v-if="isRaster" :label="$t('pages.gis.rasterUrl')" required>
           <ElInput v-model="form.url" :placeholder="$t('pages.gis.rasterUrlHint')" />
         </ElFormItem>
+        <template v-if="isTileset">
+          <ElFormItem :label="$t('pages.gis.tilesetUrl')" required>
+            <ElInput v-model="form.url" :placeholder="$t('pages.gis.tilesetUrlHint')" />
+            <p v-if="hostedTilesets.length" class="gis-layer-hint">
+              {{ $t('pages.gis.tilesetHosted') }}
+              <ElButton
+                v-for="code in hostedTilesets"
+                :key="code"
+                link
+                type="primary"
+                @click="form.url = `hosted:${code}`"
+              >
+                hosted:{{ code }}
+              </ElButton>
+            </p>
+          </ElFormItem>
+          <ElFormItem :label="$t('pages.gis.tilesetSse')">
+            <ElInputNumber v-model="form.sse" :min="1" :max="64" :step="1" />
+          </ElFormItem>
+          <ElFormItem :label="$t('pages.gis.tilesetHeightOffset')">
+            <ElInputNumber v-model="form.heightOffset" :min="-5000" :max="5000" :step="1" />
+          </ElFormItem>
+        </template>
         <ElFormItem v-if="form.kind === 'wms'" :label="$t('pages.gis.rasterLayers')" required>
           <ElInput v-model="form.layers" />
         </ElFormItem>
-        <ElFormItem v-if="!isRaster" :label="$t('pages.gis.layerPayload')">
+        <ElFormItem v-if="isPayload" :label="$t('pages.gis.layerPayload')">
           <ElInput
             v-model="form.payload"
             type="textarea"
@@ -90,7 +114,7 @@
           accept=".json,.geojson,.wkt,.csv,.kml,.gpx,application/json,text/csv"
           @change="onFile"
         />
-        <ElButton v-if="!isRaster" @click="fileRef?.click()">{{
+        <ElButton v-if="isPayload" @click="fileRef?.click()">{{
           $t('pages.gis.importJson')
         }}</ElButton>
         <span v-if="previewCount != null" class="gis-preview">{{
@@ -99,7 +123,7 @@
       </ElForm>
       <template #footer>
         <ElButton @click="dialog = false">{{ $t('common.cancel') }}</ElButton>
-        <ElButton v-if="!isRaster" :loading="ingesting" @click="previewIngest">{{
+        <ElButton v-if="isPayload" :loading="ingesting" @click="previewIngest">{{
           $t('pages.gis.layerIngest')
         }}</ElButton>
         <ElButton v-perm="'gis:layer:save'" type="primary" :loading="saving" @click="save">
@@ -153,8 +177,21 @@
   const saving = ref(false)
   const previewCount = ref<number | null>(null)
   const fileRef = ref<HTMLInputElement>()
-  const form = reactive({ name: '', kind: 'vector', remark: '', payload: '', url: '', layers: '' })
+  const form = reactive({
+    name: '',
+    kind: 'vector',
+    remark: '',
+    payload: '',
+    url: '',
+    layers: '',
+    sse: 16,
+    heightOffset: 0
+  })
   const isRaster = computed(() => form.kind === 'xyz' || form.kind === 'wms')
+  const isTileset = computed(() => form.kind === '3dtiles')
+  /** 只有矢量/热力需要贴要素数据，栅格与三维切片填地址 */
+  const isPayload = computed(() => !isRaster.value && !isTileset.value)
+  const hostedTilesets = ref<string[]>([])
   let bag: LabMapBag | undefined
 
   const kindText = (kind?: string): string => {
@@ -166,6 +203,9 @@
     }
     if (kind === 'wms') {
       return t('pages.gis.kindWms')
+    }
+    if (kind === '3dtiles') {
+      return t('pages.gis.kind3dtiles')
     }
     return t('pages.gis.kindVector')
   }
@@ -211,11 +251,20 @@
     form.payload = ''
     form.url = ''
     form.layers = ''
+    form.sse = 16
+    form.heightOffset = 0
     previewCount.value = null
     dialog.value = true
   }
 
   const parsedPayload = (): unknown => {
+    if (isTileset.value) {
+      return {
+        url: form.url.trim(),
+        maximumScreenSpaceError: form.sse,
+        heightOffset: form.heightOffset
+      }
+    }
     if (isRaster.value) {
       return { url: form.url.trim(), layers: form.layers.trim() }
     }
@@ -303,6 +352,7 @@
 
   onMounted(async () => {
     const status = await fetchGisStatus()
+    hostedTilesets.value = status.tilesets ?? []
     const provider = rememberedOrFirst(status.providers)
     await nextTick()
     if (mapHost.value) {

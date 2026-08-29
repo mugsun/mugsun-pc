@@ -1,7 +1,19 @@
 <template>
   <div class="gis-lab-play">
     <div class="gis-lab-stage">
-      <div ref="mapHost" class="gis-map"></div>
+      <div v-show="!is3d" ref="mapHost" class="gis-map"></div>
+      <div v-if="is3d" ref="cesiumHost" class="gis-map">
+        <div v-if="loading3d" class="gis-loading">{{ $t('pages.gis.load3d') }}</div>
+      </div>
+      <aside v-if="is3d && pick3d" class="gis-hud gis-lab-pick" data-test="lab-3d-pick">
+        <strong>{{ $t('pages.gis.tilesetPick') }}</strong>
+        <ul>
+          <li v-for="item in pick3d.properties" :key="item.key">
+            <span class="gis-pick-key">{{ item.key }}</span>
+            <span>{{ item.value }}</span>
+          </li>
+        </ul>
+      </aside>
       <div class="gis-hud gis-hud-tr gis-lab-chip">
         <strong>{{ meta?.title || code }}</strong>
         <span>{{ meta?.summary }}</span>
@@ -116,6 +128,8 @@
     type LabMapBag
   } from '@/gis/labBoot'
   import { pointerWgs84 } from '@/gis/olMap'
+  import { parseTilesetSpec } from '@/gis/raster'
+  import type { CesiumMod, CesiumViewer, TilesetPick } from '@/gis/cesiumMap'
 
   const props = defineProps<{ code: string; catalog: GisDemoMeta[] }>()
   const { t } = useI18n()
@@ -140,7 +154,16 @@
   let rawCollection: unknown
   const RADIUS_M = 800
 
+  const cesiumHost = ref<HTMLElement>()
+  const loading3d = ref(false)
+  const pick3d = ref<TilesetPick | undefined>()
+  let cesiumApi: typeof import('@/gis/cesiumMap') | undefined
+  let cesiumMod: CesiumMod | undefined
+  let cesiumViewer: CesiumViewer | undefined
+  let cesiumHandler: InstanceType<CesiumMod['ScreenSpaceEventHandler']> | undefined
+
   const meta = computed(() => props.catalog.find((row) => row.code === props.code))
+  const is3d = computed(() => uiOf(props.code) === 'tileset')
   const uiOf = (code: string): string => {
     if (meta.value?.ui) {
       return meta.value.ui
@@ -153,7 +176,8 @@
       buffer: 'buffer',
       radius: 'radius',
       geocode: 'geocode',
-      measure: 'measure'
+      measure: 'measure',
+      tiles3d: 'tileset'
     }
     return map[code] || 'overlay'
   }
@@ -276,6 +300,7 @@
     }
     bag.overlays.clear()
     bag.overlays.setCluster(false)
+    pick3d.value = undefined
     extraLayer?.getSource()?.clear()
     jsonOpen.value = false
     tab.value = 'code'
@@ -283,6 +308,10 @@
     rawCollection = data
     payload.value = data
     const ui = uiOf(props.code)
+    if (ui === 'tileset') {
+      await renderTileset(data)
+      return
+    }
     if (ui === 'playback') {
       const pack = samplesFromTrack(data)
       duration.value = pack.durationSec
@@ -332,6 +361,45 @@
       paintRadius(116.475, 39.918)
     }
     bag.map.updateSize()
+  }
+
+  /** 三维示例：起 Cesium、加载示例切片、绑点选 */
+  const renderTileset = async (data: unknown): Promise<void> => {
+    const spec = parseTilesetSpec(data)
+    if (!spec) {
+      ElMessage.error(t('pages.gis.tilesetFailed', { name: meta.value?.title || props.code }))
+      return
+    }
+    await nextTick()
+    if (!cesiumHost.value) {
+      return
+    }
+    loading3d.value = true
+    try {
+      cesiumApi = await import('@/gis/cesiumMap')
+      cesiumMod = cesiumMod ?? (await cesiumApi.loadCesium())
+      if (!cesiumViewer) {
+        cesiumViewer = cesiumApi.createCesiumViewer(cesiumHost.value, cesiumMod)
+        const provider = rememberedOrFirst((await fetchGisStatus()).providers)
+        cesiumApi.applyCesiumBasemap(cesiumMod, cesiumViewer, provider, 'img_label')
+        bindTilesetPick(cesiumMod, cesiumViewer)
+      }
+      const tileset = await cesiumApi.loadCesiumTileset(cesiumMod, cesiumViewer, spec)
+      cesiumApi.flyToCesiumTileset(cesiumMod, cesiumViewer, tileset)
+    } catch {
+      ElMessage.error(t('pages.gis.tilesetFailed', { name: meta.value?.title || props.code }))
+    } finally {
+      loading3d.value = false
+    }
+  }
+
+  const bindTilesetPick = (Cesium: CesiumMod, viewer: CesiumViewer): void => {
+    cesiumHandler?.destroy()
+    cesiumHandler = new Cesium.ScreenSpaceEventHandler(viewer.canvas)
+    cesiumHandler.setInputAction((movement: { position: unknown }) => {
+      const picked = viewer.scene.pick(movement.position as never)
+      pick3d.value = cesiumApi?.readTilesetPick(Cesium, picked)
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
   }
 
   const onMapClick = async (pixel: number[]): Promise<void> => {
@@ -412,6 +480,10 @@
       bag.map.removeInteraction(draw)
     }
     bag?.destroy()
+    cesiumHandler?.destroy()
+    cesiumHandler = undefined
+    cesiumViewer?.destroy()
+    cesiumViewer = undefined
   })
 </script>
 
@@ -421,6 +493,33 @@
   .gis-lab-stage {
     position: absolute;
     inset: 0;
+  }
+
+  /* 左上角被示例导航面板占着，属性浮层放右侧信息卡下方 */
+  .gis-lab-pick {
+    top: 60px;
+    right: 12px;
+    flex-direction: column;
+    align-items: stretch;
+    width: 240px;
+    font-size: 12px;
+  }
+
+  .gis-lab-pick ul {
+    padding: 0;
+    margin: 6px 0 0;
+    list-style: none;
+  }
+
+  .gis-lab-pick li {
+    display: flex;
+    gap: 8px;
+    padding: 2px 0;
+  }
+
+  .gis-lab-pick .gis-pick-key {
+    flex: 0 0 76px;
+    color: var(--el-text-color-secondary);
   }
 
   .gis-lab-chip {

@@ -27,7 +27,7 @@
   const cap = (id: string): string => id.charAt(0).toUpperCase() + id.slice(1)
 
   const groups = computed(() => {
-    const order = ['cover', 'motion', 'query']
+    const order = ['cover', 'motion', 'query', 'scene']
     return order
       .map((id) => ({
         id,

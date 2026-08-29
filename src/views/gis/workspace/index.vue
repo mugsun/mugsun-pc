@@ -268,6 +268,73 @@
                 </li>
               </ul>
             </ElTabPane>
+            <ElTabPane
+              :label="`${$t('pages.gis.wsSide3d')} (${tilesetRows.length})`"
+              name="scene3d"
+            >
+              <p v-if="viewMode !== '3d'" class="gis-feats-empty">
+                {{ $t('pages.gis.tilesetNeed3d') }}
+              </p>
+              <div class="gis-3d-switches">
+                <label class="gis-3d-switch">
+                  <ElSwitch
+                    :model-value="terrainOn"
+                    :disabled="!terrainReady"
+                    size="small"
+                    data-test="gis-terrain-switch"
+                    @update:model-value="
+                      (v: boolean | string | number) => onTerrainChange(Boolean(v))
+                    "
+                  />
+                  <span>{{ $t('pages.gis.terrain') }}</span>
+                  <span v-if="!terrainReady" class="gis-3d-hint">{{
+                    $t('pages.gis.terrainUnset')
+                  }}</span>
+                </label>
+                <label class="gis-3d-switch">
+                  <ElSwitch
+                    :model-value="extrudeOn"
+                    size="small"
+                    data-test="gis-extrude-switch"
+                    @update:model-value="
+                      (v: boolean | string | number) => onExtrudeChange(Boolean(v))
+                    "
+                  />
+                  <span>{{ $t('pages.gis.extrude') }}</span>
+                </label>
+              </div>
+              <ul v-if="tilesetRows.length" class="gis-ov-list">
+                <li v-for="row in tilesetRows" :key="row.id" class="gis-ov-card">
+                  <div class="gis-ov-row">
+                    <ElCheckbox
+                      :model-value="row.visible"
+                      data-test="gis-tileset-visible"
+                      @update:model-value="
+                        (v: boolean | string | number) => setTilesetVisible(row.id, Boolean(v))
+                      "
+                    />
+                    <span class="gis-feat-kind">{{ $t('pages.gis.kind3dtiles') }}</span>
+                    <span class="gis-ov-name" :title="row.name">{{ row.name }}</span>
+                    <ElButton link type="primary" @click="fitTileset(row.id)">{{
+                      $t('pages.gis.featLocate')
+                    }}</ElButton>
+                    <ElButton link type="danger" @click="dropTileset(row.id)">{{
+                      $t('pages.gis.featDelete')
+                    }}</ElButton>
+                  </div>
+                </li>
+              </ul>
+              <p v-else class="gis-feats-empty">{{ $t('pages.gis.tilesetEmpty') }}</p>
+              <template v-if="pick3d">
+                <div class="gis-feats-head">{{ $t('pages.gis.tilesetPick') }}</div>
+                <ul class="gis-pick-list" data-test="gis-tileset-pick">
+                  <li v-for="item in pick3d.properties" :key="item.key">
+                    <span class="gis-pick-key">{{ item.key }}</span>
+                    <span class="gis-pick-val">{{ item.value }}</span>
+                  </li>
+                </ul>
+              </template>
+            </ElTabPane>
             <ElTabPane :label="$t('pages.gis.inspect')" name="inspect">
               <template v-if="selectedFeat">
                 <ElForm label-position="top" size="small">
@@ -387,7 +454,8 @@
     type GisStyleCode,
     type GisViewMode
   } from '@/gis/types'
-  import type { CesiumMod, CesiumViewer } from '@/gis/cesiumMap'
+  import type { CesiumMod, CesiumTileset, CesiumViewer, TilesetPick } from '@/gis/cesiumMap'
+  import { parseTilesetSpec, type TilesetSpec } from '@/gis/raster'
   import type { OlSketchHandle } from '@/gis/olSketch'
   import {
     attachOlOverlays,
@@ -439,7 +507,27 @@
     }
   }
 
-  const status = ref({ enabled: true, providers: [] as GisProviderStatus[] })
+  const status = ref({
+    enabled: true,
+    providers: [] as GisProviderStatus[],
+    terrainUrl: '',
+    tilesets: [] as string[]
+  })
+
+  interface TilesetRow {
+    id: string
+    layerId: string | number
+    name: string
+    visible: boolean
+    spec: TilesetSpec
+  }
+
+  const tilesetRows = ref<TilesetRow[]>([])
+  const terrainOn = ref(false)
+  const extrudeOn = ref(false)
+  const pick3d = ref<TilesetPick | undefined>()
+  /** 地形要有服务地址才能开，否则开关置灰而不是点了没反应 */
+  const terrainReady = computed(() => Boolean(status.value.terrainUrl))
   const scenes = ref<GisScene[]>([])
   const sceneId = ref<GisId | undefined>()
   const sceneName = ref('')
@@ -479,6 +567,9 @@
   let cesiumViewer: CesiumViewer | undefined
   let cesiumSketch: InstanceType<CesiumMod['DataSource']> | undefined
   let cesiumApi: typeof import('@/gis/cesiumMap') | undefined
+  /** 已加载的三维切片，key 与 tilesetRows.id 一致 */
+  const loadedTilesets: globalThis.Map<string, CesiumTileset> = new globalThis.Map()
+  let cesiumClickHandler: InstanceType<CesiumMod['ScreenSpaceEventHandler']> | undefined
   let olApi: typeof import('@/gis/olMap') | undefined
   let pointerKey: unknown
   let clickKey: unknown
@@ -525,15 +616,7 @@
       view2d: { ...DEFAULT_SCENE.view2d },
       view3d: { ...DEFAULT_SCENE.view3d },
       layers: layersWithSketch(sketch?.exportFeatures(baseProvider.value) ?? []),
-      overlayLayers: overlays?.list().map((row) => ({
-        id: row.id,
-        layerId: row.layerId,
-        name: row.name,
-        kind: row.kind,
-        visible: row.visible,
-        color: row.color,
-        opacity: row.opacity
-      })),
+      overlayLayers: currentOverlayRefs(),
       heatmap: heatmapOn.value
     }
     if (olMap && olApi) {
@@ -669,6 +752,10 @@
       baseProvider.value,
       cesiumSketch
     )
+    // 重建数据源会丢掉挤出高度，白模开着就重新应用一次
+    if (extrudeOn.value) {
+      cesiumApi.setCesiumExtrude(cesiumMod, cesiumSketch, true)
+    }
   }
 
   const ensureCesium = async (): Promise<void> => {
@@ -680,10 +767,26 @@
       cesiumViewer = cesiumApi.createCesiumViewer(cesiumHost.value, cesiumMod)
       cesiumApi.applyCesiumBasemap(cesiumMod, cesiumViewer, baseProvider.value, baseStyle.value)
       cesiumApi.flyCesiumTo(cesiumMod, cesiumViewer, DEFAULT_SCENE.view3d, baseProvider.value)
+      bindCesiumPick(cesiumMod, cesiumViewer)
       await refreshCesiumSketch()
     } finally {
       loading3d.value = false
     }
+  }
+
+  /** 三维点选：命中 3D Tiles 要素就把 Batch Table 属性摆到侧栏 */
+  const bindCesiumPick = (Cesium: CesiumMod, viewer: CesiumViewer): void => {
+    cesiumClickHandler?.destroy()
+    cesiumClickHandler = new Cesium.ScreenSpaceEventHandler(viewer.canvas)
+    cesiumClickHandler.setInputAction((movement: { position: unknown }) => {
+      const picked = viewer.scene.pick(movement.position as never)
+      const hit = cesiumApi?.readTilesetPick(Cesium, picked)
+      pick3d.value = hit
+      if (hit) {
+        sideTab.value = 'scene3d'
+        panelOpen.value = true
+      }
+    }, Cesium.ScreenSpaceEventType.LEFT_CLICK)
   }
 
   const applyBasemap = (): void => {
@@ -718,6 +821,7 @@
         cesiumApi.flyCesiumTo(cesiumMod, cesiumViewer, spec.view3d, baseProvider.value)
         cesiumViewer.resize()
         await refreshCesiumSketch()
+        await syncCesiumTilesets()
       }
     }
     tool.value = 'pan'
@@ -744,16 +848,7 @@
     sketch?.importFeatures(feats, baseProvider.value)
     lastProvider.value = baseProvider.value
     rememberGisProvider(baseProvider.value)
-    void applyOverlays(
-      overlays?.list().map((row) => ({
-        id: row.id,
-        layerId: row.layerId,
-        name: row.name,
-        kind: row.kind,
-        visible: row.visible,
-        color: row.color
-      })) ?? []
-    )
+    void applyOverlays(currentOverlayRefs())
     void refreshCesiumSketch()
     syncSketchState()
   }
@@ -812,8 +907,31 @@
     }
   }
 
+  /** 当前全部叠加引用：二维图层 + 三维切片。重排 overlays 时必须带全，否则会丢层 */
+  const currentOverlayRefs = (): GisOverlayRef[] => [
+    ...(overlays?.list().map((row) => ({
+      id: row.id,
+      layerId: row.layerId,
+      name: row.name,
+      kind: row.kind,
+      visible: row.visible,
+      color: row.color,
+      opacity: row.opacity
+    })) ?? []),
+    ...tilesetRows.value.map((row) => ({
+      id: row.id,
+      layerId: row.layerId,
+      name: row.name,
+      kind: '3dtiles' as OverlayKind,
+      visible: row.visible
+    }))
+  ]
+
   const applyOverlays = async (refs: GisOverlayRef[]): Promise<void> => {
     overlays?.clear()
+    // 场景切换时三维切片也要重排，否则上个场景的模型会留在场里
+    tilesetRows.value = []
+    pick3d.value = undefined
     for (const item of refs) {
       if (!item.layerId) {
         continue
@@ -824,6 +942,10 @@
         parsed = row.dataJson ? JSON.parse(row.dataJson) : {}
       } catch {
         parsed = {}
+      }
+      if (row.kind === '3dtiles') {
+        registerTileset(item.layerId, item.name || row.name, parsed, item.visible)
+        continue
       }
       const raster = row.kind === 'xyz' || row.kind === 'wms' ? parseRasterSpec(parsed) : undefined
       if (raster) {
@@ -848,10 +970,15 @@
     }
     syncOverlayRows()
     void refreshCesiumSketch()
+    void syncCesiumTilesets()
   }
 
   const addOverlay = async (row: GisLayerRow): Promise<void> => {
     if (row.id == null || row.id === '') {
+      return
+    }
+    if (row.kind === '3dtiles') {
+      await addTilesetLayer(row)
       return
     }
     const already = overlayRows.value.some((o) => String(o.layerId) === String(row.id))
@@ -860,15 +987,7 @@
       return
     }
     await applyOverlays([
-      ...overlayRows.value.map((o) => ({
-        id: o.id,
-        layerId: o.layerId,
-        name: o.name,
-        kind: overlayKindOf(o.kind),
-        visible: o.visible,
-        color: o.color,
-        opacity: o.opacity
-      })),
+      ...currentOverlayRefs(),
       {
         id: `ov-${row.id}`,
         layerId: row.id,
@@ -887,6 +1006,146 @@
     overlays?.remove(id)
     syncOverlayRows()
     void refreshCesiumSketch()
+  }
+
+  /** 把图层 dataJson 解析成三维切片行；同一图层重复加只更新可见性 */
+  const registerTileset = (
+    layerId: string | number,
+    name: string,
+    parsed: unknown,
+    visible: boolean
+  ): void => {
+    const spec = parseTilesetSpec(parsed)
+    if (!spec) {
+      return
+    }
+    const id = `ts-${layerId}`
+    const exist = tilesetRows.value.find((row) => row.id === id)
+    if (exist) {
+      exist.visible = visible
+      exist.spec = spec
+      return
+    }
+    tilesetRows.value.push({ id, layerId, name, visible, spec })
+  }
+
+  /** 让 Cesium 侧的切片与 tilesetRows 对齐：缺的加载、多的移除、显隐同步 */
+  const syncCesiumTilesets = async (): Promise<void> => {
+    if (!tilesetRows.value.length && !loadedTilesets.size) {
+      return
+    }
+    if (viewMode.value !== '3d') {
+      return
+    }
+    await ensureCesium()
+    if (!cesiumMod || !cesiumViewer || !cesiumApi) {
+      return
+    }
+    for (const [id, tileset] of [...loadedTilesets]) {
+      if (!tilesetRows.value.some((row) => row.id === id)) {
+        cesiumApi.removeCesiumTileset(cesiumViewer, tileset)
+        loadedTilesets.delete(id)
+      }
+    }
+    for (const row of tilesetRows.value) {
+      let tileset = loadedTilesets.get(row.id)
+      if (!tileset) {
+        try {
+          tileset = await cesiumApi.loadCesiumTileset(cesiumMod, cesiumViewer, row.spec)
+        } catch {
+          ElMessage.error(t('pages.gis.tilesetFailed', { name: row.name }))
+          continue
+        }
+        loadedTilesets.set(row.id, tileset)
+        cesiumApi.flyToCesiumTileset(cesiumMod, cesiumViewer, tileset)
+      }
+      tileset.show = row.visible
+    }
+  }
+
+  const addTilesetLayer = async (row: GisLayerRow): Promise<void> => {
+    const detail = await fetchGisLayerDetail(row.id as GisId)
+    let parsed: unknown = {}
+    try {
+      parsed = detail.dataJson ? JSON.parse(detail.dataJson) : {}
+    } catch {
+      parsed = {}
+    }
+    registerTileset(row.id as GisId, row.name, parsed, true)
+    if (viewMode.value !== '3d') {
+      viewMode.value = '3d'
+      await onViewModeChange()
+    }
+    sideTab.value = 'scene3d'
+    await syncCesiumTilesets()
+  }
+
+  const setTilesetVisible = (id: string, visible: boolean): void => {
+    const row = tilesetRows.value.find((item) => item.id === id)
+    if (!row) {
+      return
+    }
+    row.visible = visible
+    const tileset = loadedTilesets.get(id)
+    if (tileset) {
+      tileset.show = visible
+    }
+  }
+
+  const fitTileset = (id: string): void => {
+    const tileset = loadedTilesets.get(id)
+    if (tileset && cesiumViewer && cesiumApi && cesiumMod) {
+      cesiumApi.flyToCesiumTileset(cesiumMod, cesiumViewer, tileset)
+    }
+  }
+
+  const dropTileset = (id: string): void => {
+    const tileset = loadedTilesets.get(id)
+    if (tileset && cesiumViewer && cesiumApi) {
+      cesiumApi.removeCesiumTileset(cesiumViewer, tileset)
+    }
+    loadedTilesets.delete(id)
+    tilesetRows.value = tilesetRows.value.filter((row) => row.id !== id)
+    pick3d.value = undefined
+  }
+
+  const onTerrainChange = async (val: boolean): Promise<void> => {
+    if (val && !terrainReady.value) {
+      ElMessage.info(t('pages.gis.terrainUnsetTip'))
+      return
+    }
+    if (viewMode.value !== '3d') {
+      viewMode.value = '3d'
+      await onViewModeChange()
+    }
+    await ensureCesium()
+    if (!cesiumMod || !cesiumViewer || !cesiumApi) {
+      return
+    }
+    // 开关状态以实际生效结果为准，接地形服务失败就弹回关闭
+    terrainOn.value = await cesiumApi
+      .setCesiumTerrain(cesiumMod, cesiumViewer, val, status.value.terrainUrl)
+      .catch(() => {
+        ElMessage.error(t('pages.gis.terrainFailed'))
+        return false
+      })
+  }
+
+  const onExtrudeChange = async (val: boolean): Promise<void> => {
+    extrudeOn.value = val
+    if (viewMode.value !== '3d') {
+      viewMode.value = '3d'
+      await onViewModeChange()
+    }
+    await ensureCesium()
+    if (!cesiumMod || !cesiumApi) {
+      return
+    }
+    const count = cesiumApi.setCesiumExtrude(cesiumMod, cesiumSketch, val)
+    if (val && !count) {
+      ElMessage.info(t('pages.gis.extrudeEmpty'))
+    }
+    cesiumViewer?.scene.requestRender()
   }
 
   const toggleTrackHeat = async (): Promise<void> => {
@@ -1020,7 +1279,7 @@
 
   const overlayKindOf = (kind?: string, fallback?: string): OverlayKind => {
     const raw = kind || fallback
-    if (raw === 'heatmap' || raw === 'xyz' || raw === 'wms') {
+    if (raw === 'heatmap' || raw === 'xyz' || raw === 'wms' || raw === '3dtiles') {
       return raw
     }
     return 'vector'
@@ -1035,6 +1294,9 @@
     }
     if (kind === 'wms') {
       return t('pages.gis.kindWms')
+    }
+    if (kind === '3dtiles') {
+      return t('pages.gis.kind3dtiles')
     }
     return t('pages.gis.kindVector')
   }
@@ -1376,7 +1638,13 @@
   })
 
   onMounted(async () => {
-    status.value = await fetchGisStatus()
+    const next = await fetchGisStatus()
+    status.value = {
+      enabled: next.enabled,
+      providers: next.providers,
+      terrainUrl: next.terrainUrl ?? '',
+      tilesets: next.tilesets ?? []
+    }
     if (!status.value.enabled || !hasReadyProvider.value) return
     await loadScenes()
     await bootMap()
@@ -1396,6 +1664,9 @@
     sketch = undefined
     olMap?.setTarget(undefined)
     olMap = undefined
+    cesiumClickHandler?.destroy()
+    cesiumClickHandler = undefined
+    loadedTilesets.clear()
     cesiumViewer?.destroy()
     cesiumViewer = undefined
   })
@@ -1534,6 +1805,12 @@
     margin: 0 0 8px;
   }
 
+  /* 四个页签要在固定宽度的 HUD 面板里排下，默认 padding 会把最后一个挤出面板点不到 */
+  .gis-side-tabs :deep(.el-tabs__item) {
+    padding: 0 10px;
+    font-size: 12px;
+  }
+
   .gis-side-tabs :deep(.el-tabs__content),
   .gis-side-tabs :deep(.el-tab-pane) {
     display: flex;
@@ -1652,6 +1929,51 @@
   .gis-ov-card {
     padding: 6px 2px 4px;
     border-bottom: 1px solid var(--el-border-color-extra-light);
+  }
+
+  .gis-3d-switches {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px 16px;
+    margin-bottom: 8px;
+  }
+
+  .gis-3d-switch {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    font-size: 12px;
+    cursor: pointer;
+  }
+
+  .gis-3d-hint {
+    color: var(--el-text-color-secondary);
+  }
+
+  .gis-pick-list {
+    padding: 0;
+    margin: 0;
+    list-style: none;
+  }
+
+  .gis-pick-list li {
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    padding: 3px 2px;
+    font-size: 12px;
+    border-bottom: 1px solid var(--el-border-color-extra-light);
+  }
+
+  .gis-pick-key {
+    flex: 0 0 88px;
+    color: var(--el-text-color-secondary);
+  }
+
+  .gis-pick-val {
+    flex: 1;
+    min-width: 0;
+    word-break: break-all;
   }
 
   .gis-ov-row {
