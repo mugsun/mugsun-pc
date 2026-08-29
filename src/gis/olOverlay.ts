@@ -5,6 +5,13 @@ import type Geometry from 'ol/geom/Geometry'
 import Heatmap from 'ol/layer/Heatmap'
 import TileLayer from 'ol/layer/Tile'
 import VectorLayer from 'ol/layer/Vector'
+import VectorTileLayer from 'ol/layer/VectorTile'
+import MVT from 'ol/format/MVT'
+import VectorTileSource from 'ol/source/VectorTile'
+import type VectorTileSourceTile from 'ol/VectorTile'
+import type RenderFeature from 'ol/render/Feature'
+import type { Extent } from 'ol/extent'
+import type Projection from 'ol/proj/Projection'
 import Cluster from 'ol/source/Cluster'
 import TileWMS from 'ol/source/TileWMS'
 import VectorSource from 'ol/source/Vector'
@@ -12,6 +19,7 @@ import XYZ from 'ol/source/XYZ'
 import { Fill, Stroke, Style, Circle as CircleStyle, Text } from 'ol/style'
 import type { FeatureLike } from 'ol/Feature'
 import { fromDisplayLonLat, mapLonLatCoords, toDisplayLonLat } from './coord'
+import { loadAuthedTileBuffer } from './authTile'
 import { OL_ROLE_OVERLAY } from './olMap'
 import { parseRasterSpec, type OverlayKind, type RasterSpec } from './raster'
 import {
@@ -33,6 +41,8 @@ export interface OverlayEntry {
   color: string
   count: number
   opacity: number
+  /** 该图层是否以矢量瓦片渲染（true 时前端手里没有完整要素，导出与适应范围不可用） */
+  tiled?: boolean
 }
 
 export interface OlOverlayHandle {
@@ -44,6 +54,22 @@ export interface OlOverlayHandle {
       layerId?: string | number
       name: string
       kind: OverlayKind
+      visible?: boolean
+      color?: string
+      opacity?: number
+    }
+  ) => void
+  /**
+   * 矢量瓦片图层：万级要素不再整层拉 GeoJSON，改由后端 ST_AsMVT 按 z/x/y 裁好再发。
+   * 瓦片里的坐标是 WGS84 口径，无法逐点纠偏，所以只能用在不做偏移的供应商上（调用方负责判断）。
+   */
+  setTiles: (
+    id: string,
+    url: string,
+    meta: {
+      layerId?: string | number
+      name: string
+      count?: number
       visible?: boolean
       color?: string
       opacity?: number
@@ -79,6 +105,7 @@ interface Slot {
   heat?: Heatmap
   cluster?: VectorLayer
   raster?: TileLayer
+  tiles?: VectorTileLayer
 }
 
 export function attachOlOverlays(map: OlMap): OlOverlayHandle {
@@ -97,6 +124,9 @@ export function attachOlOverlays(map: OlMap): OlOverlayHandle {
     }
     if (slot.raster) {
       map.removeLayer(slot.raster)
+    }
+    if (slot.tiles) {
+      map.removeLayer(slot.tiles)
     }
   }
 
@@ -178,6 +208,60 @@ export function attachOlOverlays(map: OlMap): OlOverlayHandle {
       slots.set(id, slot)
       applyCluster(slot)
     },
+    setTiles: (id, url, meta) => {
+      const exist = slots.get(id)
+      if (exist) {
+        destroySlot(exist)
+      }
+      const color = meta.color || '#16a34a'
+      const opacity = clampOpacity(meta.opacity)
+      const tiles = new VectorTileLayer({
+        className: `gis-ol-ov-${id}`,
+        zIndex: 18,
+        declutter: true,
+        visible: meta.visible !== false,
+        opacity,
+        source: new VectorTileSource({
+          format: new MVT(),
+          url,
+          maxZoom: 18,
+          // OpenLayers 取瓦片不走 axios 拦截器，令牌得自己塞进 fetch。
+          // loader 的返回值会被 VectorTile.load 丢掉，成败一律走 onLoad / onError 回调，
+          // 否则瓦片会一直停在 LOADING，既不出图也不报错。
+          tileLoadFunction: (tile, src) => {
+            const vt = tile as unknown as VectorTileSourceTile<RenderFeature>
+            vt.setLoader((extent: Extent, _resolution: number, projection: Projection) => {
+              loadAuthedTileBuffer(src)
+                .then((buffer) => {
+                  const feats = new MVT().readFeatures(buffer, {
+                    extent,
+                    featureProjection: projection
+                  }) as RenderFeature[]
+                  vt.onLoad(feats, projection)
+                })
+                .catch(() => vt.onError())
+            })
+          }
+        }),
+        style: (feature) => overlayStyle(feature, color)
+      })
+      tiles.set('mugsunRole', OL_ROLE_OVERLAY)
+      map.addLayer(tiles)
+      slots.set(id, {
+        tiles,
+        meta: {
+          id,
+          layerId: meta.layerId,
+          name: meta.name,
+          kind: 'vector',
+          visible: meta.visible !== false,
+          color,
+          count: meta.count || 0,
+          opacity,
+          tiled: true
+        }
+      })
+    },
     setRaster: (id, spec, meta) => {
       const exist = slots.get(id)
       if (exist) {
@@ -243,6 +327,10 @@ export function attachOlOverlays(map: OlMap): OlOverlayHandle {
         return
       }
       slot.meta.visible = visible
+      if (slot.tiles) {
+        slot.tiles.setVisible(visible)
+        return
+      }
       if (slot.raster) {
         slot.raster.setVisible(visible)
         return
@@ -270,6 +358,7 @@ export function attachOlOverlays(map: OlMap): OlOverlayHandle {
       slot.heat?.setOpacity(next)
       slot.cluster?.setOpacity(next)
       slot.raster?.setOpacity(next)
+      slot.tiles?.setOpacity(next)
     },
     setCluster: (on) => {
       clusterOn = on

@@ -191,7 +191,13 @@
                     <span class="gis-feat-kind">{{ overlayKindText(row.kind) }}</span>
                     <span class="gis-ov-name" :title="row.name">{{ row.name }}</span>
                     <span class="gis-ov-count">{{ row.count }}</span>
-                    <ElButton link type="primary" @click="overlays?.fit(row.id)">{{
+                    <span
+                      v-if="row.tiled"
+                      class="gis-ov-tiled"
+                      :title="$t('pages.gis.wsTiledHint')"
+                      >{{ $t('pages.gis.wsTiled') }}</span
+                    >
+                    <ElButton link type="primary" @click="fitOverlay(row)">{{
                       $t('pages.gis.featLocate')
                     }}</ElButton>
                     <ElButton link type="danger" @click="dropOverlay(row.id)">{{
@@ -268,6 +274,63 @@
                 </li>
               </ul>
             </ElTabPane>
+            <div class="gis-query">
+              <div class="gis-feats-head">{{ $t('pages.gis.wsSideQuery') }}</div>
+              <ElSelect
+                v-model="queryLayerId"
+                size="small"
+                clearable
+                :placeholder="$t('pages.gis.wsQueryLayer')"
+                data-test="gis-query-layer"
+              >
+                <ElOption
+                  v-for="row in queryableLayers"
+                  :key="String(row.id)"
+                  :label="`${row.name} (${row.featureCount})`"
+                  :value="String(row.id)"
+                />
+              </ElSelect>
+              <div class="gis-query-row">
+                <ElButton
+                  size="small"
+                  :loading="queryBusy"
+                  data-test="gis-query-bbox"
+                  @click="runQueryBbox"
+                >
+                  {{ $t('pages.gis.wsQueryView') }}
+                </ElButton>
+                <ElButton
+                  size="small"
+                  :loading="queryBusy"
+                  data-test="gis-query-nearest"
+                  @click="runQueryNearest"
+                >
+                  {{ $t('pages.gis.wsQueryNearest') }}
+                </ElButton>
+              </div>
+              <div class="gis-query-row">
+                <ElInputNumber
+                  v-model="queryMeters"
+                  size="small"
+                  :min="10"
+                  :max="200000"
+                  :step="500"
+                  controls-position="right"
+                  data-test="gis-query-meters"
+                />
+                <ElButton
+                  size="small"
+                  :loading="queryBusy"
+                  data-test="gis-query-radius"
+                  @click="runQueryRadius"
+                >
+                  {{ $t('pages.gis.wsQueryRadius') }}
+                </ElButton>
+              </div>
+              <p v-if="queryHint" class="gis-query-hint" data-test="gis-query-hint">
+                {{ queryHint }}
+              </p>
+            </div>
             <ElTabPane
               :label="`${$t('pages.gis.wsSide3d')} (${tilesetRows.length})`"
               name="scene3d"
@@ -427,10 +490,16 @@
     fetchGisSearch,
     fetchGisReverse,
     fetchGisLayerList,
+    fetchGisSpatialStatus,
+    fetchGisSpatialBbox,
+    fetchGisSpatialRadius,
+    fetchGisSpatialNearest,
+    gisMvtUrlTemplate,
     fetchGisLayerDetail,
     fetchGisAnalyze,
     type GisId,
     type GisLayerRow,
+    type GisSpatialResult,
     type GisPoi,
     type GisProviderStatus,
     type GisScene
@@ -549,6 +618,16 @@
   const overviewOn = ref(false)
   const overlayRows = ref<OverlayEntry[]>([])
   const catalogLayers = ref<GisLayerRow[]>([])
+  /** 要素超过这个数就改走矢量瓦片：再往上整层 GeoJSON 的解析与渲染会明显掉帧 */
+  const TILE_THRESHOLD = 2000
+  const spatial = ref({ postgis: false, mvt: false, limitMax: 5000 })
+  /**
+   * 高德 / 百度底图要逐点纠偏才对得上，而矢量瓦片是后端裁好的 WGS84 坐标没法逐点动，
+   * 所以这两家底图下即便图层很大也只能回落整层渲染。
+   */
+  const tileFriendlyProvider = computed(
+    () => baseProvider.value !== 'amap' && baseProvider.value !== 'baidu'
+  )
   const searchText = ref('')
   const searchRef = ref<{ blur?: () => void } | null>(null)
   const gotoOpen = ref(false)
@@ -907,6 +986,134 @@
     }
   }
 
+  // ==================== 空间查询 ====================
+
+  const queryLayerId = ref<string>('')
+  const queryMeters = ref(2000)
+  const queryBusy = ref(false)
+  const queryHint = ref('')
+  const QUERY_OVERLAY_ID = 'ov-spatial-query'
+
+  /** 只有矢量 / 热力图层有几何可查，栅格与三维切片没有 */
+  const queryableLayers = computed(() =>
+    catalogLayers.value.filter((row) => row.kind === 'vector' || row.kind === 'heatmap')
+  )
+
+  // 目录到位后默认选要素最多的那层：多数情况就是用户想查的，省掉一次必然的下拉操作
+  watch(queryableLayers, (rows) => {
+    if (queryLayerId.value || !rows.length) {
+      return
+    }
+    const biggest = rows.reduce((a, b) => ((b.featureCount ?? 0) > (a.featureCount ?? 0) ? b : a))
+    queryLayerId.value = String(biggest.id)
+  })
+
+  /** 把命中要素画成一个临时叠加层，再查一次就整层替换 */
+  const showQueryResult = (result: GisSpatialResult): void => {
+    const feats = collectionToSketch(result)
+    overlays?.set(QUERY_OVERLAY_ID, feats, baseProvider.value, {
+      name: t('pages.gis.wsSideQuery'),
+      kind: 'vector',
+      visible: true,
+      color: '#f97316'
+    })
+    syncOverlayRows()
+    queryHint.value = feats.length
+      ? `${t('pages.gis.wsQueryHitCount')} ${result.count} · ${t('pages.gis.wsQueryEngine')} ${result.engine}` +
+        (result.truncated ? ` · ${t('pages.gis.wsQueryTruncated')}` : '')
+      : t('pages.gis.wsQueryEmpty')
+    if (feats.length) {
+      overlays?.fit(QUERY_OVERLAY_ID)
+    }
+  }
+
+  /** 三个查询共用的前置检查与异常收口，避免各自重复 try/catch */
+  const runQuery = async (fn: (layerId: string) => Promise<GisSpatialResult>): Promise<void> => {
+    if (!queryLayerId.value) {
+      queryHint.value = t('pages.gis.wsQueryNoLayer')
+      return
+    }
+    queryBusy.value = true
+    try {
+      showQueryResult(await fn(queryLayerId.value))
+    } catch (e) {
+      queryHint.value = e instanceof Error ? e.message : String(e)
+    } finally {
+      queryBusy.value = false
+    }
+  }
+
+  const runQueryBbox = (): Promise<void> =>
+    runQuery(async (layerId) => {
+      if (!olMap || !olApi) {
+        throw new Error('map not ready')
+      }
+      const box = olApi.readOlExtentLonLat(olMap, baseProvider.value)
+      return fetchGisSpatialBbox({ layerId, ...box })
+    })
+
+  const runQueryRadius = (): Promise<void> =>
+    runQuery(async (layerId) => {
+      const center = currentCenter()
+      return fetchGisSpatialRadius({
+        layerId,
+        lon: center[0],
+        lat: center[1],
+        meters: queryMeters.value
+      })
+    })
+
+  const runQueryNearest = (): Promise<void> =>
+    runQuery(async (layerId) => {
+      const center = currentCenter()
+      return fetchGisSpatialNearest({ layerId, lon: center[0], lat: center[1], limit: 10 })
+    })
+
+  /** 半径与最近邻以当前地图中心为基准点，省掉一个额外的取点交互 */
+  const currentCenter = (): [number, number] => {
+    if (olMap && olApi) {
+      return olApi.readOlView(olMap, baseProvider.value).center
+    }
+    return [116.397428, 39.90923]
+  }
+
+  /**
+   * 定位到图层。瓦片图层前端手里没有要素，OpenLayers 算不出范围，
+   * 改用图层入库时算好的 bbox。
+   */
+  const fitOverlay = (row: OverlayEntry): void => {
+    if (!row.tiled) {
+      overlays?.fit(row.id)
+      return
+    }
+    const meta = catalogLayers.value.find((l) => String(l.id) === String(row.layerId))
+    let box: number[] | undefined
+    try {
+      const parsed = meta?.bbox ? JSON.parse(meta.bbox) : undefined
+      if (Array.isArray(parsed) && parsed.length === 4) {
+        box = parsed.map(Number)
+      }
+    } catch {
+      box = undefined
+    }
+    if (!box || box.some((n) => !Number.isFinite(n))) {
+      return
+    }
+    if (olMap && olApi) {
+      olApi.fitOlLonLatExtent(olMap, baseProvider.value, box[0], box[1], box[2], box[3])
+    }
+  }
+
+  /** 是否改用矢量瓦片渲染：能力在、底图不纠偏、要素够多、且是矢量图层 */
+  const shouldTile = (meta?: GisLayerRow): boolean =>
+    Boolean(
+      spatial.value.mvt &&
+        tileFriendlyProvider.value &&
+        meta &&
+        meta.kind === 'vector' &&
+        (meta.featureCount ?? 0) >= TILE_THRESHOLD
+    )
+
   /** 当前全部叠加引用：二维图层 + 三维切片。重排 overlays 时必须带全，否则会丢层 */
   const currentOverlayRefs = (): GisOverlayRef[] => [
     ...(overlays?.list().map((row) => ({
@@ -934,6 +1141,19 @@
     pick3d.value = undefined
     for (const item of refs) {
       if (!item.layerId) {
+        continue
+      }
+      // 够大且能走瓦片的图层不取整层 dataJson，省掉一次兆级传输与前端解析
+      const meta = catalogLayers.value.find((l) => String(l.id) === String(item.layerId))
+      if (shouldTile(meta)) {
+        overlays?.setTiles(`ov-${item.layerId}`, gisMvtUrlTemplate(item.layerId), {
+          layerId: item.layerId,
+          name: item.name || meta?.name || '',
+          count: meta?.featureCount ?? 0,
+          visible: item.visible,
+          color: item.color,
+          opacity: item.opacity
+        })
         continue
       }
       const row = await fetchGisLayerDetail(item.layerId)
@@ -1275,6 +1495,14 @@
 
   const loadCatalog = async (): Promise<void> => {
     catalogLayers.value = (await fetchGisLayerList()) ?? []
+    try {
+      const st = await fetchGisSpatialStatus()
+      if (st) {
+        spatial.value = st
+      }
+    } catch {
+      // 空间能力探测失败按不可用处理，整层渲染这条老路始终可用
+    }
   }
 
   const overlayKindOf = (kind?: string, fallback?: string): OverlayKind => {
@@ -1994,6 +2222,42 @@
   .gis-ov-count {
     flex-shrink: 0;
     font-size: 12px;
+    color: var(--el-text-color-secondary);
+  }
+
+  .gis-ov-tiled {
+    flex-shrink: 0;
+    padding: 0 4px;
+    font-size: 11px;
+    line-height: 16px;
+    color: var(--el-color-primary);
+    background: var(--el-color-primary-light-9);
+    border-radius: 3px;
+  }
+
+  .gis-query {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    padding-top: 8px;
+    margin-top: 8px;
+    border-top: 1px solid var(--el-border-color-lighter);
+  }
+
+  .gis-query-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+
+    .el-input-number {
+      width: 108px;
+    }
+  }
+
+  .gis-query-hint {
+    margin: 0;
+    font-size: 12px;
+    line-height: 1.5;
     color: var(--el-text-color-secondary);
   }
 

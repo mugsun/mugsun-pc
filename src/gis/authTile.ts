@@ -12,3 +12,15 @@ export async function loadAuthedTileBlob(src: string): Promise<string> {
   const blob = await res.blob()
   return URL.createObjectURL(blob)
 }
+
+/** 矢量瓦片是 protobuf，不能走 blob URL，直接把字节给 MVT 解析器 */
+export async function loadAuthedTileBuffer(src: string): Promise<ArrayBuffer> {
+  const token = useUserStore().accessToken
+  const res = await fetch(src, {
+    headers: token ? { Authorization: token } : {}
+  })
+  if (!res.ok) {
+    throw new Error(`mvt ${res.status}`)
+  }
+  return res.arrayBuffer()
+}

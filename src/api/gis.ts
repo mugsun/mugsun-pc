@@ -173,3 +173,73 @@ export function fetchGisDemo(code: string) {
     url: `/api/system/gis/demo/${code}`
   })
 }
+
+/** 空间查询结果：GeoJSON FeatureCollection + 执行引擎与是否被截断 */
+export interface GisSpatialResult {
+  type: string
+  features: unknown[]
+  count: number
+  /** postgis 表示下沉数据库执行，java 表示回落内存执行 */
+  engine: 'postgis' | 'java'
+  truncated: boolean
+}
+
+export interface GisSpatialStatus {
+  postgis: boolean
+  mvt: boolean
+  limitMax: number
+}
+
+export function fetchGisSpatialStatus() {
+  return request.get<GisSpatialStatus>({ url: '/api/system/gis/spatial/status' })
+}
+
+export function fetchGisSpatialBbox(params: {
+  layerId: GisId
+  minLon: number
+  minLat: number
+  maxLon: number
+  maxLat: number
+  limit?: number
+  engine?: 'java'
+}) {
+  return request.get<GisSpatialResult>({ url: '/api/system/gis/spatial/bbox', params })
+}
+
+export function fetchGisSpatialRadius(params: {
+  layerId: GisId
+  lon: number
+  lat: number
+  meters: number
+  limit?: number
+  engine?: 'java'
+}) {
+  return request.get<GisSpatialResult>({ url: '/api/system/gis/spatial/radius', params })
+}
+
+export function fetchGisSpatialNearest(params: {
+  layerId: GisId
+  lon: number
+  lat: number
+  limit?: number
+  engine?: 'java'
+}) {
+  return request.get<GisSpatialResult>({ url: '/api/system/gis/spatial/nearest', params })
+}
+
+export function fetchGisSpatialIntersects(data: {
+  layerId: GisId
+  geometry: unknown
+  limit?: number
+  engine?: 'java'
+}) {
+  return request.post<GisSpatialResult>({ url: '/api/system/gis/spatial/intersects', data })
+}
+
+/**
+ * 矢量瓦片模板地址（交给 OpenLayers 拼 z/x/y）。
+ * layerId 保持字符串：雪花 ID 有 18 位，转成 number 会丢精度。
+ */
+export function gisMvtUrlTemplate(layerId: GisId): string {
+  return `/api/system/gis/spatial/mvt/${layerId}/{z}/{x}/{y}`
+}

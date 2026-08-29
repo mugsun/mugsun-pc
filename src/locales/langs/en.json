@@ -2511,7 +2511,22 @@
       "tilesetHosted": "Bundled samples:",
       "tilesetSse": "Max screen space error",
       "tilesetHeightOffset": "Height offset (m)",
-      "labGroupScene": "3D scene"
+      "labGroupScene": "3D scene",
+      "wsTiled": "Tiled",
+      "wsTiledHint": "Large layer rendered as vector tiles: only the current viewport is fetched; export and whole-layer stats are unavailable",
+      "wsSideQuery": "Query",
+      "wsQueryView": "Current view",
+      "wsQueryRadius": "Within radius",
+      "wsQueryNearest": "Nearest",
+      "wsQueryLayer": "Target layer",
+      "wsQueryMeters": "Radius (m)",
+      "wsQueryRun": "Run",
+      "wsQueryEngine": "Engine",
+      "wsQueryHitCount": "Hits",
+      "wsQueryTruncated": "Result truncated",
+      "wsQueryPickCenter": "Click the map to set the center",
+      "wsQueryNoLayer": "Pick a vector layer first",
+      "wsQueryEmpty": "No features matched"
     },
     "track": {
       "shared": {

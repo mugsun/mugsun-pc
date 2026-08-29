@@ -2511,7 +2511,22 @@
       "tilesetHosted": "内置示例：",
       "tilesetSse": "屏幕空间误差",
       "tilesetHeightOffset": "高程偏移（米）",
-      "labGroupScene": "三维场景"
+      "labGroupScene": "三维场景",
+      "wsTiled": "瓦片",
+      "wsTiledHint": "要素较多，已改用矢量瓦片渲染：只取当前视野的瓦片，导出与整层统计不可用",
+      "wsSideQuery": "查询",
+      "wsQueryView": "当前视野",
+      "wsQueryRadius": "半径内",
+      "wsQueryNearest": "最近邻",
+      "wsQueryLayer": "目标图层",
+      "wsQueryMeters": "半径(米)",
+      "wsQueryRun": "查询",
+      "wsQueryEngine": "引擎",
+      "wsQueryHitCount": "命中",
+      "wsQueryTruncated": "结果已截断",
+      "wsQueryPickCenter": "在地图上点一下取圆心",
+      "wsQueryNoLayer": "请先选择一个矢量图层",
+      "wsQueryEmpty": "没有命中要素"
     },
     "track": {
       "shared": {

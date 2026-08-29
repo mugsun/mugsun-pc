@@ -28,6 +28,10 @@ export function createOlMap(target: HTMLElement, view: GisView2d, provider: GisP
     ])
   })
   map.getViewport().setAttribute('tabindex', '0')
+  if (import.meta.env.DEV) {
+    // 二维图层的加载问题只能靠 source 状态定位，开发态挂个句柄给调试用
+    ;(globalThis as unknown as { __olMap?: Map }).__olMap = map
+  }
   return map
 }
 
@@ -97,4 +101,41 @@ export function pointerWgs84(
   const display = toLonLat(coord) as [number, number]
   const wgs = fromDisplayLonLat(display, provider)
   return [Number(wgs[0].toFixed(6)), Number(wgs[1].toFixed(6))]
+}
+
+/**
+ * 按 WGS84 经纬度范围定位视野。矢量瓦片图层前端没有要素，
+ * 算不出 OpenLayers 的 extent，只能拿图层入库时算好的 bbox 来构图。
+ */
+export function fitOlLonLatExtent(
+  map: Map,
+  provider: GisProviderCode,
+  minLon: number,
+  minLat: number,
+  maxLon: number,
+  maxLat: number
+): void {
+  const sw = fromLonLat(toDisplayLonLat([minLon, minLat], provider))
+  const ne = fromLonLat(toDisplayLonLat([maxLon, maxLat], provider))
+  map.getView().fit([sw[0], sw[1], ne[0], ne[1]], {
+    padding: [48, 48, 48, 48],
+    maxZoom: 16,
+    duration: 280
+  })
+}
+
+/** 当前视野的经纬度范围（WGS84），用于「查当前视野内的要素」 */
+export function readOlExtentLonLat(
+  map: Map,
+  provider: GisProviderCode
+): { minLon: number; minLat: number; maxLon: number; maxLat: number } {
+  const [minX, minY, maxX, maxY] = map.getView().calculateExtent(map.getSize() ?? [800, 600])
+  const sw = fromDisplayLonLat(toLonLat([minX, minY]) as [number, number], provider)
+  const ne = fromDisplayLonLat(toLonLat([maxX, maxY]) as [number, number], provider)
+  return {
+    minLon: Number(sw[0].toFixed(6)),
+    minLat: Number(sw[1].toFixed(6)),
+    maxLon: Number(ne[0].toFixed(6)),
+    maxLat: Number(ne[1].toFixed(6))
+  }
 }
