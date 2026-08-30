@@ -5,6 +5,7 @@
  * 用法：
  *   node scripts/api-probe.mjs login [username] [password]   # 打印 token
  *   node scripts/api-probe.mjs perf                          # 关键列表端点 RT 测量（p50/p95/max）
+ *   node scripts/api-probe.mjs gis-perf                      # GIS 基线：底图瓦片 QPS、MVT、四类空间查询 postgis vs java
  *   node scripts/api-probe.mjs sec                           # 8 个无安全验证记录域 + 全局探针
  *   node scripts/api-probe.mjs track-feed [batches] [size]   # collect 灌注（默认 100 批×100 事件，p50/p95/max + 落库核对）
  *
@@ -373,6 +374,207 @@ function feedLandedCount(startMs) {
   }
 }
 
+// ---------- GIS 性能基线 ----------
+
+/**
+ * 打一组同构请求并统计分位。返回 { p50, p95, max, err, qps }。
+ * 预热 3 次吃掉 JIT 与连接池冷启动，否则 p95 会被首个请求单独拉高。
+ */
+async function measure(label, fire, { requests, concurrency }) {
+  for (let i = 0; i < 3; i++) await fire()
+  const rts = []
+  let err = 0
+  let cursor = 0
+  const t0 = performance.now()
+  async function worker() {
+    while (cursor < requests) {
+      cursor++
+      const s = performance.now()
+      const ok = await fire()
+      rts.push(performance.now() - s)
+      if (!ok) err++
+    }
+  }
+  await Promise.all(Array.from({ length: concurrency }, worker))
+  const wall = (performance.now() - t0) / 1000
+  rts.sort((a, b) => a - b)
+  const stat = {
+    p50: percentile(rts, 50),
+    p95: percentile(rts, 95),
+    max: Math.round(rts[rts.length - 1]),
+    err,
+    qps: Math.round(requests / wall)
+  }
+  console.log(
+    `[GIS] ${label} n=${requests} c=${concurrency} p50=${stat.p50}ms p95=${stat.p95}ms max=${stat.max}ms qps=${stat.qps} err=${err}`
+  )
+  return stat
+}
+
+/** 经纬度 → 指定层级的瓦片行列号（Web 墨卡托标准切片方案） */
+function lonLatToTile(lon, lat, z) {
+  const n = 2 ** z
+  const x = Math.floor(((lon + 180) / 360) * n)
+  const latRad = (lat * Math.PI) / 180
+  const y = Math.floor(((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) * n)
+  return { x, y }
+}
+
+/**
+ * GIS 性能基线：底图瓦片代理 QPS、万级要素图层的四类空间查询与矢量瓦片 p95，
+ * 且每类查询都跑 PostGIS 与 Java 回落两条路径做同口径对比（`engine=java` 强制回落）。
+ *
+ * 挑图层的规则是「要素最多的那个」——基线要打在最坏情况上，拿单要素图层测毫无意义。
+ */
+async function runGisPerf(token) {
+  const requests = Number(process.env.PROBE_REQUESTS || 200)
+  const concurrency = Number(process.env.PROBE_CONCURRENCY || 10)
+  const center = { lon: 116.3975, lat: 39.9087 }
+
+  const status = await api('GET', '/system/gis/spatial/status', { token })
+  console.log(
+    `# gis base=${BASE} requests=${requests} concurrency=${concurrency} postgis=${status.data?.postgis} mvt=${status.data?.mvt}`
+  )
+
+  const layers = await api('GET', '/system/gis/layer/list', { token })
+  const vectors = (layers.data || []).filter((l) => l.kind === 'vector' || l.kind === 'heatmap')
+  const target = vectors.sort((a, b) => (b.featureCount || 0) - (a.featureCount || 0))[0]
+  if (!target) {
+    console.error('没有矢量图层可压测；先入库一个万级要素图层')
+    process.exit(1)
+  }
+  const id = target.id
+  console.log(`# 目标图层 id=${id} name=${target.name} featureCount=${target.featureCount}`)
+
+  // 1) 底图瓦片代理：走上游供应商，QPS 受外网 RTT 与供应商限速支配，与本机无关
+  for (const [provider, layer] of [
+    ['tianditu', 'vec'],
+    ['amap', 'vec']
+  ]) {
+    const t = lonLatToTile(center.lon, center.lat, 10)
+    const path = `/system/gis/tile/${provider}/${layer}/10/${t.x}/${t.y}`
+    await measure(
+      `底图瓦片代理 ${provider}`,
+      async () => {
+        const r = await fetch(BASE + path, { headers: { Authorization: token } })
+        await r.arrayBuffer()
+        return r.status === 200
+      },
+      { requests: Math.min(requests, 100), concurrency: Math.min(concurrency, 8) }
+    )
+  }
+
+  // 2) 整层 GeoJSON：前端在不走瓦片时的回落路径，万级要素时响应体最大
+  await measure(
+    '整层 GeoJSON detail',
+    async () => {
+      const r = await api('GET', `/system/gis/layer/detail/${id}`, { token })
+      return r.code === 200
+    },
+    { requests: Math.min(requests, 50), concurrency: Math.min(concurrency, 5) }
+  )
+
+  // 3) 矢量瓦片：库内 ST_AsMVT 裁图，z 越小落进瓦片的要素越多
+  if (status.data?.mvt) {
+    for (const z of [8, 10, 13]) {
+      const t = lonLatToTile(center.lon, center.lat, z)
+      const path = `/system/gis/spatial/mvt/${id}/${z}/${t.x}/${t.y}`
+      await measure(
+        `矢量瓦片 MVT z=${z}`,
+        async () => {
+          const r = await fetch(BASE + path, { headers: { Authorization: token } })
+          const buf = await r.arrayBuffer()
+          return r.status === 200 && buf.byteLength >= 0
+        },
+        { requests, concurrency }
+      )
+    }
+  } else {
+    console.log('[GIS] 矢量瓦片 MVT — 跳过（当前库无 PostGIS）')
+  }
+
+  // 4) 四类空间查询 × 两条引擎路径
+  const queries = [
+    [
+      'bbox 视野查询',
+      (engine) =>
+        `/system/gis/spatial/bbox?layerId=${id}&minLon=116.2&minLat=39.8&maxLon=116.6&maxLat=40.0&limit=1000${engine}`
+    ],
+    [
+      'radius 半径查询 5km',
+      (engine) =>
+        `/system/gis/spatial/radius?layerId=${id}&lon=${center.lon}&lat=${center.lat}&meters=5000&limit=1000${engine}`
+    ],
+    [
+      'nearest 最近邻 top20',
+      (engine) =>
+        `/system/gis/spatial/nearest?layerId=${id}&lon=${center.lon}&lat=${center.lat}&limit=20${engine}`
+    ]
+  ]
+  for (const [name, build] of queries) {
+    for (const engine of status.data?.postgis ? ['', '&engine=java'] : ['&engine=java']) {
+      const tag = engine ? 'java' : 'postgis'
+      await measure(
+        `${name} [${tag}]`,
+        async () => {
+          const r = await api('GET', build(engine), { token })
+          return r.code === 200
+        },
+        { requests, concurrency }
+      )
+    }
+  }
+
+  // intersects 走 POST，几何取覆盖压测图层的一个方框
+  const geometry = {
+    type: 'Polygon',
+    coordinates: [
+      [
+        [116.3, 39.85],
+        [116.5, 39.85],
+        [116.5, 39.95],
+        [116.3, 39.95],
+        [116.3, 39.85]
+      ]
+    ]
+  }
+  for (const engine of status.data?.postgis ? [undefined, 'java'] : ['java']) {
+    await measure(
+      `intersects 相交查询 [${engine || 'postgis'}]`,
+      async () => {
+        const r = await api('POST', '/system/gis/spatial/intersects', {
+          token,
+          body: { layerId: String(id), geometry, limit: 1000, engine }
+        })
+        return r.code === 200
+      },
+      { requests, concurrency }
+    )
+  }
+
+  // 5) 空间分析算子：整层要素在 Java 侧算（JTS），要素数越多越吃 CPU，
+  //    并发压这里主要看的是「会不会把工作线程拖垮」，样本量取小一档
+  for (const [op, extra] of [
+    ['buffer', { distance: 500 }],
+    ['centroid', {}],
+    ['bbox', {}],
+    ['convexHull', {}],
+    ['simplify', {}]
+  ]) {
+    await measure(
+      `空间分析 ${op}（${target.featureCount} 要素）`,
+      async () => {
+        const r = await api('POST', '/system/gis/geo/analyze', {
+          token,
+          body: { op, layerId: String(id), ...extra }
+        })
+        return r.code === 200
+      },
+      { requests: Math.min(requests, 30), concurrency: Math.min(concurrency, 5) }
+    )
+  }
+}
+
 /**
  * 灌注：batches 批 × batchSize 事件 POST /track/collect（匿名端点，无需 token；
  * 注意服务端 IP+appKey 分钟窗限流 600，batches 勿超窗）。
@@ -443,6 +645,9 @@ if (cmd === 'login') {
   } else {
     await runPerf(token, deepPage)
   }
+} else if (cmd === 'gis-perf') {
+  const token = await login('admin', '123456')
+  await runGisPerf(token)
 } else if (cmd === 'sec') {
   const admin = await login('admin', '123456')
   const front = await login('fronttest', '123456')
@@ -454,6 +659,6 @@ if (cmd === 'login') {
     Number(args[1] || process.env.PROBE_TRACK_BATCH_SIZE || 100)
   )
 } else {
-  console.error('用法: api-probe.mjs login|perf|sec|track-feed [batches] [batchSize]')
+  console.error('用法: api-probe.mjs login|perf|gis-perf|sec|track-feed [batches] [batchSize]')
   process.exit(1)
 }
