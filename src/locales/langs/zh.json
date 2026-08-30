@@ -2527,7 +2527,11 @@
       "wsQueryTruncated": "结果已截断",
       "wsQueryPickCenter": "在地图上点一下取圆心",
       "wsQueryNoLayer": "请先选择一个矢量图层",
-      "wsQueryEmpty": "没有命中要素"
+      "wsQueryEmpty": "没有命中要素",
+      "enginePostgis": "PostGIS",
+      "engineJava": "Java 回落",
+      "enginePostgisTip": "空间查询与矢量瓦片已下沉数据库",
+      "engineJavaTip": "当前库无 PostGIS：空间查询走内存、矢量瓦片不可用。请用仓库 docker-compose（postgis/postgis 镜像）重建数据库"
     },
     "track": {
       "shared": {

@@ -2527,7 +2527,11 @@
       "wsQueryTruncated": "Result truncated",
       "wsQueryPickCenter": "Click the map to set the center",
       "wsQueryNoLayer": "Pick a vector layer first",
-      "wsQueryEmpty": "No features matched"
+      "wsQueryEmpty": "No features matched",
+      "enginePostgis": "PostGIS",
+      "engineJava": "Java fallback",
+      "enginePostgisTip": "Spatial queries and vector tiles run in the database",
+      "engineJavaTip": "PostGIS is missing: spatial queries run in memory and vector tiles are unavailable. Rebuild the database with the repo docker-compose (postgis/postgis image)"
     },
     "track": {
       "shared": {

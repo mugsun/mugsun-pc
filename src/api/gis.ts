@@ -238,6 +238,24 @@ export function fetchGisSpatialIntersects(data: {
   return request.post<GisSpatialResult>({ url: '/api/system/gis/spatial/intersects', data })
 }
 
+export function fetchGisSpatialContains(data: {
+  layerId: GisId
+  geometry: unknown
+  limit?: number
+  engine?: 'java'
+}) {
+  return request.post<GisSpatialResult>({ url: '/api/system/gis/spatial/contains', data })
+}
+
+export function fetchGisSpatialBuffer(data: {
+  layerId: GisId
+  distance: number
+  limit?: number
+  engine?: 'java'
+}) {
+  return request.post<GisSpatialResult>({ url: '/api/system/gis/spatial/buffer', data })
+}
+
 /**
  * 矢量瓦片模板地址（交给 OpenLayers 拼 z/x/y）。
  * layerId 保持字符串：雪花 ID 有 18 位，转成 number 会丢精度。

@@ -89,6 +89,17 @@
             <ElOption value="img_label" :label="$t('pages.gis.styleImgLabel')" />
             <ElOption value="vec_label" :label="$t('pages.gis.styleVecLabel')" />
           </ElSelect>
+          <ElTag
+            v-if="status.enabled && hasReadyProvider"
+            size="small"
+            class="gis-engine-tag"
+            :type="spatial.postgis ? 'success' : 'warning'"
+            :title="
+              spatial.postgis ? $t('pages.gis.enginePostgisTip') : $t('pages.gis.engineJavaTip')
+            "
+          >
+            {{ spatial.postgis ? $t('pages.gis.enginePostgis') : $t('pages.gis.engineJava') }}
+          </ElTag>
         </div>
 
         <div class="gis-hud gis-hud-rail">
@@ -1874,6 +1885,8 @@
       tilesets: next.tilesets ?? []
     }
     if (!status.value.enabled || !hasReadyProvider.value) return
+    // 引擎标签与大图层是否走瓦片都依赖这条探测，不能等打开图层面板才拉
+    void loadCatalog()
     await loadScenes()
     await bootMap()
     await applyRouteQuery()
@@ -2058,6 +2071,11 @@
   .gis-style-select {
     flex-shrink: 0;
     width: 108px;
+  }
+
+  .gis-engine-tag {
+    flex-shrink: 0;
+    cursor: default;
   }
 
   .gis-search {
