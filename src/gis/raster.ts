@@ -13,7 +13,9 @@ export function parseRasterSpec(raw: unknown): RasterSpec | undefined {
   }
   const rec = raw as { type?: string; url?: string; layers?: string; format?: string }
   const url = String(rec.url || '').trim()
-  if (!/^https?:\/\//i.test(url)) {
+  // 同源路径放行：内置示例的栅格走本站瓦片代理（/api/system/gis/tile/...），密钥不进浏览器。
+  // 用户自建图层的地址仍由后端 GisRasterSpec 卡 http(s)。
+  if (!/^https?:\/\//i.test(url) && !url.startsWith('/')) {
     return undefined
   }
   if (rec.type === 'WMS' || rec.layers) {

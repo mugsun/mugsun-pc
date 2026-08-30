@@ -149,11 +149,12 @@
   import { useRouter, onBeforeRouteLeave } from 'vue-router'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import {
-    fetchGisLayerIngest,
+    fetchGisLayerIngestText,
     fetchGisLayerPage,
     fetchGisStatus,
     fetchRemoveGisLayer,
     fetchSaveGisLayer,
+    ingestAny,
     type GisLayerRow
   } from '@/api/gis'
   import { bootLabMap, type LabMapBag } from '@/gis/labBoot'
@@ -281,7 +282,7 @@
   const previewIngest = async (): Promise<void> => {
     ingesting.value = true
     try {
-      const data = await fetchGisLayerIngest(parsedPayload())
+      const data = await ingestAny(parsedPayload())
       previewCount.value = data.count
       ElMessage.success(t('pages.gis.layerPreview', { n: data.count }))
     } catch {
@@ -298,11 +299,15 @@
     }
     saving.value = true
     try {
+      // 原文（WKT / CSV / KML / GPX）先经原文通道解析成 GeoJSON 再提交：
+      // 直接塞进 JSON body 的话，标签会被全局 XSS 净化剥掉，KML / GPX 存进去就是空图层
+      const raw = parsedPayload()
+      const payload = typeof raw === 'string' ? await fetchGisLayerIngestText(raw) : raw
       const row = await fetchSaveGisLayer({
         name: form.name.trim(),
         kind: form.kind,
         remark: form.remark,
-        payload: parsedPayload()
+        payload
       })
       // 后端修过几何（未闭合环、自相交）就逐条说明，不能让用户以为原样存进去了
       const warnings = row?.warnings ?? []

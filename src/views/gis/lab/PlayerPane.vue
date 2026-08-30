@@ -49,6 +49,52 @@
         </ElRadioGroup>
         <ElButton size="small" @click="resetMeasure">{{ $t('pages.gis.featClear') }}</ElButton>
       </div>
+      <div v-else-if="code === 'ops'" class="gis-hud gis-playbar" data-test="lab-ops-bar">
+        <span class="gis-bar-label">{{ $t('pages.gis.labOpsPick') }}</span>
+        <ElSelect v-model="opsOp" size="small" class="gis-ops-select" @change="runOps">
+          <ElOption v-for="item in OPS_DEMO" :key="item" :value="item" :label="opLabel(item)" />
+        </ElSelect>
+        <span class="gis-clock" data-test="lab-ops-metrics">{{
+          opsText || $t('pages.gis.labOpsRunning')
+        }}</span>
+      </div>
+      <div v-else-if="code === 'raster'" class="gis-hud gis-playbar" data-test="lab-raster-bar">
+        <ElSwitch
+          v-model="rasterOn"
+          size="small"
+          :active-text="$t('pages.gis.labRasterOn')"
+          @change="applyRaster"
+        />
+        <span class="gis-bar-label">{{ $t('pages.gis.labRasterOpacity') }}</span>
+        <ElSlider
+          v-model="rasterOpacity"
+          :min="10"
+          :max="100"
+          class="gis-play-slider"
+          @update:model-value="applyRaster"
+        />
+        <span class="gis-clock" data-test="lab-raster-opacity">{{ rasterOpacity }}%</span>
+      </div>
+      <div v-else-if="code === 'ingest'" class="gis-hud gis-ingest-bar" data-test="lab-ingest-bar">
+        <div class="gis-ingest-head">
+          <ElRadioGroup v-model="ingestFormat" size="small" @change="pickSample">
+            <ElRadioButton v-for="row in ingestSamples" :key="row.format" :value="row.format">
+              {{ row.label }}
+            </ElRadioButton>
+          </ElRadioGroup>
+          <ElButton size="small" type="primary" :loading="ingesting" @click="runIngest">
+            {{ $t('pages.gis.labIngestRun') }}
+          </ElButton>
+          <span class="gis-clock" data-test="lab-ingest-count">{{ ingestText }}</span>
+        </div>
+        <ElInput
+          v-model="ingestRaw"
+          type="textarea"
+          :rows="4"
+          spellcheck="false"
+          :placeholder="$t('pages.gis.labIngestPlaceholder')"
+        />
+      </div>
       <p v-if="hint" class="gis-hud gis-lab-float">{{ hint }}</p>
     </div>
     <ElDrawer
@@ -113,6 +159,7 @@
   import {
     fetchGisAnalyze,
     fetchGisDemo,
+    fetchGisLayerIngestText,
     fetchGisReverse,
     fetchGisStatus,
     type GisDemoMeta
@@ -128,7 +175,7 @@
     type LabMapBag
   } from '@/gis/labBoot'
   import { pointerWgs84 } from '@/gis/olMap'
-  import { parseTilesetSpec } from '@/gis/raster'
+  import { parseRasterSpec, parseTilesetSpec } from '@/gis/raster'
   import type { CesiumMod, CesiumViewer, TilesetPick } from '@/gis/cesiumMap'
 
   const props = defineProps<{ code: string; catalog: GisDemoMeta[] }>()
@@ -154,6 +201,31 @@
   let rawCollection: unknown
   const RADIUS_M = 800
 
+  /** 空间运算示例暴露的算子：缓冲另有独立示例，这里不重复 */
+  const OPS_DEMO = [
+    'intersects',
+    'contains',
+    'union',
+    'difference',
+    'convexHull',
+    'centroid',
+    'simplify',
+    'bbox',
+    'area',
+    'length',
+    'distance'
+  ] as const
+  const opsOp = ref<(typeof OPS_DEMO)[number]>('intersects')
+  const opsText = ref('')
+  const rasterOn = ref(true)
+  const rasterOpacity = ref(90)
+  const ingestSamples = ref<{ format: string; label: string; text: string }[]>([])
+  const ingestFormat = ref('wkt')
+  const ingestRaw = ref('')
+  const ingestText = ref('')
+  const ingesting = ref(false)
+  let rasterSpecRaw: unknown
+
   const cesiumHost = ref<HTMLElement>()
   const loading3d = ref(false)
   const pick3d = ref<TilesetPick | undefined>()
@@ -172,12 +244,14 @@
       heat: 'heatmap',
       cluster: 'cluster',
       playback: 'playback',
-      track: 'playback',
       buffer: 'buffer',
+      ops: 'ops',
       radius: 'radius',
       geocode: 'geocode',
       measure: 'measure',
-      tiles3d: 'tileset'
+      tiles3d: 'tileset',
+      raster: 'raster',
+      ingest: 'ingest'
     }
     return map[code] || 'overlay'
   }
@@ -202,8 +276,133 @@
     if (props.code === 'playback') {
       return t('pages.gis.labHintPlayback')
     }
+    if (props.code === 'ingest') {
+      return t('pages.gis.labHintIngest')
+    }
+    if (props.code === 'raster') {
+      return t('pages.gis.labHintRaster')
+    }
     return ''
   })
+
+  const opLabel = (op: string): string =>
+    t(`pages.gis.op${op.charAt(0).toUpperCase()}${op.slice(1)}`)
+
+  /** 示例的两个围栏：role=source 当运算对象，role=other 当第二个几何 */
+  const roleFeature = (role: string): unknown => {
+    const feats = (rawCollection as { features?: unknown[] })?.features ?? []
+    const hit = feats.find(
+      (f) => (f as { properties?: { role?: string } })?.properties?.role === role
+    )
+    return hit ? { type: 'FeatureCollection', features: [hit] } : undefined
+  }
+
+  const runOps = async (): Promise<void> => {
+    if (!bag) {
+      return
+    }
+    const source = roleFeature('source')
+    const other = roleFeature('other')
+    if (!source || !other) {
+      return
+    }
+    opsText.value = ''
+    const analyzed = await fetchGisAnalyze({
+      op: opsOp.value,
+      payload: source,
+      other,
+      tolerance: 0.002
+    })
+    payload.value = analyzed
+    const m = analyzed.metrics || {}
+    const parts: string[] = []
+    if (typeof m.areaSqMeters === 'number' && m.areaSqMeters > 0) {
+      parts.push(t('pages.gis.metricsArea', { n: Math.round(m.areaSqMeters) }))
+    }
+    if (typeof m.lengthMeters === 'number' && m.lengthMeters > 0) {
+      parts.push(t('pages.gis.metricsLength', { n: Math.round(m.lengthMeters) }))
+    }
+    if (typeof m.distanceMeters === 'number') {
+      parts.push(t('pages.gis.metricsDistance', { n: Math.round(m.distanceMeters) }))
+    }
+    if (m.intersects != null) {
+      parts.push(`${t('pages.gis.opIntersects')}: ${m.intersects}`)
+    }
+    if (m.contains != null) {
+      parts.push(`${t('pages.gis.opContains')}: ${m.contains}`)
+    }
+    const got = analyzed.collection?.count
+    if (!parts.length && typeof got === 'number') {
+      parts.push(t('pages.gis.metricsCount', { n: got }))
+    }
+    lines.value = parts
+    opsText.value = parts.join(' · ') || t('pages.gis.labOpsNoMetrics')
+    const result = collectionToSketch(analyzed.collection)
+    if (result.length) {
+      bag.overlays.set('lab-ops', result, bag.provider, {
+        name: opLabel(opsOp.value),
+        kind: 'vector',
+        color: '#db2777'
+      })
+      bag.overlays.fit('lab-ops')
+    } else {
+      bag.overlays.remove('lab-ops')
+      bag.overlays.fit('lab')
+    }
+    bag.map.updateSize()
+  }
+
+  /** 栅格叠加：{provider} 换成当前生效的供应商，地址仍走同源代理，密钥不落浏览器 */
+  const applyRaster = (): void => {
+    if (!bag) {
+      return
+    }
+    const rec = (rasterSpecRaw || {}) as { url?: string }
+    const spec = parseRasterSpec({
+      ...(rasterSpecRaw as object),
+      url: String(rec.url || '').replace('{provider}', bag.provider)
+    })
+    if (!spec) {
+      ElMessage.error(t('pages.gis.labRasterBad'))
+      return
+    }
+    bag.overlays.setRaster('lab-raster', spec, {
+      name: meta.value?.title || props.code,
+      kind: spec.type === 'WMS' ? 'wms' : 'xyz',
+      visible: rasterOn.value,
+      opacity: rasterOpacity.value / 100
+    })
+  }
+
+  const pickSample = (): void => {
+    const hit = ingestSamples.value.find((row) => row.format === ingestFormat.value)
+    ingestRaw.value = hit?.text || ''
+    ingestText.value = ''
+  }
+
+  const runIngest = async (): Promise<void> => {
+    if (!bag || !ingestRaw.value.trim()) {
+      return
+    }
+    ingesting.value = true
+    try {
+      const parsed = await fetchGisLayerIngestText(ingestRaw.value)
+      payload.value = parsed
+      const feats = collectionToSketch(parsed)
+      bag.overlays.set('lab-ingest', feats, bag.provider, {
+        name: meta.value?.title || props.code,
+        kind: 'vector',
+        color: '#0ea5e9'
+      })
+      bag.overlays.fit('lab-ingest')
+      bag.map.updateSize()
+      ingestText.value = t('pages.gis.metricsCount', { n: parsed.count ?? feats.length })
+    } catch {
+      ingestText.value = t('pages.gis.labIngestFailed')
+    } finally {
+      ingesting.value = false
+    }
+  }
 
   const copy = async (text: string): Promise<void> => {
     await navigator.clipboard.writeText(text)
@@ -335,6 +534,34 @@
         bindMeasure()
       }
       bag.map.updateSize()
+      return
+    }
+    if (ui === 'raster') {
+      rasterSpecRaw = data
+      rasterOn.value = true
+      const opacity = Number((data as { opacity?: number })?.opacity)
+      rasterOpacity.value = Number.isFinite(opacity) ? Math.round(opacity * 100) : 90
+      applyRaster()
+      bag.map.updateSize()
+      return
+    }
+    if (ui === 'ingest') {
+      const rows = (data as { samples?: { format: string; label: string; text: string }[] })
+        ?.samples
+      ingestSamples.value = Array.isArray(rows) ? rows : []
+      ingestFormat.value = ingestSamples.value[0]?.format || 'wkt'
+      pickSample()
+      bag.map.updateSize()
+      return
+    }
+    if (ui === 'ops') {
+      bag.overlays.set('lab', collectionToSketch(data), bag.provider, {
+        name: meta.value?.title || props.code,
+        kind: 'vector',
+        color: '#2563eb'
+      })
+      bag.overlays.fit('lab')
+      await runOps()
       return
     }
     let collection: unknown = data
@@ -562,6 +789,41 @@
     font-size: 12px;
     font-variant-numeric: tabular-nums;
     color: var(--el-text-color-regular);
+  }
+
+  .gis-bar-label {
+    flex-shrink: 0;
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+  }
+
+  .gis-ops-select {
+    width: 128px;
+  }
+
+  /* 入站示例要放原文输入，改成上下两行；高度跟内容走，不加内层滚动 */
+  .gis-ingest-bar {
+    right: 12px;
+    bottom: 12px;
+    left: 304px;
+    z-index: 5;
+    flex-direction: column;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .gis-ingest-head {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+  }
+
+  .gis-ingest-bar :deep(.el-textarea__inner) {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    font-size: 12px;
+    line-height: 1.5;
+    resize: none;
   }
 
   .gis-lab-float {

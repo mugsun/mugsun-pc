@@ -130,11 +130,37 @@ export function fetchGisLayerDetail(id: GisId) {
   return request.get<GisLayerRow>({ url: `/api/system/gis/layer/detail/${id}` })
 }
 
+export interface GisIngestResult {
+  count: number
+  features: unknown[]
+  crs: string
+}
+
 export function fetchGisLayerIngest(payload: unknown) {
-  return request.post<{ count: number; features: unknown[]; crs: string }>({
+  return request.post<GisIngestResult>({
     url: '/api/system/gis/layer/ingest',
     data: payload
   })
+}
+
+/**
+ * 原文入站：KML / GPX 等带标签的格式必须以 text/plain 发。
+ * 走 JSON body 的话，后端全局 XSS 反序列化器会按富文本把标签剥掉，解析不出任何要素。
+ */
+export function fetchGisLayerIngestText(raw: string) {
+  return request.post<GisIngestResult>({
+    url: '/api/system/gis/layer/ingest',
+    data: raw,
+    headers: { 'Content-Type': 'text/plain;charset=UTF-8' }
+  })
+}
+
+/** 非 JSON 原文（WKT / CSV / KML / GPX）走原文通道，GeoJSON 仍走 JSON */
+export function ingestAny(payload: unknown) {
+  if (typeof payload === 'string') {
+    return fetchGisLayerIngestText(payload)
+  }
+  return fetchGisLayerIngest(payload)
 }
 
 export function fetchSaveGisLayer(data: Record<string, unknown>) {

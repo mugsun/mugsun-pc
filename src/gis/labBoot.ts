@@ -67,6 +67,26 @@ POST /api/system/gis/geo/analyze
 { "op": "buffer", "distance": 500, "payload": <上一步> }
 
 distance 单位：米。`,
+    ops: `GET /api/system/gis/demo/ops
+POST /api/system/gis/geo/analyze
+{ "op": "intersects", "payload": <role=source 的要素>, "other": <role=other 的要素> }
+
+相交 / 包含 / 差集 / 距离要 other；并集 / 凸包 / 质心 / 简化 / 外包框 / 面积 / 长度只要 payload。
+简化用 tolerance（度），缓冲用 distance（米）。
+换成 layerId + otherLayerId 即按图层运算，有 PostGIS 时缓冲与包含会自动下沉到库里。`,
+    raster: `GET /api/system/gis/demo/raster
+
+XYZ：{ "type": "XYZ", "url": "https://host/{z}/{x}/{y}.png" }
+WMS：{ "type": "WMS", "url": "https://host/geoserver/wms", "layers": "ws:layer" }
+
+示例地址走同源瓦片代理 /api/system/gis/tile/{provider}/cva/{z}/{x}/{y}，密钥留在服务端。
+图层库按 XYZ / WMS 建图层后，工作台即可叠加、调透明度。`,
+    ingest: `GET /api/system/gis/demo/ingest
+POST /api/system/gis/layer/ingest
+{ "payload": "POINT (116.397428 39.90923)" }
+
+payload 可以是 GeoJSON，也可以是 WKT / CSV / KML / GPX 原文，
+统一归一成 WGS84 FeatureCollection；图层库新建时走的是同一个入口。`,
     radius: `GET /api/system/gis/demo/radius
 
 单击地图改圆心，前端按 800 米过滤。`,
