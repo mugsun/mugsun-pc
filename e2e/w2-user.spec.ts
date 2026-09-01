@@ -2,6 +2,8 @@ import { execSync } from 'node:child_process'
 import type { Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
 import { login } from './fixtures/auth'
+import { purgePosts } from './helpers/cleanup'
+import { ensureDataTestRole, ensurePost } from './helpers/prepare'
 
 /**
  * W2-S1/S3 用户页黄金验证：搜索栏真实过滤 + 建档挂部门/岗位/角色端到端。
@@ -20,9 +22,13 @@ let page: Page
 test.beforeAll(async ({ browser }) => {
   page = await browser.newPage()
   await login(page)
+  // 建档要挂岗位与角色，前置由本 spec 自建（不依赖种子或上一轮残留）
+  await ensurePost(page, '开发工程师', 'dev')
+  await ensureDataTestRole(page)
 })
 
 test.afterAll(async () => {
+  purgePosts('开发工程师')
   await page?.close()
 })
 

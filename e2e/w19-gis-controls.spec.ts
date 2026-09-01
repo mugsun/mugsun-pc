@@ -52,20 +52,23 @@ test('W19-1 切高德后检索天安门请求带 provider=amap', async () => {
     .poll(() => page.evaluate(() => localStorage.getItem('gis:lastProvider')))
     .toBe('amap')
 
+  const searchWait = page.waitForResponse(
+    (r) => r.url().includes('/gis/search') && r.url().includes('provider=amap'),
+    { timeout: 15_000 }
+  )
   await page.getByPlaceholder(/搜索地名/).fill('天安门')
+  const searchResp = await searchWait
+  expect(searchResp.status(), '检索须 200').toBe(200)
+  const searchBody = await searchResp.json()
+  const data = searchBody?.data as { lon?: number; lat?: number }[] | undefined
+  expect(Array.isArray(data) && data.length > 0, '检索须有结果').toBeTruthy()
+  expect(data![0].lon).toBeGreaterThan(100)
+  expect(data![0].lat).toBeGreaterThan(20)
+
   const sug = page.locator('.el-autocomplete-suggestion li').first()
   await expect(sug).toBeVisible({ timeout: 10_000 })
   await sug.click()
-  await page.waitForTimeout(800)
-
-  const search = nets.find((n) => n.url.includes('/gis/search'))
-  expect(search, '应发出 /gis/search').toBeTruthy()
-  expect(search!.url).toContain('provider=amap')
-  expect(search!.status).toBe(200)
-  const data = (search!.body as { data?: { lon?: number; lat?: number }[] })?.data
-  expect(Array.isArray(data) && data.length > 0).toBeTruthy()
-  expect(data![0].lon).toBeGreaterThan(100)
-  expect(data![0].lat).toBeGreaterThan(20)
+  await page.waitForTimeout(400)
 })
 
 test('W19-2 空白点击逆地理带当前 provider', async () => {

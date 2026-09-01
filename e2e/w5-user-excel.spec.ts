@@ -3,6 +3,8 @@ import type { Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
 import { login, logout, readAccessToken } from './fixtures/auth'
 import { XLSX_MIME, buildXlsx, parseXlsxAoa } from './fixtures/xlsx'
+import { purgePosts } from './helpers/cleanup'
+import { ensureDataTestRole, ensurePost } from './helpers/prepare'
 
 /**
  * W5 用户导入导出完整化：
@@ -78,9 +80,15 @@ let page: Page
 test.beforeAll(async ({ browser }) => {
   page = await browser.newPage()
   await login(page)
+  // 导入行按名解析岗位、导出用例要 fronttest/datatest：前置自建，不靠种子或上一轮残留
+  await ensurePost(page, '开发工程师', 'dev')
+  await ensureDataTestRole(page)
 })
 
 test.afterAll(async () => {
+  // 兜底清本 spec 造的账号：断言中途失败时会残留，下一轮导入就会撞"已存在"
+  cleanupUsers(baseUser, badPhoneUser, maskUser)
+  purgePosts('开发工程师')
   await page?.close()
 })
 

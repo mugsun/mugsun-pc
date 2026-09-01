@@ -8,8 +8,8 @@ import { login } from './fixtures/auth'
  * 漏斗：页面内 fetch 真实摄入 3 个有序自定义事件（同 actor 同 session，分 3 批发送保 received_at 严格递增
  * ——漏斗 SQL 要求后步 received_at > 前步）→ psql 轮询落库 → /#/track/funnel 构建三步漏斗 → 查询
  * → 漏斗图 canvas + 明细表 1/1/1 + psql 反证。
- * 留存：psql 直灌历史事件构造双 actor cohort（动态选取窗口内零事件日做 cohort 日——
- * 无事件日即无他人 first_day，cohort 规模/网格值精确可断言；his_a D0/D+1/D+2 回访、his_b 仅 D0）
+ * 留存：建一个本 spec 独占的应用，psql 直灌历史事件构造双 actor cohort
+ * （独占 app_key 才能保证 cohort 规模恒为 2；his_a D0/D+1/D+2 回访、his_b 仅 D0）
  * → /#/track/retention 查询 → 网格单元格精确值（100/50/50/未来格·）+ tooltip + psql 反证 → 测后清理。
  * 前置：mugsun-boot(:8080) 已重启加载 G103 代码（V67 迁移已执行）；vite dev(:3007) 在跑。
  */
@@ -25,8 +25,11 @@ let funnelActor = ''
 let funnelSession = ''
 let hisA = ''
 let hisB = ''
-/** 留存 cohort 日（UTC，yyyy-MM-dd；W12-3 动态选取窗口内零事件日） */
+/** 留存 cohort 日（UTC，yyyy-MM-dd；固定取 todayUtc-2，覆盖 D+0/D+1/D+2 三格） */
 let cohortDate = ''
+/** 留存专用应用：cohort 规模必须只由本 spec 的两个 actor 决定，故独占一个 app_key */
+let retentionAppKey = ''
+let retentionAppName = ''
 /** 选取 cohort 日时的 todayUtc（yyyy-MM-dd；W12-4 据此判定未来格边界） */
 let todayUtc = ''
 
@@ -48,6 +51,14 @@ test.beforeAll(async ({ browser }) => {
   funnelSession = `e2e-funnel-${testStart}`
   hisA = `e2e_his_a_${testStart}`
   hisB = `e2e_his_b_${testStart}`
+  // 留存专用应用（app_key 上限 32 字符）：种子应用天天有真实浏览器会话产生事件，
+  // 别的 actor 一旦在 cohort 日首访，cohort 规模就不是 2，网格精确值无从断言
+  retentionAppKey = `ak_e2e_ret_${String(testStart).slice(-13)}`
+  retentionAppName = `E2E留存应用${String(testStart).slice(-6)}`
+  psqlTrack(
+    `INSERT INTO track_app (id, app_key, app_name, platform, tenant_id, sample_rate, enabled)` +
+      ` VALUES (${testStart}, '${retentionAppKey}', '${retentionAppName}', 'web', '000000', 100, 1)`
+  )
   page = await browser.newPage()
   page.on('console', (msg) => {
     if (msg.type() === 'error' && !msg.text().includes('favicon')) {
@@ -80,9 +91,14 @@ test.afterAll(async () => {
     `DELETE FROM track_event_def WHERE app_key = '${SEED_APP_KEY}'` +
       ` AND event_name IN ('${FUNNEL_EVENTS.join("', '")}')`
   )
+  // 留存专用应用连带其事件一起清（应用留着会挤进应用下拉，干扰其他埋点用例的选择器）
+  if (retentionAppKey) {
+    psqlTrack(`DELETE FROM track_event WHERE app_key = '${retentionAppKey}'`)
+    psqlTrack(`DELETE FROM track_app WHERE app_key = '${retentionAppKey}'`)
+  }
   console.log(
     `[w12-track-analysis] 清理测试数据：track_event ${events}，track_session ${sessions}，` +
-      `历史直灌 ${his}，事件定义 ${defs}`
+      `历史直灌 ${his}，事件定义 ${defs}，留存应用 ${retentionAppKey}`
   )
 })
 
@@ -184,29 +200,13 @@ test('W12-2 漏斗页：构建三步漏斗查询 → canvas 渲染 + 明细 1/1/
 })
 
 test('W12-3 留存数据直灌：零事件日双 actor cohort（his_a D0/D+1/D+2，his_b 仅 D0）', async () => {
-  // cohort 日动态选取：cohort 窗 [todayUtc-6, todayUtc-1] 内从近到远找首个种子应用零事件日——
-  // 无事件日即无其他 actor 的 first_day（first_day 必有当日事件），cohort 规模/网格精确可断言
-  const busyDays = psqlTrack(
-    `SELECT to_char((received_at AT TIME ZONE 'UTC')::date, 'YYYY-MM-DD') FROM track_event` +
-      ` WHERE app_key = '${SEED_APP_KEY}'` +
-      ` AND received_at >= (((now() AT TIME ZONE 'UTC')::date - 6)::timestamp AT TIME ZONE 'UTC')` +
-      ` GROUP BY 1`
-  )
-    .split('\n')
-    .map((d) => d.trim())
-    .filter(Boolean)
+  // cohort 日固定取 todayUtc-2：D+0/D+1/D+2 三格都已过去，D+3 为未来格。
+  // 隔离靠独占 app_key 而非"找零事件日"——活跃 dev 库里每天都有真实会话事件，零事件日根本不存在
   todayUtc = psqlTrack(`SELECT to_char((now() AT TIME ZONE 'UTC')::date, 'YYYY-MM-DD')`)
-  for (let back = 2; back <= 6 && !cohortDate; back++) {
-    const candidate = psqlTrack(
-      `SELECT to_char((now() AT TIME ZONE 'UTC')::date - ${back}, 'YYYY-MM-DD')`
-    )
-    if (!busyDays.includes(candidate)) cohortDate = candidate
-  }
-  if (!cohortDate) {
-    // 窗口内日日有事件的极端情形（dev 库连续使用）：退回 todayUtc-2，精确断言依赖当日无他人首访
-    cohortDate = psqlTrack(`SELECT to_char((now() AT TIME ZONE 'UTC')::date - 2, 'YYYY-MM-DD')`)
-  }
-  console.log(`[w12-track-analysis] 留存 cohort 日 = ${cohortDate}（todayUtc = ${todayUtc}）`)
+  cohortDate = psqlTrack(`SELECT to_char((now() AT TIME ZONE 'UTC')::date - 2, 'YYYY-MM-DD')`)
+  console.log(
+    `[w12-track-analysis] 留存 cohort 日 = ${cohortDate}（todayUtc = ${todayUtc}，应用 ${retentionAppKey}）`
+  )
 
   // 直灌历史事件：received_at 决定 UTC 日切与分区归属（锚定当日 10:00 UTC）。
   // his_a 的 D+2 锚定 cohort+2 而非恒 now()：cohort 日回退超过 2 天时 now() 会错落到 D+3 列，D+2 格真实为 0；
@@ -214,7 +214,7 @@ test('W12-3 留存数据直灌：零事件日双 actor cohort（his_a D0/D+1/D+2
   const d = (offsetDays: number) =>
     `(('${cohortDate}'::date + interval '${offsetDays} days' + interval '10 hours')::timestamp AT TIME ZONE 'UTC')`
   const row = (actor: string, session: string, tsExpr: string) =>
-    `((random()*9007199254740991)::bigint, gen_random_uuid()::text, '${SEED_APP_KEY}',` +
+    `((random()*9007199254740991)::bigint, gen_random_uuid()::text, '${retentionAppKey}',` +
     ` '\\$pageview', ${tsExpr}, ${tsExpr}, ${tsExpr}, 0, '${actor}', NULL, '${session}',` +
     ` '000000', '/e2e/retention', '{}'::jsonb, now())`
   psqlTrack(
@@ -235,21 +235,20 @@ test('W12-3 留存数据直灌：零事件日双 actor cohort（his_a D0/D+1/D+2
   expect(inserted, '直灌历史事件应 4 行落库').toBe(4)
   const foreign = Number(
     psqlTrack(
-      `SELECT count(*) FROM track_event WHERE app_key = '${SEED_APP_KEY}'` +
-        ` AND (received_at AT TIME ZONE 'UTC')::date = '${cohortDate}'::date` +
+      `SELECT count(*) FROM track_event WHERE app_key = '${retentionAppKey}'` +
         ` AND distinct_id NOT IN ('${hisA}', '${hisB}')`
     )
   )
-  expect(foreign, 'cohort 日不应有其他 actor 事件（否则 cohort 规模被污染）').toBe(0)
+  expect(foreign, '留存专用应用内不应有其他 actor 事件（否则 cohort 规模被污染）').toBe(0)
 })
 
 test('W12-4 留存页：cohort 网格精确值（100/50/50/未来格）+ tooltip + psql 反证', async () => {
   test.setTimeout(60_000)
   await page.goto('/#/track/retention')
   await expect(page.locator('.track-retention-page')).toBeVisible({ timeout: 15_000 })
-  // 显式选中种子应用（默认天数 7，覆盖 cohort 窗）
+  // 显式选中留存专用应用（默认天数 7，覆盖 cohort 窗）
   await page.locator('.track-app-select').click()
-  await page.getByRole('option', { name: 'mugsun-pc 自监控' }).click()
+  await page.getByRole('option', { name: retentionAppName }).click()
   await page.getByRole('button', { name: '查询' }).click()
 
   // cohort 行：日期 + 规模 新客 2 人

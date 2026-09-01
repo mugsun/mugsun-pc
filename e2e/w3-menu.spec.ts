@@ -2,6 +2,7 @@ import { execSync } from 'node:child_process'
 import type { Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
 import { login, logout, readAccessToken } from './fixtures/auth'
+import { ensureDataTestRole } from './helpers/prepare'
 
 /**
  * W3 后端菜单驱动矩阵：菜单管理真实驱动侧边栏（修「两张皮」）。
@@ -35,6 +36,9 @@ let page: Page
 
 test.beforeAll(async ({ browser }) => {
   page = await browser.newPage()
+  // fronttest + datatest 这对夹具是授权驱动场景的前置，幂等补齐（曾被清理删掉导致整条红）
+  await login(page)
+  await ensureDataTestRole(page)
 })
 
 test.afterAll(async () => {

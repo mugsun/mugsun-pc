@@ -2,6 +2,7 @@ import { execSync } from 'node:child_process'
 import type { Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
 import { login, logout, readCaptchaCode, readAccessToken } from './fixtures/auth'
+import { purgeAttaches } from './helpers/cleanup'
 
 /**
  * W1「一眼假清理」逐项真实浏览器验证。
@@ -25,6 +26,9 @@ test.beforeAll(async ({ browser }) => {
 })
 
 test.afterAll(async () => {
+  // 附件上传用例每轮留一条 w1-shot.png；磁盘文件被清后这些行会让附件页缩略图 404，
+  // 巡访用例把 404 记成 console.error，于是 /system/attach 一路红
+  purgeAttaches('w1-shot.png')
   await page?.close()
 })
 

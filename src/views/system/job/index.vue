@@ -242,9 +242,14 @@
     }
   }
 
-  onMounted(async () => {
-    await loadData()
+  const loadProcessors = async (): Promise<void> => {
     processorOptions.value = (await fetchJobProcessors()) || []
+  }
+
+  // 注册表与列表并行拉：串行等列表回来再拉处理器，会让"列表还在转就点新建"的用户看到空下拉
+  onMounted(() => {
+    loadData()
+    loadProcessors()
   })
 
   const closeDialogs = (): void => {
@@ -254,6 +259,8 @@
 
   const showDialog = (row?: any): void => {
     closeDialogs()
+    // 注册表没拉到（首屏竞态或上次失败）时补拉，避免处理器下拉打开却是空的
+    if (!processorOptions.value.length) void loadProcessors()
     formRef.value?.clearValidate()
     Object.assign(form, {
       id: undefined,

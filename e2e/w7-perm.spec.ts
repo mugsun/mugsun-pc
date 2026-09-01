@@ -26,7 +26,9 @@ async function api(page: Page, method: 'GET' | 'POST', url: string, body?: any) 
   })
 }
 
-const USER_MENU_ID = '102821679786000104' // 用户管理（V39 锚定的存量菜单 id）
+// 菜单授权须连父节点一起授：只授叶子，侧边栏没有可挂载的分组，页面进不去
+const SYSTEM_MENU_ID = '1200000000000000001' // 系统管理（M 型分组）
+const USER_MENU_ID = '1200000000000000101' // 用户管理（C 型，sys:user:list）
 // V39 种子的用户管理 F 型按钮节点
 const USER_BUTTON_IDS = [
   '1061000000000000001', // 新增用户 sys:user:add
@@ -80,7 +82,7 @@ test('W7-1 仅授用户管理菜单：写按钮全部隐藏、列表与未门控
   // 只授 用户管理 菜单节点（不含任何按钮节点）→ 用户 buttons 仅 sys:user:list
   const grantResp = await api(page, 'POST', '/system/role/grant', {
     roleId,
-    menuIds: [USER_MENU_ID]
+    menuIds: [SYSTEM_MENU_ID, USER_MENU_ID]
   })
   expect(grantResp.status(), '角色授权须 200').toBe(200)
 
@@ -117,7 +119,7 @@ test('W7-2 追加授予按钮节点：写按钮全部恢复可见', async () => 
   await login(page)
   const grantResp = await api(page, 'POST', '/system/role/grant', {
     roleId,
-    menuIds: [USER_MENU_ID, ...USER_BUTTON_IDS]
+    menuIds: [SYSTEM_MENU_ID, USER_MENU_ID, ...USER_BUTTON_IDS]
   })
   expect(grantResp.status(), '追加授权须 200').toBe(200)
 

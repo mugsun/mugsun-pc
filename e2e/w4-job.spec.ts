@@ -17,6 +17,8 @@ function redis(...args: string[]): string {
 test.describe.configure({ mode: 'serial' })
 
 let page: Page
+/** 任务名逐轮唯一：PowerJob 软删仍留在列表，固定名会撞 strict mode */
+const JOB_NAME = `W4缓存清理验证${Date.now() % 100000}`
 
 test.beforeAll(async ({ browser }) => {
   page = await browser.newPage()
@@ -24,6 +26,22 @@ test.beforeAll(async ({ browser }) => {
 })
 
 test.afterAll(async () => {
+  // W4-3 末尾走 UI 删除；这里兜底，避免断言失败时任务残留在 PowerJob 列表
+  try {
+    await page.goto('/#/system/job')
+    const root = page.locator('.job-page')
+    const rows = root.getByRole('row', { name: new RegExp(JOB_NAME) })
+    const n = await rows.count()
+    for (let i = 0; i < n; i++) {
+      const row = rows.first()
+      if (!(await row.isVisible().catch(() => false))) break
+      await row.getByText('删除').click()
+      await page.locator('.el-message-box').getByRole('button', { name: '确定' }).click()
+      await page.waitForTimeout(400)
+    }
+  } catch {
+    /* 页面已关时不阻断收尾 */
+  }
   await page?.close()
 })
 
@@ -62,7 +80,7 @@ test('W4-3 缓存清理处理器：建任务→带参执行→真实清键→日
   await page.goto('/#/system/job')
   await page.getByRole('button', { name: '新建任务' }).click()
   const dialog = page.getByRole('dialog')
-  await dialog.getByPlaceholder('请输入任务名称').fill('W4缓存清理验证')
+  await dialog.getByPlaceholder('请输入任务名称').fill(JOB_NAME)
   await dialog.locator('.el-form-item', { hasText: '处理器' }).locator('.el-select').first().click()
   await page.getByRole('option', { name: 'CacheEvictProcessor' }).click()
   await dialog.getByPlaceholder(/jobParams/).fill('mugsun:dict')
@@ -72,7 +90,7 @@ test('W4-3 缓存清理处理器：建任务→带参执行→真实清键→日
   await expect(dialog).toBeHidden({ timeout: 10_000 })
 
   // 列表行：处理器/参数/下次触发列齐全
-  const row = page.getByRole('row', { name: /W4缓存清理验证/ })
+  const row = page.getByRole('row', { name: new RegExp(JOB_NAME) }).first()
   await expect(row).toBeVisible({ timeout: 10_000 })
   await expect(row.getByText('CacheEvictProcessor')).toBeVisible()
   await expect(row.getByText('mugsun:dict')).toBeVisible()

@@ -2,6 +2,7 @@ import { execSync } from 'node:child_process'
 import type { Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
 import { login } from './fixtures/auth'
+import { purgeTenant } from './helpers/cleanup'
 
 /**
  * W15 租户运营：新增租户（一键初始化）→ 列表可见 → 删除清理。
@@ -25,6 +26,9 @@ test.beforeAll(async ({ browser }) => {
 })
 
 test.afterAll(async () => {
+  // 产品语义上删租户是逻辑删，但"一键初始化"给租户建了 admin/角色/岗位/部门；
+  // 测试造的租户必须连这些一起物理清掉，否则 sys_user 里的 admin 逐轮堆积
+  purgeTenant(tenantCode)
   await page?.close()
 })
 

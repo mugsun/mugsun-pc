@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
 import { login, logout, readCaptchaCode, readAccessToken } from './fixtures/auth'
 import { buildXlsx } from './fixtures/xlsx'
+import { clearLoginLock, purgeUsers } from './helpers/cleanup'
 
 /**
  * 会话与锁定链路口径验证：
@@ -39,6 +40,9 @@ test.afterAll(async () => {
     psql(
       `DELETE FROM sys_user_role WHERE user_id IN (SELECT id FROM sys_user WHERE username='${USERNAME}'); DELETE FROM sys_user WHERE username='${USERNAME}';`
     )
+    purgeUsers('e2e_idem_%')
+    // 锁键留着（TTL 内）会让登录日志页对该账号显示「解锁」按钮，污染其他用例的按钮断言
+    clearLoginLock(USERNAME)
   } finally {
     await page?.close()
   }

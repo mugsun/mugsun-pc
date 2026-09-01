@@ -1,23 +1,33 @@
 import type { Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
 import { login } from './fixtures/auth'
+import { purgePosts, purgeTenant } from './helpers/cleanup'
+import { createTenant, ensurePost } from './helpers/prepare'
 
 /**
  * W2 组织域搜索栏验证：部门/岗位/参数/租户/租户套餐 五页搜索过滤与重置。
  * 写法对齐 w2-user.spec.ts（serial + 共享 page + login fixture）。
  * 注意：keepAlive 页面驻留 DOM，所有行/输入定位必须按页面根类作用域化。
+ * 岗位与租户行由本 spec 自建（不依赖种子/残留），跑完物理清掉。
  */
 
 test.describe.configure({ mode: 'serial' })
 
 let page: Page
+const POST_NAME = '开发工程师'
+const TENANT_NAME = `E2E组织租户${Date.now() % 100000}`
+let tenantCode = ''
 
 test.beforeAll(async ({ browser }) => {
   page = await browser.newPage()
   await login(page)
+  await ensurePost(page, POST_NAME, 'dev')
+  tenantCode = await createTenant(page, TENANT_NAME)
 })
 
 test.afterAll(async () => {
+  purgeTenant(tenantCode)
+  purgePosts(POST_NAME)
   await page?.close()
 })
 

@@ -197,13 +197,19 @@ test('W5-1b 忘记密码全链路：发码→Redis取码→重置→旧密码失
   }
 })
 
-test('W5-2 登录页第三方登录区与 /auth/social/sources 一致（无源整区不可见）', async () => {
+test('W5-2 登录页第三方登录区与 /auth/social/sources 一致（无源且未开 mock 才整区不可见）', async () => {
   const resp = await page.request.fetch('/api/auth/social/sources')
-  const sources = ((await resp.json()).data.sources || []) as string[]
+  const body = (await resp.json()).data
+  const sources = (body.sources || []) as string[]
+  const mockEnabled = !!body.mockEnabled
 
   await page.goto('/#/auth/login')
-  if (sources.length === 0) {
-    // 无已配置真实源：整区不可见（mock 按钮仅 DEV+后端允许，当前环境后端 mock 未允许）
+  if (sources.length === 0 && mockEnabled) {
+    // 无真实源但后端放开了 mock：dev 下整区可见，只提供「模拟第三方登录」入口
+    await expect(page.getByText('第三方登录').first()).toBeVisible()
+    await expect(page.getByRole('button', { name: '模拟第三方登录' })).toBeVisible()
+  } else if (sources.length === 0) {
+    // 无真实源且后端未放开 mock：整区不可见
     await expect(page.getByText('第三方登录')).toHaveCount(0)
     await expect(page.getByRole('button', { name: '模拟第三方登录' })).toHaveCount(0)
   } else {

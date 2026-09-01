@@ -18,7 +18,9 @@ export interface PageIssue {
 /** 已知良性 console.error 噪音（逐条核实后方可加入，禁止无脑放行） */
 const CONSOLE_NOISE: RegExp[] = [
   // Element Plus 在 dev 下的 hydration/弃用告警以 error 形式输出时
-  /\[Vue warn\]/i
+  /\[Vue warn\]/i,
+  // keepAlive / 快速切路由时，在途请求被 axios 主动 abort——非业务失败
+  /请求已取消/i
 ]
 
 export class PageProbe {

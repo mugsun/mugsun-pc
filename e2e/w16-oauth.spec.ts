@@ -1,6 +1,7 @@
 import type { Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
 import { login } from './fixtures/auth'
+import { purgeOauthClients } from './helpers/cleanup'
 
 /**
  * W16 开放平台·OAuth 客户端：新建客户端凭证模式 → 一次性密钥弹窗 → 列表可见 → 删除。
@@ -17,6 +18,9 @@ test.beforeAll(async ({ browser }) => {
 })
 
 test.afterAll(async () => {
+  // W16-3 走 UI 删除；这里兜底，避免删除断言失败时客户端残留下来
+  // （残留客户端会让 oauth 列表逐轮变长，也会污染其他用例的列表断言）
+  purgeOauthClients(clientName)
   await page?.close()
 })
 
@@ -61,7 +65,9 @@ test('W16-3 删除客户端', async () => {
   const root = page.locator('.oauth-client-page')
   const row = root.getByRole('row', { name: new RegExp(clientName) }).first()
   await expect(row).toBeVisible({ timeout: 10_000 })
-  await row.getByRole('button', { name: '删除' }).click()
+  // 操作列收窄为「编辑 + 更多」，删除在「更多」下拉里
+  await row.locator('.oauth-more').getByRole('button', { name: /更多/ }).click()
+  await page.locator('.el-dropdown-menu__item', { hasText: '删除' }).first().click()
   await page.locator('.el-message-box').getByRole('button', { name: '确定' }).click()
   await expect(root.getByRole('row', { name: new RegExp(clientName) })).toHaveCount(0, {
     timeout: 10_000

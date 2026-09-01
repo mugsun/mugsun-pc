@@ -2,6 +2,7 @@ import { execSync } from 'node:child_process'
 import type { Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
 import { login } from './fixtures/auth'
+import { purgeAttaches } from './helpers/cleanup'
 
 /**
  * W2 任务C 日志三件套 + 附件管理黄金验证：
@@ -17,6 +18,9 @@ function psql(sql: string): string {
 /** 1x1 透明 PNG（最小合法文件，供附件上传/预览验证） */
 const PNG_BASE64 =
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mNk+M9QDwADhgGAWjR9awAAAABJRU5ErkJggg=='
+/** 附件名逐轮唯一：固定名一旦有残留行，行选择器就会撞 strict mode */
+const ATTACH_NAME = `w2c3-${Date.now() % 100000}.png`
+const ATTACH_RE = new RegExp(ATTACH_NAME.replace('.', '\\.'))
 
 test.describe.configure({ mode: 'serial' })
 
@@ -28,6 +32,9 @@ test.beforeAll(async ({ browser }) => {
 })
 
 test.afterAll(async () => {
+  // 用例末尾走 UI 删除；这里兜底，避免中途失败时附件行残留——
+  // 残留行的磁盘文件会被后续清理掉，缩略图 404 会把巡访用例一起带红
+  purgeAttaches(`${ATTACH_NAME}%`)
   await page?.close()
 })
 
@@ -103,30 +110,35 @@ test('W2-C2 登录日志：搜索过滤 + UA/归属地列 + 解锁入口', async
   )
   expect(parsed, '最近登录日志 browser/os 应由 UA 解析落列').toBe('t')
 
-  // 解锁入口按锁定状态显隐（行级 locked 由后端按 Redis 锁键富化）：admin 未锁定 → 不显示「解锁」按钮；
+  // 解锁入口按锁定状态显隐（行级 locked 由后端按 Redis 锁键富化）：admin 未锁定 → 其行不显示「解锁」按钮。
+  // 断言收窄到 admin 行：其他账号是否锁定（如并行/先前用例锁的测试账号）与本用例无关。
   // 「连续错密锁定 → 本页一键解锁 → 恢复登录」完整链路见 session-lock.spec.ts
-  await expect(page.getByRole('button', { name: '解锁' })).toHaveCount(0)
+  await expect(
+    page.getByRole('row', { name: /admin/ }).first().getByRole('button', { name: '解锁' })
+  ).toHaveCount(0)
 })
 
 test('W2-C3 附件管理：真分页 + 文件名搜索 + 图片预览', async () => {
   await page.goto('/#/system/attach')
-  // 真分页：分页器可见且首屏请求走 /system/file/page
-  await expect(page.locator('.el-pagination')).toBeVisible({ timeout: 10_000 })
 
   // 上传 1x1 PNG（隐藏 input 直接 setInputFiles；本地存储回退 multipart 上传）
+  // 先上传再断言分页器：空表不渲染分页器，附件全清后断言"分页器可见"会失败
   const uploadResp = page.waitForResponse(
     (r) => r.url().includes('/system/file/upload') || r.url().includes('/system/file/create')
   )
   await page.locator('input[type="file"]').setInputFiles({
-    name: 'w2c3.png',
+    name: ATTACH_NAME,
     mimeType: 'image/png',
     buffer: Buffer.from(PNG_BASE64, 'base64')
   })
   expect((await uploadResp).status(), '附件上传须 200').toBe(200)
 
   // 新行出现（按 id 倒序在第一行）
-  const row = page.getByRole('row', { name: /w2c3\.png/ })
+  const row = page.getByRole('row', { name: ATTACH_RE }).first()
   await expect(row).toBeVisible({ timeout: 10_000 })
+
+  // 真分页：有数据后分页器可见（首屏请求走 /system/file/page）
+  await expect(page.locator('.el-pagination')).toBeVisible({ timeout: 10_000 })
 
   // 图片缩略图懒加载（download-stream 鉴权链取字节 → blob objectURL）
   const thumb = row.locator('img[src^="blob:"]')
@@ -139,26 +151,27 @@ test('W2-C3 附件管理：真分页 + 文件名搜索 + 图片预览', async ()
   await expect(page.locator('.el-image-viewer__wrapper')).toBeHidden({ timeout: 10_000 })
 
   // 文件名搜索：w2c3 → 只剩该行；叠加不可能条件 → 空
+  const stem = ATTACH_NAME.replace('.png', '')
   const filenameInput = page.getByPlaceholder('请输入文件名')
-  await filenameInput.fill('w2c3')
+  await filenameInput.fill(stem)
   const hitReq = page.waitForRequest(
-    (r) => r.url().includes('/system/file/page') && r.url().includes('filename=w2c3')
+    (r) => r.url().includes('/system/file/page') && r.url().includes(`filename=${stem}`)
   )
   await page.getByRole('button', { name: '查询' }).click()
   await hitReq
   await expect(row).toBeVisible({ timeout: 10_000 })
-  await filenameInput.fill('w2c3_nonexistent')
+  await filenameInput.fill(`${stem}_nonexistent`)
   await page.getByRole('button', { name: '查询' }).click()
-  await expect(page.getByRole('row', { name: /w2c3\.png/ })).toHaveCount(0, { timeout: 10_000 })
+  await expect(page.getByRole('row', { name: ATTACH_RE })).toHaveCount(0, { timeout: 10_000 })
   await page.getByRole('button', { name: '重置' }).click()
-  await expect(page.getByRole('row', { name: /w2c3\.png/ })).toBeVisible({ timeout: 10_000 })
+  await expect(page.getByRole('row', { name: ATTACH_RE }).first()).toBeVisible({ timeout: 10_000 })
 
-  // 清理：UI 删除（物理 + 登记级联；ArtButtonTable 为图标按钮，按 bg-error 类定位）
+  // 清理：UI 删除（物理 + 登记级联；操作列为「下载 / 删除」文字链接按钮）
   await page
-    .getByRole('row', { name: /w2c3\.png/ })
-    .locator('[class*="bg-error"]')
+    .getByRole('row', { name: ATTACH_RE })
     .first()
+    .getByRole('button', { name: '删除' })
     .click()
   await page.locator('.el-message-box').getByRole('button', { name: '确定' }).click()
-  await expect(page.getByRole('row', { name: /w2c3\.png/ })).toHaveCount(0, { timeout: 10_000 })
+  await expect(page.getByRole('row', { name: ATTACH_RE })).toHaveCount(0, { timeout: 10_000 })
 })

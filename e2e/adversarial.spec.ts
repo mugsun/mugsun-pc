@@ -78,10 +78,10 @@ test('ADV-2 忘记密码端点滥用（无码/错码/限频）', async () => {
   expect((await badCode.json()).code, '错误邮件码须被拒').toBe(400)
 })
 
-test('ADV-3 菜单接口越权与注册表探测', async () => {
+test('ADV-3 菜单接口越权与注册表探测', async ({ baseURL }) => {
   // 真匿名（全新请求上下文，不携带页面会话）拉菜单 → 401
   const { request } = await import('@playwright/test')
-  const anon = await request.newContext({ baseURL: 'http://localhost:3007' })
+  const anon = await request.newContext({ baseURL })
   const noAuth = await anon.get('/api/v3/system/menus')
   expect(noAuth.status(), '匿名拉菜单须 401').toBe(401)
   const menus2 = await noAuth.json()
