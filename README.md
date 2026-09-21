@@ -49,7 +49,7 @@ mugsun/
 └── mugsun-track    # 埋点 SDK
 ```
 
-本仓以 `file:../mugsun-track` 协议依赖埋点 SDK，其 `dist/` 不随仓库分发。直接执行 `pnpm install && pnpm dev` 会因模块缺失报错，**须先构建一次 SDK**：
+本仓以 `file:../mugsun-track` 协议依赖埋点 SDK，其 `dist/` 不随仓库分发。直接执行 `pnpm install && pnpm dev` 会因模块缺失报错，**须先构建一次 SDK**（若关闭埋点模块可跳过，见下方「可选模块」）：
 
 ```bash
 # 1. 构建本地埋点 SDK（首次或 SDK 更新后需要）
@@ -65,6 +65,17 @@ pnpm dev
 启动后自动打开 http://localhost:3006（端口取 `.env` 的 `VITE_PORT`，当前为 3006）。
 
 开发联调不使用 mock：`/api/**` 请求全部由 vite 代理转发到本地后端 `http://localhost:8080`（见 `.env.development` 的 `VITE_API_PROXY_URL`），请先启动 mugsun-boot。
+
+## 可选模块（GIS / 埋点）
+
+源码在 `modules/gis`、`modules/track`（删除目录即可去掉对应代码）。构建开关见 `.env`：
+
+```bash
+VITE_ENABLE_GIS=true
+VITE_ENABLE_TRACK=true
+```
+
+设为 `false` 时不注册路由与 SDK；与后端 `-Pbasic,'!full'` 配套可做「只要基础后台」。完整说明见后端文档 [可选模块装配](../mugsun-boot/docs/可选模块装配.md)。
 
 ## 常用脚本
 

@@ -13,6 +13,12 @@
     "skipLibCheck": true,
     "baseUrl": ".",
     "paths": {
+      "@/gis/*": ["modules/gis/lib/*"],
+      "@/api/gis": ["modules/gis/api.ts"],
+      "@/components/gis/*": ["modules/gis/components/*"],
+      "@/views/gis/*": ["modules/gis/views/*"],
+      "@/api/track": ["modules/track/api.ts"],
+      "@/views/track/*": ["modules/track/views/*"],
       "@/*": ["src/*"],
       "@views/*": ["src/views/*"],
       "@imgs/*": ["src/assets/images/*"],
@@ -23,6 +29,13 @@
       "@styles/*": ["src/assets/styles/*"]
     }
   },
-  "include": ["src/**/*", "src/**/*.ts", "src/**/*.d.ts", "src/**/*.tsx", "src/**/*.vue"],
+  "include": [
+    "src/**/*",
+    "src/**/*.ts",
+    "src/**/*.d.ts",
+    "src/**/*.tsx",
+    "src/**/*.vue",
+    "modules/**/*"
+  ],
   "exclude": ["node_modules", "dist", "**/*.js"]
 }

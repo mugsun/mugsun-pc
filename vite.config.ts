@@ -22,14 +22,20 @@ export default ({ mode }: { mode: string }) => {
     : `${VITE_BASE_URL}/`
   const cesiumSource = 'node_modules/cesium/Build/Cesium'
   const cesiumBaseUrl = 'cesiumStatic'
+  const hasCesium = fs.existsSync(path.resolve(root, cesiumSource))
+  const enableGis = env.VITE_ENABLE_GIS !== 'false'
+  const enableTrack = env.VITE_ENABLE_TRACK !== 'false'
 
   console.log(`🚀 API_URL = ${VITE_API_URL}`)
   console.log(`🚀 VERSION = ${VITE_VERSION}`)
+  console.log(`🚀 MODULES = gis=${enableGis} track=${enableTrack} cesium=${hasCesium}`)
 
   return defineConfig({
     define: {
       __APP_VERSION__: JSON.stringify(VITE_VERSION),
-      CESIUM_BASE_URL: JSON.stringify(`${publicBase}${cesiumBaseUrl}/`)
+      CESIUM_BASE_URL: JSON.stringify(
+        hasCesium ? `${publicBase}${cesiumBaseUrl}/` : `${publicBase}`
+      )
     },
     base: VITE_BASE_URL,
     server: {
@@ -56,17 +62,34 @@ export default ({ mode }: { mode: string }) => {
         }
       }
     },
-    // 路径别名
+    // 路径别名：更具体的可选模块别名必须写在 `@` 之前，否则会被 `@` → src 吃掉
     resolve: {
-      alias: {
-        '@': fileURLToPath(new URL('./src', import.meta.url)),
-        '@views': resolvePath('src/views'),
-        '@imgs': resolvePath('src/assets/images'),
-        '@icons': resolvePath('src/assets/icons'),
-        '@utils': resolvePath('src/utils'),
-        '@stores': resolvePath('src/store'),
-        '@styles': resolvePath('src/assets/styles')
-      }
+      alias: [
+        ...(fs.existsSync(resolvePath('modules/gis'))
+          ? [
+              { find: '@/gis', replacement: resolvePath('modules/gis/lib') },
+              { find: '@/api/gis', replacement: resolvePath('modules/gis/api.ts') },
+              {
+                find: '@/components/gis',
+                replacement: resolvePath('modules/gis/components')
+              },
+              { find: '@/views/gis', replacement: resolvePath('modules/gis/views') }
+            ]
+          : []),
+        ...(fs.existsSync(resolvePath('modules/track'))
+          ? [
+              { find: '@/api/track', replacement: resolvePath('modules/track/api.ts') },
+              { find: '@/views/track', replacement: resolvePath('modules/track/views') }
+            ]
+          : []),
+        { find: '@', replacement: fileURLToPath(new URL('./src', import.meta.url)) },
+        { find: '@views', replacement: resolvePath('src/views') },
+        { find: '@imgs', replacement: resolvePath('src/assets/images') },
+        { find: '@icons', replacement: resolvePath('src/assets/icons') },
+        { find: '@utils', replacement: resolvePath('src/utils') },
+        { find: '@stores', replacement: resolvePath('src/store') },
+        { find: '@styles', replacement: resolvePath('src/assets/styles') }
+      ]
     },
     build: {
       target: 'es2015',
@@ -84,7 +107,7 @@ export default ({ mode }: { mode: string }) => {
       dynamicImportVarsOptions: {
         warnOnError: true,
         exclude: [],
-        include: ['src/views/**/*.vue']
+        include: ['src/views/**/*.vue', 'modules/**/*.vue']
       }
     },
     plugins: [
@@ -120,15 +143,19 @@ export default ({ mode }: { mode: string }) => {
         deleteOriginFile: false // 压缩后是否删除原文件
       }),
       vueDevTools(),
-      serveCesiumStatic(cesiumSource, cesiumBaseUrl),
-      viteStaticCopy({
-        targets: [
-          { src: `${cesiumSource}/ThirdParty`, dest: cesiumBaseUrl },
-          { src: `${cesiumSource}/Workers`, dest: cesiumBaseUrl },
-          { src: `${cesiumSource}/Assets`, dest: cesiumBaseUrl },
-          { src: `${cesiumSource}/Widgets`, dest: cesiumBaseUrl }
-        ]
-      })
+      ...(hasCesium
+        ? [
+            serveCesiumStatic(cesiumSource, cesiumBaseUrl),
+            viteStaticCopy({
+              targets: [
+                { src: `${cesiumSource}/ThirdParty`, dest: cesiumBaseUrl },
+                { src: `${cesiumSource}/Workers`, dest: cesiumBaseUrl },
+                { src: `${cesiumSource}/Assets`, dest: cesiumBaseUrl },
+                { src: `${cesiumSource}/Widgets`, dest: cesiumBaseUrl }
+              ]
+            })
+          ]
+        : [])
       // 打包分析
       // visualizer({
       //   open: true,
@@ -151,7 +178,7 @@ export default ({ mode }: { mode: string }) => {
         'element-plus/es',
         'element-plus/es/components/*/style/css',
         'element-plus/es/components/*/style/index',
-        'cesium',
+        ...(hasCesium ? (['cesium'] as const) : []),
         'mersenne-twister'
       ]
     },

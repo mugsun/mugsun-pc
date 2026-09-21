@@ -133,7 +133,7 @@
                 <ElDropdownItem command="heatmap" divided>
                   {{ heatmapOn ? '✓ ' : '' }}{{ $t('pages.gis.heatmap') }}
                 </ElDropdownItem>
-                <ElDropdownItem command="trackHeat">
+                <ElDropdownItem v-if="trackModuleOn" command="trackHeat">
                   {{ trackHeatOn ? '✓ ' : '' }}{{ $t('pages.gis.trackHeat') }}
                 </ElDropdownItem>
                 <ElDropdownItem command="cluster">
@@ -515,7 +515,7 @@
     type GisProviderStatus,
     type GisScene
   } from '@/api/gis'
-  import { fetchTrackAppPage, fetchTrackGeo } from '@/api/track'
+  import { enableTrack } from '@/modules/flags'
   import { geoPointsToSketch } from '@/gis/trackHeat'
   import { rememberGisProvider, rememberedOrFirst } from '@/gis/preferProvider'
   import {
@@ -623,6 +623,7 @@
   const canUndo = ref(false)
   const canRedo = ref(false)
   const heatmapOn = ref(false)
+  const trackModuleOn = enableTrack
   const trackHeatOn = ref(false)
   const TRACK_HEAT_ID = 'track-heat'
   const clusterOn = ref(false)
@@ -1380,6 +1381,9 @@
   }
 
   const toggleTrackHeat = async (): Promise<void> => {
+    if (!enableTrack) {
+      return
+    }
     if (trackHeatOn.value) {
       overlays?.remove(TRACK_HEAT_ID)
       trackHeatOn.value = false
@@ -1387,6 +1391,7 @@
       return
     }
     try {
+      const { fetchTrackAppPage, fetchTrackGeo } = await import('@/api/track')
       const preferred = localStorage.getItem('track:appKey') || ''
       const page = await fetchTrackAppPage({ pageNum: 1, pageSize: 20 })
       const records = (page?.records || []) as { appKey?: string }[]

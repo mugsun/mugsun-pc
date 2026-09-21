@@ -1,37 +1,66 @@
 import App from './App.vue'
 import { createApp } from 'vue'
-import { initStore } from './store'                 // Store
-import { initRouter } from './router'               // Router
-import language from './locales'                    // 国际化
-import ElementPlus from 'element-plus'              // form-create 动态渲染需全局注册
-import 'element-plus/dist/index.css'                // element-plus 基础样式（置于主题前，主题覆盖生效）
-import formCreate from '@form-create/element-ui'    // 低代码表单运行时渲染
-import FcDesigner from '@form-create/designer'      // 低代码表单设计器
-import '@styles/core/tailwind.css'                  // tailwind
-import '@styles/index.scss'                         // 样式
-import '@utils/sys/console.ts'                      // 控制台输出内容
+import { initStore } from './store'
+import { initRouter } from './router'
+import language from './locales'
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
+import formCreate from '@form-create/element-ui'
+import FcDesigner from '@form-create/designer'
+import '@styles/core/tailwind.css'
+import '@styles/index.scss'
+import '@utils/sys/console.ts'
 import { setupGlobDirectives } from './directives'
 import { setupErrorHandle } from './utils/sys/error-handle'
-import { setupTrack } from './plugins/track'         // 埋点（自监控）
-import { registerGisPick } from '@/components/gis/registerGisPick'
+import { installTrackApi, setupTrack } from './plugins/track'
+import { enableGis, enableTrack } from '@/modules/flags'
 
-document.addEventListener(
-  'touchstart',
-  function () {},
-  { passive: false }
+const trackPluginMods = import.meta.glob<{
+  setupTrack: (app: ReturnType<typeof createApp>) => void
+  trackIdentify: (...args: unknown[]) => void
+  trackReset: () => void
+}>('../modules/track/plugin.ts')
+
+const gisPickMods = import.meta.glob<{ registerGisPick: () => void }>(
+  '../modules/gis/components/registerGisPick.ts'
 )
 
-const app = createApp(App)
-initStore(app)
-initRouter(app)
-setupGlobDirectives(app)
-setupErrorHandle(app)
-// 埋点须在 setupErrorHandle 之后挂接（errorHandler 链式保留既有处理），且 router 就绪、mount 之前
-setupTrack(app)
+async function bootstrap() {
+  document.addEventListener('touchstart', function () {}, { passive: false })
 
-app.use(ElementPlus)
-app.use(formCreate)
-app.use(FcDesigner)
-registerGisPick()
-app.use(language)
-app.mount('#app')
+  const app = createApp(App)
+  initStore(app)
+  initRouter(app)
+  setupGlobDirectives(app)
+  setupErrorHandle(app)
+
+  if (enableTrack) {
+    const loaders = Object.values(trackPluginMods)
+    if (loaders[0]) {
+      const track = await loaders[0]()
+      installTrackApi({
+        setupTrack: track.setupTrack,
+        trackIdentify: track.trackIdentify,
+        trackReset: track.trackReset
+      })
+      setupTrack(app)
+    }
+  }
+
+  app.use(ElementPlus)
+  app.use(formCreate)
+  app.use(FcDesigner)
+
+  if (enableGis) {
+    const loaders = Object.values(gisPickMods)
+    if (loaders[0]) {
+      const { registerGisPick } = await loaders[0]()
+      registerGisPick()
+    }
+  }
+
+  app.use(language)
+  app.mount('#app')
+}
+
+void bootstrap()

@@ -1,0 +1,6 @@
+{
+  "name": "@mugsun/pc-track",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Mugsun PC 埋点可选模块（删除本目录即可去掉埋点源码）"
+}

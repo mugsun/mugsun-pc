@@ -167,7 +167,7 @@
               $t('pages.track.overview.geoCount', { n: geoCount })
             }}</span>
           </p>
-          <GisHeatMap v-if="geoPoints.length" :points="geoPoints" />
+          <GisHeatMap v-if="gisModuleOn && geoPoints.length" :points="geoPoints" />
           <ElEmpty v-else :description="$t('pages.track.overview.geoEmpty')" :image-size="72" />
         </div>
       </ElCol>
@@ -184,6 +184,7 @@
     fetchTrackTrend
   } from '@/api/track'
   import GisHeatMap from '@/components/gis/GisHeatMap.vue'
+  import { enableGis } from '@/modules/flags'
   import { useI18n } from 'vue-i18n'
   import { fmtTrackClock, fmtTrackDuration, useTrackApp } from '@/views/track/shared/useTrackApp'
   import { useChartOps } from '@/hooks/core/useChart'
@@ -192,6 +193,7 @@
 
   defineOptions({ name: 'TrackOverview' })
 
+  const gisModuleOn = enableGis
   const { t } = useI18n()
 
   const { appOptions, appKey, days, appsLoading } = useTrackApp()

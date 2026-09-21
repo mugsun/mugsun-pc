@@ -1,7 +1,7 @@
 /**
  * 组件加载器
  *
- * 负责动态加载 Vue 组件
+ * 负责动态加载 Vue 组件。核心页在 src/views；GIS / 埋点页在 modules 下对应 views。
  *
  * @module router/core/ComponentLoader
  * @author Mugsun
@@ -13,8 +13,18 @@ export class ComponentLoader {
   private modules: Record<string, () => Promise<any>>
 
   constructor() {
-    // 动态导入 views 目录下所有 .vue 组件
-    this.modules = import.meta.glob('../../views/**/*.vue')
+    const core = import.meta.glob('../../views/**/*.vue')
+    const gis = import.meta.glob('../../../modules/gis/views/**/*.vue')
+    const track = import.meta.glob('../../../modules/track/views/**/*.vue')
+    this.modules = { ...core }
+    for (const [k, loader] of Object.entries(gis)) {
+      const rel = k.replace('../../../modules/gis/views', '../../views/gis')
+      this.modules[rel] = loader
+    }
+    for (const [k, loader] of Object.entries(track)) {
+      const rel = k.replace('../../../modules/track/views', '../../views/track')
+      this.modules[rel] = loader
+    }
   }
 
   /**
@@ -25,11 +35,8 @@ export class ComponentLoader {
       return this.createEmptyComponent()
     }
 
-    // 构建可能的路径
     const fullPath = `../../views${componentPath}.vue`
     const fullPathWithIndex = `../../views${componentPath}/index.vue`
-
-    // 先尝试直接路径，再尝试添加/index的路径
     const module = this.modules[fullPath] || this.modules[fullPathWithIndex]
 
     if (!module) {
@@ -42,23 +49,14 @@ export class ComponentLoader {
     return module
   }
 
-  /**
-   * 加载布局组件
-   */
   loadLayout(): () => Promise<any> {
     return () => import('@/views/index/index.vue')
   }
 
-  /**
-   * 加载 iframe 组件
-   */
   loadIframe(): () => Promise<any> {
     return () => import('@/views/outside/Iframe.vue')
   }
 
-  /**
-   * 创建空组件
-   */
   private createEmptyComponent(): () => Promise<any> {
     return () =>
       Promise.resolve({
@@ -68,9 +66,6 @@ export class ComponentLoader {
       })
   }
 
-  /**
-   * 创建错误提示组件
-   */
   private createErrorComponent(componentPath: string): () => Promise<any> {
     return () =>
       Promise.resolve({

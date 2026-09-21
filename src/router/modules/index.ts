@@ -1,19 +1,30 @@
 import { AppRouteRecord } from '@/types/router'
 import { dashboardRoutes } from './dashboard'
-import { gisRoutes } from './gis'
-import { trackRoutes } from './track'
 import { systemRoutes } from './system'
 import { openPlatformRoutes } from './openPlatform'
 import { saasRoutes } from './saas'
+import { enableGis, enableTrack } from '@/modules/flags'
 
 /**
- * 导出所有模块化路由（仅真实功能模块，已移除模板演示路由）
- * dashboard 置于首位，作为登录后落地页；其余为并列的顶级应用分组（多应用）
+ * 可选模块路由：用 glob 探测，目录不存在时为空（下载器 basic 组合可删 modules/*）。
+ * VITE_ENABLE_*=false 时即使源码仍在也不注册。
  */
+const gisRouteMods = import.meta.glob<{ gisRoutes: AppRouteRecord }>(
+  '../../../modules/gis/routes.ts',
+  { eager: true }
+)
+const trackRouteMods = import.meta.glob<{ trackRoutes: AppRouteRecord }>(
+  '../../../modules/track/routes.ts',
+  { eager: true }
+)
+
+const gisRoutes = Object.values(gisRouteMods)[0]?.gisRoutes
+const trackRoutes = Object.values(trackRouteMods)[0]?.trackRoutes
+
 export const routeModules: AppRouteRecord[] = [
   dashboardRoutes,
-  gisRoutes,
-  trackRoutes,
+  ...(enableGis && gisRoutes ? [gisRoutes] : []),
+  ...(enableTrack && trackRoutes ? [trackRoutes] : []),
   systemRoutes,
   openPlatformRoutes,
   saasRoutes
