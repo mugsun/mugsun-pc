@@ -6,7 +6,7 @@ import { saasRoutes } from './saas'
 import { enableGis, enableTrack } from '@/modules/flags'
 
 /**
- * 可选模块路由：用 glob 探测，目录不存在时为空（下载器 basic 组合可删 modules/*）。
+ * 可选模块路由：用 glob 探测，目录不存在时为空（可整目录删除 modules/gis|track）。
  * VITE_ENABLE_*=false 时即使源码仍在也不注册。
  */
 const gisRouteMods = import.meta.glob<{ gisRoutes: AppRouteRecord }>(
