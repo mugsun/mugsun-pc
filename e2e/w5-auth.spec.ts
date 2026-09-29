@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
 import { sm2 } from 'sm-crypto'
 import { login } from './fixtures/auth'
+import { PG_CONTAINER, REDIS_CONTAINER, REDIS_DB } from './helpers/docker'
 
 /**
  * W5 登录体验增强端到端：
@@ -13,11 +14,8 @@ import { login } from './fixtures/auth'
  * 3) 个人中心：mock 绑定区不可见（DEV 但后端未允许），邮箱/手机展示位存在。
  */
 
-const REDIS_CONTAINER = process.env.E2E_REDIS_CONTAINER || 'blade-redis'
-const REDIS_DB = process.env.E2E_REDIS_DB || '3'
-
 function psql(sql: string): string {
-  return execSync(`docker exec mugsun-pg psql -U mugsun -d mugsun -t -c "${sql}"`, {
+  return execSync(`docker exec ${PG_CONTAINER} psql -U mugsun -d mugsun -t -c "${sql}"`, {
     encoding: 'utf-8'
   }).trim()
 }

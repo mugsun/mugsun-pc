@@ -2,6 +2,7 @@ import { execSync } from 'node:child_process'
 import type { Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
 import { login, readAccessToken } from './fixtures/auth'
+import { PG_CONTAINER } from './helpers/docker'
 
 /**
  * 对抗性测试：针对本轮新建的搜索栏/菜单/导入/忘记密码/任务处理器端点做滥用攻击。
@@ -120,11 +121,11 @@ test('ADV-3 菜单接口越权与注册表探测', async ({ baseURL }) => {
   await browser.close()
   // 清理
   const uid = execSync(
-    `docker exec mugsun-pg psql -U mugsun -d mugsun -t -c "SELECT id FROM sys_user WHERE username='${uname}';"`,
+    `docker exec ${PG_CONTAINER} psql -U mugsun -d mugsun -t -c "SELECT id FROM sys_user WHERE username='${uname}';"`,
     { encoding: 'utf-8' }
   ).trim()
   execSync(
-    `docker exec mugsun-pg psql -U mugsun -d mugsun -c "DELETE FROM sys_user_role WHERE user_id=${uid}; DELETE FROM sys_user WHERE id=${uid};"`
+    `docker exec ${PG_CONTAINER} psql -U mugsun -d mugsun -c "DELETE FROM sys_user_role WHERE user_id=${uid}; DELETE FROM sys_user WHERE id=${uid};"`
   )
 })
 

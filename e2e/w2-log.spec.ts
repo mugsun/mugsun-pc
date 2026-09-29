@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
 import { login } from './fixtures/auth'
 import { purgeAttaches } from './helpers/cleanup'
+import { PG_CONTAINER } from './helpers/docker'
 
 /**
  * W2 任务C 日志三件套 + 附件管理黄金验证：
@@ -10,7 +11,7 @@ import { purgeAttaches } from './helpers/cleanup'
  */
 
 function psql(sql: string): string {
-  return execSync(`docker exec mugsun-pg psql -U mugsun -d mugsun -t -c "${sql}"`, {
+  return execSync(`docker exec ${PG_CONTAINER} psql -U mugsun -d mugsun -t -c "${sql}"`, {
     encoding: 'utf-8'
   }).trim()
 }

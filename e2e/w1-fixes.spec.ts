@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
 import { login, logout, readCaptchaCode, readAccessToken } from './fixtures/auth'
 import { purgeAttaches } from './helpers/cleanup'
+import { PG_CONTAINER } from './helpers/docker'
 
 /**
  * W1「一眼假清理」逐项真实浏览器验证。
@@ -12,7 +13,7 @@ import { purgeAttaches } from './helpers/cleanup'
 const REMEMBER_KEY = 'mugsun.remembered-username'
 
 function psql(sql: string): string {
-  return execSync(`docker exec mugsun-pg psql -U mugsun -d mugsun -c "${sql}"`, {
+  return execSync(`docker exec ${PG_CONTAINER} psql -U mugsun -d mugsun -c "${sql}"`, {
     encoding: 'utf-8'
   })
 }

@@ -5,6 +5,7 @@ import { login, logout, readAccessToken } from './fixtures/auth'
 import { XLSX_MIME, buildXlsx, parseXlsxAoa } from './fixtures/xlsx'
 import { purgePosts } from './helpers/cleanup'
 import { ensureDataTestRole, ensurePost } from './helpers/prepare'
+import { PG_CONTAINER } from './helpers/docker'
 
 /**
  * W5 用户导入导出完整化：
@@ -25,7 +26,7 @@ const badPhoneUser = `e2e_w5_bad_${suffix}`
 const maskUser = `e2e_w5_mask_${suffix}`
 
 function psql(sql: string): string {
-  return execSync(`docker exec mugsun-pg psql -U mugsun -d mugsun -t -c "${sql}"`, {
+  return execSync(`docker exec ${PG_CONTAINER} psql -U mugsun -d mugsun -t -c "${sql}"`, {
     encoding: 'utf-8'
   }).trim()
 }

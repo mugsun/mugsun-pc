@@ -2,6 +2,7 @@ import { execSync } from 'node:child_process'
 import type { Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
 import { login } from './fixtures/auth'
+import { PG_CONTAINER } from './helpers/docker'
 
 /**
  * W14 工作流专属：设计→部署→发起→待办通过→审批中心可见。
@@ -9,7 +10,7 @@ import { login } from './fixtures/auth'
  */
 
 function psql(sql: string): string {
-  return execSync(`docker exec mugsun-pg psql -U mugsun -d mugsun -t -c "${sql}"`, {
+  return execSync(`docker exec ${PG_CONTAINER} psql -U mugsun -d mugsun -t -c "${sql}"`, {
     encoding: 'utf-8'
   }).trim()
 }

@@ -2,6 +2,7 @@ import { execSync } from 'node:child_process'
 import type { Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
 import { login } from './fixtures/auth'
+import { PG_CONTAINER } from './helpers/docker'
 
 /**
  * G106 埋点地理：地域分布看板 + GIS 工作台叠加埋点热力 + 接入开关 + 表单选点积木。
@@ -13,13 +14,13 @@ let testStart = 0
 const EVENT_IDS: string[] = []
 
 function psqlTrack(sql: string): string {
-  return execSync(`docker exec mugsun-pg psql -U mugsun -d mugsun_track -t -c "${sql}"`, {
+  return execSync(`docker exec ${PG_CONTAINER} psql -U mugsun -d mugsun_track -t -c "${sql}"`, {
     encoding: 'utf-8'
   }).trim()
 }
 
 function psqlBiz(sql: string): string {
-  return execSync(`docker exec mugsun-pg psql -U mugsun -d mugsun -t -c "${sql}"`, {
+  return execSync(`docker exec ${PG_CONTAINER} psql -U mugsun -d mugsun -t -c "${sql}"`, {
     encoding: 'utf-8'
   }).trim()
 }

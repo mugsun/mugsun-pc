@@ -3,6 +3,7 @@ import type { Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
 import { login, logout, readAccessToken } from './fixtures/auth'
 import { ensureDataTestRole } from './helpers/prepare'
+import { PG_CONTAINER } from './helpers/docker'
 
 /**
  * W3 后端菜单驱动矩阵：菜单管理真实驱动侧边栏（修「两张皮」）。
@@ -13,7 +14,7 @@ import { ensureDataTestRole } from './helpers/prepare'
  */
 
 function psql(sql: string): string {
-  return execSync(`docker exec mugsun-pg psql -U mugsun -d mugsun -t -c "${sql}"`, {
+  return execSync(`docker exec ${PG_CONTAINER} psql -U mugsun -d mugsun -t -c "${sql}"`, {
     encoding: 'utf-8'
   }).trim()
 }

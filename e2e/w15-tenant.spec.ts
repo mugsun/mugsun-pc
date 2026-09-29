@@ -3,13 +3,14 @@ import type { Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
 import { login } from './fixtures/auth'
 import { purgeTenant } from './helpers/cleanup'
+import { PG_CONTAINER } from './helpers/docker'
 
 /**
  * W15 租户运营：新增租户（一键初始化）→ 列表可见 → 删除清理。
  */
 
 function psql(sql: string): string {
-  return execSync(`docker exec mugsun-pg psql -U mugsun -d mugsun -t -c "${sql}"`, {
+  return execSync(`docker exec ${PG_CONTAINER} psql -U mugsun -d mugsun -t -c "${sql}"`, {
     encoding: 'utf-8'
   }).trim()
 }

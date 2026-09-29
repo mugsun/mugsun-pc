@@ -2,6 +2,7 @@ import { execSync } from 'node:child_process'
 import type { Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
 import { login } from './fixtures/auth'
+import { REDIS_CONTAINER } from './helpers/docker'
 
 /**
  * W4 定时任务真可用：处理器注册表 / jobParams / 真实处理器端到端。
@@ -9,7 +10,7 @@ import { login } from './fixtures/auth'
  */
 
 function redis(...args: string[]): string {
-  return execSync(`docker exec blade-redis redis-cli -n 3 ${args.join(' ')}`, {
+  return execSync(`docker exec ${REDIS_CONTAINER} redis-cli -n 3 ${args.join(' ')}`, {
     encoding: 'utf-8'
   }).trim()
 }

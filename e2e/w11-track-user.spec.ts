@@ -4,6 +4,7 @@ import path from 'node:path'
 import type { Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
 import { login } from './fixtures/auth'
+import { PG_CONTAINER, REDIS_CONTAINER } from './helpers/docker'
 
 /**
  * W11 用户细查（行为时间线）+ 接口监控 + 响应体采集全链路验证（G102）：
@@ -26,13 +27,13 @@ const DEV_STORAGE_ROOT = '/tmp/mugsun-files/'
 let testStart = 0
 
 function psqlTrack(sql: string): string {
-  return execSync(`docker exec mugsun-pg psql -U mugsun -d mugsun_track -t -c "${sql}"`, {
+  return execSync(`docker exec ${PG_CONTAINER} psql -U mugsun -d mugsun_track -t -c "${sql}"`, {
     encoding: 'utf-8'
   }).trim()
 }
 
 function psqlBiz(sql: string): string {
-  return execSync(`docker exec mugsun-pg psql -U mugsun -d mugsun -t -c "${sql}"`, {
+  return execSync(`docker exec ${PG_CONTAINER} psql -U mugsun -d mugsun -t -c "${sql}"`, {
     encoding: 'utf-8'
   }).trim()
 }
@@ -96,7 +97,7 @@ test.afterAll(async () => {
   }
   if (rows.length > 0) {
     execSync(
-      `docker exec blade-redis redis-cli -n 3 DEL ${rows
+      `docker exec ${REDIS_CONTAINER} redis-cli -n 3 DEL ${rows
         .map((r) => `mugsun:track:api-body:${r.eventId}`)
         .join(' ')}`,
       { encoding: 'utf-8' }

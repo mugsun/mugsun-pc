@@ -4,6 +4,7 @@ import { test, expect } from '@playwright/test'
 import { login, logout, readCaptchaCode, readAccessToken } from './fixtures/auth'
 import { buildXlsx } from './fixtures/xlsx'
 import { clearLoginLock, purgeUsers } from './helpers/cleanup'
+import { PG_CONTAINER } from './helpers/docker'
 
 /**
  * 会话与锁定链路口径验证：
@@ -12,7 +13,7 @@ import { clearLoginLock, purgeUsers } from './helpers/cleanup'
  */
 
 function psql(sql: string): string {
-  return execSync(`docker exec mugsun-pg psql -U mugsun -d mugsun -t -c "${sql}"`, {
+  return execSync(`docker exec ${PG_CONTAINER} psql -U mugsun -d mugsun -t -c "${sql}"`, {
     encoding: 'utf-8'
   }).trim()
 }

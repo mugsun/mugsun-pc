@@ -1,4 +1,5 @@
 import { execSync } from 'node:child_process'
+import { PG_CONTAINER, REDIS_CONTAINER, REDIS_DB } from './docker'
 
 /**
  * e2e 数据自清契约。
@@ -9,10 +10,6 @@ import { execSync } from 'node:child_process'
  *
  * 约定：谁造谁清，一律在 afterAll 里调用本模块，且清理自身不得抛错打断收尾。
  */
-
-const PG_CONTAINER = process.env.E2E_PG_CONTAINER || 'mugsun-pg'
-const REDIS_CONTAINER = process.env.E2E_REDIS_CONTAINER || 'blade-redis'
-const REDIS_DB = process.env.E2E_REDIS_DB || '3'
 
 /** 主库执行（返回 stdout；-t 无表头，便于取单值） */
 export function psqlMain(sql: string): string {

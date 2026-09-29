@@ -7,6 +7,7 @@ import { test, expect } from '@playwright/test'
 import { minify } from 'terser'
 import { SourceMapConsumer } from 'source-map-js'
 import { login, readAccessToken } from './fixtures/auth'
+import { PG_CONTAINER, REDIS_CONTAINER } from './helpers/docker'
 
 /**
  * W10 错误堆栈 sourcemap 还原 + 符号表管理 + 错误告警全链路验证（G101）：
@@ -42,13 +43,13 @@ let alertFingerprint = ''
 let mapFilePath = ''
 
 function psqlTrack(sql: string): string {
-  return execSync(`docker exec mugsun-pg psql -U mugsun -d mugsun_track -t -c "${sql}"`, {
+  return execSync(`docker exec ${PG_CONTAINER} psql -U mugsun -d mugsun_track -t -c "${sql}"`, {
     encoding: 'utf-8'
   }).trim()
 }
 
 function psqlBiz(sql: string): string {
-  return execSync(`docker exec mugsun-pg psql -U mugsun -d mugsun -t -c "${sql}"`, {
+  return execSync(`docker exec ${PG_CONTAINER} psql -U mugsun -d mugsun -t -c "${sql}"`, {
     encoding: 'utf-8'
   }).trim()
 }
@@ -201,7 +202,7 @@ test.afterAll(async () => {
     `mugsun:track:alert-freq:${SEED_APP_KEY}:${fp}`,
     `mugsun:track:alert-sent:${SEED_APP_KEY}:${fp}`
   ])
-  execSync(`docker exec blade-redis redis-cli -n 3 DEL ${redisKeys.join(' ')}`, {
+  execSync(`docker exec ${REDIS_CONTAINER} redis-cli -n 3 DEL ${redisKeys.join(' ')}`, {
     encoding: 'utf-8'
   })
   // 事件/会话行（口径同 w8/w9）

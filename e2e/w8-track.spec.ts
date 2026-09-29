@@ -3,6 +3,7 @@ import { gunzipSync } from 'node:zlib'
 import type { Page, Request } from '@playwright/test'
 import { test, expect } from '@playwright/test'
 import { login } from './fixtures/auth'
+import { PG_CONTAINER } from './helpers/docker'
 
 /**
  * W8 埋点全链路验证（G99 收官）：
@@ -16,7 +17,7 @@ const SEED_APP_KEY = 'ak_000000000000000000000001'
 let testStart = 0
 
 function psqlTrack(sql: string): string {
-  return execSync(`docker exec mugsun-pg psql -U mugsun -d mugsun_track -t -c "${sql}"`, {
+  return execSync(`docker exec ${PG_CONTAINER} psql -U mugsun -d mugsun_track -t -c "${sql}"`, {
     encoding: 'utf-8'
   }).trim()
 }

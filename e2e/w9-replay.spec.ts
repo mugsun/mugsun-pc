@@ -4,6 +4,7 @@ import path from 'node:path'
 import type { Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
 import { login } from './fixtures/auth'
+import { PG_CONTAINER } from './helpers/docker'
 
 /**
  * W9 会话回放全链路验证（G100）：
@@ -23,7 +24,7 @@ let testStart = 0
 let recordedSession = ''
 
 function psqlTrack(sql: string): string {
-  return execSync(`docker exec mugsun-pg psql -U mugsun -d mugsun_track -t -c "${sql}"`, {
+  return execSync(`docker exec ${PG_CONTAINER} psql -U mugsun -d mugsun_track -t -c "${sql}"`, {
     encoding: 'utf-8'
   }).trim()
 }

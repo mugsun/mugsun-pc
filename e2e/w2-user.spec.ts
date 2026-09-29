@@ -4,13 +4,14 @@ import { test, expect } from '@playwright/test'
 import { login } from './fixtures/auth'
 import { purgePosts } from './helpers/cleanup'
 import { ensureDataTestRole, ensurePost } from './helpers/prepare'
+import { PG_CONTAINER } from './helpers/docker'
 
 /**
  * W2-S1/S3 用户页黄金验证：搜索栏真实过滤 + 建档挂部门/岗位/角色端到端。
  */
 
 function psql(sql: string): string {
-  return execSync(`docker exec mugsun-pg psql -U mugsun -d mugsun -t -c "${sql}"`, {
+  return execSync(`docker exec ${PG_CONTAINER} psql -U mugsun -d mugsun -t -c "${sql}"`, {
     encoding: 'utf-8'
   }).trim()
 }

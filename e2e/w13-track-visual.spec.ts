@@ -4,6 +4,7 @@ import path from 'node:path'
 import type { Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
 import { login, readAccessToken } from './fixtures/auth'
+import { PG_CONTAINER, REDIS_CONTAINER } from './helpers/docker'
 
 /**
  * W13 圈选式可视化埋点（G104）+ 回放会话事件打点（G105c）全链路验证：
@@ -33,7 +34,7 @@ let testStart = 0
 let visualToken = ''
 
 function psqlTrack(sql: string): string {
-  return execSync(`docker exec mugsun-pg psql -U mugsun -d mugsun_track -t -c "${sql}"`, {
+  return execSync(`docker exec ${PG_CONTAINER} psql -U mugsun -d mugsun_track -t -c "${sql}"`, {
     encoding: 'utf-8'
   }).trim()
 }
@@ -111,7 +112,7 @@ test.afterAll(async () => {
   // 圈选令牌/草稿 Redis 键（TTL 30min 自然过期，测试数据专用主动清）
   if (visualToken) {
     execSync(
-      `docker exec blade-redis redis-cli -n 3 DEL` +
+      `docker exec ${REDIS_CONTAINER} redis-cli -n 3 DEL` +
         ` mugsun:track:visual-token:${visualToken} mugsun:track:visual-draft:${visualToken}`,
       { encoding: 'utf-8' }
     )
