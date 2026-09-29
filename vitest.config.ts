@@ -10,6 +10,7 @@ const resolvePath = (p: string) => path.resolve(__dirname, p)
 export default defineConfig({
   resolve: {
     alias: {
+      '@/gis': resolvePath('modules/gis/lib'),
       '@': resolvePath('src'),
       '@views': resolvePath('src/views'),
       '@imgs': resolvePath('src/assets/images'),
