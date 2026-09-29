@@ -13,7 +13,7 @@ import '@utils/sys/console.ts'
 import { setupGlobDirectives } from './directives'
 import { setupErrorHandle } from './utils/sys/error-handle'
 import { installTrackApi, setupTrack } from './plugins/track'
-import { enableGis, enableTrack } from '@/modules/flags'
+import { enableAi, enableGis, enableTrack } from '@/modules/flags'
 
 const trackPluginMods = import.meta.glob<{
   setupTrack: (app: ReturnType<typeof createApp>) => void
@@ -23,6 +23,10 @@ const trackPluginMods = import.meta.glob<{
 
 const gisPickMods = import.meta.glob<{ registerGisPick: () => void }>(
   '../modules/gis/components/registerGisPick.ts'
+)
+
+const aiPluginMods = import.meta.glob<{ setupAi: (app: ReturnType<typeof createApp>) => void }>(
+  '../modules/ai/plugin.ts'
 )
 
 async function bootstrap() {
@@ -56,6 +60,14 @@ async function bootstrap() {
     if (loaders[0]) {
       const { registerGisPick } = await loaders[0]()
       registerGisPick()
+    }
+  }
+
+  if (enableAi) {
+    const loaders = Object.values(aiPluginMods)
+    if (loaders[0]) {
+      const { setupAi } = await loaders[0]()
+      setupAi(app)
     }
   }
 

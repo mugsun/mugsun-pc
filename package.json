@@ -65,6 +65,7 @@
     "@iconify/vue": "^5.0.0",
     "@mugsun/track-web": "file:../mugsun-track",
     "@tailwindcss/vite": "^4.1.14",
+    "@vue-flow/core": "^1.48.1",
     "@vue/reactivity": "^3.5.21",
     "@vueuse/core": "^13.9.0",
     "@wangeditor/editor": "^5.1.23",

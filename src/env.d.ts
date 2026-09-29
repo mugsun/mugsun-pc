@@ -37,6 +37,7 @@ declare const CESIUM_BASE_URL: string
 interface ImportMetaEnv {
   readonly VITE_ENABLE_GIS?: string
   readonly VITE_ENABLE_TRACK?: string
+  readonly VITE_ENABLE_AI?: string
   readonly VITE_TRACK_ENDPOINT?: string
   readonly VITE_TRACK_APP_KEY?: string
   readonly VITE_VERSION?: string

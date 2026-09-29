@@ -1,7 +1,7 @@
 /**
  * 组件加载器
  *
- * 负责动态加载 Vue 组件。核心页在 src/views；GIS / 埋点页在 modules 下对应 views。
+ * 负责动态加载 Vue 组件。核心页在 src/views；GIS / 埋点 / AI 页在 modules 下对应 views。
  *
  * @module router/core/ComponentLoader
  * @author Mugsun
@@ -16,6 +16,7 @@ export class ComponentLoader {
     const core = import.meta.glob('../../views/**/*.vue')
     const gis = import.meta.glob('../../../modules/gis/views/**/*.vue')
     const track = import.meta.glob('../../../modules/track/views/**/*.vue')
+    const ai = import.meta.glob('../../../modules/ai/views/**/*.vue')
     this.modules = { ...core }
     for (const [k, loader] of Object.entries(gis)) {
       const rel = k.replace('../../../modules/gis/views', '../../views/gis')
@@ -23,6 +24,10 @@ export class ComponentLoader {
     }
     for (const [k, loader] of Object.entries(track)) {
       const rel = k.replace('../../../modules/track/views', '../../views/track')
+      this.modules[rel] = loader
+    }
+    for (const [k, loader] of Object.entries(ai)) {
+      const rel = k.replace('../../../modules/ai/views', '../../views/ai')
       this.modules[rel] = loader
     }
   }

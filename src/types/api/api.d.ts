@@ -99,6 +99,10 @@ declare namespace Api {
       avatar?: string
       /** 地理信息模块开关（默认开） */
       gisEnabled?: boolean
+      /** 埋点模块开关（默认开） */
+      trackEnabled?: boolean
+      /** AI 模块开关（默认开） */
+      aiEnabled?: boolean
     }
   }
 

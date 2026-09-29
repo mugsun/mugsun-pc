@@ -11,6 +11,7 @@ import type { RouteRecordRaw } from 'vue-router'
 import type { AppRouteRecord } from '@/types/router'
 import { ComponentLoader } from './ComponentLoader'
 import { IframeRouteManager } from './IframeRouteManager'
+import { RoutesAlias } from '../routesAlias'
 
 interface ConvertedRoute extends Omit<RouteRecordRaw, 'children'> {
   id?: number
@@ -45,7 +46,7 @@ export class RouteTransformer {
     } else if (this.isFirstLevelRoute(route, depth)) {
       this.handleFirstLevelRoute(converted, route, component as string)
     } else {
-      this.handleNormalRoute(converted, component as string)
+      this.handleNormalRoute(converted, component as string, depth)
     }
 
     // 递归处理子路由
@@ -116,10 +117,22 @@ export class RouteTransformer {
   /**
    * 处理普通路由
    */
-  private handleNormalRoute(converted: ConvertedRoute, component: string | undefined): void {
-    if (component) {
-      converted.component = this.componentLoader.load(component)
+  /**
+   * 处理普通路由
+   * depth=0 的分组根（如 /ai、/system）需要 Layout；更深层级不得再套 Layout，否则双菜单
+   */
+  private handleNormalRoute(
+    converted: ConvertedRoute,
+    component: string | undefined,
+    depth: number
+  ): void {
+    if (!component) {
+      return
     }
+    if (depth > 0 && component === RoutesAlias.Layout) {
+      return
+    }
+    converted.component = this.componentLoader.load(component)
   }
 
   /**
