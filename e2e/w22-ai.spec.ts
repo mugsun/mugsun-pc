@@ -61,6 +61,7 @@ test('危险 SQL 在问数重跑时被拒绝', async () => {
     await page.request.post('/api/system/ai/datasource/submit', {
       data: {
         name: 'e2e-ds',
+        dbType: 'postgresql',
         jdbcUrl: 'jdbc:postgresql://127.0.0.1:1/none',
         username: 'none'
       }

@@ -57,7 +57,7 @@ test('W5-H10 渠道列表无微信公众号（死常量已移除）', async () =
   const constantsSrc = readFileSync(
     path.resolve(
       process.cwd(),
-      '../mugsun-boot/src/main/java/com/mugsun/boot/common/constant/NotifyConstants.java'
+      '../mugsun-boot/mugsun-boot-core/src/main/java/com/mugsun/boot/common/constant/NotifyConstants.java'
     ),
     'utf-8'
   )

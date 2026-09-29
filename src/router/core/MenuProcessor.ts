@@ -307,8 +307,9 @@ export class MenuProcessor {
         // 跳过合法的绝对路径：外部链接和 iframe 路由
         if (this.isValidAbsolutePath(childPath)) return
 
-        // 检测非法的绝对路径
-        if (childPath.startsWith('/')) {
+        // 绝对路径：能对上静态路由的是分组目录与真实地址前缀不一致（如 AI 二级目录），
+        // 前端按绝对地址跳转，不记配置错误。对不上静态路由的仍然报错。
+        if (childPath.startsWith('/') && !this.staticRouteIndex().has(childPath)) {
           this.logPathError(child, childPath, parentName, level)
         }
       })

@@ -7,7 +7,7 @@ import { PageProbe, assertProbeClean } from './helpers/probe'
 /**
  * 全页面巡访 smoke：admin 登录后逐页真实访问，
  * 抓 白屏/未捕获异常/5xx/console.error——「别人打开每个页面都不能出问题」的底线网。
- * 路由清单自动解析自 src/router/modules，新增页面自动纳入。
+ * 路由清单自动解析自路由源码（含 modules/gis、track、ai），新增页面自动纳入。
  */
 const routes = collectAdminRoutes()
 
