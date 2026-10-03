@@ -156,7 +156,7 @@
   import { useI18n } from 'vue-i18n'
   import type { FormInstance, FormRules } from 'element-plus'
   import { fetchUserDetail, fetchLeaderList, fetchLeaderInfo } from '@/api/user'
-  import { fetchDeptTree, fetchPostSelect } from '@/api/system-manage'
+  import { fetchDeptOptions, fetchPostSelect } from '@/api/system-manage'
   import { fetchRoleSelect } from '@/api/role'
   import { useDict } from '@/hooks'
   import { DICT_CODE } from '@/utils/constants'
@@ -271,7 +271,7 @@
         Object.assign(formData, emptyForm(), props.userData || {})
         // 组织选项（每次打开拉最新，角色/部门/岗位改动即时可见）
         const [tree, posts, roles] = await Promise.all([
-          fetchDeptTree(),
+          fetchDeptOptions(),
           fetchPostSelect(),
           fetchRoleSelect(),
           loadLeaders()

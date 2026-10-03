@@ -69,6 +69,10 @@
   overflow: hidden;
 }
 
+.gis-lab-nav.gis-hud-panel {
+  overflow-y: auto;
+}
+
 .gis-hud-panel-wide {
   width: 300px;
 }

@@ -51,6 +51,7 @@
 <style scoped>
   .gis-lab-nav {
     gap: 4px;
+    overflow-y: auto;
   }
 
   .gis-lab-group + .gis-lab-group {

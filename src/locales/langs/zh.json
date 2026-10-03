@@ -2474,6 +2474,7 @@
       "analyzeRun": "运算",
       "analyzeSave": "存为图层",
       "analyzeEmpty": "请选择源图层或粘贴坐标后再运算",
+      "layerBadPayload": "没有可识别的地理要素，请检查原文是否完整",
       "analyzeSaved": "分析结果已入库",
       "metricsCount": "要素 {n}",
       "metricsArea": "面积 {n} ㎡",

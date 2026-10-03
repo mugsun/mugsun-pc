@@ -52,7 +52,14 @@
       <p class="gis-hud gis-hud-status">{{ $t('pages.gis.layerCoach') }}</p>
     </div>
 
-    <ElDialog v-model="dialog" :title="$t('pages.gis.layerAdd')" width="640px" destroy-on-close>
+    <ElDialog
+      v-model="dialog"
+      class="gis-layer-dialog"
+      :title="$t('pages.gis.layerAdd')"
+      width="640px"
+      align-center
+      destroy-on-close
+    >
       <p class="gis-layer-hint">{{ $t('pages.gis.layerHint') }}</p>
       <ElForm label-position="top">
         <ElFormItem :label="$t('pages.gis.layerName')" required>
@@ -103,7 +110,7 @@
           <ElInput
             v-model="form.payload"
             type="textarea"
-            :rows="10"
+            :rows="6"
             :placeholder="$t('pages.gis.layerPayloadHint')"
           />
         </ElFormItem>
@@ -284,9 +291,14 @@
     try {
       const data = await ingestAny(parsedPayload())
       previewCount.value = data.count
+      if (!data.count) {
+        ElMessage.warning(t('pages.gis.layerBadPayload'))
+        return
+      }
       ElMessage.success(t('pages.gis.layerPreview', { n: data.count }))
-    } catch {
+    } catch (error) {
       previewCount.value = null
+      ElMessage.warning(payloadError(error))
     } finally {
       ingesting.value = false
     }
@@ -302,6 +314,10 @@
       // 原文（WKT / CSV / KML / GPX）先经原文通道解析成 GeoJSON 再提交：
       // 直接塞进 JSON body 的话，标签会被全局 XSS 净化剥掉，KML / GPX 存进去就是空图层
       const raw = parsedPayload()
+      if (emptyFeatures(raw)) {
+        ElMessage.warning(t('pages.gis.layerBadPayload'))
+        return
+      }
       const payload = typeof raw === 'string' ? await fetchGisLayerIngestText(raw) : raw
       const row = await fetchSaveGisLayer({
         name: form.name.trim(),
@@ -321,9 +337,30 @@
       }
       dialog.value = false
       await load()
+    } catch (error) {
+      ElMessage.warning(payloadError(error))
     } finally {
       saving.value = false
     }
+  }
+
+  const emptyFeatures = (raw: unknown): boolean => {
+    if (!raw || typeof raw !== 'object') {
+      return false
+    }
+    const bag = raw as { type?: string; features?: unknown; geometry?: unknown }
+    if (Array.isArray(bag.features)) {
+      return bag.features.length === 0
+    }
+    return bag.type === 'Feature' && !bag.geometry
+  }
+
+  const payloadError = (error: unknown): string => {
+    const message = error instanceof Error ? error.message : ''
+    if (!message || message === 'empty' || /JSON|Unexpected/i.test(message)) {
+      return t('pages.gis.layerBadPayload')
+    }
+    return message
   }
 
   const onFile = async (ev: Event): Promise<void> => {
@@ -412,5 +449,20 @@
 
   .gis-hud-head :deep(.gis-hud-search) {
     width: 132px;
+  }
+</style>
+<style>
+  .gis-layer-dialog.el-dialog,
+  .gis-layer-dialog .el-dialog {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 32px);
+    margin-top: 16px;
+    margin-bottom: 16px;
+  }
+
+  .gis-layer-dialog .el-dialog__body,
+  .gis-layer-dialog.el-dialog .el-dialog__body {
+    overflow: auto;
   }
 </style>

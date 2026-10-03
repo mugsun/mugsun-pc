@@ -107,7 +107,13 @@
     loading.value = true
     try {
       const res = await fetchAiChannelPage({ pageNum: pageNum.value, pageSize: pageSize.value })
-      records.value = res?.records ?? []
+      records.value = (res?.records ?? []).map((row: any) => ({
+        ...row,
+        name: row.alias || row.name || '',
+        channelType: row.channelCode || row.channelType || '',
+        webhookUrl: row.paramsSample || row.webhookUrl || '',
+        appId: row.templateCode || row.appId || ''
+      }))
       total.value = res?.totalRow ?? res?.total ?? 0
     } finally {
       loading.value = false
@@ -121,7 +127,14 @@
   async function save() {
     saving.value = true
     try {
-      await fetchSaveAiChannel({ ...form })
+      await fetchSaveAiChannel({
+        id: form.id,
+        channelCode: form.channelType,
+        alias: form.name,
+        templateCode: form.appId || '',
+        paramsSample: form.webhookUrl || '',
+        status: form.status
+      })
       ElMessage.success('已保存')
       visible.value = false
       await reload()
@@ -131,6 +144,10 @@
   }
   async function debug(row: any) {
     const r = await fetchDebugAiChannel(row.id)
+    if (r?.ok === false || r?.httpSent === false) {
+      ElMessage.warning(r?.message || r?.httpResp || '调试未发出')
+      return
+    }
     ElMessage.success(r?.message || '调试成功')
   }
   async function remove(row: any) {

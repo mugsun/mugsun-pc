@@ -270,11 +270,33 @@
     font-size: 16px;
   }
 
+  .ai-gen-page :deep(.el-card) {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+  }
+
+  .ai-gen-settings {
+    min-height: 0;
+    overflow: auto;
+  }
+
+  .ai-gen-page :deep(.el-card__body) {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 0;
+    overflow: hidden;
+  }
+
   .ai-gen-body {
     display: grid;
+    flex: 1;
     grid-template-columns: 360px 1fr;
     gap: 16px;
-    min-height: 420px;
+    min-height: 0;
+    overflow: hidden;
   }
 
   .ai-gen-body.stacked {
@@ -282,7 +304,8 @@
   }
 
   .ai-gen-preview {
-    min-height: 360px;
+    height: 100%;
+    min-height: 0;
     padding: 12px;
     overflow: auto;
     background: var(--el-fill-color-blank);

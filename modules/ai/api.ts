@@ -551,8 +551,18 @@ export function fetchSaveAiQuota(data: Record<string, any>) {
 export function fetchAiGenStream(type: string, data: Record<string, any>, handlers: AiSseHandlers) {
   return consumeAiSse(`/api/system/ai/gen/${type}/stream`, data, handlers)
 }
-export function fetchAiGenExport(type: string, data: Record<string, any>) {
-  return request.post<any>({ url: `/api/system/ai/gen/${type}/export`, data })
+export async function fetchAiGenExport(type: string, data: Record<string, any>) {
+  const saved = await request.post<{ filename?: string; content?: string }>({
+    url: `/api/system/ai/gen/${type}/export`,
+    data
+  })
+  const content = saved?.content ?? ''
+  const blob = new Blob([content], { type: 'text/plain;charset=utf-8' })
+  const link = document.createElement('a')
+  link.href = URL.createObjectURL(blob)
+  link.download = saved?.filename || `${type}.txt`
+  link.click()
+  URL.revokeObjectURL(link.href)
 }
 
 // ===== 平台织入（只读候选） =====

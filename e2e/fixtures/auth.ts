@@ -2,7 +2,7 @@ import { execSync } from 'node:child_process'
 import type { Page } from '@playwright/test'
 import { expect } from '@playwright/test'
 
-const REDIS_CONTAINER = process.env.E2E_REDIS_CONTAINER || 'blade-redis'
+const REDIS_CONTAINER = process.env.E2E_REDIS_CONTAINER || 'mugsun-redis'
 const REDIS_DB = process.env.E2E_REDIS_DB || '3'
 const CAPTCHA_KEY_PREFIX = 'mugsun:captcha:'
 

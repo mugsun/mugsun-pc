@@ -99,7 +99,7 @@
   }
   async function openDetail(row: any) {
     const d = await fetchAiConversationDetail(row.id)
-    detailMsgs.value = d?.messages || d?.records || []
+    detailMsgs.value = Array.isArray(d) ? d : d?.messages || d?.records || []
     detailVisible.value = true
   }
   async function doExport() {

@@ -64,7 +64,7 @@
 <script setup lang="ts">
   import { useI18n } from 'vue-i18n'
   import type { FormInstance, FormRules } from 'element-plus'
-  import { fetchDeptTree } from '@/api/system-manage'
+  import { fetchDeptOptions } from '@/api/system-manage'
   import { fetchRoleDeptIds } from '@/api/role'
 
   interface Props {
@@ -113,7 +113,7 @@
 
   const loadDeptTree = async () => {
     if (!deptTree.value.length) {
-      deptTree.value = (await fetchDeptTree()) || []
+      deptTree.value = (await fetchDeptOptions()) || []
     }
   }
 

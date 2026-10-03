@@ -151,6 +151,10 @@
   }
   async function test(row: any) {
     const r = await fetchTestAiDatasource(row.id)
+    if (r?.ok === false) {
+      ElMessage.warning(r?.message || '连接失败')
+      return
+    }
     ElMessage.success(r?.message || '连接成功')
     await reload()
   }

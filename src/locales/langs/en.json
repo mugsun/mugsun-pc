@@ -2474,6 +2474,7 @@
       "analyzeRun": "Run",
       "analyzeSave": "Save as layer",
       "analyzeEmpty": "Pick a source layer or paste coordinates first",
+      "layerBadPayload": "No geographic features recognized. Check that the text is complete",
       "analyzeSaved": "Analysis saved to the catalog",
       "metricsCount": "{n} features",
       "metricsArea": "Area {n} m²",

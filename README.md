@@ -101,7 +101,7 @@ VITE_ENABLE_TRACK=true
 `playwright.config.ts` 默认 `baseURL` 为 http://localhost:3007，与日常 dev 使用的 3006 隔离，两者互不干扰。
 
 ```bash
-# 前置：mugsun-boot(:8080) 已启动，PostgreSQL（容器名 mugsun-pg）与 Redis（blade-redis）在运行
+# 前置：mugsun-boot(:8080) 已启动，PostgreSQL（容器名 mugsun-pg）与 Redis（mugsun-redis）在运行
 pnpm setup:sdk      # 等价于先构建 ../mugsun-track（首次必做）
 pnpm dev:e2e        # 终端 A：起 3007 独立实例
 pnpm test:e2e       # 终端 B：跑全量套件（串行，含 w14 流程 / w15 租户 / w16 OAuth 等）

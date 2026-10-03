@@ -70,7 +70,7 @@
     resetUserPassword,
     setUserLeader
   } from '@/api/user'
-  import { fetchDeptTree } from '@/api/system-manage'
+  import { fetchDeptOptions } from '@/api/system-manage'
   import UserDialog from './modules/user-dialog.vue'
   import UserRoleDialog from './modules/user-role-dialog.vue'
   import UserImportDialog from './modules/user-import-dialog.vue'
@@ -384,7 +384,7 @@
   }
 
   onMounted(async () => {
-    deptTreeData.value = (await fetchDeptTree()) || []
+    deptTreeData.value = (await fetchDeptOptions()) || []
   })
 
   const showDialog = (type: DialogType, row?: Record<string, any>): void => {

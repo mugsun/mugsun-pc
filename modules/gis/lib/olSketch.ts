@@ -240,7 +240,8 @@ export function attachOlSketch(map: Map): OlSketchHandle {
         feature.set('mugsunText', feature.get('mugsunName'))
       }
       tip.setPosition(undefined)
-      commit()
+      // drawend 触发时要素还没进 source，立刻快照会把新点漏掉，撤销后再重做就找不回来
+      queueMicrotask(() => commit())
     })
     draw.on('drawabort', () => {
       tip.setPosition(undefined)

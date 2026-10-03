@@ -6,6 +6,10 @@ import { AppRouteRecord } from '@/types/router'
 export function fetchDeptTree(params?: Record<string, any>) {
   return request.get<any[]>({ url: '/api/system/dept/tree', params })
 }
+/** 用户、角色表单的部门树。管理页仍走 /tree。 */
+export function fetchDeptOptions() {
+  return request.get<any[]>({ url: '/api/system/dept/options' })
+}
 export function fetchDeptSelect() {
   return request.get<Array<{ label: string; value: string }>>({ url: '/api/system/dept/select' })
 }

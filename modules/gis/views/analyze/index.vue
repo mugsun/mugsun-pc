@@ -213,7 +213,15 @@
         distance: distance.value,
         tolerance: tolerance.value
       }
-      const pasted = parsePayload()
+      let pasted: unknown
+      try {
+        pasted = parsePayload()
+      } catch {
+        result.value = undefined
+        bag?.overlays.clear()
+        ElMessage.warning(t('pages.gis.layerBadPayload'))
+        return
+      }
       if (pasted !== undefined) {
         body.payload = pasted
       } else if (sourceId.value) {
@@ -232,6 +240,9 @@
       result.value = await fetchGisAnalyze(body)
       await nextTick()
       await preview()
+    } catch {
+      result.value = undefined
+      bag?.overlays.clear()
     } finally {
       running.value = false
     }

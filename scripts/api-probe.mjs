@@ -10,7 +10,7 @@
  *   node scripts/api-probe.mjs track-feed [batches] [size]   # collect 灌注（默认 100 批×100 事件，p50/p95/max + 落库核对）
  *
  * 环境：PROBE_BASE（默认 http://localhost:8080，直连后端，不经 vite 代理）
- *       PROBE_REDIS（默认 blade-redis）、PROBE_REDIS_DB（默认 3）
+ *       PROBE_REDIS（默认 mugsun-redis）、PROBE_REDIS_DB（默认 3）
  *       PROBE_TRACK_APP_KEY（默认 T2 种子 ak_000000000000000000000001）
  * 登录复刻集成测试链路：取验证码 → Redis 读答案 → SM2 公钥加密（开启时）→ 登录换 token。
  */
@@ -19,7 +19,7 @@ import { performance } from 'node:perf_hooks'
 import smCrypto from 'sm-crypto'
 
 const BASE = process.env.PROBE_BASE || 'http://localhost:8080'
-const REDIS = process.env.PROBE_REDIS || 'blade-redis'
+const REDIS = process.env.PROBE_REDIS || 'mugsun-redis'
 const REDIS_DB = process.env.PROBE_REDIS_DB || '3'
 const TENANT = '000000'
 /** 埋点默认应用种子 app_key（与后端 track 库 T2 迁移种子一致） */
