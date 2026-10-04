@@ -237,7 +237,11 @@
           output.value += t
         },
         onError: (m) => {
-          ElMessage.error(m)
+          const raw = String(m || '')
+          const refused = /ECONNREFUSED|Connection refused|finishConnect|connect timed out/i.test(
+            raw
+          )
+          ElMessage.error(refused ? '模型服务连不上，请确认地址和端口后再试' : raw)
           streaming.value = false
         },
         onDone: () => {

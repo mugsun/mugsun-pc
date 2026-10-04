@@ -30,7 +30,7 @@
               <ElTag v-if="row.defaultFlag === 1" size="small" type="success">默认</ElTag>
               <ElTag v-if="row.lockFlag === 1" size="small" type="warning">锁定</ElTag>
             </div>
-            <div class="meta">工具数 {{ row.toolCount ?? '-' }} · {{ row.description }}</div>
+            <div class="meta">工具数 {{ toolCount(row) }} · {{ row.description }}</div>
             <div class="ops">
               <ElButton link type="primary" :disabled="row.lockFlag === 1" @click="openEdit(row)"
                 >编辑</ElButton
@@ -136,6 +136,21 @@
   const keyword = ref('')
   const loading = ref(false)
   const records = ref<any[]>([])
+
+  const toolCount = (row: any): string | number => {
+    if (row.toolCount != null) {
+      return row.toolCount
+    }
+    if (!row.toolsJson) {
+      return '-'
+    }
+    try {
+      const parsed = JSON.parse(row.toolsJson)
+      return Array.isArray(parsed) ? parsed.length : '-'
+    } catch {
+      return '-'
+    }
+  }
   const visible = ref(false)
   const saving = ref(false)
   const form = reactive<Record<string, any>>({})

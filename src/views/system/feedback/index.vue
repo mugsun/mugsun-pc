@@ -164,6 +164,15 @@
       .catch(() => {})
   }
 
+  let seenFeedback = false
+  onActivated(() => {
+    if (!seenFeedback) {
+      seenFeedback = true
+      return
+    }
+    refreshData()
+  })
+
   onDeactivated(() => {
     ElMessageBox.close()
   })

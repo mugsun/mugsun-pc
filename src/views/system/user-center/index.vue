@@ -231,10 +231,18 @@
       { required: true, message: t('pages.system.userCenter.oldPasswordRequired'), trigger: 'blur' }
     ],
     newPassword: [
+      { required: true, message: t('pages.system.userCenter.passwordRule'), trigger: 'blur' },
       {
-        required: true,
-        min: 8,
-        message: t('pages.system.userCenter.passwordRule'),
+        validator: (_r: unknown, v: string, cb: (e?: Error) => void) => {
+          const kinds =
+            Number(/[a-z]/.test(v)) +
+            Number(/[A-Z]/.test(v)) +
+            Number(/\d/.test(v)) +
+            Number(/[^a-zA-Z0-9]/.test(v))
+          if (!v || v.length < 8 || kinds < 3)
+            cb(new Error(t('pages.system.userCenter.passwordRule')))
+          else cb()
+        },
         trigger: 'blur'
       }
     ],

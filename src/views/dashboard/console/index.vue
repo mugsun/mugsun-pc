@@ -153,7 +153,7 @@
     >
       <p class="editor-tip">{{ $t('pages.dashboard.console.shortcutsDialogTip') }}</p>
       <ElCheckboxGroup v-model="selectedPaths" class="catalog-grid">
-        <ElCheckbox v-for="c in CATALOG" :key="c.path" :value="c.path" :label="c.path">
+        <ElCheckbox v-for="c in reachableCatalog" :key="c.path" :value="c.path" :label="c.path">
           {{ c.name }}
         </ElCheckbox>
       </ElCheckboxGroup>
@@ -422,9 +422,14 @@
     applyShortcuts(paths)
   }
 
-  // 按候选目录顺序过滤，剔除失效 path，保证名称与路由一致
+  const canOpen = (path: string) =>
+    router.resolve(path).matched.some((r) => r.name && r.name !== 'Exception404')
+
+  const reachableCatalog = computed(() => CATALOG.value.filter((c) => canOpen(c.path)))
+
+  // 只保留当前账号实际能打开的入口，避免点进去是 404
   const applyShortcuts = (paths: string[]) => {
-    shortcuts.value = CATALOG.value.filter((c) => paths.includes(c.path))
+    shortcuts.value = reachableCatalog.value.filter((c) => paths.includes(c.path))
   }
 
   const openShortcutEditor = () => {
@@ -435,7 +440,7 @@
   const saveShortcuts = async () => {
     saving.value = true
     try {
-      const list = CATALOG.value.filter((c) => selectedPaths.value.includes(c.path))
+      const list = reachableCatalog.value.filter((c) => selectedPaths.value.includes(c.path))
       await saveWorkbenchShortcuts(JSON.stringify(list))
       shortcuts.value = list
       editorVisible.value = false

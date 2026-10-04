@@ -29,6 +29,7 @@
 
       <ArtTable
         :loading="loading"
+        :error-message="error?.message"
         :data="data as any[]"
         :columns="columns"
         :pagination="pagination"
@@ -320,6 +321,7 @@
     columnChecks,
     data,
     loading,
+    error,
     pagination,
     searchParams,
     handleSizeChange,

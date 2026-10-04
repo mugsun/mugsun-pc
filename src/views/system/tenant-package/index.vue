@@ -70,6 +70,16 @@
           </ElTableColumn>
         </ElTable>
       </div>
+      <div class="tpkg-pager">
+        <ElPagination
+          v-model:current-page="pageNum"
+          :page-size="pageSize"
+          :total="total"
+          layout="total, prev, pager, next"
+          background
+          @current-change="loadData"
+        />
+      </div>
     </ElCard>
 
     <ElDialog
@@ -191,6 +201,9 @@
 
   const tableData = ref<any[]>([])
   const loading = ref(false)
+  const pageNum = ref(1)
+  const pageSize = ref(20)
+  const total = ref(0)
   const dialogVisible = ref(false)
   const dialogSaving = ref(false)
   const formRef = ref<FormInstance>()
@@ -215,8 +228,13 @@
   const loadData = async (): Promise<void> => {
     loading.value = true
     try {
-      const resp = await fetchTenantPackagePage({ pageNum: 1, pageSize: 50, ...currentParams() })
+      const resp = await fetchTenantPackagePage({
+        pageNum: pageNum.value,
+        pageSize: pageSize.value,
+        ...currentParams()
+      })
       tableData.value = resp?.records ?? []
+      total.value = resp?.totalRow ?? 0
     } finally {
       loading.value = false
     }
@@ -226,6 +244,7 @@
 
   // ===== 查询栏联动 =====
   const handleSearch = async (): Promise<void> => {
+    pageNum.value = 1
     await loadData()
   }
 
@@ -234,6 +253,7 @@
       name: '',
       status: undefined
     }
+    pageNum.value = 1
     await loadData()
   }
 
@@ -316,6 +336,13 @@
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+  }
+
+  .tpkg-pager {
+    display: flex;
+    flex-shrink: 0;
+    justify-content: flex-end;
+    margin-top: 12px;
   }
 
   .tpkg-tree {

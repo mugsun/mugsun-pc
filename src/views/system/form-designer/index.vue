@@ -156,11 +156,9 @@
             <pre class="form-data-cell">{{ prettyData(row.formData) }}</pre>
           </template>
         </ElTableColumn>
-        <ElTableColumn
-          prop="submitter"
-          :label="$t('pages.system.formDesigner.submitter')"
-          width="170"
-        />
+        <ElTableColumn :label="$t('pages.system.formDesigner.submitter')" width="170">
+          <template #default="{ row }">{{ row.submitterName || row.submitter || '-' }}</template>
+        </ElTableColumn>
         <ElTableColumn
           prop="createTime"
           :label="$t('pages.system.formDesigner.time')"

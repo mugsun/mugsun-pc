@@ -83,12 +83,6 @@
     { prop: 'dbType', label: '类型', width: 120 },
     { prop: 'jdbcUrl', label: 'JDBC', minWidth: 220, showOverflowTooltip: true },
     {
-      prop: 'activateFlag',
-      label: '状态',
-      width: 90,
-      formatter: (r: any) => (r.activateFlag === 1 ? '已激活' : '未激活')
-    },
-    {
       prop: 'operation',
       label: '操作',
       width: 220,

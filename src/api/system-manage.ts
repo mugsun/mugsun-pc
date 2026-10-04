@@ -292,6 +292,11 @@ export function fetchGenImport(data: {
 export function fetchGenList() {
   return request.get<any[]>({ url: '/api/system/gen/list' })
 }
+export function fetchGenRemove(tableId: number | string) {
+  return request.post<void>({
+    url: `/api/system/gen/remove?tableId=${encodeURIComponent(String(tableId))}`
+  })
+}
 export function fetchGenMeta(tableId: number | string) {
   return request.get<{ table: any; columns: any[] }>({
     url: '/api/system/gen/meta',

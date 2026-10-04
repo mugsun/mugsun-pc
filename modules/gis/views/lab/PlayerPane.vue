@@ -381,7 +381,11 @@
   }
 
   const runIngest = async (): Promise<void> => {
-    if (!bag || !ingestRaw.value.trim()) {
+    if (!bag) {
+      return
+    }
+    if (!ingestRaw.value.trim()) {
+      ElMessage.warning(t('pages.gis.labIngestEmpty'))
       return
     }
     ingesting.value = true
@@ -406,7 +410,7 @@
 
   const copy = async (text: string): Promise<void> => {
     await navigator.clipboard.writeText(text)
-    ElMessage.success(t('pages.gis.copied'))
+    ElMessage.success(t('pages.gis.copiedContent'))
   }
 
   const togglePlay = (): void => {

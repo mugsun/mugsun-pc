@@ -86,7 +86,7 @@
             min-width="140"
             show-overflow-tooltip
           />
-          <ElTableColumn :label="$t('pages.system.gen.colOperation')" width="280" fixed="right">
+          <ElTableColumn :label="$t('pages.system.gen.colOperation')" width="330" fixed="right">
             <template #default="{ row }">
               <ElButton
                 v-perm="'sys:gen:edit'"
@@ -119,6 +119,14 @@
                 size="small"
                 @click="doDownload(row)"
                 >{{ $t('pages.system.gen.download') }}</ElButton
+              >
+              <ElButton
+                v-perm="'sys:gen:edit'"
+                link
+                type="danger"
+                size="small"
+                @click="doRemove(row)"
+                >{{ $t('pages.system.gen.delete') }}</ElButton
               >
             </template>
           </ElTableColumn>
@@ -246,6 +254,7 @@
     fetchGenTables,
     fetchGenImport,
     fetchGenList,
+    fetchGenRemove,
     fetchGenMeta,
     fetchSaveGenMeta,
     fetchGenSync,
@@ -316,6 +325,26 @@
     } finally {
       listLoading.value = false
     }
+  }
+
+  const doRemove = (row: any): void => {
+    ElMessageBox.confirm(
+      t('pages.system.gen.deleteConfirm', { name: row.tableName }),
+      t('pages.system.gen.deleteTitle'),
+      {
+        type: 'warning',
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel')
+      }
+    )
+      .then(async () => {
+        await fetchGenRemove(row.id)
+        ElMessage.success(t('pages.system.gen.deleteSuccess'))
+        await loadList()
+      })
+      .catch(() => {
+        /* cancel */
+      })
   }
 
   const onImport = async (): Promise<void> => {

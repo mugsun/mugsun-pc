@@ -153,6 +153,15 @@
       refreshData()
     })
   }
+
+  let seenMessage = false
+  onActivated(() => {
+    if (!seenMessage) {
+      seenMessage = true
+      return
+    }
+    refreshData()
+  })
 </script>
 
 <style lang="scss" scoped>

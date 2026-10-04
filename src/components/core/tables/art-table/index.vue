@@ -53,7 +53,7 @@
 
       <template #empty>
         <div v-if="loading"></div>
-        <ElEmpty v-else :description="emptyText" :image-size="120" />
+        <ElEmpty v-else :description="errorMessage || emptyText" :image-size="120" />
       </template>
     </ElTable>
 
@@ -138,6 +138,8 @@
     emptyHeight?: string
     /** 空数据时显示的文本 */
     emptyText?: string
+    /** 请求失败时不要把表格画成空数据 */
+    errorMessage?: string
     /** 是否开启 ArtTableHeader，解决表格高度自适应问题 */
     showTableHeader?: boolean
   }

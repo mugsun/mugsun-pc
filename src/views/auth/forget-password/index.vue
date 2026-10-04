@@ -263,7 +263,19 @@
         message: t('pages.auth.forgetPassword.newPasswordPlaceholder'),
         trigger: 'blur'
       },
-      { min: 8, message: t('pages.auth.forgetPassword.passwordRule'), trigger: 'blur' }
+      {
+        validator: (_r: unknown, v: string, cb: (e?: Error) => void) => {
+          const kinds =
+            Number(/[a-z]/.test(v || '')) +
+            Number(/[A-Z]/.test(v || '')) +
+            Number(/\d/.test(v || '')) +
+            Number(/[^a-zA-Z0-9]/.test(v || ''))
+          if (!v || v.length < 8 || kinds < 3) {
+            cb(new Error(t('pages.auth.forgetPassword.passwordRule')))
+          } else cb()
+        },
+        trigger: 'blur'
+      }
     ],
     confirmPassword: [{ required: true, validator: validateConfirmPassword, trigger: 'blur' }]
   }))

@@ -1,9 +1,11 @@
 import App from './App.vue'
-import { createApp } from 'vue'
+import { createApp, watch } from 'vue'
 import { initStore } from './store'
 import { initRouter } from './router'
 import language from './locales'
-import ElementPlus from 'element-plus'
+import ElementPlus, { provideGlobalConfig } from 'element-plus'
+import zhCn from 'element-plus/es/locale/lang/zh-cn'
+import en from 'element-plus/es/locale/lang/en'
 import 'element-plus/dist/index.css'
 import formCreate from '@form-create/element-ui'
 import FcDesigner from '@form-create/designer'
@@ -14,6 +16,12 @@ import { setupGlobDirectives } from './directives'
 import { setupErrorHandle } from './utils/sys/error-handle'
 import { installTrackApi, setupTrack } from './plugins/track'
 import { enableAi, enableGis, enableTrack } from '@/modules/flags'
+import { useUserStore } from './store/modules/user'
+
+/** MessageBox 渲染在组件树外，读的是 app.use 写入的全局 locale，不读 ConfigProvider。 */
+function elementLocale(lang: string) {
+  return lang === 'en' ? en : zhCn
+}
 
 const trackPluginMods = import.meta.glob<{
   setupTrack: (app: ReturnType<typeof createApp>) => void
@@ -51,7 +59,14 @@ async function bootstrap() {
     }
   }
 
-  app.use(ElementPlus)
+  const userStore = useUserStore()
+  app.use(ElementPlus, { locale: elementLocale(userStore.language) })
+  watch(
+    () => userStore.language,
+    (lang) => {
+      provideGlobalConfig({ locale: elementLocale(lang) }, app, true)
+    }
+  )
   app.use(formCreate)
   app.use(FcDesigner)
 

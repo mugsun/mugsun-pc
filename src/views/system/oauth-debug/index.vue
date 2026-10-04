@@ -146,6 +146,8 @@
       form.grantType = 'authorization_code'
       form.code = code
       ElMessage.success(t('pages.system.oauthDebug.msgCodeFromCallback'))
+    } else if (route.query.error) {
+      ElMessage.warning(t('pages.system.oauthDebug.msgAccessDenied'))
     }
   })
 

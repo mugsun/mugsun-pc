@@ -51,13 +51,13 @@
   }))
   const columns: ColumnOption[] = [
     { type: 'index', width: 60, label: '#' },
-    { prop: 'createTime', label: '时间', width: 170 },
-    { prop: 'userName', label: '用户', width: 120 },
+    { prop: 'callTime', label: '时间', width: 170 },
+    { prop: 'userId', label: '用户', width: 160 },
     { prop: 'modelName', label: '模型', minWidth: 140 },
-    { prop: 'tokensIn', label: '输入', width: 90 },
-    { prop: 'tokensOut', label: '输出', width: 90 },
+    { prop: 'promptTokens', label: '输入', width: 90 },
+    { prop: 'completionTokens', label: '输出', width: 90 },
     { prop: 'amount', label: '费用', width: 100 },
-    { prop: 'source', label: '来源', width: 100 }
+    { prop: 'bizType', label: '来源', width: 100 }
   ]
   async function reload() {
     loading.value = true
@@ -77,8 +77,8 @@
     chart.setOption({
       tooltip: { trigger: 'axis' },
       xAxis: { type: 'category', data: list.map((x: any) => x.date || x.day) },
-      yAxis: { type: 'value', name: '费用' },
-      series: [{ type: 'line', data: list.map((x: any) => x.amount ?? x.total), smooth: true }]
+      yAxis: { type: 'value', name: 'Tokens' },
+      series: [{ type: 'line', data: list.map((x: any) => x.tokens ?? 0), smooth: true }]
     })
   }
   async function doExport() {

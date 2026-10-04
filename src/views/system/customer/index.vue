@@ -22,8 +22,11 @@
             min-width="160"
             show-overflow-tooltip
           />
-          <ElTableColumn :label="$t('pages.system.customer.actions')" width="100" fixed="right">
+          <ElTableColumn :label="$t('pages.system.customer.actions')" width="140" fixed="right">
             <template #default="{ row }">
+              <ElButton link type="primary" @click="showEdit(row)">{{
+                $t('pages.system.customer.edit')
+              }}</ElButton>
               <ElButton link type="danger" @click="remove(row)">{{
                 $t('pages.system.customer.delete')
               }}</ElButton>
@@ -47,7 +50,7 @@
 
     <ElDialog
       v-model="dialogVisible"
-      :title="$t('pages.system.customer.create')"
+      :title="form.id ? $t('pages.system.customer.editTitle') : $t('pages.system.customer.create')"
       width="500px"
       align-center
       destroy-on-close
@@ -101,7 +104,7 @@
   const dialogSaving = ref(false)
   const formRef = ref<FormInstance>()
 
-  const form = reactive<Record<string, any>>({ name: '', phone: '', remark: '' })
+  const form = reactive<Record<string, any>>({ id: undefined, name: '', phone: '', remark: '' })
 
   const rules: FormRules = {
     name: [{ required: true, message: t('pages.system.customer.namePlaceholder'), trigger: 'blur' }]
@@ -121,7 +124,17 @@
   onMounted(loadData)
 
   const showCreate = (): void => {
-    Object.assign(form, { name: '', phone: '', remark: '' })
+    Object.assign(form, { id: undefined, name: '', phone: '', remark: '' })
+    dialogVisible.value = true
+  }
+
+  const showEdit = (row: Record<string, any>): void => {
+    Object.assign(form, {
+      id: row.id,
+      name: row.name,
+      phone: row.phone,
+      remark: row.remark
+    })
     dialogVisible.value = true
   }
 

@@ -15,6 +15,7 @@
             ref="groupTableRef"
             v-loading="groupLoading"
             :data="groups"
+            max-height="calc(100vh - 220px)"
             border
             row-key="name"
             highlight-current-row
@@ -52,7 +53,7 @@
               {{ $t('pages.system.cache.clearGroupBtn') }}
             </ElButton>
           </div>
-          <ElTable v-loading="keyLoading" :data="keys" border>
+          <ElTable v-loading="keyLoading" :data="keys" max-height="calc(100vh - 220px)" border>
             <ElTableColumn type="index" label="#" width="50" />
             <ElTableColumn :label="$t('pages.system.cache.colKey')" min-width="260">
               <template #default="{ row }">{{ row }}</template>

@@ -45,7 +45,7 @@
             {{ current.requestMethod }} {{ current.requestUri }}
           </ElDescriptionsItem>
           <ElDescriptionsItem :label="$t('pages.system.apiLog.operator')">
-            {{ current.operator || '-' }}
+            {{ current.operatorName || current.operator || '-' }}
           </ElDescriptionsItem>
           <ElDescriptionsItem label="IP">{{ current.ip }}</ElDescriptionsItem>
           <ElDescriptionsItem label="UA">{{ current.userAgent || '-' }}</ElDescriptionsItem>
@@ -118,7 +118,12 @@
           minWidth: 200,
           showOverflowTooltip: true
         },
-        { prop: 'operator', label: t('pages.system.apiLog.operator'), width: 110 },
+        {
+          prop: 'operator',
+          label: t('pages.system.apiLog.operator'),
+          width: 110,
+          formatter: (row: any) => row.operatorName || row.operator || '-'
+        },
         { prop: 'ip', label: 'IP', width: 120 },
         {
           prop: 'status',
@@ -195,6 +200,15 @@
     current.value = row
     detailVisible.value = true
   }
+
+  let seenApiLog = false
+  onActivated(() => {
+    if (!seenApiLog) {
+      seenApiLog = true
+      return
+    }
+    refreshData()
+  })
 
   onDeactivated(closeDetail)
 </script>

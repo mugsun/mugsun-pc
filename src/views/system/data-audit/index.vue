@@ -218,6 +218,15 @@
     }
   })
 
+  let seenAudit = false
+  onActivated(() => {
+    if (!seenAudit) {
+      seenAudit = true
+      return
+    }
+    refreshData()
+  })
+
   onDeactivated(closeDetail)
 </script>
 

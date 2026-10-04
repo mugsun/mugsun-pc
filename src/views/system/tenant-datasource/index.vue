@@ -87,6 +87,14 @@
           </ElTableColumn>
         </ElTable>
       </div>
+      <ElPagination
+        v-model:current-page="pageNum"
+        v-model:page-size="pageSize"
+        class="tds-pager"
+        :total="total"
+        layout="total, prev, pager, next"
+        @current-change="loadData"
+      />
     </ElCard>
 
     <ElDialog
@@ -181,6 +189,9 @@
 
   const tableData = ref<any[]>([])
   const loading = ref(false)
+  const pageNum = ref(1)
+  const pageSize = ref(20)
+  const total = ref(0)
   const dialogVisible = ref(false)
   const dialogSaving = ref(false)
   const formRef = ref<FormInstance>()
@@ -220,8 +231,12 @@
   const loadData = async (): Promise<void> => {
     loading.value = true
     try {
-      const resp = await fetchTenantDatasourcePage({ pageNum: 1, pageSize: 50 })
+      const resp = await fetchTenantDatasourcePage({
+        pageNum: pageNum.value,
+        pageSize: pageSize.value
+      })
       tableData.value = resp?.records ?? []
+      total.value = resp?.total ?? 0
     } finally {
       loading.value = false
     }
@@ -326,6 +341,12 @@
     flex: 1;
     min-height: 0;
     overflow-y: auto;
+  }
+
+  .tds-pager {
+    flex-shrink: 0;
+    justify-content: flex-end;
+    margin-top: 12px;
   }
 </style>
 

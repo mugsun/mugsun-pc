@@ -106,6 +106,15 @@
   }
 
   onMounted(loadData)
+
+  let seenOauthLog = false
+  onActivated(() => {
+    if (!seenOauthLog) {
+      seenOauthLog = true
+      return
+    }
+    loadData()
+  })
 </script>
 
 <style scoped>

@@ -52,7 +52,7 @@
             {{ current.requestMethod }} {{ current.requestUri }}
           </ElDescriptionsItem>
           <ElDescriptionsItem :label="$t('pages.system.errorLog.operator')">
-            {{ current.operator || '-' }}
+            {{ current.operatorName || current.operator || '-' }}
           </ElDescriptionsItem>
           <ElDescriptionsItem :label="$t('pages.system.errorLog.location')">
             {{ current.locationClass }}.{{ current.locationMethod }}({{ current.locationFile }}:{{
@@ -68,7 +68,7 @@
           >
             {{
               $t('pages.system.errorLog.handleDetail', {
-                user: current.handleUser,
+                user: current.handleUserName || current.handleUser,
                 time: current.handleTime,
                 note: current.handleNote || '-'
               })
@@ -176,7 +176,12 @@
           minWidth: 200,
           showOverflowTooltip: true
         },
-        { prop: 'operator', label: t('pages.system.errorLog.operator'), width: 100 },
+        {
+          prop: 'operator',
+          label: t('pages.system.errorLog.operator'),
+          width: 100,
+          formatter: (row: any) => row.operatorName || row.operator || '-'
+        },
         {
           prop: 'status',
           label: t('pages.system.errorLog.colStatus'),

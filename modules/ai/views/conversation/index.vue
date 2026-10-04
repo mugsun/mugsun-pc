@@ -68,8 +68,8 @@
     { prop: 'source', label: '来源', width: 100 },
     { prop: 'userName', label: '用户', width: 120 },
     { prop: 'modelName', label: '模型', width: 140 },
-    { prop: 'tokenTotal', label: 'Tokens', width: 100 },
-    { prop: 'createTime', label: '时间', width: 170 },
+    { prop: 'totalTokens', label: 'Tokens', width: 100 },
+    { prop: 'lastTime', label: '时间', width: 170 },
     {
       prop: 'operation',
       label: '操作',

@@ -203,4 +203,13 @@
       dialogSaving.value = false
     }
   }
+
+  let seenNotice = false
+  onActivated(() => {
+    if (!seenNotice) {
+      seenNotice = true
+      return
+    }
+    refreshData()
+  })
 </script>

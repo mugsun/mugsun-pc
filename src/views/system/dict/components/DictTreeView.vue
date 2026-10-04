@@ -245,7 +245,11 @@
 
   const showDialog = (type: 'add' | 'edit', row?: Record<string, any>): void => {
     dialogType.value = type
-    Object.assign(formData, defaultForm(), type === 'add' ? { parentId: row?.id ?? 0 } : row || {})
+    Object.assign(
+      formData,
+      defaultForm(),
+      type === 'add' ? { parentId: row?.id ?? 0, code: row?.code ?? '' } : row || {}
+    )
     dialogVisible.value = true
     nextTick(() => formRef.value?.clearValidate())
   }

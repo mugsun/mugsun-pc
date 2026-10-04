@@ -267,6 +267,15 @@
       .catch(() => {})
   }
 
+  let seenChangelog = false
+  onActivated(() => {
+    if (!seenChangelog) {
+      seenChangelog = true
+      return
+    }
+    refreshData()
+  })
+
   onDeactivated(() => {
     ElMessageBox.close()
     closeDialog()
