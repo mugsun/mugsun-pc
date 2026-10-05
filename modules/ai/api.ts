@@ -260,13 +260,25 @@ export function fetchAiChannelPage(params: Record<string, any>) {
   return request.get<any>({ url: '/api/system/ai/channel/page', params })
 }
 export function fetchSaveAiChannel(data: Record<string, any>) {
-  return request.post<any>({ url: '/api/system/ai/channel/submit', data })
+  return request.post<any>({
+    url: '/api/system/ai/channel/submit',
+    data,
+    showSuccessMessage: true
+  })
 }
 export function fetchRemoveAiChannel(id: AiId) {
-  return request.post<void>({ url: '/api/system/ai/channel/remove', data: { id } })
+  return request.post<void>({
+    url: '/api/system/ai/channel/remove',
+    data: { id },
+    showSuccessMessage: true
+  })
 }
 export function fetchDebugAiChannel(id: AiId) {
-  return request.post<any>({ url: '/api/system/ai/channel/debug', data: { id } })
+  return request.post<any>({
+    url: '/api/system/ai/channel/debug',
+    data: { id },
+    showSuccessMessage: true
+  })
 }
 
 // ===== 会话 / 对话 =====
