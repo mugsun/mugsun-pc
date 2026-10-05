@@ -2511,7 +2511,7 @@
         "leaveEndAfterStart": "The end time must be later than the start time",
         "msgCodeNameRequired": "Flow code and name cannot be empty. Enter both, then publish again.",
         "msgNodeRequired": "Design at least one approval node. Add one, then publish again.",
-        "msgCandidateRequired": "Each node requires a candidate",
+        "msgCandidateRequired": "Approval node \"{name}\" has no candidate. Choose a candidate for this node, then publish again.",
         "msgDeployed": "Flow deployed"
       },
       "flowGraph": {
@@ -2584,7 +2584,7 @@
         "branchOne": "Branch One",
         "branchTwo": "Branch Two",
         "branchElse": "Otherwise",
-        "errNodeNoCandidate": "Node \"{name}\" has no candidate configured",
+        "errNodeNoCandidate": "Approval node \"{name}\" has no candidate. Choose a candidate for this node, then publish again.",
         "errParallelMinBranch": "Parallel \"{name}\" requires at least two branches",
         "errBranchMin": "Branch \"{name}\" requires at least one branch",
         "errConditionRequired": "Condition branch \"{name}\" requires conditions or must be marked as default"

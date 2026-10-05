@@ -559,8 +559,11 @@
       candidates: n.candidates.map(candidateToken).filter(Boolean),
       fieldPerms: n.fieldPerms
     }))
-    if (nodes.some((n) => n.candidates.length === 0)) {
-      ElMessage.warning(t('pages.system.flowDef.msgCandidateRequired'))
+    const missing = nodes.find((n) => n.candidates.length === 0)
+    if (missing) {
+      ElMessage.warning(
+        t('pages.system.flowDef.msgCandidateRequired', { name: missing.name || '未命名' })
+      )
       return
     }
     deploying.value = true
