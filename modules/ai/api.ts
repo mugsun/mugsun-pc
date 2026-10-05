@@ -501,19 +501,35 @@ export function fetchAiDatasetDetail(id: AiId) {
   return request.get<any>({ url: '/api/system/ai/dataset/detail', params: { id } })
 }
 export function fetchSaveAiDataset(data: Record<string, any>) {
-  return request.post<any>({ url: '/api/system/ai/dataset/submit', data })
+  return request.post<any>({
+    url: '/api/system/ai/dataset/submit',
+    data,
+    showSuccessMessage: true
+  })
 }
 export function fetchRemoveAiDataset(id: AiId) {
-  return request.post<void>({ url: '/api/system/ai/dataset/remove', data: { id } })
+  return request.post<void>({
+    url: '/api/system/ai/dataset/remove',
+    data: { id },
+    showSuccessMessage: true
+  })
 }
 export function fetchCopyAiDataset(id: AiId) {
-  return request.post<any>({ url: '/api/system/ai/dataset/copy', data: { id } })
+  return request.post<any>({
+    url: '/api/system/ai/dataset/copy',
+    data: { id },
+    showSuccessMessage: true
+  })
 }
 export function fetchExportAiDataset(id: AiId) {
   return request.download({ url: '/api/system/ai/dataset/export', params: { id } })
 }
 export function fetchSaveDatasetTables(data: Record<string, any>) {
-  return request.post<void>({ url: '/api/system/ai/dataset/config/tables', data })
+  return request.post<void>({
+    url: '/api/system/ai/dataset/config/tables',
+    data,
+    showSuccessMessage: true
+  })
 }
 export function fetchDatasetTables(id: AiId) {
   return request.get<any>({ url: '/api/system/ai/dataset/config/tables', params: { id } })

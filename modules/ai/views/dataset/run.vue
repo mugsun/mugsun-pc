@@ -53,7 +53,7 @@
 <script setup lang="ts">
   import { computed, nextTick, onMounted, ref } from 'vue'
   import { useRoute } from 'vue-router'
-  import { ElMessage, ElMessageBox } from 'element-plus'
+  import { ElMessageBox } from 'element-plus'
   import {
     fetchDatasetAnalyze,
     fetchDatasetAsk,
@@ -96,8 +96,7 @@
       bot.rows = r?.rows || []
       bot.content = Array.isArray(bot.rows) ? `查询完成，共 ${bot.rows.length} 行` : '查询完成'
     } catch (e: any) {
-      ElMessage.error(e?.message || '问数失败')
-      bot.content = '问数失败'
+      bot.content = e?.message || '这次没有问成。请先配置数据表，再试一次'
     } finally {
       asking.value = false
       await scroll()

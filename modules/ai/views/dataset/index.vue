@@ -5,9 +5,10 @@
         <ElInput
           v-model="keyword"
           clearable
-          placeholder="搜索问数智能体"
+          placeholder="搜索问数"
           style="width: 220px"
           @keyup.enter="reload"
+          @clear="reload"
         />
         <ElButton @click="reload">搜索</ElButton>
         <ElButton type="primary" @click="openEdit()">新建</ElButton>
@@ -15,8 +16,8 @@
       <div v-loading="loading" class="card-grid">
         <ElCard v-for="row in records" :key="row.id" shadow="hover">
           <div class="title">{{ row.name }}</div>
-          <div class="meta">数据源 {{ row.datasourceName || row.datasourceId || '-' }}</div>
-          <div class="desc">{{ row.description || '暂无描述' }}</div>
+          <div class="meta">数据源和表在配置里选择</div>
+          <div class="desc">{{ row.description || '还没有描述' }}</div>
           <div class="ops">
             <ElButton link type="primary" @click="goConfig(row)">配置</ElButton>
             <ElButton link @click="goRun(row)">问数</ElButton>
@@ -26,16 +27,39 @@
             <ElButton link type="danger" @click="remove(row)">删除</ElButton>
           </div>
         </ElCard>
-        <ElEmpty v-if="!loading && !records.length" description="暂无问数智能体" />
+        <ElEmpty
+          v-if="!loading && !records.length"
+          :description="
+            searched ? '没有符合条件的问数。换个名称再查' : '还没有问数。点新建开始配置'
+          "
+        />
       </div>
     </ElCard>
-    <ElDialog v-model="visible" :title="form.id ? '编辑' : '新建问数智能体'" width="560px">
-      <ElForm :model="form" label-width="100px">
-        <ElFormItem label="名称" required><ElInput v-model="form.name" /></ElFormItem>
-        <ElFormItem label="数据源 ID" required><ElInput v-model="form.datasourceId" /></ElFormItem>
-        <ElFormItem label="描述"
-          ><ElInput v-model="form.description" type="textarea" :rows="3"
-        /></ElFormItem>
+    <ElDialog
+      v-model="visible"
+      class="ai-dataset-dialog"
+      :title="form.id ? '编辑问数' : '新建问数'"
+      width="560px"
+    >
+      <ElForm :model="form" label-width="72px">
+        <ElFormItem label="名称" required>
+          <ElInput
+            v-model="form.name"
+            maxlength="64"
+            show-word-limit
+            placeholder="用来在列表里区分"
+          />
+        </ElFormItem>
+        <ElFormItem label="描述">
+          <ElInput
+            v-model="form.description"
+            type="textarea"
+            :rows="3"
+            maxlength="200"
+            show-word-limit
+            placeholder="数据源和表保存后，到配置里选择"
+          />
+        </ElFormItem>
       </ElForm>
       <template #footer>
         <ElButton @click="visible = false">取消</ElButton>
@@ -47,7 +71,7 @@
 <script setup lang="ts">
   import { onMounted, reactive, ref } from 'vue'
   import { useRouter } from 'vue-router'
-  import { ElMessage, ElMessageBox } from 'element-plus'
+  import { ElMessageBox } from 'element-plus'
   import {
     fetchAiDatasetPage,
     fetchCopyAiDataset,
@@ -57,6 +81,7 @@
   defineOptions({ name: 'AiDataset' })
   const router = useRouter()
   const keyword = ref('')
+  const searched = ref(false)
   const loading = ref(false)
   const records = ref<any[]>([])
   const visible = ref(false)
@@ -64,6 +89,7 @@
   const form = reactive<Record<string, any>>({})
   async function reload() {
     loading.value = true
+    searched.value = !!keyword.value.trim()
     try {
       const res = await fetchAiDatasetPage({
         pageNum: 1,
@@ -92,21 +118,24 @@
   async function save() {
     saving.value = true
     try {
-      await fetchSaveAiDataset({ ...form })
-      ElMessage.success('已保存')
+      await fetchSaveAiDataset({ id: form.id, name: form.name, description: form.description })
       visible.value = false
       await reload()
+    } catch {
+      /* 失败时弹窗留着，方便改完再保存 */
     } finally {
       saving.value = false
     }
   }
   async function copy(row: any) {
     await fetchCopyAiDataset(row.id)
-    ElMessage.success('已复制')
     await reload()
   }
   async function remove(row: any) {
-    await ElMessageBox.confirm(`删除「${row.name}」？`, '确认')
+    await ElMessageBox.confirm(
+      `删除「${row.name}」后，列表里不会再出现，配置的表也会一起去掉`,
+      '确认'
+    )
     await fetchRemoveAiDataset(row.id)
     await reload()
   }
@@ -115,6 +144,7 @@
 <style scoped>
   .toolbar {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     margin-bottom: 12px;
   }
@@ -142,6 +172,9 @@
   }
 
   .ops {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
     margin-top: 10px;
   }
 </style>

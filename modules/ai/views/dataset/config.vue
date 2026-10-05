@@ -8,6 +8,25 @@
       </div>
       <ElTabs v-model="tab">
         <ElTabPane label="数据表" name="tables">
+          <ElForm label-width="88px">
+            <ElFormItem label="数据源" required>
+              <ElSelect
+                v-model="datasourceId"
+                filterable
+                clearable
+                placeholder="先选数据源，再选表"
+                style="width: 360px"
+                @change="loadSchema"
+              >
+                <ElOption
+                  v-for="item in datasources"
+                  :key="item.id"
+                  :label="item.name"
+                  :value="String(item.id)"
+                />
+              </ElSelect>
+            </ElFormItem>
+          </ElForm>
           <ElTransfer
             v-model="selectedTables"
             :data="tableOptions"
@@ -52,10 +71,11 @@
   import type { ColumnOption } from '@/types/component'
   import { computed, h, onMounted, reactive, ref } from 'vue'
   import { useRoute } from 'vue-router'
-  import { ElButton, ElMessage, ElMessageBox } from 'element-plus'
+  import { ElButton, ElMessageBox } from 'element-plus'
   import {
+    fetchAiDatasourcePage,
+    fetchAiDatasourceTables,
     fetchAiTerminologyPage,
-    fetchDatasetSchema,
     fetchDatasetTables,
     fetchRemoveAiTerminology,
     fetchSaveAiTerminology,
@@ -68,6 +88,8 @@
   const saving = ref(false)
   const selectedTables = ref<string[]>([])
   const tableOptions = ref<{ key: string; label: string }[]>([])
+  const datasources = ref<any[]>([])
+  const datasourceId = ref('')
   const bizDesc = ref('')
   const termLoading = ref(false)
   const terms = ref<any[]>([])
@@ -91,29 +113,45 @@
         ])
     }
   ]
+  async function loadDatasources() {
+    const res = await fetchAiDatasourcePage({ pageNum: 1, pageSize: 100 })
+    datasources.value = res?.records ?? []
+  }
+  async function loadSchema() {
+    tableOptions.value = []
+    if (!datasourceId.value) return
+    try {
+      const schema = await fetchAiDatasourceTables(datasourceId.value)
+      const tables = Array.isArray(schema) ? schema : schema?.tables || []
+      tableOptions.value = (tables as any[]).map((t) => ({
+        key: typeof t === 'string' ? t : t.name || t.tableName,
+        label:
+          typeof t === 'string'
+            ? t
+            : t.comment
+              ? `${t.name || t.tableName}（${t.comment}）`
+              : t.name || t.tableName
+      }))
+    } catch {
+      tableOptions.value = []
+    }
+  }
   async function load() {
     const cfg = await fetchDatasetTables(datasetId.value)
     selectedTables.value = cfg?.tables || cfg?.selected || []
     bizDesc.value = cfg?.bizDesc || ''
-    const dsId = cfg?.datasourceId
-    if (dsId) {
-      const schema = await fetchDatasetSchema(dsId)
-      const tables = schema?.tables || schema || []
-      tableOptions.value = (tables as any[]).map((t) => ({
-        key: typeof t === 'string' ? t : t.name,
-        label: typeof t === 'string' ? t : t.comment ? `${t.name}（${t.comment}）` : t.name
-      }))
-    }
+    datasourceId.value = cfg?.datasourceId ? String(cfg.datasourceId) : ''
+    await loadSchema()
   }
   async function saveTables() {
     saving.value = true
     try {
       await fetchSaveDatasetTables({
         id: datasetId.value,
+        datasourceId: datasourceId.value || undefined,
         tables: selectedTables.value,
         bizDesc: bizDesc.value
       })
-      ElMessage.success('已保存')
     } finally {
       saving.value = false
     }
@@ -147,6 +185,7 @@
     await loadTerms()
   }
   onMounted(async () => {
+    await loadDatasources()
     await load()
     await loadTerms()
   })
