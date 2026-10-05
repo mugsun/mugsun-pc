@@ -1,16 +1,32 @@
 <!-- 登录客户端差异化策略：验证码开关 / 并发在线数 / 令牌有效期，一 client 一套 -->
 <template>
   <div class="client-page art-full-height">
+    <ArtSearchBar
+      v-model="searchForm"
+      :items="searchItems"
+      :span="6"
+      @search="handleSearch"
+      @reset="handleResetSearch"
+    />
     <ElCard class="art-table-card">
       <div class="client-toolbar">
         <span class="client-title">{{ $t('pages.system.client.pageTitle') }}</span>
-        <ElButton v-perm="'sys:client:save'" type="primary" @click="openCreate">{{
-          $t('pages.system.client.addBtn')
-        }}</ElButton>
+        <div>
+          <ElButton v-perm="'sys:client:save'" type="primary" @click="openCreate">{{
+            $t('pages.system.client.addBtn')
+          }}</ElButton>
+          <ElButton v-perm="'sys:client:remove'" @click="removeSelected">{{
+            $t('pages.system.client.deleteSelected')
+          }}</ElButton>
+        </div>
       </div>
 
       <div class="client-table-scroll">
-        <ElTable :data="tableData" border v-loading="loading">
+        <ElTable :data="tableData" border v-loading="loading" @selection-change="onSelectionChange">
+          <template #empty>
+            <span>{{ emptyText }}</span>
+          </template>
+          <ElTableColumn type="selection" width="48" :selectable="canSelect" />
           <ElTableColumn
             prop="clientId"
             :label="$t('pages.system.client.colClientId')"
@@ -63,6 +79,7 @@
                 >{{ $t('pages.system.client.editBtn') }}</ElButton
               >
               <ElButton
+                v-if="!isBuiltin(row)"
                 v-perm="'sys:client:edit'"
                 link
                 :type="row.status === 1 ? 'warning' : 'success'"
@@ -76,6 +93,7 @@
                 }}
               </ElButton>
               <ElButton
+                v-if="!isBuiltin(row)"
                 v-perm="'sys:client:remove'"
                 link
                 type="danger"
@@ -144,6 +162,7 @@
   import { nextTick, onDeactivated, onMounted, reactive, ref } from 'vue'
   import type { FormInstance, FormRules } from 'element-plus'
   import { ElMessage, ElMessageBox } from 'element-plus'
+  import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
   import {
     fetchClientPage,
     fetchSaveClient,
@@ -157,6 +176,30 @@
   defineOptions({ name: 'Client' })
 
   const { t } = useI18n()
+
+  const searchForm = ref({ clientId: '', clientName: '' })
+  const filtering = ref(false)
+  const selectedRows = ref<any[]>([])
+  const searchItems = computed(() => [
+    {
+      key: 'clientId',
+      label: t('pages.system.client.colClientId'),
+      type: 'input',
+      props: { placeholder: t('pages.system.client.clientIdPlaceholder'), clearable: true }
+    },
+    {
+      key: 'clientName',
+      label: t('pages.system.client.colName'),
+      type: 'input',
+      props: { placeholder: t('pages.system.client.ruleName'), clearable: true }
+    }
+  ])
+  const emptyText = computed(() =>
+    filtering.value ? t('pages.system.client.emptySearch') : t('pages.system.client.empty')
+  )
+  const isBuiltin = (row: { clientId?: string }): boolean =>
+    row.clientId === 'web' || row.clientId === 'app'
+  const canSelect = (row: { clientId?: string }): boolean => !isBuiltin(row)
 
   const tableData = ref<any[]>([])
   const loading = ref(false)
@@ -184,13 +227,35 @@
 
   const loadData = async (): Promise<void> => {
     loading.value = true
+    filtering.value = Boolean(searchForm.value.clientId || searchForm.value.clientName)
     try {
-      const res: any = await fetchClientPage({ pageNum: pageNum.value, pageSize })
+      selectedRows.value = []
+      const res: any = await fetchClientPage({
+        pageNum: pageNum.value,
+        pageSize,
+        clientId: searchForm.value.clientId || undefined,
+        clientName: searchForm.value.clientName || undefined
+      })
       tableData.value = res?.records ?? []
       total.value = res?.totalRow ?? 0
     } finally {
       loading.value = false
     }
+  }
+
+  const onSelectionChange = (rows: any[]): void => {
+    selectedRows.value = rows
+  }
+
+  const handleSearch = async (): Promise<void> => {
+    pageNum.value = 1
+    await loadData()
+  }
+
+  const handleResetSearch = async (): Promise<void> => {
+    searchForm.value = { clientId: '', clientName: '' }
+    pageNum.value = 1
+    await loadData()
   }
 
   const onPage = (p: number): void => {
@@ -262,20 +327,29 @@
       .catch(() => {})
   }
 
-  const remove = (row: any): void => {
-    ElMessageBox.confirm(
-      t('pages.system.client.deleteConfirm', { name: row.clientName }),
-      t('pages.system.client.deleteTitle'),
-      {
-        type: 'warning'
-      }
-    )
+  const confirmRemove = (message: string, ids: Array<number | string>): void => {
+    ElMessageBox.confirm(message, t('pages.system.client.deleteTitle'), { type: 'warning' })
       .then(async () => {
-        await fetchRemoveClient([row.id])
+        await fetchRemoveClient(ids)
         ElMessage.success(t('pages.system.client.deleteSuccess'))
         loadData()
       })
       .catch(() => {})
+  }
+
+  const remove = (row: any): void => {
+    confirmRemove(t('pages.system.client.deleteConfirm', { name: row.clientName }), [row.id])
+  }
+
+  const removeSelected = (): void => {
+    if (!selectedRows.value.length) {
+      ElMessage.warning(t('pages.system.client.selectFirst'))
+      return
+    }
+    confirmRemove(
+      t('pages.system.client.deleteSelectedConfirm', { count: selectedRows.value.length }),
+      selectedRows.value.map((row) => row.id)
+    )
   }
 
   onDeactivated(() => {
