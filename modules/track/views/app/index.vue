@@ -131,7 +131,7 @@
               <ElOption :label="$t('pages.track.shared.enabled')" :value="1" />
               <ElOption :label="$t('pages.track.shared.disabled')" :value="0" />
             </ElSelect>
-            <ElButton @click="loadVisualRules" v-ripple>{{
+            <ElButton @click="searchVisualRules" v-ripple>{{
               $t('pages.track.shared.search')
             }}</ElButton>
             <span class="track-visual-hint">{{ $t('pages.track.app.visualHint') }}</span>
@@ -958,6 +958,14 @@ const track = createTracker({
     if (vrStatus.value !== '') params.status = vrStatus.value
     replaceVrParams(params)
     await fetchVisualRules()
+  }
+
+  const searchVisualRules = (): void => {
+    if (!appKey.value) {
+      ElMessage.warning(t('pages.track.app.visualNeedApp'))
+      return
+    }
+    void loadVisualRules()
   }
 
   // 切到圈选规则 tab / 应用变化时加载（首载在 appKey 就绪后触发）
