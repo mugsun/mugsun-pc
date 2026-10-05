@@ -43,6 +43,45 @@
           </ElTable>
         </ElTabPane>
 
+        <ElTabPane :label="$t('pages.system.flowCenter.tabClaim')" name="claim">
+          <div class="fc-toolbar">
+            <ElButton :loading="loading" @click="load">{{
+              $t('pages.system.flowCenter.refresh')
+            }}</ElButton>
+          </div>
+          <ElAlert
+            v-if="!loading && tab === 'claim' && rows.length === 0"
+            type="info"
+            :closable="false"
+            :title="$t('pages.system.flowCenter.claimEmpty')"
+          />
+          <ElTable :data="rows" border :loading="loading">
+            <ElTableColumn type="index" :label="$t('table.column.index')" width="56" />
+            <ElTableColumn
+              prop="businessId"
+              :label="$t('pages.system.flowCenter.businessId')"
+              min-width="150"
+            />
+            <ElTableColumn
+              prop="flowName"
+              :label="$t('pages.system.flowCenter.flow')"
+              min-width="120"
+            />
+            <ElTableColumn
+              prop="nodeName"
+              :label="$t('pages.system.flowCenter.currentNode')"
+              min-width="120"
+            />
+            <ElTableColumn :label="$t('pages.system.flowCenter.actions')" width="90" fixed="right">
+              <template #default="{ row }">
+                <ElButton link type="primary" @click="claim(row)">{{
+                  $t('pages.system.flowCenter.claim')
+                }}</ElButton>
+              </template>
+            </ElTableColumn>
+          </ElTable>
+        </ElTabPane>
+
         <ElTabPane :label="$t('pages.system.flowCenter.tabStarted')" name="started">
           <div class="fc-toolbar">
             <ElButton :loading="loading" @click="load">{{
@@ -372,6 +411,8 @@
   import ApprovalForm from './components/ApprovalForm.vue'
   import {
     fetchFlowMyTodo,
+    fetchFlowClaimList,
+    fetchFlowClaim,
     fetchFlowMyStarted,
     fetchFlowMyDone,
     fetchFlowMyCopy,
@@ -398,6 +439,7 @@
 
   const LOADERS: Record<string, () => Promise<any[]>> = {
     todo: fetchFlowMyTodo,
+    claim: fetchFlowClaimList,
     started: fetchFlowMyStarted,
     done: fetchFlowMyDone,
     copy: fetchFlowMyCopy
@@ -462,6 +504,12 @@
   const onTabChange = (): void => {
     closeDialogs()
     load()
+  }
+
+  const claim = async (row: any): Promise<void> => {
+    await fetchFlowClaim(row.taskId)
+    ElMessage.success(t('pages.system.flowCenter.claimed'))
+    await load()
   }
 
   const closeDialogs = (): void => {

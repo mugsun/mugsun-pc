@@ -243,6 +243,16 @@ export const systemRoutes: AppRouteRecord = {
       }
     },
     {
+      path: 'flow-running',
+      name: 'FlowRunning',
+      component: '/system/flow-running',
+      meta: {
+        title: 'menus.system.flowRunning',
+        icon: 'ri:git-commit-line',
+        keepAlive: true
+      }
+    },
+    {
       path: 'flow-graph',
       name: 'FlowGraph',
       component: '/system/flow-graph',

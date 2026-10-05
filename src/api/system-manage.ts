@@ -449,6 +449,27 @@ export function fetchFlowInstanceForm(instanceId: number | string) {
 export function fetchFlowMyTodo() {
   return request.get<any[]>({ url: '/api/system/flow/my-todo' })
 }
+export function fetchFlowClaimList() {
+  return request.get<any[]>({ url: '/api/system/flow/claim-list' })
+}
+export function fetchFlowClaim(taskId: number | string) {
+  return request.post<void>({ url: `/api/system/flow/claim/${taskId}` })
+}
+export function fetchFlowRunning(params?: { instanceId?: string; flowCode?: string }) {
+  return request.get<any[]>({ url: '/api/system/flow/running', params })
+}
+export function fetchStopRunningFlow(instanceId: string, reason: string) {
+  return request.post<void>({
+    url: '/api/system/flow/running/terminate',
+    data: { instanceId, reason }
+  })
+}
+export function fetchSuspendRunningFlow(instanceId: string) {
+  return request.post<void>({ url: '/api/system/flow/running/suspend', data: { instanceId } })
+}
+export function fetchResumeRunningFlow(instanceId: string) {
+  return request.post<void>({ url: '/api/system/flow/running/resume', data: { instanceId } })
+}
 export function fetchFlowMyCopy() {
   return request.get<any[]>({ url: '/api/system/flow/my-copy' })
 }
