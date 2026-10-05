@@ -253,8 +253,11 @@
       t('pages.system.genDatasource.removeTitle'),
       { type: 'warning' }
     )
-    await fetchRemoveGenDatasource(ids)
-    ElMessage.success(t('pages.system.genDatasource.removed'))
+    try {
+      await fetchRemoveGenDatasource(ids)
+    } catch {
+      return
+    }
     await load()
   }
 

@@ -349,7 +349,11 @@ export function fetchSaveGenDatasource(data: Record<string, any>) {
   })
 }
 export function fetchRemoveGenDatasource(ids: Array<string | number>) {
-  return request.post<void>({ url: '/api/system/gen-datasource/remove', data: { ids } })
+  return request.post<void>({
+    url: '/api/system/gen-datasource/remove',
+    data: { ids },
+    showSuccessMessage: true
+  })
 }
 export function fetchTestGenDatasource(id: string) {
   return request.post<{ connected: boolean; message: string }>({
