@@ -238,7 +238,11 @@
       t('common.tips'),
       { type: 'warning' }
     )
-    await fetchRemoveTopMenu([String(row.id)])
+    try {
+      await fetchRemoveTopMenu([String(row.id)])
+    } catch {
+      return
+    }
     await load()
     await topMenuStore.load()
   }
