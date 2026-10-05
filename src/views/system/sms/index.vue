@@ -7,6 +7,14 @@
           $t('pages.system.sms.addBtn')
         }}</ElButton>
       </div>
+      <ElAlert
+        v-if="!loading && tableData.length === 0"
+        :title="$t('pages.system.sms.empty')"
+        type="info"
+        show-icon
+        :closable="false"
+        style="margin-bottom: 12px"
+      />
 
       <div class="sms-table-scroll">
         <ElTable :data="tableData" border v-loading="loading">
@@ -46,8 +54,11 @@
               </ElTag>
             </template>
           </ElTableColumn>
-          <ElTableColumn :label="$t('pages.system.sms.colOperation')" width="220">
+          <ElTableColumn :label="$t('pages.system.sms.colOperation')" width="260" fixed="right">
             <template #default="{ row }">
+              <ElButton v-perm="'sys:sms:edit'" link type="primary" @click="openDebug(row)">{{
+                $t('pages.system.sms.debugBtn')
+              }}</ElButton>
               <!-- 启用互斥切换：已启用行提供「禁用」（走 submit 全量更新 status），未启用行提供「启用」 -->
               <ElButton
                 v-if="row.status === 1"
@@ -76,6 +87,30 @@
         </ElTable>
       </div>
 
+      <ElDialog
+        v-model="debugVisible"
+        :title="$t('pages.system.sms.debugTitle')"
+        width="420px"
+        align-center
+        destroy-on-close
+      >
+        <ElForm label-width="80px">
+          <ElFormItem :label="$t('pages.system.sms.debugPhone')">
+            <ElInput
+              v-model="debugPhone"
+              maxlength="11"
+              :placeholder="$t('pages.system.sms.debugPhonePlaceholder')"
+            />
+          </ElFormItem>
+        </ElForm>
+        <template #footer>
+          <ElButton @click="debugVisible = false">{{ $t('common.cancel') }}</ElButton>
+          <ElButton type="primary" :loading="debugSending" @click="submitDebug">{{
+            $t('pages.system.sms.debugBtn')
+          }}</ElButton>
+        </template>
+      </ElDialog>
+
       <SmsDialog
         v-if="dialogVisible"
         v-model:visible="dialogVisible"
@@ -90,7 +125,13 @@
 
 <script setup lang="ts">
   import { ref, onMounted, onDeactivated } from 'vue'
-  import { fetchSmsPage, fetchSaveSms, fetchRemoveSms, fetchEnableSms } from '@/api/system-manage'
+  import {
+    fetchSmsPage,
+    fetchSaveSms,
+    fetchRemoveSms,
+    fetchEnableSms,
+    fetchDebugSms
+  } from '@/api/system-manage'
   import SmsDialog from './modules/sms-dialog.vue'
   import { ElMessageBox, ElMessage } from 'element-plus'
   import { DialogType } from '@/types'
@@ -106,6 +147,10 @@
   const dialogVisible = ref(false)
   const dialogSaving = ref(false)
   const currentData = ref<Record<string, any>>({})
+  const debugVisible = ref(false)
+  const debugSending = ref(false)
+  const debugPhone = ref('')
+  const debugRow = ref<Record<string, any> | null>(null)
 
   const loadData = async (): Promise<void> => {
     loading.value = true
@@ -121,7 +166,32 @@
 
   onDeactivated(() => {
     dialogVisible.value = false
+    debugVisible.value = false
   })
+
+  const openDebug = (row: Record<string, any>): void => {
+    debugRow.value = row
+    debugPhone.value = ''
+    debugVisible.value = true
+  }
+
+  const submitDebug = async (): Promise<void> => {
+    if (debugSending.value || !debugRow.value) return
+    if (!/^1\d{10}$/.test(debugPhone.value.trim())) {
+      ElMessage.warning(t('pages.system.sms.debugPhonePlaceholder'))
+      return
+    }
+    debugSending.value = true
+    try {
+      const message = await fetchDebugSms({ id: debugRow.value.id, phone: debugPhone.value.trim() })
+      ElMessage.success(
+        typeof message === 'string' && message ? message : t('pages.system.sms.debugBtn')
+      )
+      debugVisible.value = false
+    } finally {
+      debugSending.value = false
+    }
+  }
 
   const showDialog = (type: DialogType, row?: Record<string, any>): void => {
     dialogType.value = type

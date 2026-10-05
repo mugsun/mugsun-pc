@@ -254,6 +254,9 @@ export function fetchRemoveOss(ids: (number | string)[] | number | string) {
 export function fetchEnableOss(id: number | string) {
   return request.post<void>({ url: `/api/system/oss/enable/${id}` })
 }
+export function fetchProbeOss(id: number | string) {
+  return request.post<string>({ url: `/api/system/oss/probe/${id}` })
+}
 
 // ===== 短信平台配置 =====
 export function fetchSmsPage(params: Record<string, any>) {
@@ -270,6 +273,9 @@ export function fetchRemoveSms(ids: (number | string)[] | number | string) {
 }
 export function fetchEnableSms(id: number | string) {
   return request.post<void>({ url: `/api/system/sms/enable/${id}` })
+}
+export function fetchDebugSms(data: { id: number | string; phone: string }) {
+  return request.post<string>({ url: '/api/system/sms/debug', data })
 }
 
 // ===== 在线代码生成 =====

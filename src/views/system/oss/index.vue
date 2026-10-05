@@ -7,6 +7,14 @@
           $t('pages.system.oss.addBtn')
         }}</ElButton>
       </div>
+      <ElAlert
+        v-if="!loading && tableData.length === 0"
+        :title="$t('pages.system.oss.empty')"
+        type="info"
+        show-icon
+        :closable="false"
+        style="margin-bottom: 12px"
+      />
 
       <div class="oss-table-scroll">
         <ElTable :data="tableData" border v-loading="loading">
@@ -43,8 +51,11 @@
               </ElTag>
             </template>
           </ElTableColumn>
-          <ElTableColumn :label="$t('pages.system.oss.colOperation')" width="220">
+          <ElTableColumn :label="$t('pages.system.oss.colOperation')" width="260" fixed="right">
             <template #default="{ row }">
+              <ElButton v-perm="'sys:oss:edit'" link type="primary" @click="probeRow(row)">{{
+                $t('pages.system.oss.probeBtn')
+              }}</ElButton>
               <!-- 启用互斥切换：已启用行提供「禁用」（走 submit 全量更新 status），未启用行提供「启用」 -->
               <ElButton
                 v-if="row.status === 1"
@@ -87,7 +98,13 @@
 
 <script setup lang="ts">
   import { ref, onMounted, onDeactivated } from 'vue'
-  import { fetchOssPage, fetchSaveOss, fetchRemoveOss, fetchEnableOss } from '@/api/system-manage'
+  import {
+    fetchOssPage,
+    fetchSaveOss,
+    fetchRemoveOss,
+    fetchEnableOss,
+    fetchProbeOss
+  } from '@/api/system-manage'
   import OssDialog from './modules/oss-dialog.vue'
   import { ElMessageBox, ElMessage } from 'element-plus'
   import { DialogType } from '@/types'
@@ -125,6 +142,13 @@
     dialogType.value = type
     currentData.value = row ? { ...row } : {}
     dialogVisible.value = true
+  }
+
+  const probeRow = async (row: any): Promise<void> => {
+    const message = await fetchProbeOss(row.id)
+    ElMessage.success(
+      typeof message === 'string' && message ? message : t('pages.system.oss.probeBtn')
+    )
   }
 
   const enableRow = async (row: any): Promise<void> => {
