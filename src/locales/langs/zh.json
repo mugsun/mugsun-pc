@@ -2305,6 +2305,7 @@
         "prefixPlaceholder": "如 sys_",
         "author": "作者",
         "importBtn": "导入",
+        "emptyList": "还没有导入的表。先在上面选一张业务表，再点导入",
         "colTableName": "表名",
         "colEntity": "实体",
         "colFunction": "功能",

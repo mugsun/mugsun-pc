@@ -389,14 +389,20 @@ export function fetchGenImport(data: {
   tablePrefix?: string
   author?: string
 }) {
-  return request.post<number | string>({ url: '/api/system/gen/import', data })
+  return request.post<number | string>({
+    url: '/api/system/gen/import',
+    data,
+    showSuccessMessage: true
+  })
 }
 export function fetchGenList() {
   return request.get<any[]>({ url: '/api/system/gen/list' })
 }
 export function fetchGenRemove(tableId: number | string) {
   return request.post<void>({
-    url: `/api/system/gen/remove?tableId=${encodeURIComponent(String(tableId))}`
+    url: `/api/system/gen/remove?tableId=${encodeURIComponent(String(tableId))}`,
+    data: {},
+    showSuccessMessage: true
   })
 }
 export function fetchGenMeta(tableId: number | string) {
@@ -406,12 +412,18 @@ export function fetchGenMeta(tableId: number | string) {
   })
 }
 export function fetchSaveGenMeta(data: { table: any; columns: any[] }) {
-  return request.post<void>({ url: '/api/system/gen/meta/save', data })
+  return request.post<void>({
+    url: '/api/system/gen/meta/save',
+    data,
+    showSuccessMessage: true
+  })
 }
 export function fetchGenSync(tableId: number | string) {
   // 后端 @RequestParam：POST 仅 params 时 axios 封装会误写入 JSON body，须走 query
   return request.post<void>({
-    url: `/api/system/gen/sync?tableId=${encodeURIComponent(String(tableId))}`
+    url: `/api/system/gen/sync?tableId=${encodeURIComponent(String(tableId))}`,
+    data: {},
+    showSuccessMessage: true
   })
 }
 export function fetchGenPreviewMeta(tableId: number | string) {

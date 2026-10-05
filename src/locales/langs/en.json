@@ -2305,6 +2305,7 @@
         "prefixPlaceholder": "e.g. sys_",
         "author": "Author",
         "importBtn": "Import",
+        "emptyList": "No tables imported yet. Choose a business table above, then import it",
         "colTableName": "Table Name",
         "colEntity": "Entity",
         "colFunction": "Function",

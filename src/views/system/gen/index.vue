@@ -111,6 +111,9 @@
             min-width="140"
             show-overflow-tooltip
           />
+          <template #empty>
+            <span>{{ $t('pages.system.gen.emptyList') }}</span>
+          </template>
           <ElTableColumn :label="$t('pages.system.gen.colOperation')" width="330" fixed="right">
             <template #default="{ row }">
               <ElButton
@@ -288,7 +291,7 @@
     fetchGenPreviewMeta,
     downloadGenZip
   } from '@/api/system-manage'
-  import { ElMessage, ElMessageBox } from 'element-plus'
+  import { ElMessageBox } from 'element-plus'
   import { useI18n } from 'vue-i18n'
 
   defineOptions({ name: 'Gen' })
@@ -372,7 +375,6 @@
     )
       .then(async () => {
         await fetchGenRemove(row.id)
-        ElMessage.success(t('pages.system.gen.deleteSuccess'))
         await loadList()
       })
       .catch(() => {
@@ -384,7 +386,6 @@
     importing.value = true
     try {
       await fetchGenImport({ ...importForm })
-      ElMessage.success(t('pages.system.gen.importSuccess'))
       await loadList()
     } finally {
       importing.value = false
@@ -409,7 +410,6 @@
     configSaving.value = true
     try {
       await fetchSaveGenMeta({ table: configTable.value, columns: configColumns.value })
-      ElMessage.success(t('pages.system.gen.configSaved'))
       configVisible.value = false
     } finally {
       configSaving.value = false
@@ -418,7 +418,6 @@
 
   const doSync = async (row: any): Promise<void> => {
     await fetchGenSync(row.id)
-    ElMessage.success(t('pages.system.gen.syncSuccess'))
   }
 
   const openPreview = async (row: any): Promise<void> => {
