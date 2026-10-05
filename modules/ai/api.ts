@@ -161,7 +161,11 @@ export function fetchDefaultAiModel(id: AiId) {
   })
 }
 export function fetchTestAiModel(id: AiId) {
-  return request.post<any>({ url: '/api/system/ai/model/test', data: { id } })
+  return request.post<any>({
+    url: '/api/system/ai/model/test',
+    data: { id },
+    showSuccessMessage: true
+  })
 }
 
 // ===== 提示词 =====
