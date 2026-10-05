@@ -673,9 +673,12 @@ const track = createTracker({
     form.append('file', payload.file)
     form.append('appKey', appKey.value)
     form.append('release', payload.release)
-    await fetchUploadTrackSourcemap(form)
+    try {
+      await fetchUploadTrackSourcemap(form)
+    } catch {
+      return
+    }
     smUploadVisible.value = false
-    ElMessage.success(t('pages.track.app.uploadSuccess'))
     await fetchSourcemaps()
   }
 

@@ -107,7 +107,11 @@ export function fetchTrackSourcemapPage(params: Record<string, any>) {
 }
 /** 上传（multipart：file/appKey/release；.map ≤20MB 须含 mappings；同 appKey+release+filename 重传覆盖） */
 export function fetchUploadTrackSourcemap(data: FormData) {
-  return request.post<any>({ url: '/api/system/track/sourcemap/upload', data })
+  return request.post<any>({
+    url: '/api/system/track/sourcemap/upload',
+    data,
+    showSuccessMessage: true
+  })
 }
 export function fetchRemoveTrackSourcemap(id: number | string) {
   return request.post<void>({
