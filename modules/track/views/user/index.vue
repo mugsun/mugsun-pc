@@ -434,6 +434,8 @@
     loadingMore.value = true
     try {
       await fetchTimeline(nextCursor.value)
+    } catch {
+      nextCursor.value = null
     } finally {
       loadingMore.value = false
     }
