@@ -655,6 +655,7 @@
       "register": {
         "phonePlaceholder": "Phone number (optional, can be used for SMS login)",
         "phoneInvalid": "Invalid phone number. Use an 11-digit number starting with 1, then register again.",
+        "credentialsRequired": "Username and password are required. Fill in both, then register again.",
         "successMessage": "Registration successful. Please log in"
       },
       "forgetPassword": {

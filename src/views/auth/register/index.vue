@@ -184,7 +184,7 @@
    */
   const validatePassword = (_rule: any, value: string, callback: (error?: Error) => void) => {
     if (!value) {
-      callback(new Error(t('register.placeholder.password')))
+      callback(new Error(t('pages.auth.register.credentialsRequired')))
       return
     }
 
@@ -231,7 +231,7 @@
 
   const rules = computed<FormRules<RegisterForm>>(() => ({
     username: [
-      { required: true, message: t('register.placeholder.username'), trigger: 'blur' },
+      { required: true, message: t('pages.auth.register.credentialsRequired'), trigger: 'blur' },
       {
         min: USERNAME_MIN_LENGTH,
         max: USERNAME_MAX_LENGTH,
