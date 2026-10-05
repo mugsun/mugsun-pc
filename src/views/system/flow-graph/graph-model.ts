@@ -120,6 +120,20 @@ export const validateTree = (nodes: GNode[]): string => {
         ) {
           return $t('pages.system.flowGraph.errFieldInvalid')
         }
+        if (
+          n.type === 'condition' &&
+          b.conditions.some(
+            (r) =>
+              r.field &&
+              r.op &&
+              ((r.value || '').includes('|') ||
+                (r.value || '').includes('@@') ||
+                (r.value || '').includes('\n') ||
+                (r.value || '').includes('\r'))
+          )
+        ) {
+          return $t('pages.system.flowGraph.errValueInvalid')
+        }
         if (n.type === 'condition' && !b.isDefault && !b.conditions.filter((r) => r.field).length)
           return $t('pages.system.flowGraph.errConditionRequired', { name: b.name })
         const sub = validateTree(b.children)

@@ -2590,7 +2590,8 @@
         "errConditionRequired": "条件分支「{name}」需配置条件或标记为默认",
         "errRuleIncomplete": "条件规则缺少字段或运算符。请补上字段和运算符后再发布",
         "errOpUnsupported": "不支持的条件运算符。请改成等于、不等于、大于、大于等于、小于、小于等于、包含或不包含后再发布",
-        "errFieldInvalid": "条件变量名非法。请改成以字母或下划线开头，并且只含字母、数字和下划线后再发布"
+        "errFieldInvalid": "条件变量名非法。请改成以字母或下划线开头，并且只含字母、数字和下划线后再发布",
+        "errValueInvalid": "条件值含非法字符（不能包含 | 或 @@ 或换行）。请去掉这些字符后再发布"
       },
       "flowTodo": {
         "tabTodo": "我的待办",
