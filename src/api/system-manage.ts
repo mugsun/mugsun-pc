@@ -786,6 +786,9 @@ export function fetchRemoveRegion(id: number | string) {
 export function exportRegion(): Promise<void> {
   return request.download({ url: '/api/system/region/export', filename: '行政区划.xlsx' })
 }
+export function exportRegionTemplate(): Promise<void> {
+  return request.download({ url: '/api/system/region/template', filename: '行政区划模板.xlsx' })
+}
 export function importRegion(file: File) {
   const form = new FormData()
   form.append('file', file)

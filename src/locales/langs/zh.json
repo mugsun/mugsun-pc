@@ -1119,10 +1119,14 @@
       "region": {
         "addProvince": "新增省级",
         "export": "导出",
+        "template": "下载模板",
         "import": "导入",
         "addChild": "新增下级",
+        "edit": "编辑",
         "delete": "删除",
         "addRegion": "新增区划",
+        "editRegion": "编辑区划",
+        "empty": "还没有区划。可以新增省级，或先下载模板填好后再导入。",
         "deleteRegion": "删除区划",
         "deleteConfirm": "确定删除\"{name}\"吗？",
         "deleteSuccess": "删除成功",
@@ -1139,12 +1143,15 @@
         },
         "placeholder": {
           "name": "请输入名称",
-          "code": "请输入编码"
+          "code": "2 到 12 位数字，例如 11 或 1101"
         },
+        "codeRule": "区划编码请填写 2 到 12 位数字",
         "levels": {
           "province": "省",
           "city": "市",
-          "district": "区县"
+          "district": "区县",
+          "town": "乡镇",
+          "village": "村"
         }
       },
       "notice": {

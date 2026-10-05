@@ -9,11 +9,22 @@
         <ElButton :loading="exporting" @click="doExport">{{
           $t('pages.system.region.export')
         }}</ElButton>
+        <ElButton v-perm="'sys:region:import'" :loading="templating" @click="doTemplate">{{
+          $t('pages.system.region.template')
+        }}</ElButton>
         <ElButton v-perm="'sys:region:import'" :loading="importing" @click="triggerImport">{{
           $t('pages.system.region.import')
         }}</ElButton>
         <input ref="fileInput" type="file" accept=".xlsx" style="display: none" @change="onFile" />
       </div>
+      <ElAlert
+        v-if="!loading && tableData.length === 0"
+        :title="$t('pages.system.region.empty')"
+        type="info"
+        show-icon
+        :closable="false"
+        style="margin-bottom: 12px"
+      />
 
       <ElTable
         v-loading="loading"
@@ -32,12 +43,12 @@
         </ElTableColumn>
         <ElTableColumn
           :label="$t('pages.system.region.fields.operation')"
-          width="200"
+          width="240"
           fixed="right"
         >
           <template #default="{ row }">
             <ElButton
-              v-if="row.level < 3"
+              v-if="row.level < 5"
               v-perm="'sys:region:save'"
               link
               type="primary"
@@ -45,6 +56,9 @@
             >
               {{ $t('pages.system.region.addChild') }}
             </ElButton>
+            <ElButton v-perm="'sys:region:save'" link type="primary" @click="openEdit(row)">{{
+              $t('pages.system.region.edit')
+            }}</ElButton>
             <ElButton v-perm="'sys:region:remove'" link type="danger" @click="remove(row)">{{
               $t('pages.system.region.delete')
             }}</ElButton>
@@ -56,7 +70,7 @@
     <ElDialog
       v-if="dialogVisible"
       v-model="dialogVisible"
-      :title="$t('pages.system.region.addRegion')"
+      :title="editing ? $t('pages.system.region.editRegion') : $t('pages.system.region.addRegion')"
       width="460px"
       align-center
       destroy-on-close
@@ -69,7 +83,11 @@
           <ElInput v-model="form.name" :placeholder="$t('pages.system.region.placeholder.name')" />
         </ElFormItem>
         <ElFormItem :label="$t('pages.system.region.fields.code')" prop="code">
-          <ElInput v-model="form.code" :placeholder="$t('pages.system.region.placeholder.code')" />
+          <ElInput
+            v-model="form.code"
+            :disabled="editing"
+            :placeholder="$t('pages.system.region.placeholder.code')"
+          />
         </ElFormItem>
       </ElForm>
       <template #footer>
@@ -93,6 +111,7 @@
     fetchSaveRegion,
     fetchRemoveRegion,
     exportRegion,
+    exportRegionTemplate,
     importRegion
   } from '@/api/system-manage'
   import { ElMessage, ElMessageBox } from 'element-plus'
@@ -106,25 +125,38 @@
   const loading = ref(false)
   const importing = ref(false)
   const exporting = ref(false)
+  const templating = ref(false)
+  const editing = ref(false)
   const dialogVisible = ref(false)
   const dialogSaving = ref(false)
   const parentName = ref(t('pages.system.region.topLevel'))
   const formRef = ref<FormInstance>()
   const fileInput = ref<HTMLInputElement>()
-  const parentRow = ref<any>(null)
 
-  const form = reactive<Record<string, any>>({ name: '', code: '', parentCode: '0', level: 1 })
+  const form = reactive<Record<string, any>>({
+    id: undefined,
+    name: '',
+    code: '',
+    parentCode: '0',
+    level: 1,
+    sort: 0
+  })
 
   const rules = computed<FormRules>(() => ({
     name: [{ required: true, message: t('pages.system.region.placeholder.name'), trigger: 'blur' }],
-    code: [{ required: true, message: t('pages.system.region.placeholder.code'), trigger: 'blur' }]
+    code: [
+      { required: true, message: t('pages.system.region.placeholder.code'), trigger: 'blur' },
+      { pattern: /^[0-9]{2,12}$/, message: t('pages.system.region.codeRule'), trigger: 'blur' }
+    ]
   }))
 
   const levelText = (l: number): string =>
     ({
       1: t('pages.system.region.levels.province'),
       2: t('pages.system.region.levels.city'),
-      3: t('pages.system.region.levels.district')
+      3: t('pages.system.region.levels.district'),
+      4: t('pages.system.region.levels.town'),
+      5: t('pages.system.region.levels.village')
     })[l] || String(l)
 
   const mapNodes = (list: any[]): any[] => list.map((r) => ({ ...r, hasChildren: !r.leaf }))
@@ -156,13 +188,30 @@
   })
 
   const showDialog = (row: any): void => {
-    parentRow.value = row
+    editing.value = false
     parentName.value = row ? row.name : t('pages.system.region.topLevel')
     Object.assign(form, {
+      id: undefined,
       name: '',
       code: '',
       parentCode: row ? row.code : '0',
-      level: row ? row.level + 1 : 1
+      level: row ? row.level + 1 : 1,
+      sort: 0
+    })
+    dialogVisible.value = true
+  }
+
+  const openEdit = (row: any): void => {
+    editing.value = true
+    parentName.value =
+      !row.parentCode || row.parentCode === '0' ? t('pages.system.region.topLevel') : row.parentCode
+    Object.assign(form, {
+      id: row.id,
+      name: row.name,
+      code: row.code,
+      parentCode: row.parentCode || '0',
+      level: row.level,
+      sort: row.sort || 0
     })
     dialogVisible.value = true
   }
@@ -201,6 +250,16 @@
         loadRoot()
       })
       .catch(() => {})
+  }
+
+  const doTemplate = async (): Promise<void> => {
+    templating.value = true
+    try {
+      await exportRegionTemplate()
+      ElMessage.success(t('pages.system.region.exportSuccess'))
+    } finally {
+      templating.value = false
+    }
   }
 
   const doExport = async (): Promise<void> => {

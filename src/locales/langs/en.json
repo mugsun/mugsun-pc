@@ -1119,10 +1119,14 @@
       "region": {
         "addProvince": "Add Province",
         "export": "Export",
+        "template": "Download template",
         "import": "Import",
         "addChild": "Add Child",
+        "edit": "Edit",
         "delete": "Delete",
         "addRegion": "Add Region",
+        "editRegion": "Edit Region",
+        "empty": "No regions yet. Add a province, or download the template and import it.",
         "deleteRegion": "Delete Region",
         "deleteConfirm": "Are you sure you want to delete \"{name}\"?",
         "deleteSuccess": "Deleted successfully",
@@ -1139,12 +1143,15 @@
         },
         "placeholder": {
           "name": "Please enter name",
-          "code": "Please enter code"
+          "code": "2 to 12 digits, for example 11 or 1101"
         },
+        "codeRule": "Use 2 to 12 digits for the region code",
         "levels": {
           "province": "Province",
           "city": "City",
-          "district": "District/County"
+          "district": "District/County",
+          "town": "Town",
+          "village": "Village"
         }
       },
       "notice": {
