@@ -177,6 +177,16 @@ export const systemRoutes: AppRouteRecord = {
       }
     },
     {
+      path: 'gen-datasource',
+      name: 'GenDatasource',
+      component: '/system/gen-datasource',
+      meta: {
+        title: 'menus.system.genDatasource',
+        icon: 'ri:database-2-line',
+        keepAlive: true
+      }
+    },
+    {
       path: 'online-form',
       name: 'OnlineForm',
       component: '/system/online-form',

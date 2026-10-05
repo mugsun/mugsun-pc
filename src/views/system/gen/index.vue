@@ -11,7 +11,7 @@
       >
         <!-- 后端读不到连接配置时字段为 null，统一 '-' 兜底，避免出现无标题空白格 -->
         <ElDescriptionsItem :label="$t('pages.system.gen.dsName')">{{
-          datasource.name || '-'
+          selectedSource ? selectedSource.dsName : datasource.name || '-'
         }}</ElDescriptionsItem>
         <ElDescriptionsItem :label="$t('pages.system.gen.dsDriver')">{{
           datasource.driver || '-'
@@ -20,11 +20,21 @@
           datasource.username || '-'
         }}</ElDescriptionsItem>
         <ElDescriptionsItem :label="$t('pages.system.gen.dsUrl')" :span="1">{{
-          datasource.url || '-'
+          selectedSource ? $t('pages.system.gen.registeredSource') : datasource.url || '-'
         }}</ElDescriptionsItem>
       </ElDescriptions>
 
       <div class="gen-form">
+        <span class="gen-label">{{ $t('pages.system.gen.source') }}</span>
+        <ElSelect v-model="sourceId" style="width: 220px" @change="onSourceChange">
+          <ElOption :label="$t('pages.system.gen.primarySource')" value="primary" />
+          <ElOption
+            v-for="item in sources"
+            :key="item.id"
+            :label="item.dsName"
+            :value="String(item.id)"
+          />
+        </ElSelect>
         <span class="gen-label">{{ $t('pages.system.gen.table') }}</span>
         <ElSelect
           v-model="importForm.tableName"
@@ -251,6 +261,7 @@
   import { ref, reactive, computed, onMounted, onDeactivated } from 'vue'
   import {
     fetchGenDatasource,
+    fetchGenDatasourceOptions,
     fetchGenTables,
     fetchGenImport,
     fetchGenList,
@@ -269,6 +280,11 @@
   const { t } = useI18n()
 
   const datasource = ref<Record<string, any>>({})
+  const sources = ref<Array<{ id: string; dsName: string }>>([])
+  const sourceId = ref('primary')
+  const selectedSource = computed(
+    () => sources.value.find((item) => String(item.id) === sourceId.value) || null
+  )
   const tables = ref<any[]>([])
   const genList = ref<any[]>([])
   const importing = ref(false)
@@ -400,8 +416,15 @@
     if (row) await downloadGenZip(row.id)
   }
 
+  const onSourceChange = async (): Promise<void> => {
+    importForm.tableName = ''
+    tables.value =
+      (await fetchGenTables(sourceId.value === 'primary' ? undefined : sourceId.value)) || []
+  }
+
   onMounted(async () => {
     datasource.value = (await fetchGenDatasource()) || {}
+    sources.value = (await fetchGenDatasourceOptions()) || []
     tables.value = (await fetchGenTables()) || []
     await loadList()
   })

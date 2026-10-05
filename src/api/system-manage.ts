@@ -276,8 +276,41 @@ export function fetchEnableSms(id: number | string) {
 export function fetchGenDatasource() {
   return request.get<any>({ url: '/api/system/gen/datasource' })
 }
-export function fetchGenTables() {
-  return request.get<any[]>({ url: '/api/system/gen/tables' })
+export function fetchGenTables(datasourceId?: string) {
+  return request.get<any[]>({
+    url: '/api/system/gen/tables',
+    params: datasourceId ? { datasourceId } : {}
+  })
+}
+export function fetchGenDatasourcePage(params: {
+  pageNum: number
+  pageSize: number
+  name?: string
+}) {
+  return request.get<{ records: any[]; totalRow: number }>({
+    url: '/api/system/gen-datasource/page',
+    params
+  })
+}
+export function fetchGenDatasourceOptions() {
+  return request.get<Array<{ id: string; dsName: string }>>({
+    url: '/api/system/gen-datasource/options'
+  })
+}
+export function fetchSaveGenDatasource(data: Record<string, any>) {
+  return request.post<{ id: string; connected: boolean; message: string }>({
+    url: '/api/system/gen-datasource/save',
+    data
+  })
+}
+export function fetchRemoveGenDatasource(ids: Array<string | number>) {
+  return request.post<void>({ url: '/api/system/gen-datasource/remove', data: { ids } })
+}
+export function fetchTestGenDatasource(id: string) {
+  return request.post<{ connected: boolean; message: string }>({
+    url: '/api/system/gen-datasource/test',
+    data: { id }
+  })
 }
 // 元数据驱动代码生成（gen_table/gen_column）
 export function fetchGenImport(data: {
