@@ -54,8 +54,20 @@ export async function consumeAiSse(
       const resp = await fetch(url.startsWith('http') ? url : `/api${url.replace(/^\/api/, '')}`, {
         ...init
       })
-      if (!resp.ok || !resp.body) {
-        handlers.onError?.(resp.statusText || `HTTP ${resp.status}`)
+      const type = resp.headers.get('content-type') || ''
+      if (!resp.ok || !resp.body || !type.includes('text/event-stream')) {
+        let msg = resp.statusText || `HTTP ${resp.status}`
+        try {
+          const text = await resp.text()
+          const parsed = tryParseJson(text)
+          if (parsed && typeof parsed === 'object' && parsed !== null && 'msg' in parsed) {
+            const m = (parsed as { msg?: unknown }).msg
+            if (typeof m === 'string' && m.trim()) msg = m
+          }
+        } catch {
+          /* 读不到正文时用状态说明 */
+        }
+        handlers.onError?.(msg || '生成失败。请检查后再发送')
         return
       }
       const reader = resp.body.getReader()

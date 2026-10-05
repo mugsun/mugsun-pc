@@ -398,7 +398,9 @@
         onError: (msg) => {
           streaming.value = false
           abortCtrl.value = null
-          ElMessage.error(msg || '生成失败')
+          const text = msg || '生成失败。请检查模型后再发送'
+          if (!assistant.content) assistant.content = text
+          ElMessage.error(text)
         }
       }
     )
