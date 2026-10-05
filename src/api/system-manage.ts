@@ -253,7 +253,7 @@ export function fetchErrorLogDetail(id: number | string) {
 }
 /** 认领处理：status 1 已处理 / 2 已忽略，附处理备注 */
 export function fetchHandleErrorLog(data: { id: number | string; status: number; note?: string }) {
-  return request.post<void>({ url: '/api/system/error-log/handle', data })
+  return request.post<void>({ url: '/api/system/error-log/handle', data, showSuccessMessage: true })
 }
 export function fetchRemoveErrorLog(id: number | string) {
   return request.del<void>({

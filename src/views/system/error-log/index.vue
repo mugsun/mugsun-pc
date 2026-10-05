@@ -122,7 +122,7 @@
   import { formatTableTime } from '@/utils/date'
   import { hasPerm } from '@/utils/permission'
   import { DICT_CODE } from '@/utils/constants'
-  import { ElMessage, ElMessageBox, ElRadio, ElRadioButton, ElRadioGroup } from 'element-plus'
+  import { ElMessageBox, ElRadio, ElRadioButton, ElRadioGroup } from 'element-plus'
   import { useI18n } from 'vue-i18n'
 
   defineOptions({ name: 'ErrorLog' })
@@ -260,12 +260,15 @@
   const submitHandle = async (): Promise<void> => {
     handleLoading.value = true
     try {
-      await fetchHandleErrorLog({
-        id: handleForm.id,
-        status: handleForm.status,
-        note: handleForm.note
-      })
-      ElMessage.success(t('pages.system.errorLog.handleSuccess'))
+      try {
+        await fetchHandleErrorLog({
+          id: handleForm.id,
+          status: handleForm.status,
+          note: handleForm.note
+        })
+      } catch {
+        return
+      }
       handleVisible.value = false
       refreshUpdate()
     } finally {
