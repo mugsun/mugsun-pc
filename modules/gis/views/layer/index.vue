@@ -18,7 +18,10 @@
             {{ $t('pages.gis.layerAdd') }}
           </ElButton>
         </div>
-        <ul v-loading="loading" class="gis-list">
+        <p v-if="!loading && !rows.length" class="gis-list-empty">
+          {{ searching ? $t('pages.gis.emptyLayerSearch') : $t('pages.gis.emptyLayerList') }}
+        </p>
+        <ul v-else v-loading="loading" class="gis-list">
           <li
             v-for="row in rows"
             :key="String(row.id)"
@@ -155,6 +158,7 @@
   import { useI18n } from 'vue-i18n'
   import { useRouter, onBeforeRouteLeave } from 'vue-router'
   import { ElMessage, ElMessageBox } from 'element-plus'
+  import { HttpError } from '@/utils/http/error'
   import {
     fetchGisLayerIngestText,
     fetchGisLayerPage,
@@ -179,6 +183,7 @@
   const pageNum = ref(1)
   const pageSize = 20
   const keyword = ref('')
+  const searching = ref(false)
   const selectedId = ref('')
   const dialog = ref(false)
   const ingesting = ref(false)
@@ -229,10 +234,12 @@
   const load = async (): Promise<void> => {
     loading.value = true
     try {
+      const name = keyword.value.trim()
+      searching.value = Boolean(name)
       const page = await fetchGisLayerPage({
         pageNum: pageNum.value,
         pageSize,
-        name: keyword.value.trim() || undefined
+        name: name || undefined
       })
       rows.value = page?.records ?? []
       total.value = Number(page?.totalRow ?? 0)
@@ -306,7 +313,7 @@
 
   const save = async (): Promise<void> => {
     if (!form.name.trim()) {
-      ElMessage.warning(t('pages.gis.layerName'))
+      ElMessage.warning(t('pages.gis.layerNameRequired'))
       return
     }
     saving.value = true
@@ -319,26 +326,19 @@
         return
       }
       const payload = typeof raw === 'string' ? await fetchGisLayerIngestText(raw) : raw
-      const row = await fetchSaveGisLayer({
+      await fetchSaveGisLayer({
         name: form.name.trim(),
         kind: form.kind,
         remark: form.remark,
         payload
       })
       // 后端修过几何（未闭合环、自相交）就逐条说明，不能让用户以为原样存进去了
-      const warnings = row?.warnings ?? []
-      if (warnings.length) {
-        ElMessage.warning({
-          message: t('pages.gis.layerFixed', { count: warnings.length }) + warnings.join('；'),
-          duration: 8000
-        })
-      } else {
-        ElMessage.success(t('pages.gis.saveSuccess'))
-      }
       dialog.value = false
       await load()
     } catch (error) {
-      ElMessage.warning(payloadError(error))
+      if (!(error instanceof HttpError)) {
+        ElMessage.warning(payloadError(error))
+      }
     } finally {
       saving.value = false
     }
@@ -387,17 +387,13 @@
       return
     }
     try {
-      await ElMessageBox.confirm(
-        t('hooks.crud.deleteConfirmMessage', { label: t('pages.gis.layerName'), name: row.name }),
-        {
-          type: 'warning'
-        }
-      )
+      await ElMessageBox.confirm(t('pages.gis.layerRemoveConfirm', { name: row.name }), {
+        type: 'warning'
+      })
     } catch {
       return
     }
     await fetchRemoveGisLayer([row.id])
-    ElMessage.success(t('pages.gis.removeSuccess'))
     await load()
   }
 
@@ -449,6 +445,13 @@
 
   .gis-hud-head :deep(.gis-hud-search) {
     width: 132px;
+  }
+
+  .gis-list-empty {
+    margin: 12px 0 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--el-text-color-secondary);
   }
 </style>
 <style>

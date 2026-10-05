@@ -180,11 +180,19 @@ export function ingestAny(payload: unknown) {
 }
 
 export function fetchSaveGisLayer(data: Record<string, unknown>) {
-  return request.post<GisLayerRow>({ url: '/api/system/gis/layer/submit', data })
+  return request.post<GisLayerRow>({
+    url: '/api/system/gis/layer/submit',
+    data,
+    showSuccessMessage: true
+  })
 }
 
 export function fetchRemoveGisLayer(ids: GisId[]) {
-  return request.post<void>({ url: '/api/system/gis/layer/remove', data: ids })
+  return request.post<void>({
+    url: '/api/system/gis/layer/remove',
+    data: ids,
+    showSuccessMessage: true
+  })
 }
 
 export interface GisAnalyzeResult {

@@ -260,7 +260,6 @@
         payload: result.value.collection
       })
       savedId.value = row.id
-      ElMessage.success(t('pages.gis.analyzeSaved'))
     } finally {
       saving.value = false
     }
