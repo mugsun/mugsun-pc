@@ -256,8 +256,11 @@
       t('pages.system.genScheme.removeTitle'),
       { type: 'warning' }
     )
-    await fetchRemoveGenScheme(ids)
-    ElMessage.success(t('pages.system.genScheme.removed'))
+    try {
+      await fetchRemoveGenScheme(ids)
+    } catch {
+      return
+    }
     await load()
   }
 

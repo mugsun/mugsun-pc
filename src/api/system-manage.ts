@@ -379,7 +379,11 @@ export function fetchEnableGenScheme(id: string) {
   })
 }
 export function fetchRemoveGenScheme(ids: Array<string | number>) {
-  return request.post<void>({ url: '/api/system/gen-scheme/remove', data: { ids } })
+  return request.post<void>({
+    url: '/api/system/gen-scheme/remove',
+    data: { ids },
+    showSuccessMessage: true
+  })
 }
 // 元数据驱动代码生成（gen_table/gen_column）
 export function fetchGenImport(data: {
