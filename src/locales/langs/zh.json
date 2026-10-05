@@ -2549,6 +2549,7 @@
         "msgCopied": "已复制新版本",
         "msgDeleted": "已删除",
         "confirmDelete": "确认删除该流程定义？",
+        "confirmDeleteNamed": "确认删除流程「{name}」？删除后列表里不会再出现，也不能再发起",
         "role": "角色",
         "dept": "部门",
         "specifiedUser": "指定用户",

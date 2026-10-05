@@ -2549,6 +2549,7 @@
         "msgCopied": "Copied as new version",
         "msgDeleted": "Deleted",
         "confirmDelete": "Delete this flow definition?",
+        "confirmDeleteNamed": "Delete flow \"{name}\"? It will leave the list and can no longer be started",
         "role": "Role",
         "dept": "Department",
         "specifiedUser": "Specific User",

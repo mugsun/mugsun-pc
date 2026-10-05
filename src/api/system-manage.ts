@@ -540,7 +540,11 @@ export function fetchFlowDefCopy(id: number | string) {
   return request.post<void>({ url: `/api/system/flow/definition/copy/${id}` })
 }
 export function fetchFlowDefRemove(ids: (number | string)[]) {
-  return request.post<void>({ url: '/api/system/flow/definition/remove', data: ids.map(String) })
+  return request.post<void>({
+    url: '/api/system/flow/definition/remove',
+    data: ids.map(String),
+    showSuccessMessage: true
+  })
 }
 /** 发起指定流程码实例；可选发起人自选办理人 handlers + 发起业务数据 variable */
 export function fetchFlowStartBy(

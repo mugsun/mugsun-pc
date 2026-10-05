@@ -280,29 +280,41 @@
     }
   }
 
-  const ACTIONS: Record<string, { api: (id: any) => Promise<any>; ok: string; confirm?: string }> =
-    {
-      suspend: {
-        api: fetchFlowDefSuspend,
-        ok: t('pages.system.flowGraph.msgSuspended'),
-        confirm: t('pages.system.flowGraph.confirmSuspend')
-      },
-      active: { api: fetchFlowDefActive, ok: t('pages.system.flowGraph.msgEnabled') },
-      copy: { api: fetchFlowDefCopy, ok: t('pages.system.flowGraph.msgCopied') },
-      remove: {
-        api: (id) => fetchFlowDefRemove([id]),
-        ok: t('pages.system.flowGraph.msgDeleted'),
-        confirm: t('pages.system.flowGraph.confirmDelete')
-      }
+  const ACTIONS: Record<
+    string,
+    { api: (id: any) => Promise<any>; ok: string; confirm?: string; serverSuccess?: boolean }
+  > = {
+    suspend: {
+      api: fetchFlowDefSuspend,
+      ok: t('pages.system.flowGraph.msgSuspended'),
+      confirm: t('pages.system.flowGraph.confirmSuspend')
+    },
+    active: { api: fetchFlowDefActive, ok: t('pages.system.flowGraph.msgEnabled') },
+    copy: { api: fetchFlowDefCopy, ok: t('pages.system.flowGraph.msgCopied') },
+    remove: {
+      api: (id) => fetchFlowDefRemove([id]),
+      ok: '',
+      serverSuccess: true
     }
+  }
 
   const act = async (key: string, row: any): Promise<void> => {
     const a = ACTIONS[key]
-    if (a.confirm) {
-      await ElMessageBox.confirm(a.confirm, t('common.tips'), { type: 'warning' })
+    const confirmText =
+      key === 'remove'
+        ? t('pages.system.flowGraph.confirmDeleteNamed', { name: row.flowName || '' })
+        : a.confirm
+    if (confirmText) {
+      await ElMessageBox.confirm(confirmText, t('common.tips'), { type: 'warning' })
     }
-    await a.api(row.id)
-    ElMessage.success(a.ok)
+    try {
+      await a.api(row.id)
+    } catch {
+      return
+    }
+    if (!a.serverSuccess) {
+      ElMessage.success(a.ok)
+    }
     loadDefs()
   }
 
