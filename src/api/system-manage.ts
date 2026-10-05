@@ -99,6 +99,34 @@ export function fetchSendTestMail(data: Record<string, any>) {
   return request.post<string>({ url: '/api/system/mail-template/send-test', data })
 }
 
+export function fetchSerialNumberPage(params: Record<string, any>) {
+  return request.get<any>({ url: '/api/system/serial-number/page', params })
+}
+export function fetchSaveSerialNumber(data: Record<string, any>) {
+  return request.post<void>({
+    url: '/api/system/serial-number/submit',
+    data,
+    showSuccessMessage: true
+  })
+}
+export function fetchRemoveSerialNumber(ids: (number | string)[] | number | string) {
+  return request.post<void>({
+    url: '/api/system/serial-number/remove',
+    data: Array.isArray(ids) ? ids : [ids],
+    showSuccessMessage: true
+  })
+}
+export function fetchGenerateSerialNumber(code: string, count: number) {
+  return request.post<string[]>({
+    url: `/api/system/serial-number/generate?code=${encodeURIComponent(code)}&count=${count}`,
+    data: {},
+    showSuccessMessage: true
+  })
+}
+export function fetchSerialNumberRecords(params: Record<string, any>) {
+  return request.get<any>({ url: '/api/system/serial-number/record/page', params })
+}
+
 // ===== 系统字典 / 业务字典 =====（树/批量/CRUD 已迁至 @/api/dict）
 
 // ===== 租户 =====

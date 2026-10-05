@@ -79,6 +79,16 @@ export const systemRoutes: AppRouteRecord = {
       }
     },
     {
+      path: 'serial-number',
+      name: 'SerialNumber',
+      component: '/system/serial-number',
+      meta: {
+        title: 'menus.system.serialNumber',
+        icon: 'ri:hashtag',
+        keepAlive: true
+      }
+    },
+    {
       path: 'mail-template',
       name: 'MailTemplate',
       component: '/system/mail-template',
