@@ -765,7 +765,11 @@ export function fetchSaveJobServer(data: Record<string, any>) {
   })
 }
 export function fetchRemoveJobServer(ids: Array<string | number>) {
-  return request.post<void>({ url: '/api/system/job-server/remove', data: { ids } })
+  return request.post<void>({
+    url: '/api/system/job-server/remove',
+    data: { ids },
+    showSuccessMessage: true
+  })
 }
 export function fetchSyncJobServer(id?: string) {
   return request.post<{ ok: number; fail: number; message: string }>({

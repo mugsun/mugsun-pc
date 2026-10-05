@@ -286,8 +286,11 @@
       t('pages.system.jobServer.removeTitle'),
       { type: 'warning' }
     )
-    await fetchRemoveJobServer(ids)
-    ElMessage.success(t('pages.system.jobServer.removed'))
+    try {
+      await fetchRemoveJobServer(ids)
+    } catch {
+      return
+    }
     await load()
   }
 
