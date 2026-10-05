@@ -110,7 +110,21 @@
 
   const rules: FormRules = {
     tenantName: [
-      { required: true, message: t('pages.system.tenant.namePlaceholder'), trigger: 'blur' }
+      { required: true, message: t('pages.system.tenant.namePlaceholder'), trigger: 'blur' },
+      { max: 64, message: t('pages.system.tenant.nameTooLong'), trigger: 'blur' }
+    ],
+    contactPhone: [
+      {
+        validator: (_rule, value, callback) => {
+          const phone = String(value || '').trim()
+          if (!phone || /^1\d{10}$/.test(phone)) {
+            callback()
+            return
+          }
+          callback(new Error(t('pages.system.tenant.phoneInvalid')))
+        },
+        trigger: 'blur'
+      }
     ]
   }
 

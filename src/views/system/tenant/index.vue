@@ -14,12 +14,19 @@
         <ElButton v-perm="'sys:tenant:save'" type="primary" @click="openCreate" v-ripple>{{
           $t('pages.system.tenant.create')
         }}</ElButton>
+        <ElButton v-perm="'sys:tenant:remove'" @click="deleteSelected">{{
+          $t('pages.system.tenant.deleteSelected')
+        }}</ElButton>
       </div>
 
       <!-- 表格为自由增长内容：art-table-card 卡片体是 height:100%+overflow:hidden 裁剪，
            内部须自备滚动，否则矮视口下底部行被切断且不可达（同 track/user 修法） -->
       <div v-loading="loading" class="tenant-table-wrap">
-        <ElTable :data="tableData" border>
+        <ElTable :data="tableData" border @selection-change="onSelectionChange">
+          <template #empty>
+            <span>{{ emptyText }}</span>
+          </template>
+          <ElTableColumn type="selection" width="48" :selectable="canSelect" />
           <ElTableColumn type="index" :label="$t('table.column.index')" width="60" />
           <ElTableColumn
             prop="tenantCode"
@@ -84,9 +91,14 @@
               <ElButton v-perm="'sys:tenant:save'" link type="primary" @click="openEdit(row)">{{
                 $t('pages.system.tenant.edit')
               }}</ElButton>
-              <ElButton v-perm="'sys:tenant:remove'" link type="danger" @click="deleteRow(row)">{{
-                $t('pages.system.tenant.delete')
-              }}</ElButton>
+              <ElButton
+                v-if="row.tenantCode !== '000000'"
+                v-perm="'sys:tenant:remove'"
+                link
+                type="danger"
+                @click="deleteRow(row)"
+                >{{ $t('pages.system.tenant.delete') }}</ElButton
+              >
             </template>
           </ElTableColumn>
         </ElTable>
@@ -158,11 +170,23 @@
   ])
 
   const tableData = ref<any[]>([])
+  const selectedRows = ref<any[]>([])
+  const filtering = ref(false)
   const packages = ref<any[]>([])
   const loading = ref(false)
   const dialogVisible = ref(false)
   const dialogSaving = ref(false)
   const current = ref<Record<string, any> | null>(null)
+
+  const emptyText = computed(() =>
+    filtering.value ? t('pages.system.tenant.emptySearch') : t('pages.system.tenant.empty')
+  )
+
+  const canSelect = (row: { tenantCode?: string }): boolean => row.tenantCode !== '000000'
+
+  const onSelectionChange = (rows: any[]): void => {
+    selectedRows.value = rows
+  }
 
   const packageName = (id: number | string): string =>
     packages.value.find((p) => String(p.id) === String(id))?.name ?? '—'
@@ -176,8 +200,14 @@
 
   const loadData = async (): Promise<void> => {
     loading.value = true
+    filtering.value = Boolean(
+      searchForm.value.tenantName ||
+        searchForm.value.tenantCode ||
+        searchForm.value.status !== undefined
+    )
     try {
       tableData.value = (await fetchTenantList(currentParams())) || []
+      selectedRows.value = []
     } finally {
       loading.value = false
     }
@@ -237,24 +267,35 @@
     }
   }
 
-  const deleteRow = (row: any): void => {
-    ElMessageBox.confirm(
-      t('pages.system.tenant.confirmDelete', { name: row.tenantName }),
-      t('pages.system.tenant.deleteTitle'),
-      {
-        confirmButtonText: t('common.confirm'),
-        cancelButtonText: t('common.cancel'),
-        type: 'warning'
-      }
-    )
+  const confirmRemove = (message: string, ids: (number | string)[]): void => {
+    ElMessageBox.confirm(message, t('pages.system.tenant.deleteTitle'), {
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
+      type: 'warning'
+    })
       .then(async () => {
-        await fetchRemoveTenant(row.id)
+        await fetchRemoveTenant(ids)
         ElMessage.success(t('pages.system.tenant.msgDeleted'))
         loadData()
       })
       .catch(() => {
-        /* cancel */
+        /* cancel or request error toast */
       })
+  }
+
+  const deleteRow = (row: any): void => {
+    confirmRemove(t('pages.system.tenant.confirmDelete', { name: row.tenantName }), [row.id])
+  }
+
+  const deleteSelected = (): void => {
+    if (!selectedRows.value.length) {
+      ElMessage.warning(t('pages.system.tenant.selectFirst'))
+      return
+    }
+    confirmRemove(
+      t('pages.system.tenant.confirmDeleteSelected', { count: selectedRows.value.length }),
+      selectedRows.value.map((row) => row.id)
+    )
   }
 
   const closeOverlays = (): void => {
