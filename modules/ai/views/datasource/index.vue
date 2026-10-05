@@ -8,6 +8,7 @@
           placeholder="按名称搜索"
           style="width: 200px"
           @keyup.enter="reload"
+          @clear="reload"
         />
         <ElButton @click="reload">搜索</ElButton>
         <ElButton type="primary" @click="openEdit()">新增数据源</ElButton>
@@ -17,13 +18,21 @@
         :data="records"
         :columns="columns"
         :pagination="pager"
+        :empty-text="emptyText"
         @pagination:size-change="onSize"
         @pagination:current-change="onPage"
       />
     </ElCard>
-    <ElDialog v-model="visible" :title="form.id ? '编辑数据源' : '新增数据源'" width="600px">
+    <ElDialog
+      v-model="visible"
+      class="ai-datasource-dialog"
+      :title="form.id ? '编辑数据源' : '新增数据源'"
+      width="600px"
+    >
       <ElForm :model="form" label-width="100px">
-        <ElFormItem label="名称" required><ElInput v-model="form.name" /></ElFormItem>
+        <ElFormItem label="名称" required>
+          <ElInput v-model="form.name" maxlength="64" placeholder="用来在列表里区分" />
+        </ElFormItem>
         <ElFormItem label="类型" required>
           <ElSelect v-model="form.dbType" style="width: 100%">
             <ElOption label="PostgreSQL" value="postgresql" />
@@ -34,7 +43,9 @@
             <ElOption label="StarRocks" value="starrocks" />
           </ElSelect>
         </ElFormItem>
-        <ElFormItem label="JDBC URL" required><ElInput v-model="form.jdbcUrl" /></ElFormItem>
+        <ElFormItem label="JDBC 地址" required>
+          <ElInput v-model="form.jdbcUrl" placeholder="例如 jdbc:postgresql://主机:端口/库名" />
+        </ElFormItem>
         <ElFormItem label="用户名"><ElInput v-model="form.username" /></ElFormItem>
         <ElFormItem label="密码"
           ><ElInput
@@ -55,7 +66,7 @@
 <script setup lang="ts">
   import type { ColumnOption } from '@/types/component'
   import { computed, h, onMounted, reactive, ref } from 'vue'
-  import { ElButton, ElMessage, ElMessageBox } from 'element-plus'
+  import { ElButton, ElMessageBox } from 'element-plus'
   import {
     fetchAiDatasourcePage,
     fetchRemoveAiDatasource,
@@ -63,7 +74,16 @@
     fetchTestAiDatasource
   } from '../../api'
   defineOptions({ name: 'AiDatasource' })
+  const TYPE_LABEL: Record<string, string> = {
+    postgresql: 'PostgreSQL',
+    mysql: 'MySQL',
+    kingbase: '金仓',
+    dm: '达梦',
+    mariadb: 'MariaDB',
+    starrocks: 'StarRocks'
+  }
   const keyword = ref('')
+  const searched = ref(false)
   const loading = ref(false)
   const records = ref<any[]>([])
   const pageNum = ref(1)
@@ -77,10 +97,18 @@
     size: pageSize.value,
     total: total.value
   }))
+  const emptyText = computed(() =>
+    searched.value ? '没有符合条件的数据源。换个名称再查' : '还没有数据源。点新增数据源开始配置'
+  )
   const columns: ColumnOption[] = [
     { type: 'index', width: 60, label: '#' },
     { prop: 'name', label: '名称', minWidth: 140 },
-    { prop: 'dbType', label: '类型', width: 120 },
+    {
+      prop: 'dbType',
+      label: '类型',
+      width: 120,
+      formatter: (row: any) => TYPE_LABEL[row.dbType] || row.dbType || ''
+    },
     { prop: 'jdbcUrl', label: 'JDBC', minWidth: 220, showOverflowTooltip: true },
     {
       prop: 'operation',
@@ -88,7 +116,7 @@
       width: 220,
       fixed: 'right',
       formatter: (row: any) =>
-        h('div', [
+        h('div', { class: 'ops' }, [
           h(
             ElButton,
             { link: true, type: 'primary', size: 'small', onClick: () => openEdit(row) },
@@ -105,11 +133,13 @@
   ]
   async function reload() {
     loading.value = true
+    const name = keyword.value.trim()
+    searched.value = name.length > 0
     try {
       const res = await fetchAiDatasourcePage({
         pageNum: pageNum.value,
         pageSize: pageSize.value,
-        name: keyword.value || undefined
+        name: name || undefined
       })
       records.value = res?.records ?? []
       total.value = res?.totalRow ?? res?.total ?? 0
@@ -136,26 +166,27 @@
       const payload = { ...form }
       if (!payload.password) delete payload.password
       await fetchSaveAiDatasource(payload)
-      ElMessage.success('已保存')
       visible.value = false
       await reload()
+    } catch {
+      /* 失败提示由请求层展示，弹窗留着方便改完再存 */
     } finally {
       saving.value = false
     }
   }
   async function test(row: any) {
-    const r = await fetchTestAiDatasource(row.id)
-    if (r?.ok === false) {
-      ElMessage.warning(r?.message || '连接失败')
-      return
+    try {
+      await fetchTestAiDatasource(row.id)
+    } catch {
+      /* 没连上时请求层会用服务器说明，不能再显示成成功 */
     }
-    ElMessage.success(r?.message || '连接成功')
-    await reload()
   }
   async function remove(row: any) {
-    await ElMessageBox.confirm(`删除数据源「${row.name}」？`, '确认')
+    await ElMessageBox.confirm(
+      `删除「${row.name || '这个数据源'}」后，列表里不会再出现，问数里也不能再选`,
+      '确认'
+    )
     await fetchRemoveAiDatasource(row.id)
-    ElMessage.success('已删除')
     await reload()
   }
   onMounted(reload)
@@ -163,7 +194,13 @@
 <style scoped>
   .toolbar {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     margin-bottom: 12px;
+  }
+
+  .ops {
+    display: flex;
+    flex-wrap: wrap;
   }
 </style>

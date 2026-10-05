@@ -243,13 +243,25 @@ export function fetchAiDatasourcePage(params: Record<string, any>) {
   return request.get<any>({ url: '/api/system/ai/datasource/page', params })
 }
 export function fetchSaveAiDatasource(data: Record<string, any>) {
-  return request.post<any>({ url: '/api/system/ai/datasource/submit', data })
+  return request.post<any>({
+    url: '/api/system/ai/datasource/submit',
+    data,
+    showSuccessMessage: true
+  })
 }
 export function fetchRemoveAiDatasource(id: AiId) {
-  return request.post<void>({ url: '/api/system/ai/datasource/remove', data: { id } })
+  return request.post<void>({
+    url: '/api/system/ai/datasource/remove',
+    data: { id },
+    showSuccessMessage: true
+  })
 }
 export function fetchTestAiDatasource(id: AiId) {
-  return request.post<any>({ url: '/api/system/ai/datasource/test', data: { id } })
+  return request.post<any>({
+    url: '/api/system/ai/datasource/test',
+    data: { id },
+    showSuccessMessage: true
+  })
 }
 export function fetchAiDatasourceTables(id: AiId) {
   return request.get<any[]>({ url: '/api/system/ai/datasource/tables', params: { id } })
