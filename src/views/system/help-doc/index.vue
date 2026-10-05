@@ -18,6 +18,7 @@
             default-expand-all
             border
             highlight-current-row
+            :empty-text="$t('pages.system.helpDoc.emptyCatalog')"
             @current-change="onCatalogSelect"
           >
             <ElTableColumn
@@ -26,7 +27,7 @@
               min-width="130"
             />
             <ElTableColumn prop="sort" :label="$t('pages.system.helpDoc.sort')" width="60" />
-            <ElTableColumn :label="$t('pages.system.helpDoc.colOperation')" width="140">
+            <ElTableColumn :label="$t('pages.system.helpDoc.colOperation')" width="168">
               <template #default="{ row }">
                 <ElButton
                   v-perm="'sys:help:manage'"
@@ -72,17 +73,47 @@
                   : $t('pages.system.helpDoc.docListEmpty')
               }}
             </span>
-            <ElButton
-              v-perm="'sys:help:manage'"
-              size="small"
-              type="primary"
-              :disabled="!selectedCatalog"
-              @click="showDocDialog('add')"
-            >
-              {{ $t('pages.system.helpDoc.addDoc') }}
-            </ElButton>
+            <div class="doc-actions">
+              <ElInput
+                v-model="keyword"
+                clearable
+                class="doc-search"
+                :disabled="!selectedCatalog"
+                :placeholder="$t('pages.system.helpDoc.searchPlaceholder')"
+                @keyup.enter="searchDocs"
+              />
+              <ElButton :disabled="!selectedCatalog" @click="searchDocs">{{
+                $t('pages.system.helpDoc.search')
+              }}</ElButton>
+              <ElButton
+                v-perm="'sys:help:manage'"
+                size="small"
+                type="primary"
+                :disabled="!selectedCatalog"
+                @click="showDocDialog('add')"
+              >
+                {{ $t('pages.system.helpDoc.addDoc') }}
+              </ElButton>
+              <ElButton
+                v-perm="'sys:help:manage'"
+                size="small"
+                type="danger"
+                plain
+                :disabled="!selectedCatalog"
+                @click="deleteSelected"
+              >
+                {{ $t('pages.system.helpDoc.deleteSelected') }}
+              </ElButton>
+            </div>
           </div>
-          <ElTable v-loading="docLoading" :data="docList" border>
+          <ElTable
+            v-loading="docLoading"
+            :data="docList"
+            border
+            :empty-text="docEmptyText"
+            @selection-change="onSelectionChange"
+          >
+            <ElTableColumn type="selection" width="48" />
             <ElTableColumn prop="title" :label="$t('pages.system.helpDoc.title')" min-width="200" />
             <ElTableColumn
               prop="viewCount"
@@ -157,9 +188,8 @@
     <ElDialog
       v-model="docDialog"
       :title="docForm.id ? $t('pages.system.helpDoc.editDoc') : $t('pages.system.helpDoc.addDoc')"
-      width="780px"
-      top="6vh"
-      class="help-doc-dialog"
+      width="720px"
+      align-center
       destroy-on-close
     >
       <ElForm :model="docForm" label-width="70px">
@@ -173,7 +203,7 @@
           <ElInputNumber v-model="docForm.sort" :min="0" />
         </ElFormItem>
         <ElFormItem :label="$t('pages.system.helpDoc.content')">
-          <ArtWangEditor v-model="docForm.content" height="320px" />
+          <ArtWangEditor v-model="docForm.content" height="180px" />
         </ElFormItem>
       </ElForm>
       <template #footer>
@@ -189,7 +219,7 @@
       v-model="bindingDialog"
       :title="$t('pages.system.helpDoc.bindPage')"
       width="560px"
-      class="help-doc-dialog"
+      align-center
       destroy-on-close
     >
       <div class="binding-add">
@@ -217,7 +247,7 @@
 </template>
 
 <script setup lang="ts">
-  import { onDeactivated, onMounted, reactive, ref } from 'vue'
+  import { computed, onDeactivated, onMounted, reactive, ref } from 'vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import ArtWangEditor from '@/components/core/forms/art-wang-editor/index.vue'
   import {
@@ -257,6 +287,9 @@
   const onCatalogSelect = (row: any) => {
     if (!row) return
     selectedCatalog.value = row
+    keyword.value = ''
+    filtering.value = false
+    selectedDocs.value = []
     loadDocs()
   }
 
@@ -291,7 +324,6 @@
     submitting.value = true
     try {
       await fetchSaveHelpCatalog({ ...catalogForm })
-      ElMessage.success(t('pages.system.helpDoc.saveSuccess'))
       catalogDialog.value = false
       loadCatalogTree()
     } finally {
@@ -307,7 +339,6 @@
     )
       .then(async () => {
         await fetchRemoveHelpCatalog(row.id)
-        ElMessage.success(t('pages.system.helpDoc.removeSuccess'))
         if (selectedCatalog.value?.id === row.id) {
           selectedCatalog.value = null
           docList.value = []
@@ -320,6 +351,16 @@
   // ---------------- 文档 ----------------
   const docList = ref<any[]>([])
   const docLoading = ref(false)
+  const keyword = ref('')
+  const filtering = ref(false)
+  const selectedDocs = ref<any[]>([])
+
+  const docEmptyText = computed(() => {
+    if (!selectedCatalog.value) return t('pages.system.helpDoc.docListEmpty')
+    return filtering.value
+      ? t('pages.system.helpDoc.emptySearch')
+      : t('pages.system.helpDoc.emptyDoc')
+  })
 
   const loadDocs = async () => {
     if (!selectedCatalog.value) return
@@ -327,6 +368,7 @@
     try {
       const page = await fetchHelpDocPage({
         catalogId: selectedCatalog.value.id,
+        title: filtering.value ? keyword.value.trim() : undefined,
         pageNum: 1,
         pageSize: 100
       })
@@ -334,6 +376,15 @@
     } finally {
       docLoading.value = false
     }
+  }
+
+  const searchDocs = () => {
+    filtering.value = !!keyword.value.trim()
+    loadDocs()
+  }
+
+  const onSelectionChange = (rows: any[]) => {
+    selectedDocs.value = rows
   }
 
   const docDialog = ref(false)
@@ -376,12 +427,29 @@
     submitting.value = true
     try {
       await fetchSaveHelpDoc({ ...docForm })
-      ElMessage.success(t('pages.system.helpDoc.saveSuccess'))
       docDialog.value = false
       loadDocs()
     } finally {
       submitting.value = false
     }
+  }
+
+  const deleteSelected = async () => {
+    if (!selectedDocs.value.length) {
+      ElMessage.warning(t('pages.system.helpDoc.deleteEmpty'))
+      return
+    }
+    try {
+      await ElMessageBox.confirm(
+        t('pages.system.helpDoc.deleteBatchConfirm', { count: selectedDocs.value.length }),
+        t('pages.system.helpDoc.removeTitle'),
+        { type: 'warning' }
+      )
+    } catch {
+      return
+    }
+    await fetchRemoveHelpDoc(selectedDocs.value.map((row) => row.id))
+    loadDocs()
   }
 
   const removeDoc = (row: any) => {
@@ -392,7 +460,6 @@
     )
       .then(async () => {
         await fetchRemoveHelpDoc([row.id])
-        ElMessage.success(t('pages.system.helpDoc.removeSuccess'))
         loadDocs()
       })
       .catch(() => {})
@@ -420,10 +487,10 @@
   const addBinding = async () => {
     const path = newRoutePath.value.trim()
     if (!path) return ElMessage.warning(t('pages.system.helpDoc.routePathRequired'))
+    if (!path.startsWith('/')) return ElMessage.warning(t('pages.system.helpDoc.routeFormat'))
     submitting.value = true
     try {
       await fetchSaveHelpBinding({ docId: bindingDocId.value, routePath: path, sort: 0 })
-      ElMessage.success(t('pages.system.helpDoc.bindSuccess'))
       newRoutePath.value = ''
       loadBindings()
     } finally {
@@ -441,7 +508,6 @@
     )
       .then(async () => {
         await fetchRemoveHelpBinding(row.id)
-        ElMessage.success(t('pages.system.helpDoc.unbindSuccess'))
         loadBindings()
       })
       .catch(() => {})
@@ -459,6 +525,8 @@
   .help-doc-page {
     .panel-toolbar {
       display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
       align-items: center;
       justify-content: space-between;
       margin-bottom: 12px;
@@ -472,13 +540,16 @@
       display: flex;
       gap: 10px;
     }
-  }
-</style>
 
-<!-- 弹窗内容 teleport 到 body，富文本/绑定列表叠加超高时需非 scoped 类限定滚动（同 notice-dialog 范式），防矮视口下操作按钮挤出视口 -->
-<style>
-  .help-doc-dialog .el-dialog__body {
-    max-height: 72vh;
-    overflow-y: auto;
+    .doc-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      align-items: center;
+    }
+
+    .doc-search {
+      width: 180px;
+    }
   }
 </style>
