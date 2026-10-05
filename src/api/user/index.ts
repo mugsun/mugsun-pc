@@ -26,6 +26,30 @@ export function updateUserStatus(id: number | string, status: number) {
   return request.post<void>({ url: '/api/system/user/status', data: { id, status } })
 }
 
+/** 管理员锁定账号。minutes 为空则一直锁定到解锁。 */
+export function lockUser(data: { id: string; reason: string; minutes?: number }) {
+  return request.post<void>({ url: '/api/system/user/lock', data })
+}
+
+/** 解锁。传 lockKey 或 id。 */
+export function unlockUser(data: { lockKey?: string; id?: string }) {
+  return request.post<void>({ url: '/api/system/user/unlock', data })
+}
+
+/** 当前租户锁定中的账号 */
+export function fetchUserLocks() {
+  return request.get<
+    Array<{
+      lockKey: string
+      username: string
+      reason: string
+      operator: string
+      permanent: boolean
+      remainMinutes: number | null
+    }>
+  >({ url: '/api/system/user/locks' })
+}
+
 /** 重置密码为默认（批量 id 数组） */
 export function resetUserPassword(ids: Array<number | string>) {
   return request.post<void>({ url: '/api/system/user/reset-password', data: ids })

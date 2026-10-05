@@ -24,6 +24,9 @@
           <ElButton @click="handleResetColumns" v-ripple>{{
             $t('pages.system.user.resetColumns')
           }}</ElButton>
+          <ElButton v-perm="'sys:user:edit'" @click="openLocks" v-ripple>{{
+            $t('pages.system.user.lockList')
+          }}</ElButton>
         </template>
       </ArtTableHeader>
 
@@ -51,6 +54,66 @@
       <UserRoleDialog v-model:visible="userRoleVisible" :user-data="currentRoleUser" />
 
       <UserImportDialog v-model:visible="importVisible" @success="refreshData" />
+
+      <ElDialog v-model="lockVisible" :title="$t('pages.system.user.lockTitle')" width="440px">
+        <ElForm label-width="88px">
+          <ElFormItem :label="$t('pages.system.user.fields.username')">
+            <ElInput :model-value="lockForm.username" disabled />
+          </ElFormItem>
+          <ElFormItem :label="$t('pages.system.user.lockReason')">
+            <ElInput
+              v-model="lockForm.reason"
+              type="textarea"
+              :rows="3"
+              maxlength="200"
+              show-word-limit
+              :placeholder="$t('pages.system.user.lockReasonPlaceholder')"
+            />
+          </ElFormItem>
+          <ElFormItem :label="$t('pages.system.user.lockMinutes')">
+            <ElInputNumber
+              v-model="lockForm.minutes"
+              :min="1"
+              :max="43200"
+              :placeholder="$t('pages.system.user.lockMinutesPlaceholder')"
+              controls-position="right"
+            />
+          </ElFormItem>
+        </ElForm>
+        <template #footer>
+          <ElButton @click="lockVisible = false">{{ $t('common.cancel') }}</ElButton>
+          <ElButton type="primary" :loading="lockSaving" @click="submitLock">{{
+            $t('common.confirm')
+          }}</ElButton>
+        </template>
+      </ElDialog>
+
+      <ElDrawer v-model="locksVisible" :title="$t('pages.system.user.lockList')" size="520px">
+        <ElTable :data="lockRows" border>
+          <ElTableColumn
+            prop="username"
+            :label="$t('pages.system.user.fields.username')"
+            width="140"
+          />
+          <ElTableColumn
+            prop="reason"
+            :label="$t('pages.system.user.lockReason')"
+            min-width="160"
+          />
+          <ElTableColumn :label="$t('pages.system.user.lockRemain')" width="120">
+            <template #default="{ row }">
+              {{ row.permanent ? $t('pages.system.user.lockUntilUnlock') : row.remainMinutes }}
+            </template>
+          </ElTableColumn>
+          <ElTableColumn :label="$t('pages.system.user.fields.operation')" width="80">
+            <template #default="{ row }">
+              <ElButton link type="primary" @click="unlockRow(row)">{{
+                $t('pages.system.user.unlock')
+              }}</ElButton>
+            </template>
+          </ElTableColumn>
+        </ElTable>
+      </ElDrawer>
     </ElCard>
   </div>
 </template>
@@ -69,7 +132,10 @@
     removeUser,
     exportUser,
     resetUserPassword,
-    setUserLeader
+    setUserLeader,
+    lockUser,
+    unlockUser,
+    fetchUserLocks
   } from '@/api/user'
   import { fetchDeptOptions } from '@/api/system-manage'
   import UserDialog from './modules/user-dialog.vue'
@@ -264,7 +330,7 @@
     {
       prop: 'operation',
       label: t('pages.system.user.fields.operation'),
-      width: 280,
+      width: 330,
       fixed: 'right',
       // 操作列由 h() 渲染（指令够不到），用 hasPerm() 函数按真实权限码门控
       formatter: (row: any) =>
@@ -293,6 +359,13 @@
                 ElButton,
                 { link: true, type: 'warning', size: 'small', onClick: () => resetPwd(row) },
                 () => t('pages.system.user.resetPassword')
+              )
+            : null,
+          hasPerm('sys:user:edit')
+            ? h(
+                ElButton,
+                { link: true, type: 'danger', size: 'small', onClick: () => openLock(row) },
+                () => t('pages.system.user.lock')
               )
             : null,
           hasPerm('sys:user:edit')
@@ -395,6 +468,51 @@
     nextTick(() => {
       dialogVisible.value = true
     })
+  }
+
+  const lockVisible = ref(false)
+  const lockSaving = ref(false)
+  const locksVisible = ref(false)
+  const lockRows = ref<any[]>([])
+  const lockForm = ref<{ id: string; username: string; reason: string; minutes?: number }>({
+    id: '',
+    username: '',
+    reason: ''
+  })
+
+  const openLock = (row: any): void => {
+    lockForm.value = { id: String(row.id), username: row.username, reason: '' }
+    lockVisible.value = true
+  }
+
+  const submitLock = async (): Promise<void> => {
+    if (!lockForm.value.reason.trim()) {
+      ElMessage.warning(t('pages.system.user.lockReasonRequired'))
+      return
+    }
+    lockSaving.value = true
+    try {
+      await lockUser({
+        id: lockForm.value.id,
+        reason: lockForm.value.reason.trim(),
+        minutes: lockForm.value.minutes
+      })
+      lockVisible.value = false
+      ElMessage.success(t('pages.system.user.lockSuccess'))
+    } finally {
+      lockSaving.value = false
+    }
+  }
+
+  const openLocks = async (): Promise<void> => {
+    lockRows.value = (await fetchUserLocks()) || []
+    locksVisible.value = true
+  }
+
+  const unlockRow = async (row: any): Promise<void> => {
+    await unlockUser({ lockKey: row.lockKey })
+    ElMessage.success(t('pages.system.user.unlockSuccess'))
+    lockRows.value = (await fetchUserLocks()) || []
   }
 
   const deleteUser = (row: any): void => {
