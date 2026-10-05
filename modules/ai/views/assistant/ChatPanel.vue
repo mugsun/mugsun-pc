@@ -342,6 +342,7 @@
     const assistant: ChatMsg = { role: 'assistant', content: '', thinkContent: '' }
     messages.value.push(assistant)
     streaming.value = true
+    requestId.value = crypto.randomUUID().replace(/-/g, '')
     await scrollBottom()
     const started = Date.now()
     abortCtrl.value = await fetchAiChatStream(
@@ -349,7 +350,8 @@
         sessionId: activeId.value,
         modelId: modelId.value,
         knowledgeId: knowledgeId.value || undefined,
-        content: text
+        content: text,
+        requestId: requestId.value
       },
       {
         onChunk: (c) => {
@@ -404,14 +406,18 @@
 
   async function stopStream() {
     abortCtrl.value?.abort()
-    if (requestId.value) {
-      try {
-        await fetchAiChatStop(requestId.value)
-      } catch {
-        /* ignore */
-      }
-    }
+    abortCtrl.value = null
+    const id = requestId.value
     streaming.value = false
+    if (!id) {
+      ElMessage.warning('生成还没开始。请等回答出现后再停止')
+      return
+    }
+    try {
+      await fetchAiChatStop(id)
+    } catch {
+      /* 拦截器已经提示下一步 */
+    }
   }
 
   onMounted(async () => {
@@ -609,6 +615,7 @@
 
   .ai-chat-input__actions {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     justify-content: flex-end;
     margin-top: 8px;

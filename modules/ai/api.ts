@@ -376,7 +376,9 @@ export function fetchAiChatReceive(requestId: string, handlers: AiSseHandlers) {
 }
 export function fetchAiChatStop(requestId: string) {
   return request.post<void>({
-    url: `/api/system/ai/chat/stop?requestId=${encodeURIComponent(String(requestId))}`
+    url: `/api/system/ai/chat/stop?requestId=${encodeURIComponent(String(requestId))}`,
+    data: {},
+    showSuccessMessage: true
   })
 }
 
