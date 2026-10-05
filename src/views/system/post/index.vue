@@ -15,14 +15,20 @@
           <ElButton v-perm="'sys:post:save'" @click="showDialog('add')" v-ripple>{{
             $t('pages.system.post.addPost')
           }}</ElButton>
+          <ElButton v-perm="'sys:post:remove'" @click="deleteSelected" v-ripple>{{
+            $t('pages.system.post.deleteSelectedBtn')
+          }}</ElButton>
         </template>
       </ArtTableHeader>
 
       <ArtTable
+        ref="tableRef"
         :loading="loading"
         :data="data as any[]"
         :columns="columns"
         :pagination="pagination"
+        :empty-text="emptyText"
+        @selection-change="onSelectionChange"
         @pagination:size-change="handleSizeChange"
         @pagination:current-change="handleCurrentChange"
       >
@@ -56,10 +62,18 @@
   const { t } = useI18n()
 
   // ===== 查询栏 =====
+  const tableRef = ref<{ elTableRef?: { clearSelection: () => void } }>()
+  const selectedRows = ref<any[]>([])
   const searchForm = ref({
     postName: '',
-    postCode: ''
+    postCode: '',
+    category: undefined as string | undefined
   })
+  const categoryOptions = computed(() => [
+    { label: t('pages.system.post.categoryManage'), value: 'manage' },
+    { label: t('pages.system.post.categoryTech'), value: 'tech' },
+    { label: t('pages.system.post.categoryBiz'), value: 'biz' }
+  ])
   const searchItems = computed(() => [
     {
       key: 'postName',
@@ -72,8 +86,26 @@
       label: t('pages.system.post.fields.postCode'),
       type: 'input',
       props: { placeholder: t('pages.system.post.placeholder.postCode'), clearable: true }
+    },
+    {
+      key: 'category',
+      label: t('pages.system.post.fields.category'),
+      type: 'select',
+      props: {
+        placeholder: t('pages.system.post.placeholder.category'),
+        clearable: true,
+        options: categoryOptions.value
+      }
     }
   ])
+  const searched = computed(
+    () => !!searchForm.value.postName || !!searchForm.value.postCode || !!searchForm.value.category
+  )
+  const emptyText = computed(() =>
+    searched.value ? t('pages.system.post.emptySearch') : t('pages.system.post.emptyList')
+  )
+  const categoryLabel = (value: string) =>
+    categoryOptions.value.find((item) => item.value === value)?.label || '—'
 
   const dialogType = ref<DialogType>('add')
   const dialogVisible = ref(false)
@@ -98,9 +130,16 @@
       apiParams: { pageNum: 1, pageSize: 20 },
       paginationKey: { current: 'pageNum', size: 'pageSize' },
       columnsFactory: () => [
+        { type: 'selection', width: 48, fixed: 'left' },
         { type: 'index', width: 60, label: t('table.column.index') },
         { prop: 'postName', label: t('pages.system.post.fields.postName'), minWidth: 140 },
         { prop: 'postCode', label: t('pages.system.post.fields.postCode'), minWidth: 140 },
+        {
+          prop: 'category',
+          label: t('pages.system.post.fields.category'),
+          width: 100,
+          formatter: (row: any) => categoryLabel(row.category)
+        },
         { prop: 'sort', label: t('pages.system.post.fields.sort'), width: 100 },
         {
           prop: 'operation',
@@ -140,7 +179,8 @@
   const handleResetSearch = async (): Promise<void> => {
     searchForm.value = {
       postName: '',
-      postCode: ''
+      postCode: '',
+      category: undefined
     }
     resetSearchParams()
     await fetchData()
@@ -154,6 +194,10 @@
     })
   }
 
+  const onSelectionChange = (rows: any[]): void => {
+    selectedRows.value = rows || []
+  }
+
   const deleteRow = (row: any): void => {
     ElMessageBox.confirm(t('pages.system.post.deleteConfirm'), t('pages.system.post.deletePost'), {
       confirmButtonText: t('common.confirm'),
@@ -162,6 +206,30 @@
     }).then(async () => {
       await fetchRemovePost(row.id)
       ElMessage.success(t('pages.system.post.deleteSuccess'))
+      selectedRows.value = []
+      tableRef.value?.elTableRef?.clearSelection()
+      refreshData()
+    })
+  }
+
+  const deleteSelected = (): void => {
+    if (!selectedRows.value.length) {
+      ElMessage.warning(t('pages.system.post.deleteEmpty'))
+      return
+    }
+    ElMessageBox.confirm(
+      t('pages.system.post.deleteBatchConfirm', { count: selectedRows.value.length }),
+      t('pages.system.post.deletePost'),
+      {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
+        type: 'warning'
+      }
+    ).then(async () => {
+      await fetchRemovePost(selectedRows.value.map((row) => row.id))
+      ElMessage.success(t('pages.system.post.deleteSuccess'))
+      selectedRows.value = []
+      tableRef.value?.elTableRef?.clearSelection()
       refreshData()
     })
   }

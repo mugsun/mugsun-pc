@@ -19,6 +19,17 @@
           :placeholder="$t('pages.system.post.placeholder.postCode')"
         />
       </ElFormItem>
+      <ElFormItem :label="$t('pages.system.post.fields.category')" prop="category">
+        <ElSelect
+          v-model="formData.category"
+          :placeholder="$t('pages.system.post.placeholder.category')"
+          style="width: 100%"
+        >
+          <ElOption :label="$t('pages.system.post.categoryManage')" value="manage" />
+          <ElOption :label="$t('pages.system.post.categoryTech')" value="tech" />
+          <ElOption :label="$t('pages.system.post.categoryBiz')" value="biz" />
+        </ElSelect>
+      </ElFormItem>
       <ElFormItem :label="$t('pages.system.post.fields.sort')" prop="sort">
         <ElInputNumber v-model="formData.sort" :min="0" />
       </ElFormItem>
@@ -67,6 +78,7 @@
     id: undefined,
     postName: '',
     postCode: '',
+    category: 'manage',
     sort: 0
   })
 
@@ -76,6 +88,9 @@
     ],
     postCode: [
       { required: true, message: t('pages.system.post.placeholder.postCode'), trigger: 'blur' }
+    ],
+    category: [
+      { required: true, message: t('pages.system.post.placeholder.category'), trigger: 'change' }
     ]
   }))
 
@@ -85,7 +100,7 @@
       if (visible) {
         Object.assign(
           formData,
-          { id: undefined, postName: '', postCode: '', sort: 0 },
+          { id: undefined, postName: '', postCode: '', category: 'manage', sort: 0 },
           props.postData || {}
         )
         nextTick(() => formRef.value?.clearValidate())

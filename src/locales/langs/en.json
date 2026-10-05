@@ -1052,17 +1052,27 @@
         "editPost": "Edit Position",
         "deletePost": "Delete Position",
         "deleteConfirm": "Are you sure you want to delete this position?",
-        "deleteSuccess": "Deleted successfully",
-        "saveSuccess": "Saved successfully",
+        "deleteSelectedBtn": "Delete Selected",
+        "deleteEmpty": "Select the positions to delete first",
+        "deleteBatchConfirm": "Delete the {count} selected positions? They will disappear from the list",
+        "deleteSuccess": "Deleted. These positions will no longer appear in the list",
+        "saveSuccess": "Saved. You can find this position in the list",
+        "emptyList": "No positions yet. Click Add Position to add one",
+        "emptySearch": "No positions match. Change the name, code, or type, then search again",
+        "categoryManage": "Management",
+        "categoryTech": "Technical",
+        "categoryBiz": "Business",
         "fields": {
           "postName": "Position Name",
           "postCode": "Position Code",
+          "category": "Type",
           "sort": "Sort",
           "operation": "Actions"
         },
         "placeholder": {
           "postName": "Please enter position name",
-          "postCode": "Please enter position code"
+          "postCode": "Please enter position code",
+          "category": "Select a type"
         }
       },
       "dict": {
