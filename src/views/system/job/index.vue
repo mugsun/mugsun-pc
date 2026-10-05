@@ -16,6 +16,15 @@
             :value="String(item.id)"
           />
         </ElSelect>
+        <ElInput
+          v-model="keyword"
+          clearable
+          :placeholder="$t('pages.system.job.searchPlaceholder')"
+          style="width: 220px"
+          @keyup.enter="loadData"
+          @clear="loadData"
+        />
+        <ElButton type="primary" @click="loadData">{{ $t('pages.system.job.search') }}</ElButton>
         <ElButton v-perm="'sys:job:save'" type="primary" @click="showDialog()">{{
           $t('pages.system.job.createJob')
         }}</ElButton>
@@ -31,6 +40,11 @@
       <!-- 表格自由增长：包一层 flex:1 定高壳内部滚动，防矮视口裁切 -->
       <div class="job-table-wrap">
         <ElTable :data="tableData" border height="100%" v-loading="loading">
+          <template #empty>
+            <span>{{
+              keyword.trim() ? $t('pages.system.job.emptySearch') : $t('pages.system.job.emptyList')
+            }}</span>
+          </template>
           <ElTableColumn type="index" :label="$t('table.column.index')" width="60" />
           <ElTableColumn prop="jobName" :label="$t('pages.system.job.jobName')" min-width="140" />
           <ElTableColumn
@@ -165,6 +179,9 @@
       destroy-on-close
     >
       <ElTable :data="logs" border size="small" max-height="420">
+        <template #empty>
+          <span>{{ $t('pages.system.job.emptyLogs') }}</span>
+        </template>
         <ElTableColumn
           prop="instanceId"
           :label="$t('pages.system.job.instanceId')"
@@ -203,7 +220,7 @@
     fetchJobInstances,
     fetchJobServerOptions
   } from '@/api/system-manage'
-  import { ElMessage, ElMessageBox } from 'element-plus'
+  import { ElMessageBox } from 'element-plus'
   import { useI18n } from 'vue-i18n'
 
   defineOptions({ name: 'Job' })
@@ -219,6 +236,7 @@
   const processorOptions = ref<Array<{ label: string; value: string }>>([])
   const servers = ref<Array<{ id: string; serverName: string; serverUrl: string }>>([])
   const serverId = ref('')
+  const keyword = ref('')
   const saving = ref(false)
 
   const form = reactive<Record<string, any>>({
@@ -259,7 +277,8 @@
   const loadData = async (): Promise<void> => {
     loading.value = true
     try {
-      tableData.value = (await fetchJobList(serverId.value || undefined)) || []
+      tableData.value =
+        (await fetchJobList(serverId.value || undefined, keyword.value.trim() || undefined)) || []
     } finally {
       loading.value = false
     }
@@ -320,7 +339,6 @@
       try {
         await fetchSaveJob({ ...form, serverId: serverId.value || undefined })
         dialogVisible.value = false
-        ElMessage.success(t('pages.system.job.saveSuccess'))
         loadData()
       } finally {
         saving.value = false
@@ -329,8 +347,7 @@
   }
 
   const run = async (row: any): Promise<void> => {
-    const instanceId = await fetchRunJob(row.id, serverId.value || undefined)
-    ElMessage.success(t('pages.system.job.triggered', { id: instanceId }))
+    await fetchRunJob(row.id, serverId.value || undefined)
   }
 
   const toggle = async (row: any): Promise<void> => {
@@ -341,10 +358,8 @@
         { type: 'warning' }
       )
       await fetchDisableJob(row.id, serverId.value || undefined)
-      ElMessage.success(t('pages.system.job.disabled'))
     } else {
       await fetchEnableJob(row.id, serverId.value || undefined)
-      ElMessage.success(t('pages.system.job.enabled'))
     }
     loadData()
   }
@@ -360,7 +375,6 @@
       }
     ).then(async () => {
       await fetchDeleteJob(row.id, serverId.value || undefined)
-      ElMessage.success(t('pages.system.job.removeSuccess'))
       loadData()
     })
   }

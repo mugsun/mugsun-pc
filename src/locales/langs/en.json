@@ -2141,6 +2141,11 @@
         "previewTitle": "Report Preview · {name}"
       },
       "job": {
+        "search": "Search",
+        "searchPlaceholder": "Search by name",
+        "emptyList": "No jobs yet. Create one and pick a processor to run it",
+        "emptySearch": "No jobs match. Try another name",
+        "emptyLogs": "No runs yet. They show up after you run the job",
         "createJob": "New Job",
         "editJob": "Edit Job",
         "jobName": "Job Name",
@@ -2175,7 +2180,7 @@
         "disableTitle": "Disable Job",
         "disabled": "Disabled",
         "enabled": "Enabled",
-        "removeConfirm": "Delete job \"{name}\"?",
+        "removeConfirm": "Delete \"{name}\"? It will not run again",
         "removeTitle": "Delete Job",
         "removeSuccess": "Deleted successfully",
         "instWaitingDispatch": "Waiting Dispatch",

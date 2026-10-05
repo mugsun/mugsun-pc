@@ -680,10 +680,10 @@ export function fetchFlowHistory(instanceId: number | string) {
 }
 
 // ===== 定时任务 =====
-export function fetchJobList(serverId?: string) {
+export function fetchJobList(serverId?: string, name?: string) {
   return request.get<any[]>({
     url: '/api/system/job/list',
-    params: serverId ? { serverId } : undefined
+    params: { serverId: serverId || undefined, name: name || undefined }
   })
 }
 /** 处理器注册表（BasicProcessor 实现，value=全限定类名 label=简单类名） */
@@ -691,30 +691,38 @@ export function fetchJobProcessors() {
   return request.get<Array<{ label: string; value: string }>>({ url: '/api/system/job/processors' })
 }
 export function fetchSaveJob(data: Record<string, any>) {
-  return request.post<number>({ url: '/api/system/job/save', data })
+  return request.post<void>({ url: '/api/system/job/save', data, showSuccessMessage: true })
 }
 export function fetchRunJob(jobId: number | string, serverId?: string) {
-  return request.post<string>({
+  return request.post<void>({
     url: `/api/system/job/run/${jobId}`,
-    params: serverId ? { serverId } : undefined
+    params: serverId ? { serverId } : undefined,
+    data: {},
+    showSuccessMessage: true
   })
 }
 export function fetchEnableJob(jobId: number | string, serverId?: string) {
   return request.post<void>({
     url: `/api/system/job/enable/${jobId}`,
-    params: serverId ? { serverId } : undefined
+    params: serverId ? { serverId } : undefined,
+    data: {},
+    showSuccessMessage: true
   })
 }
 export function fetchDisableJob(jobId: number | string, serverId?: string) {
   return request.post<void>({
     url: `/api/system/job/disable/${jobId}`,
-    params: serverId ? { serverId } : undefined
+    params: serverId ? { serverId } : undefined,
+    data: {},
+    showSuccessMessage: true
   })
 }
 export function fetchDeleteJob(jobId: number | string, serverId?: string) {
   return request.post<void>({
     url: `/api/system/job/delete/${jobId}`,
-    params: serverId ? { serverId } : undefined
+    params: serverId ? { serverId } : undefined,
+    data: {},
+    showSuccessMessage: true
   })
 }
 export function fetchJobInstances(jobId: number | string, serverId?: string) {
