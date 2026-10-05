@@ -14,22 +14,44 @@
         <ElButton v-perm="permPrefix + ':save'" @click="showDialog('add')" v-ripple>{{
           $t('pages.system.dict.addDict')
         }}</ElButton>
+        <ElButton v-perm="permPrefix + ':remove'" type="danger" plain @click="deleteSelected">{{
+          $t('pages.system.dict.deleteSelectedBtn')
+        }}</ElButton>
       </div>
 
-      <ElTable v-loading="loading" :data="treeData" row-key="id" default-expand-all border>
+      <ElTable
+        ref="tableRef"
+        v-loading="loading"
+        :data="treeData"
+        row-key="id"
+        default-expand-all
+        border
+      >
+        <template #empty>
+          <span>{{ emptyText }}</span>
+        </template>
+        <ElTableColumn type="selection" width="48" />
         <ElTableColumn
           prop="dictValue"
           :label="$t('pages.system.dict.fields.dictValue')"
-          min-width="200"
+          min-width="140"
         />
-        <ElTableColumn prop="code" :label="$t('pages.system.dict.fields.code')" min-width="140" />
+        <ElTableColumn prop="code" :label="$t('pages.system.dict.fields.code')" min-width="120" />
         <ElTableColumn
           prop="dictKey"
           :label="$t('pages.system.dict.fields.dictKey')"
-          min-width="120"
+          min-width="100"
         />
-        <ElTableColumn prop="sort" :label="$t('pages.system.dict.fields.sort')" width="80" />
-        <ElTableColumn :label="$t('pages.system.dict.fields.tag')" width="120">
+        <ElTableColumn prop="sort" :label="$t('pages.system.dict.fields.sort')" width="72" />
+        <ElTableColumn :label="$t('pages.system.dict.fields.sealed')" width="88">
+          <template #default="{ row }">
+            <ElTag v-if="row.isSealed === 1" type="info">{{
+              $t('pages.system.dict.sealedYes')
+            }}</ElTag>
+            <span v-else>{{ $t('pages.system.dict.sealedNo') }}</span>
+          </template>
+        </ElTableColumn>
+        <ElTableColumn :label="$t('pages.system.dict.fields.tag')" width="88">
           <template #default="{ row }">
             <ElTag v-if="row.color" :color="row.color" effect="dark" disable-transitions>
               {{ row.dictValue }}
@@ -40,10 +62,10 @@
         <ElTableColumn
           prop="remark"
           :label="$t('pages.system.dict.fields.remark')"
-          min-width="140"
+          min-width="100"
           show-overflow-tooltip
         />
-        <ElTableColumn :label="$t('pages.system.dict.fields.operation')" width="240">
+        <ElTableColumn :label="$t('pages.system.dict.fields.operation')" width="196">
           <template #default="{ row }">
             <ElButton
               v-perm="permPrefix + ':save'"
@@ -89,8 +111,12 @@
           <ElFormItem :label="$t('pages.system.dict.fields.code')" prop="code">
             <ElInput
               v-model="formData.code"
+              :disabled="dialogType === 'edit'"
               :placeholder="$t('pages.system.dict.placeholder.codeExample')"
             />
+            <div v-if="dialogType === 'edit'" class="field-hint">{{
+              $t('pages.system.dict.codeLocked')
+            }}</div>
           </ElFormItem>
           <ElFormItem :label="$t('pages.system.dict.fields.dictValue')" prop="dictValue">
             <ElInput
@@ -101,8 +127,15 @@
           <ElFormItem :label="$t('pages.system.dict.fields.dictKey')" prop="dictKey">
             <ElInput
               v-model="formData.dictKey"
+              :disabled="dialogType === 'edit'"
               :placeholder="$t('pages.system.dict.placeholder.keyExample')"
             />
+            <div v-if="dialogType === 'edit'" class="field-hint">{{
+              $t('pages.system.dict.keyLocked')
+            }}</div>
+          </ElFormItem>
+          <ElFormItem :label="$t('pages.system.dict.fields.sealed')">
+            <ElSwitch v-model="formData.isSealed" :active-value="1" :inactive-value="0" />
           </ElFormItem>
           <ElFormItem :label="$t('pages.system.dict.fields.sort')" prop="sort">
             <ElInputNumber v-model="formData.sort" :min="0" />
@@ -141,6 +174,7 @@
   import { ElMessageBox, ElMessage } from 'element-plus'
   import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
   import { useDictStore } from '@/store/modules/dict'
+  import type { ElTable } from 'element-plus'
 
   interface Props {
     treeApi: (params?: Record<string, any>) => Promise<any[]>
@@ -180,6 +214,11 @@
 
   const treeData = ref<any[]>([])
   const loading = ref(false)
+  const tableRef = ref<InstanceType<typeof ElTable>>()
+  const emptyText = computed(() => {
+    const filtering = !!(searchParams.value.code || searchParams.value.dictValue)
+    return filtering ? t('pages.system.dict.emptySearch') : t('pages.system.dict.emptyList')
+  })
   const topOptions = ref<Array<{ label: string; value: any }>>([])
   const dialogVisible = ref(false)
   const dialogType = ref<'add' | 'edit'>('add')
@@ -188,13 +227,14 @@
 
   const defaultForm = () => ({
     id: undefined,
-    parentId: 0,
+    parentId: 0 as number | string,
     code: '',
     dictValue: '',
     dictKey: '',
     sort: 0,
     remark: '',
-    color: ''
+    color: '',
+    isSealed: 0
   })
 
   const formData = reactive<Record<string, any>>(defaultForm())
@@ -202,6 +242,21 @@
   const rules = computed<FormRules>(() => ({
     dictValue: [
       { required: true, message: t('pages.system.dict.placeholder.dictValue'), trigger: 'blur' }
+    ],
+    code: [{ required: true, message: t('pages.system.dict.placeholder.code'), trigger: 'blur' }],
+    dictKey: [
+      {
+        validator: (_rule, value, callback) => {
+          const parent = formData.parentId
+          const top = parent === 0 || parent === '0' || parent === '' || parent == null
+          if (!top && (value == null || String(value).trim() === '')) {
+            callback(new Error(t('pages.system.dict.keyRequired')))
+            return
+          }
+          callback()
+        },
+        trigger: 'blur'
+      }
     ]
   }))
 
@@ -245,11 +300,11 @@
 
   const showDialog = (type: 'add' | 'edit', row?: Record<string, any>): void => {
     dialogType.value = type
-    Object.assign(
-      formData,
-      defaultForm(),
-      type === 'add' ? { parentId: row?.id ?? 0, code: row?.code ?? '' } : row || {}
-    )
+    const next =
+      type === 'add' ? { parentId: row?.id ?? 0, code: row?.code ?? '' } : { ...(row || {}) }
+    if (next.parentId === '0' || next.parentId === 0) next.parentId = 0
+    if (next.isSealed == null) next.isSealed = 0
+    Object.assign(formData, defaultForm(), next)
     dialogVisible.value = true
     nextTick(() => formRef.value?.clearValidate())
   }
@@ -260,7 +315,7 @@
       if (!valid) return
       dialogSaving.value = true
       try {
-        await props.saveApi({ ...formData })
+        await props.saveApi({ ...formData, color: formData.color || '' })
         dialogVisible.value = false
         ElMessage.success(t('pages.system.dict.saveSuccess'))
         // 字典维护变更后重载运行时缓存，业务页即时生效
@@ -273,6 +328,15 @@
     })
   }
 
+  const afterRemove = (codes: string[]): void => {
+    ElMessage.success(t('pages.system.dict.deleteSuccess'))
+    codes.forEach((code) => {
+      if (code) dictStore.reload(code)
+    })
+    loadTopOptions()
+    loadData()
+  }
+
   const deleteRow = (row: any): void => {
     ElMessageBox.confirm(
       t('pages.system.dict.deleteConfirm', { name: row.dictValue }),
@@ -282,14 +346,34 @@
         cancelButtonText: t('common.cancel'),
         type: 'warning'
       }
-    ).then(async () => {
-      await props.removeApi(row.id)
-      ElMessage.success(t('pages.system.dict.deleteSuccess'))
-      // 删除后重载运行时缓存，业务页即时生效
-      if (row.code) dictStore.reload(row.code)
-      loadTopOptions()
-      loadData()
-    })
+    )
+      .then(async () => {
+        await props.removeApi(row.id)
+        afterRemove([row.code])
+      })
+      .catch(() => {})
+  }
+
+  const deleteSelected = (): void => {
+    const rows = tableRef.value?.getSelectionRows?.() || []
+    if (!rows.length) {
+      ElMessage.warning(t('pages.system.dict.deleteEmpty'))
+      return
+    }
+    ElMessageBox.confirm(
+      t('pages.system.dict.deleteBatchConfirm', { count: rows.length }),
+      t('pages.system.dict.deleteDict'),
+      {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
+        type: 'warning'
+      }
+    )
+      .then(async () => {
+        await props.removeApi(rows.map((row: any) => row.id))
+        afterRemove(rows.map((row: any) => row.code))
+      })
+      .catch(() => {})
   }
 </script>
 
@@ -305,6 +389,15 @@
   }
 
   .dict-toolbar {
+    display: flex;
+    gap: 8px;
     margin-bottom: 12px;
+  }
+
+  .field-hint {
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--el-text-color-secondary);
   }
 </style>
