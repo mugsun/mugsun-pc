@@ -499,7 +499,11 @@ export function fetchSaveKbSegment(data: Record<string, any>) {
   return request.post<any>({ url: '/api/system/ai/knowledge/segment/submit', data })
 }
 export function fetchStatusKbSegment(data: Record<string, any>) {
-  return request.post<void>({ url: '/api/system/ai/knowledge/segment/status', data })
+  return request.post<void>({
+    url: '/api/system/ai/knowledge/segment/status',
+    data,
+    showSuccessMessage: true
+  })
 }
 export function fetchKbVectorStart(data: Record<string, any>) {
   return request.post<any>({

@@ -176,7 +176,7 @@
 
 <script setup lang="ts">
   import type { ColumnOption } from '@/types/component'
-  import { computed, h, onMounted, reactive, ref, watch } from 'vue'
+  import { computed, h, nextTick, onMounted, reactive, ref, watch } from 'vue'
   import { useRoute } from 'vue-router'
   import { ElButton, ElMessage, ElMessageBox, ElSwitch, ElTag } from 'element-plus'
   import {
@@ -289,8 +289,7 @@
           modelValue: row.enabled === 1,
           'onUpdate:modelValue': (v: string | number | boolean) => {
             const on = v === true || v === 1 || v === '1'
-            row.enabled = on ? 1 : 0
-            toggleSeg(row, on)
+            void toggleSeg(row, on)
           },
           size: 'small'
         })
@@ -452,10 +451,15 @@
   }
 
   async function toggleSeg(row: any, enabled: boolean) {
-    await fetchStatusKbSegment({ id: row.id, enabled: enabled ? 1 : 0 })
-    row.enabled = enabled ? 1 : 0
-    ElMessage.success(enabled ? '已启用' : '已禁用')
-    await loadVecStats()
+    const prev = row.enabled
+    try {
+      await fetchStatusKbSegment({ id: row.id, enabled: enabled ? 1 : 0 })
+      row.enabled = enabled ? 1 : 0
+    } catch {
+      row.enabled = enabled ? 0 : 1
+      await nextTick()
+      row.enabled = prev
+    }
   }
 
   async function vec(act: 'start' | 'rebuild') {
