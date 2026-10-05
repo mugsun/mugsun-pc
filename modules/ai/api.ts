@@ -229,13 +229,25 @@ export function fetchAiVectorPage(params: Record<string, any>) {
   return request.get<any>({ url: '/api/system/ai/vector/page', params })
 }
 export function fetchSaveAiVector(data: Record<string, any>) {
-  return request.post<any>({ url: '/api/system/ai/vector/submit', data })
+  return request.post<any>({
+    url: '/api/system/ai/vector/submit',
+    data,
+    showSuccessMessage: true
+  })
 }
 export function fetchRemoveAiVector(id: AiId) {
-  return request.post<void>({ url: '/api/system/ai/vector/remove', data: { id } })
+  return request.post<void>({
+    url: '/api/system/ai/vector/remove',
+    data: { id },
+    showSuccessMessage: true
+  })
 }
 export function fetchTestAiVector(id: AiId) {
-  return request.post<any>({ url: '/api/system/ai/vector/test', data: { id } })
+  return request.post<any>({
+    url: '/api/system/ai/vector/test',
+    data: { id },
+    showSuccessMessage: true
+  })
 }
 
 // ===== 数据源 =====
