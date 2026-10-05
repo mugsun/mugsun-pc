@@ -346,6 +346,7 @@
   } = useCrud({
     listApi: fetchTrackAppPage,
     removeApi: fetchRemoveTrackApp,
+    serverSuccess: true,
     label: t('pages.track.app.entity'),
     rowName: (row) => row.appName,
     columnsFactory: () => [

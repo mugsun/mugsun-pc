@@ -71,7 +71,11 @@ export function fetchSaveTrackApp(data: Record<string, any>) {
   return request.post<any>({ url: '/api/system/track/app/submit', data })
 }
 export function fetchRemoveTrackApp(id: number | string) {
-  return request.post<void>({ url: '/api/system/track/app/remove', data: { id } })
+  return request.post<void>({
+    url: '/api/system/track/app/remove',
+    data: { id },
+    showSuccessMessage: true
+  })
 }
 
 // ===== 用户细查（G102） =====

@@ -51,6 +51,8 @@ interface UseCrudOptions<TApiFn extends (params: any) => Promise<any>> {
   rowName?: (row: Record<string, any>) => string
   /** 自定义响应适配（覆盖 smartAdapter） */
   responseAdapter?: (resp: any) => any
+  /** 删除成功文案由接口返回，不再另弹「删除成功」 */
+  serverSuccess?: boolean
 }
 
 export function useCrud<TApiFn extends (params: any) => Promise<any>>(
@@ -66,7 +68,8 @@ export function useCrud<TApiFn extends (params: any) => Promise<any>>(
     idKey = 'id',
     label = $t('hooks.crud.defaultLabel'),
     rowName,
-    responseAdapter = smartAdapter
+    responseAdapter = smartAdapter,
+    serverSuccess = false
   } = options
 
   const table = useTable({
@@ -104,7 +107,7 @@ export function useCrud<TApiFn extends (params: any) => Promise<any>>(
       async () => {
         if (!removeApi) return
         await removeApi(row[idKey])
-        ElMessage.success($t('common.deleteSuccess'))
+        if (!serverSuccess) ElMessage.success($t('common.deleteSuccess'))
         await table.refreshRemove()
       },
       () => {
