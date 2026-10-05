@@ -68,7 +68,11 @@ export function fetchTrackAppPage(params: Record<string, any>) {
 }
 /** 新增（服务端生成 appKey 并返回完整实体）/ 编辑（带 id） */
 export function fetchSaveTrackApp(data: Record<string, any>) {
-  return request.post<any>({ url: '/api/system/track/app/submit', data })
+  return request.post<any>({
+    url: '/api/system/track/app/submit',
+    data,
+    showSuccessMessage: true
+  })
 }
 export function fetchRemoveTrackApp(id: number | string) {
   return request.post<void>({

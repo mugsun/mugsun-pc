@@ -451,9 +451,13 @@ const track = createTracker({
   const { appOptions, appKey, appsLoading, loadApps } = useTrackApp()
 
   const onSubmitApp = async (form: Record<string, any>): Promise<void> => {
-    const saved = await fetchSaveTrackApp(form)
+    let saved: Record<string, any> | undefined
+    try {
+      saved = await fetchSaveTrackApp(form)
+    } catch {
+      return
+    }
     dialogVisible.value = false
-    ElMessage.success(t('pages.track.shared.saveSuccess'))
     if (dialogType.value === 'add') {
       await refreshCreate()
       // 同步共享应用下拉，事件定义 tab 立即可选新应用
