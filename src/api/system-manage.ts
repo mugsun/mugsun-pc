@@ -763,13 +763,20 @@ export function fetchGenerateApiKey(data: Record<string, any>) {
   return request.post<any>({ url: '/api/system/api-key/generate', data })
 }
 export function fetchEnableApiKey(id: number | string) {
-  return request.post<void>({ url: `/api/system/api-key/enable/${id}` })
+  return request.post<void>({ url: `/api/system/api-key/enable/${id}`, showSuccessMessage: true })
 }
 export function fetchDisableApiKey(id: number | string) {
-  return request.post<void>({ url: `/api/system/api-key/disable/${id}` })
+  return request.post<void>({ url: `/api/system/api-key/disable/${id}`, showSuccessMessage: true })
 }
 export function fetchRemoveApiKey(id: number | string) {
-  return request.post<void>({ url: `/api/system/api-key/remove/${id}` })
+  return request.post<void>({ url: `/api/system/api-key/remove/${id}`, showSuccessMessage: true })
+}
+export function fetchRemoveApiKeys(ids: Array<number | string>) {
+  return request.post<void>({
+    url: '/api/system/api-key/remove',
+    data: ids,
+    showSuccessMessage: true
+  })
 }
 export function fetchApiKeyLogPage(params: Record<string, any>) {
   return request.get<any>({ url: '/api/system/api-key-log/page', params })

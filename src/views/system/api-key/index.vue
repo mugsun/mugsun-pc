@@ -3,13 +3,32 @@
   <div class="apikey-page art-full-height">
     <ElCard class="art-table-card">
       <div class="apikey-toolbar">
+        <ElInput
+          v-model="keyword"
+          clearable
+          class="apikey-search"
+          :placeholder="$t('pages.system.apiKey.searchPlaceholder')"
+          @keyup.enter="search"
+        />
+        <ElButton type="primary" @click="search">{{ $t('pages.system.apiKey.search') }}</ElButton>
+        <ElButton @click="resetSearch">{{ $t('pages.system.apiKey.reset') }}</ElButton>
         <ElButton v-perm="'sys:api-key:generate'" type="primary" @click="showDialog">{{
           $t('pages.system.apiKey.generateBtn')
+        }}</ElButton>
+        <ElButton v-perm="'sys:api-key:remove'" type="danger" plain @click="removeSelected">{{
+          $t('pages.system.apiKey.deleteSelected')
         }}</ElButton>
       </div>
 
       <div class="apikey-table-scroll">
-        <ElTable :data="tableData" border v-loading="loading">
+        <ElTable
+          :data="tableData"
+          border
+          v-loading="loading"
+          :empty-text="emptyText"
+          @selection-change="onSelectionChange"
+        >
+          <ElTableColumn type="selection" width="48" />
           <ElTableColumn type="index" :label="$t('pages.system.apiKey.colIndex')" width="55" />
           <ElTableColumn
             prop="name"
@@ -23,6 +42,18 @@
             prop="scope"
             :label="$t('pages.system.apiKey.colScope')"
             min-width="100"
+            show-overflow-tooltip
+          />
+          <ElTableColumn
+            prop="apiPath"
+            :label="$t('pages.system.apiKey.colPath')"
+            min-width="120"
+            show-overflow-tooltip
+          />
+          <ElTableColumn
+            prop="expireTime"
+            :label="$t('pages.system.apiKey.colExpire')"
+            min-width="160"
             show-overflow-tooltip
           />
           <ElTableColumn :label="$t('pages.system.apiKey.colStatus')" width="72">
@@ -76,13 +107,35 @@
         <ElFormItem :label="$t('pages.system.apiKey.colName')" prop="name">
           <ElInput v-model="form.name" :placeholder="$t('pages.system.apiKey.namePlaceholder')" />
         </ElFormItem>
-        <ElFormItem :label="$t('pages.system.apiKey.colScope')">
-          <ElInput v-model="form.scope" :placeholder="$t('pages.system.apiKey.scopePlaceholder')" />
+        <ElFormItem :label="$t('pages.system.apiKey.colScope')" prop="scope">
+          <ElInput
+            v-model="form.scope"
+            maxlength="255"
+            :placeholder="$t('pages.system.apiKey.scopePlaceholder')"
+          />
         </ElFormItem>
-        <ElFormItem :label="$t('pages.system.apiKey.remarkLabel')">
+        <ElFormItem :label="$t('pages.system.apiKey.colPath')" prop="apiPath">
+          <ElInput
+            v-model="form.apiPath"
+            maxlength="255"
+            :placeholder="$t('pages.system.apiKey.pathPlaceholder')"
+          />
+        </ElFormItem>
+        <ElFormItem :label="$t('pages.system.apiKey.colExpire')">
+          <ElDatePicker
+            v-model="form.expireTime"
+            type="datetime"
+            value-format="YYYY-MM-DD HH:mm:ss"
+            :placeholder="$t('pages.system.apiKey.expirePlaceholder')"
+            style="width: 100%"
+          />
+        </ElFormItem>
+        <ElFormItem :label="$t('pages.system.apiKey.remarkLabel')" prop="remark">
           <ElInput
             v-model="form.remark"
             type="textarea"
+            maxlength="255"
+            show-word-limit
             :placeholder="$t('pages.system.apiKey.remarkLabel')"
           />
         </ElFormItem>
@@ -214,7 +267,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, onDeactivated, onBeforeUnmount, onMounted } from 'vue'
+  import { ref, reactive, computed, onDeactivated, onBeforeUnmount, onMounted } from 'vue'
   import { onBeforeRouteLeave } from 'vue-router'
   import type { FormInstance, FormRules } from 'element-plus'
   import {
@@ -223,6 +276,7 @@
     fetchEnableApiKey,
     fetchDisableApiKey,
     fetchRemoveApiKey,
+    fetchRemoveApiKeys,
     fetchApiKeyLogPage,
     fetchApiKeyLogDetail
   } from '@/api/system-manage'
@@ -236,13 +290,25 @@
 
   const tableData = ref<any[]>([])
   const loading = ref(false)
+  const keyword = ref('')
+  const filtering = ref(false)
+  const selectedRows = ref<any[]>([])
+  const emptyText = computed(() =>
+    filtering.value ? t('pages.system.apiKey.emptySearch') : t('pages.system.apiKey.emptyList')
+  )
   const submitting = ref(false)
   const dialogVisible = ref(false)
   const resultVisible = ref(false)
   const generated = ref<Record<string, any>>({})
   const formRef = ref<FormInstance>()
 
-  const form = reactive<Record<string, any>>({ name: '', scope: '', remark: '' })
+  const form = reactive<Record<string, any>>({
+    name: '',
+    scope: '',
+    apiPath: '',
+    expireTime: '',
+    remark: ''
+  })
   const logVisible = ref(false)
   const logLoading = ref(false)
   const logTitle = ref('')
@@ -254,23 +320,45 @@
   const logDetail = ref<Record<string, any> | null>(null)
 
   const rules: FormRules = {
-    name: [{ required: true, message: t('pages.system.apiKey.namePlaceholder'), trigger: 'blur' }]
+    name: [
+      { required: true, message: t('pages.system.apiKey.namePlaceholder'), trigger: 'blur' },
+      { max: 64, message: t('pages.system.apiKey.nameLen'), trigger: 'blur' }
+    ]
   }
 
   const loadData = async (): Promise<void> => {
     loading.value = true
     try {
-      const resp = await fetchApiKeyPage({ pageNum: 1, pageSize: 50 })
+      const resp = await fetchApiKeyPage({
+        pageNum: 1,
+        pageSize: 50,
+        name: filtering.value ? keyword.value.trim() : undefined
+      })
       tableData.value = resp?.records ?? []
     } finally {
       loading.value = false
     }
   }
 
+  const search = (): void => {
+    filtering.value = !!keyword.value.trim()
+    loadData()
+  }
+
+  const resetSearch = (): void => {
+    keyword.value = ''
+    filtering.value = false
+    loadData()
+  }
+
+  const onSelectionChange = (rows: any[]): void => {
+    selectedRows.value = rows || []
+  }
+
   onMounted(loadData)
 
   const showDialog = (): void => {
-    Object.assign(form, { name: '', scope: '', remark: '' })
+    Object.assign(form, { name: '', scope: '', apiPath: '', expireTime: '', remark: '' })
     dialogVisible.value = true
   }
 
@@ -294,7 +382,6 @@
     // 启用无风险直接执行；停用会立即吊销该密钥的 API 访问，属危险操作须二次确认
     if (row.status !== 1) {
       await fetchEnableApiKey(row.id)
-      ElMessage.success(t('pages.system.apiKey.enableSuccess'))
       loadData()
       return
     }
@@ -309,7 +396,6 @@
     )
       .then(async () => {
         await fetchDisableApiKey(row.id)
-        ElMessage.success(t('pages.system.apiKey.disableSuccess'))
         loadData()
       })
       .catch(() => {
@@ -329,7 +415,31 @@
     )
       .then(async () => {
         await fetchRemoveApiKey(row.id)
-        ElMessage.success(t('pages.system.apiKey.deleteSuccess'))
+        selectedRows.value = []
+        loadData()
+      })
+      .catch(() => {
+        /* cancel */
+      })
+  }
+
+  const removeSelected = (): void => {
+    if (!selectedRows.value.length) {
+      ElMessage.warning(t('pages.system.apiKey.deleteEmpty'))
+      return
+    }
+    ElMessageBox.confirm(
+      t('pages.system.apiKey.deleteBatchConfirm', { count: selectedRows.value.length }),
+      t('pages.system.apiKey.deleteTitle'),
+      {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
+        type: 'warning'
+      }
+    )
+      .then(async () => {
+        await fetchRemoveApiKeys(selectedRows.value.map((row) => row.id))
+        selectedRows.value = []
         loadData()
       })
       .catch(() => {
@@ -401,8 +511,15 @@
   }
 
   .apikey-toolbar {
+    display: flex;
     flex-shrink: 0;
+    flex-wrap: wrap;
+    gap: 8px;
     margin-bottom: 12px;
+  }
+
+  .apikey-search {
+    width: 220px;
   }
 
   .apikey-table-scroll {
