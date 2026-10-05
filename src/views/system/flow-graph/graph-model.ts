@@ -99,6 +99,13 @@ export const validateTree = (nodes: GNode[]): string => {
         return $t('pages.system.flowGraph.errParallelMinBranch', { name: n.name })
       if (!n.branches.length) return $t('pages.system.flowGraph.errBranchMin', { name: n.name })
       for (const b of n.branches) {
+        if (
+          n.type === 'condition' &&
+          !b.isDefault &&
+          b.conditions.some((r) => (r.field && !r.op) || (!r.field && r.op))
+        ) {
+          return $t('pages.system.flowGraph.errRuleIncomplete')
+        }
         if (n.type === 'condition' && !b.isDefault && !b.conditions.filter((r) => r.field).length)
           return $t('pages.system.flowGraph.errConditionRequired', { name: b.name })
         const sub = validateTree(b.children)
