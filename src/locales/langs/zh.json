@@ -2588,7 +2588,8 @@
         "errParallelMinBranch": "并行「{name}」至少两个分支",
         "errBranchMin": "分支「{name}」至少一个分支",
         "errConditionRequired": "条件分支「{name}」需配置条件或标记为默认",
-        "errRuleIncomplete": "条件规则缺少字段或运算符。请补上字段和运算符后再发布"
+        "errRuleIncomplete": "条件规则缺少字段或运算符。请补上字段和运算符后再发布",
+        "errOpUnsupported": "不支持的条件运算符。请改成等于、不等于、大于、大于等于、小于、小于等于、包含或不包含后再发布"
       },
       "flowTodo": {
         "tabTodo": "我的待办",

@@ -2588,7 +2588,8 @@
         "errParallelMinBranch": "Parallel \"{name}\" requires at least two branches",
         "errBranchMin": "Branch \"{name}\" requires at least one branch",
         "errConditionRequired": "Condition branch \"{name}\" requires conditions or must be marked as default",
-        "errRuleIncomplete": "A condition rule is missing a field or operator. Fill in both, then publish again."
+        "errRuleIncomplete": "A condition rule is missing a field or operator. Fill in both, then publish again.",
+        "errOpUnsupported": "This condition operator is not supported. Use equal, not equal, greater than, greater or equal, less than, less or equal, contains, or not contains, then publish again."
       },
       "flowTodo": {
         "tabTodo": "My Todo",

@@ -88,6 +88,8 @@ export const toTree = (nodes: GNode[], i = 0): any => {
   return out
 }
 
+const RULE_OPS = new Set(['eq', 'ne', 'gt', 'ge', 'lt', 'le', 'like', 'notLike'])
+
 // 校验：审批节点须有候选人；条件分支须有非空分支
 export const validateTree = (nodes: GNode[]): string => {
   for (const n of nodes) {
@@ -105,6 +107,9 @@ export const validateTree = (nodes: GNode[]): string => {
           b.conditions.some((r) => (r.field && !r.op) || (!r.field && r.op))
         ) {
           return $t('pages.system.flowGraph.errRuleIncomplete')
+        }
+        if (n.type === 'condition' && b.conditions.some((r) => r.op && !RULE_OPS.has(r.op))) {
+          return $t('pages.system.flowGraph.errOpUnsupported')
         }
         if (n.type === 'condition' && !b.isDefault && !b.conditions.filter((r) => r.field).length)
           return $t('pages.system.flowGraph.errConditionRequired', { name: b.name })
