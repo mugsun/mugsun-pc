@@ -3514,6 +3514,7 @@
       "funnel": {
         "addStep": "添加步骤",
         "emptyNoData": "窗口内无转化数据",
+        "needApp": "请先选择应用。漏斗是按应用分开的",
         "emptyPrompt": "配置步骤后点击查询",
         "funnelChart": "转化漏斗",
         "funnelLabel": "{b}：{c} 人",

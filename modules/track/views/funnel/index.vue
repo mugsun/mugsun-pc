@@ -22,7 +22,7 @@
         <ElOption :value="24" :label="$t('pages.track.funnel.window24h')" />
         <ElOption :value="168" :label="$t('pages.track.funnel.window7d')" />
       </ElSelect>
-      <ElButton type="primary" :loading="loading" :disabled="!appKey" @click="search">{{
+      <ElButton type="primary" :loading="loading" @click="search">{{
         $t('pages.track.shared.search')
       }}</ElButton>
     </div>
@@ -313,7 +313,10 @@
 
   // ===== 查询（失败提示由 http 层统一透传后端 msg） =====
   const search = async (): Promise<void> => {
-    if (!appKey.value) return
+    if (!appKey.value) {
+      ElMessage.warning(t('pages.track.funnel.needApp'))
+      return
+    }
     const names = steps.value.map((s) => s.eventName)
     if (names.some((n) => !n)) {
       ElMessage.warning(t('pages.track.funnel.stepNameRequired'))

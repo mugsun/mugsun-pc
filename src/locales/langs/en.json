@@ -3514,6 +3514,7 @@
       "funnel": {
         "addStep": "Add step",
         "emptyNoData": "No conversion data in this window",
+        "needApp": "Select an app first. Funnels are kept per app.",
         "emptyPrompt": "Configure steps, then click Search",
         "funnelChart": "Conversion funnel",
         "funnelLabel": "{b}: {c} users",
