@@ -3356,6 +3356,7 @@
         "cohortDate": "新客日期",
         "cohortSize": "新客 {size} 人",
         "emptyNoData": "窗口内无新客数据",
+        "needApp": "请先选择应用。留存是按应用分开的",
         "emptyPrompt": "选择应用与统计天数后点击查询",
         "gridTitle": "新客留存网格",
         "hint": "新客留存：按首次活跃日分组，UTC 日切",

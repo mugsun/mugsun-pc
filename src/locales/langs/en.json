@@ -3356,6 +3356,7 @@
         "cohortDate": "Cohort date",
         "cohortSize": "{size} new users",
         "emptyNoData": "No new users in this window",
+        "needApp": "Select an app first. Retention is kept per app.",
         "emptyPrompt": "Select an app and a period, then click Search",
         "gridTitle": "New-user retention grid",
         "hint": "New-user retention: grouped by first active day, with UTC day boundaries",

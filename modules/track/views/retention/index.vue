@@ -17,7 +17,7 @@
         <ElRadioButton :value="14">{{ $t('pages.track.shared.last14Days') }}</ElRadioButton>
         <ElRadioButton :value="30">{{ $t('pages.track.shared.last30Days') }}</ElRadioButton>
       </ElRadioGroup>
-      <ElButton type="primary" :loading="loading" :disabled="!appKey" @click="search">{{
+      <ElButton type="primary" :loading="loading" @click="search">{{
         $t('pages.track.shared.search')
       }}</ElButton>
       <span class="track-retention-hint">{{ $t('pages.track.retention.hint') }}</span>
@@ -91,6 +91,7 @@
   import {
     ElButton,
     ElEmpty,
+    ElMessage,
     ElOption,
     ElRadioButton,
     ElRadioGroup,
@@ -169,7 +170,10 @@
 
   // ===== 查询（失败提示由 http 层统一透传后端 msg） =====
   const search = async (): Promise<void> => {
-    if (!appKey.value) return
+    if (!appKey.value) {
+      ElMessage.warning(t('pages.track.retention.needApp'))
+      return
+    }
     loading.value = true
     searched.value = true
     try {
