@@ -80,7 +80,7 @@
   import ReplayPlayerDrawer from '@/views/track/shared/ReplayPlayerDrawer.vue'
   import StackRestore from '@/views/track/error/modules/stack-restore.vue'
   import { hasPerm } from '@/utils/permission'
-  import { ElOption, ElRadioButton, ElRadioGroup, ElSelect, ElTag } from 'element-plus'
+  import { ElMessage, ElOption, ElRadioButton, ElRadioGroup, ElSelect, ElTag } from 'element-plus'
 
   defineOptions({ name: 'TrackError' })
 
@@ -286,6 +286,10 @@
   })
 
   const showDetail = async (row: Record<string, any>): Promise<void> => {
+    if (!String(row.fingerprint ?? '').trim()) {
+      ElMessage.warning(t('pages.track.error.needFingerprint'))
+      return
+    }
     current.value = row
     currentFingerprint.value = String(row.fingerprint ?? '')
     currentMessage.value = row.message || '-'

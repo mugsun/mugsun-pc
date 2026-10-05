@@ -3331,6 +3331,7 @@
         "fingerprint": "Fingerprint",
         "firstSeen": "First seen",
         "message": "Message",
+        "needFingerprint": "Open an error group from the list first. Details are kept per error group.",
         "noFrameMatch": "No stack frame matched any sourcemap file for this release",
         "noSourcemap": "No sourcemap uploaded for this release yet; upload one to restore the stack",
         "restore": "Restore",
