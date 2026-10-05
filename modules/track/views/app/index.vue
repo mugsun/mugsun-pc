@@ -805,9 +805,12 @@ const track = createTracker({
     } catch {
       return // 用户取消
     }
-    await fetchTrackVisualConfirm({ token: visualToken.value, draftId: draft.draftId, eventName })
+    try {
+      await fetchTrackVisualConfirm({ token: visualToken.value, draftId: draft.draftId, eventName })
+    } catch {
+      return
+    }
     visualDrafts.value = visualDrafts.value.filter((d) => d.draftId !== draft.draftId)
-    ElMessage.success(t('pages.track.app.draftConfirmed'))
     await refreshVisualRules()
   }
 

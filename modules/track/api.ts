@@ -177,7 +177,11 @@ export function fetchTrackVisualDrafts(params: Record<string, any>) {
 }
 /** 草稿确认成规则（eventName 可改） */
 export function fetchTrackVisualConfirm(data: Record<string, any>) {
-  return request.post<any>({ url: '/api/system/track/visual/drafts/confirm', data })
+  return request.post<any>({
+    url: '/api/system/track/visual/drafts/confirm',
+    data,
+    showSuccessMessage: true
+  })
 }
 /** 草稿丢弃 */
 export function fetchTrackVisualDiscard(data: Record<string, any>) {
