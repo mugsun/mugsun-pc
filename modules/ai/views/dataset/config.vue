@@ -55,9 +55,9 @@
     </ElCard>
     <ElDialog v-model="termVisible" title="术语" width="480px">
       <ElForm :model="termForm" label-width="80px">
-        <ElFormItem label="术语" required><ElInput v-model="termForm.term" /></ElFormItem>
+        <ElFormItem label="术语" required><ElInput v-model="termForm.name" /></ElFormItem>
         <ElFormItem label="释义" required
-          ><ElInput v-model="termForm.definition" type="textarea" :rows="3"
+          ><ElInput v-model="termForm.content" type="textarea" :rows="3"
         /></ElFormItem>
       </ElForm>
       <template #footer>
@@ -96,8 +96,8 @@
   const termVisible = ref(false)
   const termForm = reactive<Record<string, any>>({})
   const termCols: ColumnOption[] = [
-    { prop: 'term', label: '术语', minWidth: 120 },
-    { prop: 'definition', label: '释义', minWidth: 200 },
+    { prop: 'name', label: '术语', minWidth: 120 },
+    { prop: 'content', label: '释义', minWidth: 200 },
     {
       prop: 'operation',
       label: '操作',
@@ -159,12 +159,8 @@
   async function loadTerms() {
     termLoading.value = true
     try {
-      const res = await fetchAiTerminologyPage({
-        pageNum: 1,
-        pageSize: 100,
-        datasetId: datasetId.value
-      })
-      terms.value = res?.records ?? []
+      const res = await fetchAiTerminologyPage({ datasetId: datasetId.value })
+      terms.value = Array.isArray(res) ? res : []
     } finally {
       termLoading.value = false
     }
@@ -175,13 +171,28 @@
     termVisible.value = true
   }
   async function saveTerm() {
-    await fetchSaveAiTerminology({ ...termForm, datasetId: datasetId.value })
+    try {
+      await fetchSaveAiTerminology({ ...termForm, datasetId: datasetId.value })
+    } catch {
+      return
+    }
     termVisible.value = false
     await loadTerms()
   }
   async function rmTerm(row: any) {
-    await ElMessageBox.confirm('删除该术语？', '确认')
-    await fetchRemoveAiTerminology(row.id)
+    try {
+      await ElMessageBox.confirm(
+        `确定删除术语「${row.name || ''}」吗？问数时不会再带上它。`,
+        '确认'
+      )
+    } catch {
+      return
+    }
+    try {
+      await fetchRemoveAiTerminology(datasetId.value, row.id)
+    } catch {
+      return
+    }
     await loadTerms()
   }
   onMounted(async () => {

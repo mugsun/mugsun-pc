@@ -569,13 +569,24 @@ export function fetchDatasetTables(id: AiId) {
   return request.get<any>({ url: '/api/system/ai/dataset/config/tables', params: { id } })
 }
 export function fetchAiTerminologyPage(params: Record<string, any>) {
-  return request.get<any>({ url: '/api/system/ai/terminology/page', params })
+  return request.get<any[]>({
+    url: '/api/system/ai/dataset/term/list',
+    params: { datasetId: params.datasetId }
+  })
 }
 export function fetchSaveAiTerminology(data: Record<string, any>) {
-  return request.post<any>({ url: '/api/system/ai/terminology/submit', data })
+  return request.post<any>({
+    url: '/api/system/ai/dataset/term/save',
+    data,
+    showSuccessMessage: true
+  })
 }
-export function fetchRemoveAiTerminology(id: AiId) {
-  return request.post<void>({ url: '/api/system/ai/terminology/remove', data: { id } })
+export function fetchRemoveAiTerminology(datasetId: AiId, id: AiId) {
+  return request.post<void>({
+    url: '/api/system/ai/dataset/term/remove',
+    data: { datasetId, id },
+    showSuccessMessage: true
+  })
 }
 export function fetchSaveDatasetTerms(data: Record<string, any>) {
   return request.post<void>({ url: '/api/system/ai/dataset/terms', data })
