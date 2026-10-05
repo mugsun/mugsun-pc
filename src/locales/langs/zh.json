@@ -663,7 +663,7 @@
         "emailCodePlaceholder": "请输入邮箱验证码",
         "newPasswordPlaceholder": "请输入新密码",
         "confirmPasswordPlaceholder": "请再次输入新密码",
-        "enterUsernameFirst": "请先输入账号",
+        "enterUsernameFirst": "账号不能为空。请填上账号后再获取验证码",
         "enterCaptchaFirst": "请先输入图形验证码",
         "codeSent": "若账号存在且已绑定邮箱，验证码已发送",
         "passwordMismatch": "两次密码不一致",
