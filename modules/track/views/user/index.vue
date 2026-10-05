@@ -166,7 +166,7 @@
                       {{ $t('pages.track.user.bodyLoading') }}
                     </div>
                     <div v-else-if="bodyStates[e.eventId].failed" class="track-body-hint">
-                      {{ $t('pages.track.user.bodyGone') }}
+                      {{ bodyStates[e.eventId].text || $t('pages.track.user.bodyGone') }}
                     </div>
                     <pre v-else class="track-api-body-pre">{{ bodyStates[e.eventId].text }}</pre>
                   </div>
@@ -482,8 +482,10 @@
       bodyStates.value[id] = {
         text: typeof data === 'string' ? data : JSON.stringify(data, null, 2)
       }
-    } catch {
-      bodyStates.value[id] = { failed: true }
+    } catch (err: unknown) {
+      const data = (err as { data?: { msg?: unknown } })?.data
+      const msg = typeof data?.msg === 'string' ? data.msg : ''
+      bodyStates.value[id] = { failed: true, text: msg || undefined }
     }
   }
 
