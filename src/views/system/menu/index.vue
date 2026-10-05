@@ -14,18 +14,31 @@
         <ElButton v-perm="'sys:menu:save'" @click="showDialog('add')" v-ripple>{{
           $t('pages.system.menu.addMenu')
         }}</ElButton>
+        <ElButton v-perm="'sys:menu:remove'" type="danger" plain @click="deleteSelected">{{
+          $t('pages.system.menu.deleteSelectedBtn')
+        }}</ElButton>
       </div>
 
       <!-- 树表为自由增长内容：art-table-card 卡片体是 height:100%+overflow:hidden 裁剪，
            内部须自备滚动，否则矮视口下深层节点被切断且不可达（同 track/user 修法） -->
       <div v-loading="loading" class="menu-table-wrap">
-        <ElTable :data="treeData" row-key="id" default-expand-all border>
+        <ElTable
+          :data="treeData"
+          row-key="id"
+          default-expand-all
+          border
+          @selection-change="onSelectionChange"
+        >
+          <template #empty>
+            <span>{{ emptyText }}</span>
+          </template>
+          <ElTableColumn type="selection" width="48" />
           <ElTableColumn
             prop="menuName"
             :label="$t('pages.system.menu.fields.menuName')"
-            min-width="200"
+            min-width="140"
           />
-          <ElTableColumn :label="$t('pages.system.menu.fields.icon')" width="80" align="center">
+          <ElTableColumn :label="$t('pages.system.menu.fields.icon')" width="56" align="center">
             <template #default="{ row }">
               <span v-if="row.icon" class="menu-icon" :data-icon="row.icon">
                 <ArtSvgIcon :icon="row.icon" class="text-lg" />
@@ -33,18 +46,18 @@
               <span v-else>—</span>
             </template>
           </ElTableColumn>
-          <ElTableColumn :label="$t('pages.system.menu.fields.type')" width="90">
+          <ElTableColumn :label="$t('pages.system.menu.fields.type')" width="72">
             <template #default="{ row }">{{ TYPE_LABELS[row.menuType] ?? row.menuType }}</template>
           </ElTableColumn>
-          <ElTableColumn prop="path" :label="$t('pages.system.menu.fields.path')" min-width="160" />
+          <ElTableColumn prop="path" :label="$t('pages.system.menu.fields.path')" min-width="120" />
           <ElTableColumn
             prop="permission"
             :label="$t('pages.system.menu.fields.permission')"
-            min-width="200"
+            min-width="140"
             show-overflow-tooltip
           />
-          <ElTableColumn prop="sort" :label="$t('pages.system.menu.fields.sort')" width="80" />
-          <ElTableColumn :label="$t('pages.system.menu.fields.isHide')" width="80" align="center">
+          <ElTableColumn prop="sort" :label="$t('pages.system.menu.fields.sort')" width="64" />
+          <ElTableColumn :label="$t('pages.system.menu.fields.isHide')" width="64" align="center">
             <template #default="{ row }">
               <ElTag :type="row.isHide === 1 ? 'danger' : 'success'">
                 {{
@@ -57,7 +70,7 @@
           </ElTableColumn>
           <ElTableColumn
             :label="$t('pages.system.menu.fields.isKeepAlive')"
-            width="80"
+            width="64"
             align="center"
           >
             <template #default="{ row }">
@@ -70,7 +83,7 @@
           </ElTableColumn>
           <ElTableColumn
             :label="$t('pages.system.menu.fields.isExternal')"
-            width="80"
+            width="64"
             align="center"
           >
             <template #default="{ row }">
@@ -81,7 +94,7 @@
               </ElTag>
             </template>
           </ElTableColumn>
-          <ElTableColumn :label="$t('pages.system.menu.fields.operation')" width="240">
+          <ElTableColumn :label="$t('pages.system.menu.fields.operation')" width="188">
             <template #default="{ row }">
               <ElButton
                 v-perm="'sys:menu:save'"
@@ -167,6 +180,11 @@
 
   const treeData = ref<any[]>([])
   const loading = ref(false)
+  const selectedRows = ref<any[]>([])
+  const filtering = ref(false)
+  const emptyText = computed(() =>
+    filtering.value ? t('pages.system.menu.emptySearch') : t('pages.system.menu.emptyList')
+  )
   const dialogType = ref<DialogType>('add')
   const dialogVisible = ref(false)
   const currentData = ref<Record<string, any>>({})
@@ -190,12 +208,18 @@
   onMounted(loadData)
 
   const handleSearch = (): void => {
+    filtering.value = !!(searchForm.value.menuName || searchForm.value.isHide !== undefined)
     loadData()
   }
 
   const handleResetSearch = (): void => {
+    filtering.value = false
     searchForm.value = { menuName: '', isHide: undefined }
     loadData()
+  }
+
+  const onSelectionChange = (rows: any[]): void => {
+    selectedRows.value = rows || []
   }
 
   const showDialog = (type: DialogType, row?: Record<string, any>): void => {
@@ -213,11 +237,37 @@
         cancelButtonText: t('common.cancel'),
         type: 'warning'
       }
-    ).then(async () => {
-      await fetchRemoveMenu(row.id)
-      ElMessage.success(t('pages.system.menu.deleteSuccess'))
-      loadData()
-    })
+    )
+      .then(async () => {
+        await fetchRemoveMenu(row.id)
+        ElMessage.success(t('pages.system.menu.deleteSuccess'))
+        selectedRows.value = []
+        loadData()
+      })
+      .catch(() => {})
+  }
+
+  const deleteSelected = (): void => {
+    if (!selectedRows.value.length) {
+      ElMessage.warning(t('pages.system.menu.deleteEmpty'))
+      return
+    }
+    ElMessageBox.confirm(
+      t('pages.system.menu.deleteBatchConfirm', { count: selectedRows.value.length }),
+      t('pages.system.menu.deleteMenu'),
+      {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
+        type: 'warning'
+      }
+    )
+      .then(async () => {
+        await fetchRemoveMenu(selectedRows.value.map((row) => row.id))
+        ElMessage.success(t('pages.system.menu.deleteSuccess'))
+        selectedRows.value = []
+        loadData()
+      })
+      .catch(() => {})
   }
 
   const handleDialogSubmit = async (form: Record<string, any>): Promise<void> => {
@@ -241,7 +291,9 @@
   }
 
   .menu-toolbar {
+    display: flex;
     flex-shrink: 0;
+    gap: 8px;
     margin-bottom: 12px;
   }
 
