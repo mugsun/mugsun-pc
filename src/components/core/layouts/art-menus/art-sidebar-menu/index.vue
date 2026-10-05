@@ -136,6 +136,8 @@
   import { useSettingStore } from '@/store/modules/setting'
   import { MenuTypeEnum, MenuWidth } from '@/enums/appEnum'
   import { useMenuStore } from '@/store/modules/menu'
+  import { useTopMenuStore } from '@/store/modules/topMenu'
+  import { filterMenusByScheme } from '@/utils/topMenuFilter'
   import { isIframe } from '@/utils/navigation'
   import { handleMenuJump } from '@/utils/navigation'
   import SidebarSubmenu from './widget/SidebarSubmenu.vue'
@@ -182,14 +184,20 @@
   const firstLevelMenuPath = computed(() => route.matched[0]?.path)
   const routerPath = computed(() => String(route.meta.activePath || route.path))
 
+  const schemeMenus = () => {
+    const menuStore = useMenuStore()
+    const current = useTopMenuStore().active
+    if (!current) return menuStore.menuList
+    return filterMenusByScheme(menuStore.menuList, current.menuIds)
+  }
+
   // 菜单数据
   const firstLevelMenus = computed(() => {
-    return useMenuStore().menuList.filter((menu) => !menu.meta.isHide)
+    return schemeMenus().filter((menu) => !menu.meta.isHide)
   })
 
   const menuList = computed(() => {
-    const menuStore = useMenuStore()
-    const allMenus = menuStore.menuList
+    const allMenus = schemeMenus()
 
     // 如果不是顶部左侧菜单或双列菜单，直接返回完整菜单列表
     if (!isTopLeftMenu.value && !isDualMenu.value) {

@@ -53,11 +53,25 @@
           v-if="(shouldShowBreadcrumb && isLeftMenu) || (shouldShowBreadcrumb && isDualMenu)"
         />
 
+        <!-- 顶部菜单方案：有方案时才出现，用来切换侧栏 -->
+        <div v-if="topSchemes.length" class="top-schemes">
+          <button
+            v-for="item in topSchemes"
+            :key="item.id"
+            type="button"
+            class="top-scheme"
+            :class="{ 'is-active': topActiveId === item.id }"
+            @click="chooseScheme(item)"
+          >
+            {{ item.name }}
+          </button>
+        </div>
+
         <!-- 顶部菜单 -->
-        <ArtHorizontalMenu v-if="isTopMenu" :list="menuList" />
+        <ArtHorizontalMenu v-if="isTopMenu" :list="displayMenuList" />
 
         <!-- 混合菜单-顶部 -->
-        <ArtMixedMenu v-if="isTopLeftMenu" :list="menuList" />
+        <ArtMixedMenu v-if="isTopLeftMenu" :list="displayMenuList" />
       </div>
 
       <div class="flex-c gap-2.5">
@@ -178,6 +192,8 @@
   import { useSettingStore } from '@/store/modules/setting'
   import { useUserStore } from '@/store/modules/user'
   import { useMenuStore } from '@/store/modules/menu'
+  import { useTopMenuStore } from '@/store/modules/topMenu'
+  import { filterMenusByScheme } from '@/utils/topMenuFilter'
   import AppConfig from '@/config'
   import { languageOptions } from '@/locales'
   import { mittBus } from '@/utils/sys'
@@ -221,6 +237,20 @@
 
   const { language } = storeToRefs(userStore)
   const { menuList } = storeToRefs(menuStore)
+  const topMenuStore = useTopMenuStore()
+  const { schemes: topSchemes, activeId: topActiveId } = storeToRefs(topMenuStore)
+  const displayMenuList = computed(() => {
+    const current = topMenuStore.active
+    if (!current) return menuList.value
+    return filterMenusByScheme(menuList.value, current.menuIds)
+  })
+
+  const chooseScheme = (item: { id: string; path?: string }) => {
+    topMenuStore.select(item.id)
+    if (item.path) {
+      router.push(item.path)
+    }
+  }
 
   // 菜单类型判断
   const isLeftMenu = computed(() => menuType.value === MenuTypeEnum.LEFT)
@@ -233,6 +263,7 @@
   onMounted(() => {
     initLanguage()
     document.addEventListener('pointerdown', dismissGuideOnInteraction, true)
+    topMenuStore.load()
   })
 
   onBeforeUnmount(() => {
@@ -334,6 +365,34 @@
 </script>
 
 <style lang="scss" scoped>
+  .top-schemes {
+    display: flex;
+    flex-shrink: 1;
+    gap: 4px;
+    align-items: center;
+    min-width: 0;
+    margin-left: 8px;
+    overflow-x: auto;
+  }
+
+  .top-scheme {
+    flex-shrink: 0;
+    height: 28px;
+    padding: 0 10px;
+    font-size: 13px;
+    line-height: 28px;
+    color: var(--el-text-color-regular);
+    cursor: pointer;
+    background: transparent;
+    border: 0;
+    border-radius: 6px;
+  }
+
+  .top-scheme.is-active {
+    color: var(--el-color-primary);
+    background: var(--el-color-primary-light-9);
+  }
+
   /* Custom animations */
   @keyframes rotate180 {
     0% {

@@ -41,6 +41,7 @@ import { AppRouteRecord } from '@/types/router'
 import { setPageTitle } from '@/utils/router'
 import { resetRouterState } from '@/router/guards/beforeEach'
 import { useMenuStore } from './menu'
+import { useTopMenuStore } from './topMenu'
 import { StorageConfig } from '@/utils/storage/storage-config'
 import { trackReset } from '@/plugins/track'
 
@@ -155,6 +156,7 @@ export const useUserStore = defineStore(
 
       // 清空用户信息
       info.value = {}
+      useTopMenuStore().reset()
       // 重置登录状态
       isLogin.value = false
       // 重置锁屏状态

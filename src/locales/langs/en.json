@@ -318,6 +318,7 @@
       "role": "Role Manage",
       "userCenter": "User Center",
       "menu": "Menu Manage",
+      "topMenu": "Top Menus",
       "nested": "Nested Menu",
       "menu1": "Menu 1",
       "menu2": "Menu 2",
@@ -437,7 +438,8 @@
     "column": {
       "selection": "Select",
       "expand": "Expand",
-      "index": "Index"
+      "index": "Index",
+      "operation": "Actions"
     },
     "zebra": "Zebra",
     "border": "Border",
@@ -829,6 +831,33 @@
           "startImport": "Start Import",
           "importSuccess": "Successfully imported {count} records"
         }
+      },
+      "topMenu": {
+        "add": "New scheme",
+        "edit": "Edit scheme",
+        "name": "Name",
+        "code": "Code",
+        "icon": "Icon",
+        "path": "Open path",
+        "sort": "Sort",
+        "home": "Home",
+        "grant": "Menus",
+        "delete": "Delete",
+        "searchName": "Name",
+        "namePlaceholder": "For example: Daily work",
+        "codePlaceholder": "Letters, digits or underscore. Must be unique",
+        "iconPlaceholder": "For example ri:apps-2-line. Optional",
+        "pathPlaceholder": "Path to open when this scheme is selected. Optional",
+        "nameRequired": "Enter a name",
+        "codeRequired": "Enter a code",
+        "deleteConfirm": "Delete scheme \"{name}\"? Its menu selection will be removed too.",
+        "empty": "No top menu schemes yet. Add one to choose a home and which menus appear in the sidebar.",
+        "grantTitle": "Menus in \"{name}\"",
+        "linkNodes": "Checking a parent includes its children",
+        "linkHint": "Turn off to pick menus one by one",
+        "selectAll": "Select all",
+        "clearChecked": "Clear",
+        "homeHint": "This is the only scheme, so it stays the home"
       },
       "role": {
         "addRole": "Add Role",

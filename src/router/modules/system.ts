@@ -477,6 +477,16 @@ export const systemRoutes: AppRouteRecord = {
           { title: '删除', authMark: 'delete' }
         ]
       }
+    },
+    {
+      path: 'top-menu',
+      name: 'TopMenu',
+      component: '/system/top-menu',
+      meta: {
+        title: 'menus.system.topMenu',
+        icon: 'ri:layout-top-line',
+        keepAlive: true
+      }
     }
   ]
 }

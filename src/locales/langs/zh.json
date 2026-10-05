@@ -318,6 +318,7 @@
       "role": "角色管理",
       "userCenter": "个人中心",
       "menu": "菜单管理",
+      "topMenu": "顶部菜单",
       "nested": "嵌套菜单",
       "menu1": "菜单1",
       "menu2": "菜单2",
@@ -437,7 +438,8 @@
     "column": {
       "selection": "勾选",
       "expand": "展开",
-      "index": "序号"
+      "index": "序号",
+      "operation": "操作"
     },
     "zebra": "斑马纹",
     "border": "边框",
@@ -829,6 +831,33 @@
           "startImport": "开始导入",
           "importSuccess": "导入成功 {count} 条"
         }
+      },
+      "topMenu": {
+        "add": "新增方案",
+        "edit": "编辑方案",
+        "name": "方案名称",
+        "code": "方案编码",
+        "icon": "图标",
+        "path": "打开地址",
+        "sort": "排序",
+        "home": "主页",
+        "grant": "配置菜单",
+        "delete": "删除",
+        "searchName": "方案名称",
+        "namePlaceholder": "例如：业务办理",
+        "codePlaceholder": "字母、数字或下划线，不能和已有方案重复",
+        "iconPlaceholder": "例如 ri:apps-2-line，可留空",
+        "pathPlaceholder": "选中该方案后打开的地址，可留空",
+        "nameRequired": "请填写方案名称",
+        "codeRequired": "请填写方案编码",
+        "deleteConfirm": "确定删除方案「{name}」吗？方案下的菜单配置会一起去掉。",
+        "empty": "还没有顶部菜单方案。新增后可以指定主页，并决定侧栏显示哪些菜单。",
+        "grantTitle": "配置「{name}」包含的菜单",
+        "linkNodes": "勾选上级时包含下级",
+        "linkHint": "关闭后可以单独勾选任意菜单",
+        "selectAll": "全选",
+        "clearChecked": "清空",
+        "homeHint": "当前只有这一个方案，它会保持为主页"
       },
       "role": {
         "addRole": "新增角色",
