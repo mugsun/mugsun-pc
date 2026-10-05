@@ -2197,6 +2197,13 @@
         "msgBusinessIdRequired": "Please enter the business ID",
         "msgFormIncomplete": "Please complete the required form fields",
         "msgStarted": "Started. You can handle it in the Approval Center",
+        "leaveStart": "Start",
+        "leaveEnd": "End",
+        "leaveReason": "Reason",
+        "leaveReasonPlaceholder": "Say why you need the leave",
+        "leaveTimeRequired": "Choose a start time and an end time",
+        "leaveReasonRequired": "Enter a reason so the approver knows why",
+        "leaveEndAfterStart": "The end time must be later than the start time",
         "msgCodeNameRequired": "Please enter the flow code and name",
         "msgNodeRequired": "Add at least one approval node",
         "msgCandidateRequired": "Each node requires a candidate",
@@ -2339,6 +2346,9 @@
         "revoke": "Withdraw",
         "progressDivider": "Flow Progress",
         "formDivider": "Business Form",
+        "leaveStart": "Start",
+        "leaveEnd": "End",
+        "leaveReason": "Reason",
         "nextApproverDivider": "Next Node Approvers",
         "flowEnd": "Flow Ended",
         "noneText": "(None)",
@@ -2388,7 +2398,7 @@
         "submit": "Submit",
         "progressCurrent": "Pending",
         "progressPending": "Not Started",
-        "noForm": "This flow is not bound to a business form"
+        "noForm": "This flow has no form bound to it. A leave request shows its times and reason above; for other flows, bind a form to the start node in flow definitions."
       },
       "flowRunning": {
         "instanceId": "Instance",

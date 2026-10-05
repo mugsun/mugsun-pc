@@ -248,6 +248,33 @@
             style="width: 320px"
           />
         </ElFormItem>
+        <template v-if="startCtx.flowCode === 'leave'">
+          <ElFormItem :label="$t('pages.system.flowDef.leaveStart')" required>
+            <ElDatePicker
+              v-model="leaveForm.startTime"
+              type="datetime"
+              value-format="YYYY-MM-DD HH:mm:ss"
+              :placeholder="$t('pages.system.flowDef.leaveStart')"
+            />
+          </ElFormItem>
+          <ElFormItem :label="$t('pages.system.flowDef.leaveEnd')" required>
+            <ElDatePicker
+              v-model="leaveForm.endTime"
+              type="datetime"
+              value-format="YYYY-MM-DD HH:mm:ss"
+              :placeholder="$t('pages.system.flowDef.leaveEnd')"
+            />
+          </ElFormItem>
+          <ElFormItem :label="$t('pages.system.flowDef.leaveReason')" required>
+            <ElInput
+              v-model="leaveForm.reason"
+              type="textarea"
+              maxlength="500"
+              show-word-limit
+              :placeholder="$t('pages.system.flowDef.leaveReasonPlaceholder')"
+            />
+          </ElFormItem>
+        </template>
       </ElForm>
       <ApprovalForm
         v-if="startForm.schema"
@@ -273,7 +300,7 @@
   import ApprovalForm from '../flow-center/components/ApprovalForm.vue'
   import {
     fetchFlowDefinitions,
-    fetchFlowStart,
+    fetchLeaveStart,
     fetchFlowStartBy,
     fetchFlowStartForm,
     fetchFlowDesign,
@@ -341,6 +368,7 @@
   const startVisible = ref(false)
   const starting = ref(false)
   const startBusinessId = ref('')
+  const leaveForm = reactive({ startTime: '', endTime: '', reason: '' })
   const startCtx = reactive<{ flowCode: string; flowName: string }>({ flowCode: '', flowName: '' })
   const startForm = reactive<{ schema: string; option: string }>({ schema: '', option: '' })
   const startFormRef = ref<any>(null)
@@ -372,6 +400,9 @@
     startCtx.flowCode = row.flowCode
     startCtx.flowName = row.flowName || ''
     startBusinessId.value = row.flowCode.toUpperCase() + '-' + Date.now()
+    leaveForm.startTime = ''
+    leaveForm.endTime = ''
+    leaveForm.reason = ''
     startForm.schema = ''
     startForm.option = ''
     if (row.flowCode !== 'leave') {
@@ -390,10 +421,29 @@
       ElMessage.warning(t('pages.system.flowDef.msgBusinessIdRequired'))
       return
     }
+    if (startCtx.flowCode === 'leave') {
+      if (!leaveForm.startTime || !leaveForm.endTime) {
+        ElMessage.warning(t('pages.system.flowDef.leaveTimeRequired'))
+        return
+      }
+      if (!leaveForm.reason.trim()) {
+        ElMessage.warning(t('pages.system.flowDef.leaveReasonRequired'))
+        return
+      }
+      if (leaveForm.endTime <= leaveForm.startTime) {
+        ElMessage.warning(t('pages.system.flowDef.leaveEndAfterStart'))
+        return
+      }
+    }
     starting.value = true
     try {
       if (startCtx.flowCode === 'leave') {
-        await fetchFlowStart(startBusinessId.value)
+        await fetchLeaveStart({
+          businessId: startBusinessId.value,
+          startTime: leaveForm.startTime,
+          endTime: leaveForm.endTime,
+          reason: leaveForm.reason.trim()
+        })
       } else {
         let variable: Record<string, any> | undefined
         if (startForm.schema && startFormRef.value) {

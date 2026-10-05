@@ -2197,6 +2197,13 @@
         "msgBusinessIdRequired": "请填写业务单号",
         "msgFormIncomplete": "请完善表单必填项",
         "msgStarted": "已发起，可在审批中心处理",
+        "leaveStart": "开始时间",
+        "leaveEnd": "结束时间",
+        "leaveReason": "请假理由",
+        "leaveReasonPlaceholder": "说明为什么要请假",
+        "leaveTimeRequired": "请选择开始时间和结束时间",
+        "leaveReasonRequired": "请填写请假理由，说明为什么要请假",
+        "leaveEndAfterStart": "结束时间要晚于开始时间",
         "msgCodeNameRequired": "请填写流程编码与名称",
         "msgNodeRequired": "至少添加一个审批节点",
         "msgCandidateRequired": "每个节点需选择候选人",
@@ -2339,6 +2346,9 @@
         "revoke": "撤回",
         "progressDivider": "流程进度",
         "formDivider": "业务表单",
+        "leaveStart": "开始时间",
+        "leaveEnd": "结束时间",
+        "leaveReason": "请假理由",
         "nextApproverDivider": "下一节点审批人",
         "flowEnd": "流程结束",
         "noneText": "（无）",
@@ -2388,7 +2398,7 @@
         "submit": "提交",
         "progressCurrent": "待处理",
         "progressPending": "未开始",
-        "noForm": "该流程未绑定业务表单"
+        "noForm": "这张流程没有绑定业务表单。请假会在上方显示起止时间和理由；其他流程请到流程定义里给发起节点绑定表单。"
       },
       "flowRunning": {
         "instanceId": "实例编号",

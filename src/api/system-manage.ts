@@ -444,6 +444,14 @@ export function fetchFlowDeploy() {
 export function fetchFlowStart(businessId: string) {
   return request.post<string>({ url: `/api/system/flow/start/${encodeURIComponent(businessId)}` })
 }
+export function fetchLeaveStart(data: {
+  businessId: string
+  startTime: string
+  endTime: string
+  reason: string
+}) {
+  return request.post<string>({ url: '/api/system/flow/leave/start', data })
+}
 /** 图形设计部署：结构化设计生成 warm-flow 定义并发布 */
 export function fetchFlowDesign(data: Record<string, any>) {
   return request.post<number>({ url: '/api/system/flow/design', data })

@@ -236,6 +236,7 @@
           $t('pages.system.flowCenter.formDivider')
         }}</ElDivider>
         <ApprovalForm
+          v-if="form.schema"
           ref="formRef"
           :schema="form.schema"
           :option-json="form.option"
@@ -243,6 +244,18 @@
           :perms="form.fieldPerms"
           :readonly="mode !== 'todo'"
         />
+        <ElDescriptions v-else-if="form.data?.startTime" :column="1" border size="small">
+          <ElDescriptionsItem :label="$t('pages.system.flowCenter.leaveStart')">{{
+            form.data.startTime
+          }}</ElDescriptionsItem>
+          <ElDescriptionsItem :label="$t('pages.system.flowCenter.leaveEnd')">{{
+            form.data.endTime
+          }}</ElDescriptionsItem>
+          <ElDescriptionsItem :label="$t('pages.system.flowCenter.leaveReason')">{{
+            form.data.reason
+          }}</ElDescriptionsItem>
+        </ElDescriptions>
+        <ElEmpty v-else :description="$t('pages.system.flowCenter.noForm')" :image-size="60" />
 
         <template v-if="mode === 'todo'">
           <ElDivider content-position="left">{{
