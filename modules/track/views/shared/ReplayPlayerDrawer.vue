@@ -212,20 +212,26 @@
       // 逐块拉取（服务端已解压明文数组；缺失/过期块跳过不阻断整体播放）
       const events: unknown[] = []
       let skipped = 0
+      let blockMsg = ''
       for (const block of blocks) {
         try {
           const chunk: any = await fetchTrackReplayData({ sessionId, seq: block.seq })
-          // skipEnvelope 下后端错误信封（块不存在等）也会原样返回，须按数组形态甄别
+          // skipEnvelope 下后端错误信封也会原样返回，须按数组形态甄别
           if (Array.isArray(chunk)) events.push(...chunk)
-          else skipped++
-        } catch {
+          else {
+            skipped++
+            if (!blockMsg && typeof chunk?.msg === 'string') blockMsg = chunk.msg
+          }
+        } catch (err: unknown) {
           skipped++
+          const msg = (err as { data?: { msg?: unknown } })?.data?.msg
+          if (!blockMsg && typeof msg === 'string') blockMsg = msg
         }
         if (gen !== loadGen) return
       }
       skippedBlocks.value = skipped
       if (events.length === 0) {
-        errorMsg.value = t('pages.track.shared.allBlocksMissing')
+        errorMsg.value = blockMsg || t('pages.track.shared.allBlocksMissing')
         return
       }
       loadedEvents.value = events.length
