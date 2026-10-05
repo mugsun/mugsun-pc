@@ -37,7 +37,7 @@
             </template>
           </ElTableColumn>
           <!-- 双操作按钮：收窄列宽使常见视口下状态+操作同屏，避免半截「删除」 -->
-          <ElTableColumn :label="$t('pages.system.apiKey.colOperation')" width="120">
+          <ElTableColumn :label="$t('pages.system.apiKey.colOperation')" width="196" fixed="right">
             <template #default="{ row }">
               <!-- 语义配色：启用用主题色，停用才用 warning -->
               <ElButton
@@ -54,6 +54,9 @@
               </ElButton>
               <ElButton v-perm="'sys:api-key:remove'" link type="danger" @click="remove(row)">{{
                 $t('pages.system.apiKey.deleteBtn')
+              }}</ElButton>
+              <ElButton v-perm="'sys:api-key:log'" link type="primary" @click="openLogs(row)">{{
+                $t('pages.system.apiKey.callLog')
               }}</ElButton>
             </template>
           </ElTableColumn>
@@ -111,6 +114,102 @@
         }}</ElButton>
       </template>
     </ElDialog>
+
+    <ElDrawer v-model="logVisible" :title="logTitle" size="640px" append-to-body destroy-on-close>
+      <div class="apikey-log-bar">
+        <ElSelect
+          v-model="logStatus"
+          :placeholder="$t('pages.system.apiKey.resultAll')"
+          clearable
+          style="width: 140px"
+          @change="loadLogs"
+        >
+          <ElOption :label="$t('pages.system.apiKey.pass')" :value="1" />
+          <ElOption :label="$t('pages.system.apiKey.deny')" :value="0" />
+        </ElSelect>
+        <ElInput
+          v-model="logIp"
+          :placeholder="$t('pages.system.apiKey.ipPlaceholder')"
+          clearable
+          style="width: 180px"
+          @keyup.enter="loadLogs"
+        />
+        <ElButton type="primary" @click="loadLogs">{{ $t('pages.system.apiKey.search') }}</ElButton>
+        <ElButton @click="resetLogs">{{ $t('pages.system.apiKey.reset') }}</ElButton>
+      </div>
+      <ElTable
+        :data="logRows"
+        border
+        v-loading="logLoading"
+        :empty-text="$t('pages.system.apiKey.empty')"
+      >
+        <ElTableColumn prop="method" :label="$t('pages.system.apiKey.method')" width="72" />
+        <ElTableColumn
+          prop="requestUri"
+          :label="$t('pages.system.apiKey.path')"
+          min-width="140"
+          show-overflow-tooltip
+        />
+        <ElTableColumn :label="$t('pages.system.apiKey.result')" width="72">
+          <template #default="{ row }">
+            <ElTag :type="row.status === 1 ? 'success' : 'danger'">
+              {{
+                row.status === 1 ? $t('pages.system.apiKey.pass') : $t('pages.system.apiKey.deny')
+              }}
+            </ElTag>
+          </template>
+        </ElTableColumn>
+        <ElTableColumn prop="remoteIp" label="IP" width="120" show-overflow-tooltip />
+        <ElTableColumn :label="$t('pages.system.apiKey.cost')" width="80">
+          <template #default="{ row }">{{ row.costMs ?? 0 }} ms</template>
+        </ElTableColumn>
+        <ElTableColumn :label="$t('pages.system.apiKey.colOperation')" width="64" fixed="right">
+          <template #default="{ row }">
+            <ElButton link type="primary" @click="openLogDetail(row)">{{
+              $t('pages.system.apiKey.detail')
+            }}</ElButton>
+          </template>
+        </ElTableColumn>
+      </ElTable>
+    </ElDrawer>
+
+    <ElDialog
+      v-model="logDetailVisible"
+      :title="$t('pages.system.apiKey.detailTitle')"
+      width="520px"
+      align-center
+      append-to-body
+    >
+      <ElDescriptions v-if="logDetail" :column="1" border>
+        <ElDescriptionsItem :label="$t('pages.system.apiKey.method')">{{
+          logDetail.method || '—'
+        }}</ElDescriptionsItem>
+        <ElDescriptionsItem :label="$t('pages.system.apiKey.path')">{{
+          logDetail.requestUri || '—'
+        }}</ElDescriptionsItem>
+        <ElDescriptionsItem :label="$t('pages.system.apiKey.result')">
+          {{
+            logDetail.status === 1 ? $t('pages.system.apiKey.pass') : $t('pages.system.apiKey.deny')
+          }}
+        </ElDescriptionsItem>
+        <ElDescriptionsItem :label="$t('pages.system.apiKey.message')">{{
+          logDetail.msg || '—'
+        }}</ElDescriptionsItem>
+        <ElDescriptionsItem label="IP">{{ logDetail.remoteIp || '—' }}</ElDescriptionsItem>
+        <ElDescriptionsItem :label="$t('pages.system.apiKey.cost')"
+          >{{ logDetail.costMs ?? 0 }} ms</ElDescriptionsItem
+        >
+        <ElDescriptionsItem :label="$t('pages.system.apiKey.time')">{{
+          formatTableTime(logDetail.createTime)
+        }}</ElDescriptionsItem>
+        <ElDescriptionsItem :label="$t('pages.system.apiKey.userAgent')">{{
+          logDetail.userAgent || $t('pages.system.apiKey.userAgentEmpty')
+        }}</ElDescriptionsItem>
+        <ElDescriptionsItem :label="$t('pages.system.apiKey.params')">{{
+          logDetail.params || '—'
+        }}</ElDescriptionsItem>
+      </ElDescriptions>
+    </ElDialog>
   </div>
 </template>
 
@@ -123,10 +222,13 @@
     fetchGenerateApiKey,
     fetchEnableApiKey,
     fetchDisableApiKey,
-    fetchRemoveApiKey
+    fetchRemoveApiKey,
+    fetchApiKeyLogPage,
+    fetchApiKeyLogDetail
   } from '@/api/system-manage'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import { useI18n } from 'vue-i18n'
+  import { formatTableTime } from '@/utils/date'
 
   defineOptions({ name: 'ApiKey' })
 
@@ -141,6 +243,15 @@
   const formRef = ref<FormInstance>()
 
   const form = reactive<Record<string, any>>({ name: '', scope: '', remark: '' })
+  const logVisible = ref(false)
+  const logLoading = ref(false)
+  const logTitle = ref('')
+  const logKeyId = ref('')
+  const logStatus = ref<number | undefined>()
+  const logIp = ref('')
+  const logRows = ref<any[]>([])
+  const logDetailVisible = ref(false)
+  const logDetail = ref<Record<string, any> | null>(null)
 
   const rules: FormRules = {
     name: [{ required: true, message: t('pages.system.apiKey.namePlaceholder'), trigger: 'blur' }]
@@ -226,9 +337,49 @@
       })
   }
 
+  const openLogs = (row: any): void => {
+    logKeyId.value = String(row.id)
+    logTitle.value = t('pages.system.apiKey.callLogTitle', { name: row.name || row.accessKey })
+    logStatus.value = undefined
+    logIp.value = ''
+    logRows.value = []
+    logVisible.value = true
+    loadLogs()
+  }
+
+  const loadLogs = async (): Promise<void> => {
+    if (!logKeyId.value) return
+    logLoading.value = true
+    try {
+      const resp = await fetchApiKeyLogPage({
+        apiKeyId: logKeyId.value,
+        pageNum: 1,
+        pageSize: 20,
+        status: logStatus.value,
+        ip: logIp.value || undefined
+      })
+      logRows.value = resp?.records ?? []
+    } finally {
+      logLoading.value = false
+    }
+  }
+
+  const resetLogs = (): void => {
+    logStatus.value = undefined
+    logIp.value = ''
+    loadLogs()
+  }
+
+  const openLogDetail = async (row: any): Promise<void> => {
+    logDetail.value = await fetchApiKeyLogDetail(row.id)
+    logDetailVisible.value = true
+  }
+
   const closeOverlays = (): void => {
     dialogVisible.value = false
     resultVisible.value = false
+    logVisible.value = false
+    logDetailVisible.value = false
     ElMessageBox.close()
   }
 
@@ -262,5 +413,12 @@
 
   .apikey-result {
     margin-top: 14px;
+  }
+
+  .apikey-log-bar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
   }
 </style>

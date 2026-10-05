@@ -625,6 +625,12 @@ export function fetchDisableApiKey(id: number | string) {
 export function fetchRemoveApiKey(id: number | string) {
   return request.post<void>({ url: `/api/system/api-key/remove/${id}` })
 }
+export function fetchApiKeyLogPage(params: Record<string, any>) {
+  return request.get<any>({ url: '/api/system/api-key-log/page', params })
+}
+export function fetchApiKeyLogDetail(id: string | number) {
+  return request.get<any>({ url: '/api/system/api-key-log/detail', params: { id } })
+}
 
 // ===== 行政区划 =====
 export function fetchRegionLazyTree(parentCode: string) {
