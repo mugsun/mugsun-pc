@@ -2591,7 +2591,8 @@
         "errRuleIncomplete": "A condition rule is missing a field or operator. Fill in both, then publish again.",
         "errOpUnsupported": "This condition operator is not supported. Use equal, not equal, greater than, greater or equal, less than, less or equal, contains, or not contains, then publish again.",
         "errFieldInvalid": "This condition variable name is not valid. Start it with a letter or underscore, use only letters, digits, and underscores, then publish again.",
-        "errValueInvalid": "This condition value contains a character that is not allowed (a vertical bar, @@, or a line break). Remove those characters, then publish again."
+        "errValueInvalid": "This condition value contains a character that is not allowed (a vertical bar, @@, or a line break). Remove those characters, then publish again.",
+        "errNodeType": "This node type is not recognized. Use approval, condition, or parallel, then publish again."
       },
       "flowTodo": {
         "tabTodo": "My Todo",

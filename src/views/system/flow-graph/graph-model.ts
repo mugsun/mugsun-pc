@@ -89,11 +89,13 @@ export const toTree = (nodes: GNode[], i = 0): any => {
 }
 
 const RULE_OPS = new Set(['eq', 'ne', 'gt', 'ge', 'lt', 'le', 'like', 'notLike'])
+const NODE_TYPES = new Set(['approval', 'condition', 'parallel'])
 const FIELD_RE = /^[A-Za-z_][A-Za-z0-9_]*$/
 
 // 校验：审批节点须有候选人；条件分支须有非空分支
 export const validateTree = (nodes: GNode[]): string => {
   for (const n of nodes) {
+    if (!NODE_TYPES.has(n.type)) return $t('pages.system.flowGraph.errNodeType')
     if (n.type === 'approval') {
       if (!n.candidates.map(candidateToken).filter(Boolean).length)
         return $t('pages.system.flowGraph.errNodeNoCandidate', { name: n.name })
