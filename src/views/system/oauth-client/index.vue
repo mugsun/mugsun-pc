@@ -1,6 +1,13 @@
 <!-- OAuth2 客户端管理（开放平台，对接 /system/oauth-client） -->
 <template>
   <div class="oauth-client-page art-full-height">
+    <ArtSearchBar
+      v-model="searchForm"
+      :items="searchItems"
+      :span="6"
+      @search="handleSearch"
+      @reset="handleResetSearch"
+    />
     <ElCard class="art-table-card">
       <!-- 卡片体为定高裁剪（全局 overflow:hidden），内容须自备内部滚动，防矮视口裁切 -->
       <div class="oauth-body-scroll">
@@ -11,6 +18,9 @@
         </div>
 
         <ElTable :data="tableData" border v-loading="loading">
+          <template #empty>
+            <span>{{ emptyText }}</span>
+          </template>
           <ElTableColumn type="index" :label="$t('table.column.index')" width="55" />
           <ElTableColumn
             prop="name"
@@ -204,6 +214,7 @@
   import { onBeforeRouteLeave } from 'vue-router'
   import type { FormInstance, FormRules } from 'element-plus'
   import { ElMessage, ElMessageBox } from 'element-plus'
+  import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
   import { ArrowDown } from '@element-plus/icons-vue'
   import {
     fetchOauthClientPage,
@@ -264,15 +275,47 @@
         ? t('pages.system.oauthClient.grantAuthorizationCode')
         : g
 
+  const searchForm = ref({ name: '' })
+  const filtering = ref(false)
+  const searchItems = computed(() => [
+    {
+      key: 'name',
+      label: t('pages.system.oauthClient.name'),
+      type: 'input',
+      props: { placeholder: t('pages.system.oauthClient.namePlaceholder'), clearable: true }
+    }
+  ])
+  const emptyText = computed(() =>
+    filtering.value
+      ? t('pages.system.oauthClient.emptySearch')
+      : t('pages.system.oauthClient.empty')
+  )
+
   const loadData = async (): Promise<void> => {
     loading.value = true
+    filtering.value = Boolean(searchForm.value.name)
     try {
-      const resp = await fetchOauthClientPage({ pageNum: pageNum.value, pageSize: pageSize.value })
+      const resp = await fetchOauthClientPage({
+        pageNum: pageNum.value,
+        pageSize: pageSize.value,
+        name: searchForm.value.name || undefined
+      })
       tableData.value = resp?.records ?? []
       total.value = resp?.totalRow ?? 0
     } finally {
       loading.value = false
     }
+  }
+
+  const handleSearch = async (): Promise<void> => {
+    pageNum.value = 1
+    await loadData()
+  }
+
+  const handleResetSearch = async (): Promise<void> => {
+    searchForm.value = { name: '' }
+    pageNum.value = 1
+    await loadData()
   }
 
   const onPage = (p: number): void => {
