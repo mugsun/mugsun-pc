@@ -28,7 +28,7 @@
           </div>
           <div class="meta"
             >文档 {{ row.docCount ?? 0 }} · 分段 {{ row.segmentCount ?? 0 }} ·
-            {{ row.retrievalMode || 'hybrid' }}</div
+            {{ modeLabel(row.retrievalMode) }}</div
           >
           <div class="desc">{{ row.description || '暂无描述' }}</div>
           <div class="ops" @click.stop>
@@ -38,7 +38,7 @@
             <ElButton link type="danger" @click="remove(row)">删除</ElButton>
           </div>
         </ElCard>
-        <ElEmpty v-if="!loading && !records.length" description="暂无知识库" />
+        <ElEmpty v-if="!loading && !records.length" :description="emptyText" />
       </div>
     </ElCard>
 
@@ -106,7 +106,7 @@
   </div>
 </template>
 <script setup lang="ts">
-  import { onMounted, reactive, ref } from 'vue'
+  import { computed, onMounted, reactive, ref } from 'vue'
   import { useRouter } from 'vue-router'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import {
@@ -125,6 +125,15 @@
   const visible = ref(false)
   const saving = ref(false)
   const form = reactive<Record<string, any>>({})
+  const searching = ref(false)
+  const emptyText = computed(() =>
+    searching.value ? '没有符合条件的知识库。换个名称再查' : '还没有知识库。点新建知识库开始配置'
+  )
+  function modeLabel(mode?: string) {
+    if (mode === 'vector') return '向量检索'
+    if (mode === 'keyword') return '关键词'
+    return '混合检索'
+  }
   const embedModels = ref<any[]>([])
   const testVisible = ref(false)
   const testQuery = ref('')
@@ -140,6 +149,7 @@
   }
   async function reload() {
     loading.value = true
+    searching.value = !!keyword.value.trim()
     try {
       const res = await fetchAiKnowledgePage({
         pageNum: 1,
@@ -172,27 +182,27 @@
     visible.value = true
   }
   async function save() {
-    if (!form.name?.trim()) {
-      ElMessage.warning('请填写名称')
-      return
-    }
     saving.value = true
     try {
       await fetchSaveAiKnowledge({ ...form })
-      ElMessage.success('已保存')
       visible.value = false
       await reload()
+    } catch {
+      /* 失败文案由请求层弹出，弹窗留着方便改 */
     } finally {
       saving.value = false
     }
   }
   async function copy(row: any) {
-    const r = await fetchCopyAiKnowledge(row.id)
-    ElMessage.success(`已复制为「${r?.name || '副本'}」`)
-    await reload()
+    try {
+      await fetchCopyAiKnowledge(row.id)
+      await reload()
+    } catch {
+      /* 失败文案由请求层弹出 */
+    }
   }
   async function test(row: any) {
-    const { value } = await ElMessageBox.prompt('输入测试问题', `测试 · ${row.name}`, {
+    const { value } = await ElMessageBox.prompt('输入要检索的问题', `测试 · ${row.name}`, {
       inputValue: '如何创建知识库？',
       confirmButtonText: '测试'
     }).catch(() => ({ value: '' }))
@@ -201,12 +211,16 @@
     testQuery.value = value
     testHits.value = Array.isArray(r?.hits) ? r.hits : []
     testVisible.value = true
-    ElMessage.success(r?.message || `命中 ${testHits.value.length} 条`)
+    const message = r?.message || (testHits.value.length ? `命中 ${testHits.value.length} 条` : '')
+    if (testHits.value.length) ElMessage.success(message)
+    else ElMessage.warning(message || '没有命中资料。请先上传内容，或换一个更接近原文的问题再测')
   }
   async function remove(row: any) {
-    await ElMessageBox.confirm(`删除知识库「${row.name}」？相关资料与向量将一并清除。`, '确认')
+    await ElMessageBox.confirm(
+      `删除「${row.name}」后，列表里不会再出现。资料和分段也会一起清掉`,
+      '确认'
+    )
     await fetchRemoveAiKnowledge(row.id)
-    ElMessage.success('已删除')
     await reload()
   }
   onMounted(async () => {
@@ -217,6 +231,7 @@
 <style scoped>
   .toolbar {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     margin-bottom: 12px;
   }

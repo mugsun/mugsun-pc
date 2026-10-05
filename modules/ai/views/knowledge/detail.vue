@@ -435,9 +435,8 @@
   }
 
   async function rmAsset(row: any) {
-    await ElMessageBox.confirm(`删除资料「${row.fileName}」及其全部分段？`, '确认')
+    await ElMessageBox.confirm(`删除「${row.fileName}」后，资料和分段都会清掉`, '确认')
     await fetchRemoveKbAsset(row.id)
-    ElMessage.success('已删除')
     await Promise.all([loadAssets(), loadSegs(), loadVecStats(), loadKb()])
   }
 

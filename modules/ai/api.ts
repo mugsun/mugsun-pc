@@ -364,16 +364,26 @@ export function fetchAiKnowledgeDetail(id: AiId) {
   return request.get<any>({ url: `/api/system/ai/knowledge/detail/${id}` })
 }
 export function fetchSaveAiKnowledge(data: Record<string, any>) {
-  return request.post<any>({ url: '/api/system/ai/knowledge/submit', data })
+  return request.post<any>({
+    url: '/api/system/ai/knowledge/submit',
+    data,
+    showSuccessMessage: true
+  })
 }
 export function fetchRemoveAiKnowledge(id: AiId) {
   // POST 的 params 会被 HTTP 层挪到 JSON body；后端要 @RequestParam，须写进 URL
   return request.post<void>({
-    url: `/api/system/ai/knowledge/remove?ids=${encodeURIComponent(String(id))}`
+    url: `/api/system/ai/knowledge/remove?ids=${encodeURIComponent(String(id))}`,
+    data: {},
+    showSuccessMessage: true
   })
 }
 export function fetchCopyAiKnowledge(id: AiId) {
-  return request.post<any>({ url: '/api/system/ai/knowledge/copy', data: { id } })
+  return request.post<any>({
+    url: '/api/system/ai/knowledge/copy',
+    data: { id },
+    showSuccessMessage: true
+  })
 }
 export function fetchTestAiKnowledge(data: Record<string, any>) {
   return request.post<any>({ url: '/api/system/ai/knowledge/test', data })
@@ -390,7 +400,9 @@ export function fetchKbAssetPage(params: Record<string, any>) {
 }
 export function fetchRemoveKbAsset(id: AiId) {
   return request.post<void>({
-    url: `/api/system/ai/knowledge/asset/remove?ids=${encodeURIComponent(String(id))}`
+    url: `/api/system/ai/knowledge/asset/remove?ids=${encodeURIComponent(String(id))}`,
+    data: {},
+    showSuccessMessage: true
   })
 }
 export function fetchResegmentKbAsset(id: AiId) {
