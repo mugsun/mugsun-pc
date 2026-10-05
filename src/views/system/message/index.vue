@@ -2,23 +2,89 @@
 <template>
   <div class="my-message-page art-full-height">
     <ElCard class="art-table-card" shadow="never">
-      <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
-        <template #left>
-          <ElButton @click="readAll" v-ripple>{{ $t('pages.system.message.readAllBtn') }}</ElButton>
-        </template>
-      </ArtTableHeader>
+      <div class="toolbar">
+        <ElInput
+          v-model="keyword"
+          clearable
+          :placeholder="$t('pages.system.message.searchPlaceholder')"
+          style="width: 240px"
+          @keyup.enter="search"
+          @clear="search"
+        />
+        <ElSelect
+          v-model="readFilter"
+          clearable
+          :placeholder="$t('pages.system.message.statusPlaceholder')"
+          style="width: 140px"
+          @change="search"
+        >
+          <ElOption :label="$t('pages.system.message.statusUnread')" :value="0" />
+          <ElOption :label="$t('pages.system.message.statusRead')" :value="1" />
+        </ElSelect>
+        <ElButton type="primary" @click="search">{{ $t('pages.system.message.search') }}</ElButton>
+        <ElButton @click="reset">{{ $t('pages.system.message.reset') }}</ElButton>
+        <ElButton @click="readAll">{{ $t('pages.system.message.readAllBtn') }}</ElButton>
+        <ElButton type="danger" plain @click="removeSelected">{{
+          $t('pages.system.message.deleteSelected')
+        }}</ElButton>
+      </div>
 
-      <ArtTable
-        :loading="loading"
-        :data="data as any[]"
-        :columns="columns"
-        :pagination="pagination"
-        @pagination:size-change="handleSizeChange"
-        @pagination:current-change="handleCurrentChange"
-      />
+      <ElTable
+        v-loading="loading"
+        :data="rows"
+        @selection-change="(list: any[]) => (selected = list)"
+      >
+        <ElTableColumn type="selection" width="42" />
+        <ElTableColumn prop="title" :label="$t('pages.system.message.colTitle')" min-width="220" />
+        <ElTableColumn :label="$t('pages.system.message.colType')" width="90">
+          <template #default="{ row }">{{ typeLabel(row.type) }}</template>
+        </ElTableColumn>
+        <ElTableColumn :label="$t('pages.system.message.colStatus')" width="90">
+          <template #default="{ row }">
+            <ElTag :type="row.isRead === 1 ? 'info' : 'danger'">
+              {{
+                row.isRead === 1
+                  ? $t('pages.system.message.statusRead')
+                  : $t('pages.system.message.statusUnread')
+              }}
+            </ElTag>
+          </template>
+        </ElTableColumn>
+        <ElTableColumn :label="$t('pages.system.message.colSendTime')" min-width="170">
+          <template #default="{ row }">{{ formatTableTime(row.sendTime) }}</template>
+        </ElTableColumn>
+        <ElTableColumn :label="$t('pages.system.message.colOperation')" width="140" fixed="right">
+          <template #default="{ row }">
+            <ElButton link type="primary" @click="view(row)">{{
+              $t('pages.system.message.viewBtn')
+            }}</ElButton>
+            <ElButton link type="danger" @click="removeOne(row)">{{
+              $t('pages.system.message.deleteBtn')
+            }}</ElButton>
+          </template>
+        </ElTableColumn>
+        <template #empty>
+          <span>{{
+            keyword || readFilter === 0 || readFilter === 1
+              ? $t('pages.system.message.emptySearch')
+              : $t('pages.system.message.emptyList')
+          }}</span>
+        </template>
+      </ElTable>
+
+      <div class="pager">
+        <ElPagination
+          v-model:current-page="pageNum"
+          v-model:page-size="pageSize"
+          :total="total"
+          layout="total, prev, pager, next"
+          @current-change="load"
+          @size-change="load"
+        />
+      </div>
     </ElCard>
 
-    <ElDialog v-model="viewVisible" :title="current.title" width="560px">
+    <ElDialog v-model="viewVisible" :title="current.title" width="560px" align-center>
       <div class="msg-meta">{{ formatTableTime(current.sendTime) }}</div>
       <div class="msg-content" v-safe-html="current.content"></div>
     </ElDialog>
@@ -26,14 +92,13 @@
 </template>
 
 <script setup lang="ts">
-  import { h, reactive } from 'vue'
-  import { ElButton, ElTag, ElMessage, ElMessageBox } from 'element-plus'
-  import { useTable } from '@/hooks/core/useTable'
+  import { onMounted, reactive, ref } from 'vue'
+  import { ElMessage, ElMessageBox } from 'element-plus'
   import { useMessageStore } from '@/store/modules/message'
   import {
     fetchMyMessagePage,
-    fetchReadMessage,
     fetchReadAllMessage,
+    fetchReadMessage,
     fetchRemoveMyMessage
   } from '@/api/message'
   import { formatTableTime } from '@/utils/date'
@@ -42,88 +107,52 @@
   defineOptions({ name: 'Message' })
 
   const { t } = useI18n()
-
   const messageStore = useMessageStore()
   const viewVisible = ref(false)
   const current = reactive<any>({ title: '', content: '', sendTime: '' })
+  const keyword = ref('')
+  const readFilter = ref<number | undefined>(undefined)
+  const rows = ref<any[]>([])
+  const selected = ref<any[]>([])
+  const loading = ref(false)
+  const pageNum = ref(1)
+  const pageSize = ref(10)
+  const total = ref(0)
 
-  const TYPE_LABEL: Record<string, string> = {
-    system: t('pages.system.message.typeSystem'),
-    notice: t('pages.system.message.typeNotice'),
-    todo: t('pages.system.message.typeTodo')
+  const typeLabel = (type: string) => {
+    if (type === 'system') return t('pages.system.message.typeSystem')
+    if (type === 'notice') return t('pages.system.message.typeNotice')
+    if (type === 'todo') return t('pages.system.message.typeTodo')
+    return type
   }
 
-  const {
-    columns,
-    columnChecks,
-    data,
-    loading,
-    pagination,
-    handleSizeChange,
-    handleCurrentChange,
-    refreshData
-  } = useTable({
-    core: {
-      apiFn: fetchMyMessagePage,
-      apiParams: { pageNum: 1, pageSize: 10 },
-      paginationKey: { current: 'pageNum', size: 'pageSize' },
-      columnsFactory: () => [
-        { prop: 'title', label: t('pages.system.message.colTitle'), minWidth: 240 },
-        {
-          prop: 'type',
-          label: t('pages.system.message.colType'),
-          width: 90,
-          formatter: (row: any) => TYPE_LABEL[row.type] || row.type
-        },
-        {
-          prop: 'isRead',
-          label: t('pages.system.message.colStatus'),
-          width: 90,
-          formatter: (row: any) =>
-            h(ElTag, { type: row.isRead === 1 ? 'info' : 'danger' }, () =>
-              row.isRead === 1
-                ? t('pages.system.message.statusRead')
-                : t('pages.system.message.statusUnread')
-            )
-        },
-        {
-          prop: 'sendTime',
-          label: t('pages.system.message.colSendTime'),
-          minWidth: 180,
-          formatter: (row: any) => formatTableTime(row.sendTime)
-        },
-        {
-          prop: 'operation',
-          label: t('pages.system.message.colOperation'),
-          width: 140,
-          fixed: 'right',
-          formatter: (row: any) =>
-            h('div', [
-              h(
-                ElButton,
-                { link: true, type: 'primary', size: 'small', onClick: () => view(row) },
-                () => t('pages.system.message.viewBtn')
-              ),
-              h(
-                ElButton,
-                { link: true, type: 'danger', size: 'small', onClick: () => remove(row) },
-                () => t('pages.system.message.deleteBtn')
-              )
-            ])
-        }
-      ]
-    },
-    transform: {
-      responseAdapter: (resp: any) => ({
-        records: resp?.records ?? [],
-        total: resp?.totalRow ?? 0,
-        current: resp?.pageNumber ?? 1,
-        size: resp?.pageSize ?? 10
+  const load = async () => {
+    loading.value = true
+    try {
+      const resp: any = await fetchMyMessagePage({
+        pageNum: pageNum.value,
+        pageSize: pageSize.value,
+        name: keyword.value.trim() || undefined,
+        isRead: readFilter.value
       })
+      rows.value = resp?.records ?? []
+      total.value = resp?.totalRow ?? 0
+    } finally {
+      loading.value = false
     }
-  })
+  }
 
-  // 查看详情：未读则标已读并刷新角标
+  const search = () => {
+    pageNum.value = 1
+    load()
+  }
+
+  const reset = () => {
+    keyword.value = ''
+    readFilter.value = undefined
+    search()
+  }
+
   const view = async (row: any) => {
     Object.assign(current, { title: row.title, content: row.content, sendTime: row.sendTime })
     viewVisible.value = true
@@ -136,35 +165,53 @@
 
   const readAll = async () => {
     await fetchReadAllMessage()
-    ElMessage.success(t('pages.system.message.readAllSuccess'))
     messageStore.refreshUnread()
-    refreshData()
+    load()
   }
 
-  const remove = (row: any) => {
+  const removeRows = async (list: any[]) => {
+    await fetchRemoveMyMessage(list.map((row) => row.id))
+    messageStore.refreshUnread()
+    load()
+  }
+
+  const removeOne = (row: any) => {
     ElMessageBox.confirm(
-      t('pages.system.message.deleteConfirm'),
+      t('pages.system.message.deleteConfirm', { title: row.title || '' }),
       t('pages.system.message.deleteBtn'),
       { type: 'warning' }
-    ).then(async () => {
-      await fetchRemoveMyMessage([row.id])
-      ElMessage.success(t('pages.system.message.deleteSuccess'))
-      messageStore.refreshUnread()
-      refreshData()
-    })
+    ).then(() => removeRows([row]))
   }
 
-  let seenMessage = false
-  onActivated(() => {
-    if (!seenMessage) {
-      seenMessage = true
+  const removeSelected = () => {
+    if (!selected.value.length) {
+      ElMessage.warning(t('pages.system.message.deleteEmpty'))
       return
     }
-    refreshData()
-  })
+    ElMessageBox.confirm(
+      t('pages.system.message.deleteBatchConfirm', { count: selected.value.length }),
+      t('pages.system.message.deleteSelected'),
+      { type: 'warning' }
+    ).then(() => removeRows(selected.value))
+  }
+
+  onMounted(load)
 </script>
 
 <style lang="scss" scoped>
+  .toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .pager {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+  }
+
   .msg-meta {
     margin-bottom: 12px;
     font-size: 12px;
@@ -172,8 +219,7 @@
   }
 
   .msg-content {
-    // 消息内容可能很长：限高 + 内部滚动，防矮视口下弹窗整体挤出视口
-    max-height: 60vh;
+    max-height: 50vh;
     overflow-y: auto;
     line-height: 1.7;
   }

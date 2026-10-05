@@ -1299,8 +1299,16 @@
         "colOperation": "Actions",
         "viewBtn": "View",
         "deleteBtn": "Delete",
-        "deleteConfirm": "Delete this message?",
-        "deleteSuccess": "Deleted successfully",
+        "search": "Search",
+        "reset": "Reset",
+        "searchPlaceholder": "Search by title",
+        "statusPlaceholder": "Any status",
+        "deleteSelected": "Delete selected",
+        "deleteEmpty": "Select messages to delete first",
+        "deleteConfirm": "Delete \"{title}\"? It will leave your inbox",
+        "deleteBatchConfirm": "Delete the {count} selected messages?",
+        "emptyList": "No messages yet. They show up here after someone sends one",
+        "emptySearch": "No messages match. Try another title or status",
         "readAllSuccess": "All marked as read"
       },
       "messageSend": {

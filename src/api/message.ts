@@ -18,22 +18,38 @@ export function fetchMyMessagePage(params: Record<string, any>) {
 
 /** 标记单条已读 */
 export function fetchReadMessage(messageId: number | string) {
-  return request.post<void>({ url: `/api/system/message/read/${messageId}` })
+  return request.post<void>({
+    url: `/api/system/message/read/${messageId}`,
+    data: {},
+    showSuccessMessage: true
+  })
 }
 
 /** 全部已读 */
 export function fetchReadAllMessage() {
-  return request.post<void>({ url: '/api/system/message/read-all' })
+  return request.post<void>({
+    url: '/api/system/message/read-all',
+    data: {},
+    showSuccessMessage: true
+  })
 }
 
 /** 删除我的消息 */
 export function fetchRemoveMyMessage(ids: (number | string)[]) {
-  return request.post<void>({ url: '/api/system/message/remove', data: ids })
+  return request.post<void>({
+    url: '/api/system/message/remove',
+    data: ids,
+    showSuccessMessage: true
+  })
 }
 
 /** 发送站内信 */
 export function fetchSendMessage(data: Record<string, any>) {
-  return request.post<void>({ url: '/api/system/message/send', data })
+  return request.post<void>({
+    url: '/api/system/message/send',
+    data,
+    showSuccessMessage: true
+  })
 }
 
 /** 用户下拉（收件人选择）：keyword 远程搜索（用户名/昵称模糊，后端封顶 50 条）；ids 精确取（编辑回显） */

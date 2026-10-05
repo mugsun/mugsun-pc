@@ -164,7 +164,6 @@
         params,
         recipientIds: form.recipientIds
       })
-      ElMessage.success(t('pages.system.messageSend.sendSuccess'))
       Object.assign(form, {
         recipientIds: [],
         type: 'system',
@@ -187,7 +186,8 @@
 <style lang="scss" scoped>
   .message-send-page {
     .send-form-wrap {
-      height: 100%;
+      height: auto;
+      max-height: calc(100vh - 180px);
       overflow-y: auto;
 
       /* 仅占位文字不拦截点击，避免点空白处无法展开下拉 */
