@@ -3394,6 +3394,7 @@
         "responseSizeLine": "响应大小 {value}",
         "selectRangeWarn": "请选择时间范围",
         "selectUserWarn": "请选择用户",
+        "needApp": "请先选择应用。行为记录是按应用分开的",
         "sessionLine": "会话 {id}",
         "startPlaceholder": "开始时间",
         "userOptionLabel": "{name}（{account}）",

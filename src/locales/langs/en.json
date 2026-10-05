@@ -3394,6 +3394,7 @@
         "responseSizeLine": "Response size {value}",
         "selectRangeWarn": "Please select a time range",
         "selectUserWarn": "Please select a user",
+        "needApp": "Select an app first. Activity is kept per app.",
         "sessionLine": "Session {id}",
         "startPlaceholder": "Start time",
         "userOptionLabel": "{name} ({account})",

@@ -395,8 +395,11 @@
 
   /** 查询（重置）：条件校验（用户/访客二选一 + 范围 ≤7 天）→ 首页时间线 */
   const search = async (): Promise<void> => {
+    if (!appKey.value) {
+      ElMessage.warning(t('pages.track.user.needApp'))
+      return
+    }
     const target = idMode.value === 'user' ? userId.value : distinctId.value.trim()
-    if (!appKey.value) return
     if (!target) {
       ElMessage.warning(
         idMode.value === 'user'
