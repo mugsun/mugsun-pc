@@ -15,9 +15,10 @@
           <ElInput
             v-model="keyword"
             clearable
-            placeholder="搜索"
+            placeholder="搜索 MCP"
             style="width: 200px"
             @keyup.enter="reload"
+            @clear="reload"
           />
           <ElButton @click="reload">搜索</ElButton>
           <ElButton type="primary" @click="openEdit()">添加 MCP 工具</ElButton>
@@ -45,18 +46,48 @@
               >
             </div>
           </ElCard>
-          <ElEmpty v-if="!loading && !records.length" description="暂无 MCP" />
+          <ElEmpty
+            v-if="!loading && !records.length"
+            :description="
+              searched ? '没有符合条件的 MCP。换个名称再查' : '还没有 MCP。点添加 MCP 工具开始配置'
+            "
+          />
         </div>
       </template>
       <template v-else>
-        <ArtTable :loading="serverLoading" :data="servers" :columns="serverColumns" />
+        <ArtTable
+          v-if="serverLoading || servers.length"
+          :loading="serverLoading"
+          :data="servers"
+          :columns="serverColumns"
+        />
+        <ElEmpty v-else description="还没有对外暴露的工具。添加 HTTP 或 SSE 并启用后会出现在这里" />
       </template>
     </ElCard>
 
-    <ElDialog v-model="visible" :title="form.id ? '编辑 MCP' : '添加 MCP'" width="640px">
+    <ElDialog
+      v-model="visible"
+      class="ai-mcp-dialog"
+      :title="form.id ? '编辑 MCP' : '添加 MCP'"
+      width="640px"
+    >
       <ElForm :model="form" label-width="110px">
-        <ElFormItem label="协议名称" required><ElInput v-model="form.name" /></ElFormItem>
-        <ElFormItem label="协议描述" required><ElInput v-model="form.description" /></ElFormItem>
+        <ElFormItem label="协议名称" required>
+          <ElInput
+            v-model="form.name"
+            maxlength="64"
+            show-word-limit
+            placeholder="用来在列表里区分"
+          />
+        </ElFormItem>
+        <ElFormItem label="协议描述" required>
+          <ElInput
+            v-model="form.description"
+            maxlength="255"
+            show-word-limit
+            placeholder="用来说明这个工具做什么"
+          />
+        </ElFormItem>
         <ElFormItem label="分类" required>
           <ElSelect v-model="form.category" style="width: 100%">
             <ElOption label="地图工具" value="map" /><ElOption label="聊天工具" value="chat" />
@@ -84,7 +115,11 @@
           ><ElInput v-model="form.apiKey" type="password" show-password
         /></ElFormItem>
         <ElFormItem label="环境变量"
-          ><ElInput v-model="form.envJson" type="textarea" :rows="3" placeholder="JSON"
+          ><ElInput
+            v-model="form.envJson"
+            type="textarea"
+            :rows="2"
+            placeholder="JSON，留空表示不额外传"
         /></ElFormItem>
         <ElFormItem label="状态"
           ><ElSwitch v-model="form.status" :active-value="1" :inactive-value="0"
@@ -134,6 +169,7 @@
   defineOptions({ name: 'AiMcp' })
   const category = ref('')
   const keyword = ref('')
+  const searched = ref(false)
   const loading = ref(false)
   const records = ref<any[]>([])
 
@@ -171,11 +207,15 @@
       width: 100,
       formatter: (row: any) =>
         h(ElSwitch, {
-          modelValue: row.enabled === 1,
+          modelValue: row.status === 1,
           'onUpdate:modelValue': async (v: string | number | boolean) => {
-            await fetchToggleAiMcpServer({ name: row.name, enabled: v ? 1 : 0 })
-            row.enabled = v ? 1 : 0 // coerce
-            ElMessage.success('已更新')
+            try {
+              await fetchToggleAiMcpServer({ id: row.id, status: v ? 1 : 0 })
+              row.status = v ? 1 : 0
+              await reload()
+            } catch {
+              /* 失败时开关保持原样 */
+            }
           }
         })
     }
@@ -192,6 +232,7 @@
       return
     }
     loading.value = true
+    searched.value = !!keyword.value.trim()
     try {
       const res = await fetchAiMcpPage({
         pageNum: 1,
@@ -214,19 +255,46 @@
     visible.value = true
   }
   async function parseTools() {
-    const r = await fetchParseAiMcp({ ...form })
-    parsedTools.value = r?.tools || r || []
-    ElMessage.success('解析完成')
+    if (!form.id) {
+      ElMessage.error('请先保存这个工具，再解析清单')
+      return
+    }
+    try {
+      const r = await fetchParseAiMcp({ id: form.id })
+      const raw = r?.toolsJson
+      parsedTools.value = Array.isArray(raw) ? raw : []
+      if (typeof raw === 'string') {
+        try {
+          const parsed = JSON.parse(raw)
+          parsedTools.value = Array.isArray(parsed) ? parsed : []
+        } catch {
+          parsedTools.value = []
+        }
+      }
+    } catch {
+      parsedTools.value = []
+    }
   }
   async function save() {
     saving.value = true
     try {
-      const payload = { ...form }
-      if (!payload.apiKey) delete payload.apiKey
+      const payload: Record<string, any> = {
+        id: form.id,
+        name: form.name,
+        description: form.description,
+        category: form.category,
+        protocolType: form.protocolType,
+        sseUrl: form.sseUrl,
+        command: form.command,
+        envJson: form.envJson,
+        status: form.status
+      }
+      if (form.apiKey) payload.apiKey = form.apiKey
       await fetchSaveAiMcp(payload)
-      ElMessage.success('已保存')
       visible.value = false
       await reload()
+    } catch {
+      /* 失败时弹窗留着，方便改完再保存 */
     } finally {
       saving.value = false
     }
@@ -241,25 +309,24 @@
     debugging.value = true
     try {
       const r = await fetchDebugAiMcp({ id: debugRow.value.id, prompt: debugPrompt.value })
-      debugResult.value = typeof r === 'string' ? r : JSON.stringify(r, null, 2)
+      debugResult.value = r?.message || '已回显。这是本地调试，没有调用外部工具'
+    } catch (e: any) {
+      debugResult.value = e?.message || '这次没有调通。请检查地址能不能从本机访问，再试一次'
     } finally {
       debugging.value = false
     }
   }
   async function setDefault(row: any) {
     await fetchDefaultAiMcp(row.id)
-    ElMessage.success('已设为默认')
     await reload()
   }
   async function toggleLock(row: any) {
     await fetchLockAiMcp({ id: row.id, lockFlag: row.lockFlag === 1 ? 0 : 1 })
-    ElMessage.success('已更新')
     await reload()
   }
   async function remove(row: any) {
-    await ElMessageBox.confirm(`删除「${row.name}」？`, '确认')
+    await ElMessageBox.confirm(`删除「${row.name}」后，列表里不会再出现，也不能再调试`, '确认')
     await fetchRemoveAiMcp(row.id)
-    ElMessage.success('已删除')
     await reload()
   }
   onMounted(reload)
@@ -267,6 +334,7 @@
 <style scoped>
   .toolbar {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     margin: 8px 0 12px;
   }
@@ -293,6 +361,9 @@
   }
 
   .ops {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
     margin-top: 10px;
   }
 
@@ -304,5 +375,18 @@
     white-space: pre-wrap;
     background: var(--el-fill-color-light);
     border-radius: 6px;
+  }
+</style>
+<style>
+  .ai-mcp-dialog.el-dialog {
+    display: flex;
+    flex-direction: column;
+    max-height: calc(100vh - 32px);
+  }
+
+  .ai-mcp-dialog .el-dialog__body {
+    flex: 1;
+    min-height: 0;
+    overflow: auto;
   }
 </style>

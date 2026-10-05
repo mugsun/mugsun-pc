@@ -204,28 +204,56 @@ export function fetchAiMcpPage(params: Record<string, any>) {
   return request.get<any>({ url: '/api/system/ai/mcp/page', params })
 }
 export function fetchSaveAiMcp(data: Record<string, any>) {
-  return request.post<any>({ url: '/api/system/ai/mcp/submit', data })
+  return request.post<any>({
+    url: '/api/system/ai/mcp/submit',
+    data,
+    showSuccessMessage: true
+  })
 }
 export function fetchRemoveAiMcp(id: AiId) {
-  return request.post<void>({ url: '/api/system/ai/mcp/remove', data: { id } })
+  return request.post<void>({
+    url: '/api/system/ai/mcp/remove',
+    data: { id },
+    showSuccessMessage: true
+  })
 }
 export function fetchParseAiMcp(data: Record<string, any>) {
-  return request.post<any>({ url: '/api/system/ai/mcp/parse', data })
+  return request.post<any>({
+    url: '/api/system/ai/mcp/parse',
+    data,
+    showSuccessMessage: true
+  })
 }
 export function fetchDebugAiMcp(data: Record<string, any>) {
-  return request.post<any>({ url: '/api/system/ai/mcp/debug', data })
+  return request.post<any>({
+    url: '/api/system/ai/mcp/debug',
+    data,
+    showSuccessMessage: true
+  })
 }
 export function fetchLockAiMcp(data: Record<string, any>) {
-  return request.post<void>({ url: '/api/system/ai/mcp/lock', data })
+  return request.post<void>({
+    url: '/api/system/ai/mcp/lock',
+    data,
+    showSuccessMessage: true
+  })
 }
 export function fetchDefaultAiMcp(id: AiId) {
-  return request.post<void>({ url: '/api/system/ai/mcp/default', data: { id } })
+  return request.post<void>({
+    url: '/api/system/ai/mcp/default',
+    data: { id },
+    showSuccessMessage: true
+  })
 }
 export function fetchAiMcpServerList() {
   return request.get<any[]>({ url: '/api/system/ai/mcp/server/list' })
 }
 export function fetchToggleAiMcpServer(data: Record<string, any>) {
-  return request.post<void>({ url: '/api/system/ai/mcp/server/toggle', data })
+  return request.post<void>({
+    url: '/api/system/ai/mcp/server/toggle',
+    data,
+    showSuccessMessage: true
+  })
 }
 
 // ===== 向量库 =====
