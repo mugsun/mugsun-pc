@@ -62,11 +62,19 @@ export function fetchGisSceneDetail(id: GisId) {
 }
 
 export function fetchSaveGisScene(data: GisScene) {
-  return request.post<GisScene>({ url: '/api/system/gis/scene/submit', data })
+  return request.post<GisScene>({
+    url: '/api/system/gis/scene/submit',
+    data,
+    showSuccessMessage: true
+  })
 }
 
 export function fetchRemoveGisScene(ids: GisId[]) {
-  return request.post<void>({ url: '/api/system/gis/scene/remove', data: ids })
+  return request.post<void>({
+    url: '/api/system/gis/scene/remove',
+    data: ids,
+    showSuccessMessage: true
+  })
 }
 
 export interface GisPoi {

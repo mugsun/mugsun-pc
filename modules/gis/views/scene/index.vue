@@ -18,7 +18,10 @@
             {{ $t('pages.gis.newScene') }}
           </ElButton>
         </div>
-        <ul v-loading="loading" class="gis-list">
+        <p v-if="!loading && !rows.length" class="gis-list-empty">
+          {{ searching ? $t('pages.gis.emptySceneSearch') : $t('pages.gis.emptySceneList') }}
+        </p>
+        <ul v-else v-loading="loading" class="gis-list">
           <li
             v-for="row in rows"
             :key="String(row.id)"
@@ -57,7 +60,7 @@
   import { nextTick, onActivated, onBeforeUnmount, onDeactivated, onMounted, ref } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { useRouter, onBeforeRouteLeave } from 'vue-router'
-  import { ElMessage, ElMessageBox } from 'element-plus'
+  import { ElMessageBox } from 'element-plus'
   import { fetchGisScenePage, fetchGisStatus, fetchRemoveGisScene, type GisScene } from '@/api/gis'
   import { bootLabMap, type LabMapBag } from '@/gis/labBoot'
   import { rememberedOrFirst } from '@/gis/preferProvider'
@@ -75,6 +78,7 @@
   const pageNum = ref(1)
   const pageSize = 20
   const keyword = ref('')
+  const searching = ref(false)
   const selectedId = ref('')
   let bag: LabMapBag | undefined
 
@@ -96,10 +100,12 @@
   const load = async (): Promise<void> => {
     loading.value = true
     try {
+      const name = keyword.value.trim()
+      searching.value = Boolean(name)
       const page = await fetchGisScenePage({
         pageNum: pageNum.value,
         pageSize,
-        name: keyword.value.trim() || undefined
+        name: name || undefined
       })
       rows.value = page?.records ?? []
       total.value = Number(page?.totalRow ?? page?.total ?? 0)
@@ -135,14 +141,15 @@
       return
     }
     try {
-      await ElMessageBox.confirm(t('pages.gis.deleteSceneConfirm'), t('pages.gis.deleteScene'), {
-        type: 'warning'
-      })
+      await ElMessageBox.confirm(
+        t('pages.gis.deleteSceneConfirm', { name: row.name }),
+        t('pages.gis.deleteScene'),
+        { type: 'warning' }
+      )
     } catch {
       return
     }
     await fetchRemoveGisScene([row.id])
-    ElMessage.success(t('pages.gis.deletedScene'))
     await load()
   }
 
@@ -183,5 +190,12 @@
 
   .gis-hud-head :deep(.gis-hud-search) {
     width: 120px;
+  }
+
+  .gis-list-empty {
+    margin: 12px 0 0;
+    font-size: 13px;
+    line-height: 1.5;
+    color: var(--el-text-color-secondary);
   }
 </style>

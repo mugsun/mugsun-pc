@@ -1736,14 +1736,12 @@
     }
     saving.value = true
     try {
-      const isNew = sceneId.value == null
       const saved = await fetchSaveGisScene({
         id: sceneId.value,
         name,
         sceneJson: JSON.stringify(captureSpec())
       })
       sceneId.value = saved.id
-      ElMessage.success(isNew ? t('pages.gis.created') : t('pages.gis.saved'))
       await loadScenes()
     } finally {
       saving.value = false
@@ -1753,14 +1751,15 @@
   const removeScene = async (): Promise<void> => {
     if (!sceneId.value) return
     try {
-      await ElMessageBox.confirm(t('pages.gis.deleteSceneConfirm'), t('pages.gis.deleteScene'), {
-        type: 'warning'
-      })
+      await ElMessageBox.confirm(
+        t('pages.gis.deleteSceneConfirm', { name: sceneName.value || '' }),
+        t('pages.gis.deleteScene'),
+        { type: 'warning' }
+      )
     } catch {
       return
     }
     await fetchRemoveGisScene([sceneId.value])
-    ElMessage.success(t('pages.gis.deletedScene'))
     await newScene()
     await loadScenes()
   }
