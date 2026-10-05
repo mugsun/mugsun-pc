@@ -489,6 +489,26 @@ export const systemRoutes: AppRouteRecord = {
       }
     },
     {
+      path: 'notify-channel',
+      name: 'NotifyChannel',
+      component: '/system/notify-channel',
+      meta: {
+        title: 'menus.system.notifyChannel',
+        icon: 'ri:router-line',
+        keepAlive: true
+      }
+    },
+    {
+      path: 'notify-template',
+      name: 'NotifyTemplate',
+      component: '/system/notify-template',
+      meta: {
+        title: 'menus.system.notifyTemplate',
+        icon: 'ri:draft-line',
+        keepAlive: true
+      }
+    },
+    {
       path: 'message-template',
       name: 'MessageTemplate',
       component: '/system/message-template',
