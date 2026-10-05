@@ -53,7 +53,7 @@
             </ElButton>
           </div>
         </ElCard>
-        <ElEmpty v-if="!loading && !records.length" description="暂无模型" />
+        <ElEmpty v-if="!loading && !records.length" :description="emptyText" />
       </div>
 
       <div class="ai-model-pager">
@@ -70,6 +70,7 @@
 
     <ElDialog
       v-model="dialogVisible"
+      class="ai-model-dialog"
       :title="form.id ? '编辑模型' : '添加模型'"
       width="640px"
       destroy-on-close
@@ -133,8 +134,8 @@
 </template>
 
 <script setup lang="ts">
-  import { onMounted, reactive, ref } from 'vue'
-  import { ElMessage, ElMessageBox } from 'element-plus'
+  import { computed, onMounted, reactive, ref } from 'vue'
+  import { ElMessageBox } from 'element-plus'
   import {
     fetchAiModelPage,
     fetchDefaultAiModel,
@@ -167,10 +168,15 @@
   const total = ref(0)
   const dialogVisible = ref(false)
   const saving = ref(false)
+  const searching = ref(false)
   const form = reactive<Record<string, any>>({})
+  const emptyText = computed(() =>
+    searching.value ? '没有符合条件的模型。换个名称再查' : '还没有模型。点添加新模型开始配置'
+  )
 
   async function reload() {
     loading.value = true
+    searching.value = !!keyword.value.trim()
     try {
       const res = await fetchAiModelPage({
         pageNum: pageNum.value,
@@ -214,40 +220,45 @@
   }
 
   async function save() {
-    if (!form.modelName || !form.baseUrl || !form.modelCode) {
-      ElMessage.warning('请填写必填项')
-      return
-    }
     saving.value = true
     try {
       const payload = { ...form }
       if (!payload.apiKey) delete payload.apiKey
       if (!payload.secretKey) delete payload.secretKey
       await fetchSaveAiModel(payload)
-      ElMessage.success('已保存')
       dialogVisible.value = false
       await reload()
+    } catch {
+      /* 失败文案由请求层弹出，弹窗留着方便改 */
     } finally {
       saving.value = false
     }
   }
 
   async function setDefault(row: any) {
-    await fetchDefaultAiModel(row.id)
-    ElMessage.success('已设为默认')
-    await reload()
+    try {
+      await fetchDefaultAiModel(row.id)
+      await reload()
+    } catch {
+      /* 未激活时保留当前默认标记 */
+    }
   }
 
   async function testModel(row: any) {
-    const res = await fetchTestAiModel(row.id)
-    ElMessage.success(res?.message || '测试通过')
-    await reload()
+    try {
+      await fetchTestAiModel(row.id)
+      await reload()
+    } catch {
+      await reload()
+    }
   }
 
   async function remove(row: any) {
-    await ElMessageBox.confirm(`确定删除模型「${row.modelName}」？`, '删除确认')
+    await ElMessageBox.confirm(
+      `删除「${row.modelName}」后，列表里不会再出现。已设成默认的也会一起清掉`,
+      '确认'
+    )
     await fetchRemoveAiModel(row.id)
-    ElMessage.success('已删除')
     await reload()
   }
 
@@ -257,8 +268,22 @@
 <style scoped>
   .ai-model-toolbar {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     margin: 8px 0 16px;
+  }
+
+  :global(.ai-model-dialog) {
+    margin: 16px auto 0 !important;
+  }
+
+  :global(.ai-model-dialog .el-dialog__body) {
+    padding-top: 8px;
+    padding-bottom: 4px;
+  }
+
+  :global(.ai-model-dialog .el-form-item) {
+    margin-bottom: 8px;
   }
 
   .ai-model-grid {

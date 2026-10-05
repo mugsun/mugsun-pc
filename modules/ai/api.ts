@@ -140,13 +140,25 @@ export function fetchAiModelPage(params: Record<string, any>) {
   return request.get<any>({ url: '/api/system/ai/model/page', params })
 }
 export function fetchSaveAiModel(data: Record<string, any>) {
-  return request.post<any>({ url: '/api/system/ai/model/submit', data })
+  return request.post<any>({
+    url: '/api/system/ai/model/submit',
+    data,
+    showSuccessMessage: true
+  })
 }
 export function fetchRemoveAiModel(id: AiId) {
-  return request.post<void>({ url: '/api/system/ai/model/remove', data: { id } })
+  return request.post<void>({
+    url: '/api/system/ai/model/remove',
+    data: { id },
+    showSuccessMessage: true
+  })
 }
 export function fetchDefaultAiModel(id: AiId) {
-  return request.post<void>({ url: '/api/system/ai/model/default', data: { id } })
+  return request.post<void>({
+    url: '/api/system/ai/model/default',
+    data: { id },
+    showSuccessMessage: true
+  })
 }
 export function fetchTestAiModel(id: AiId) {
   return request.post<any>({ url: '/api/system/ai/model/test', data: { id } })
