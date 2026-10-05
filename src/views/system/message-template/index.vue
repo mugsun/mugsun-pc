@@ -1,27 +1,82 @@
-<!-- 站内信模板管理：title/content 含 ${key} 占位 -->
+<!-- 站内信模板：按标题查找，内置欢迎模板不能删 -->
 <template>
   <div class="msg-template-page art-full-height">
-    <ElCard class="art-table-card" shadow="never">
-      <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
-        <template #left>
-          <ElButton
-            v-perm="'sys:message:manage'"
-            type="primary"
-            @click="showDialog('add')"
-            v-ripple
-            >{{ $t('pages.system.messageTemplate.addBtn') }}</ElButton
-          >
-        </template>
-      </ArtTableHeader>
+    <ElCard class="art-table-card">
+      <div class="mt-body">
+        <div class="mt-toolbar">
+          <ElInput
+            v-model="keyword"
+            clearable
+            class="mt-search"
+            :placeholder="$t('pages.system.messageTemplate.searchPlaceholder')"
+            @keyup.enter="search"
+          />
+          <ElButton type="primary" @click="search">{{
+            $t('pages.system.messageTemplate.search')
+          }}</ElButton>
+          <ElButton @click="resetSearch">{{ $t('pages.system.messageTemplate.reset') }}</ElButton>
+          <ElButton v-perm="'sys:message:manage'" type="primary" @click="showDialog('add')">{{
+            $t('pages.system.messageTemplate.addBtn')
+          }}</ElButton>
+          <ElButton v-perm="'sys:message:manage'" type="danger" plain @click="deleteSelected">{{
+            $t('pages.system.messageTemplate.deleteSelected')
+          }}</ElButton>
+        </div>
 
-      <ArtTable
-        :loading="loading"
-        :data="data as any[]"
-        :columns="columns"
-        :pagination="pagination"
-        @pagination:size-change="handleSizeChange"
-        @pagination:current-change="handleCurrentChange"
-      />
+        <div class="mt-table-wrap">
+          <ElTable
+            v-loading="loading"
+            :data="tableData"
+            border
+            height="100%"
+            :empty-text="emptyText"
+            @selection-change="onSelectionChange"
+          >
+            <ElTableColumn type="selection" width="48" :selectable="canSelect" />
+            <ElTableColumn
+              prop="code"
+              :label="$t('pages.system.messageTemplate.colCode')"
+              width="140"
+            />
+            <ElTableColumn
+              prop="title"
+              :label="$t('pages.system.messageTemplate.titleLabel')"
+              min-width="220"
+              show-overflow-tooltip
+            />
+            <ElTableColumn :label="$t('pages.system.messageTemplate.colOperation')" width="140">
+              <template #default="{ row }">
+                <ElButton
+                  v-perm="'sys:message:manage'"
+                  link
+                  type="primary"
+                  @click="showDialog('edit', row)"
+                  >{{ $t('common.edit') }}</ElButton
+                >
+                <ElButton
+                  v-if="canSelect(row)"
+                  v-perm="'sys:message:manage'"
+                  link
+                  type="danger"
+                  @click="deleteRow(row)"
+                  >{{ $t('common.delete') }}</ElButton
+                >
+              </template>
+            </ElTableColumn>
+          </ElTable>
+        </div>
+
+        <div class="mt-pager">
+          <ElPagination
+            v-model:current-page="pageNum"
+            :page-size="pageSize"
+            :total="total"
+            layout="total, prev, pager, next"
+            background
+            @current-change="loadData"
+          />
+        </div>
+      </div>
     </ElCard>
 
     <ElDialog
@@ -31,35 +86,32 @@
           ? $t('pages.system.messageTemplate.editTitle')
           : $t('pages.system.messageTemplate.addBtn')
       "
-      width="640px"
+      width="560px"
+      align-center
     >
-      <ElForm :model="form" label-width="80px">
-        <ElFormItem :label="$t('pages.system.messageTemplate.codeLabel')" required>
+      <ElForm ref="formRef" :model="form" :rules="rules" label-width="80px">
+        <ElFormItem :label="$t('pages.system.messageTemplate.codeLabel')" prop="code">
           <ElInput
             v-model="form.code"
             :disabled="!!form.id"
             :placeholder="$t('pages.system.messageTemplate.codePlaceholder')"
           />
         </ElFormItem>
-        <ElFormItem :label="$t('pages.system.messageTemplate.titleLabel')" required>
+        <ElFormItem :label="$t('pages.system.messageTemplate.titleLabel')" prop="title">
           <ElInput
             v-model="form.title"
-            :placeholder="
-              $t('pages.system.messageTemplate.titlePlaceholder', {
-                key: '{key}',
-                name: '{name}'
-              })
-            "
+            maxlength="255"
+            :placeholder="$t('pages.system.messageTemplate.titlePlaceholder', { name: '{name}' })"
           />
         </ElFormItem>
-        <ElFormItem :label="$t('pages.system.messageTemplate.contentLabel')">
+        <ElFormItem :label="$t('pages.system.messageTemplate.contentLabel')" prop="content">
           <ElInput
             v-model="form.content"
             type="textarea"
-            :rows="5"
+            :rows="4"
+            maxlength="20000"
             :placeholder="
               $t('pages.system.messageTemplate.contentPlaceholder', {
-                key: '{key}',
                 name: '{name}',
                 role: '{role}'
               })
@@ -72,7 +124,7 @@
           $t('common.cancel')
         }}</ElButton>
         <ElButton type="primary" :loading="dialogSaving" @click="submit">{{
-          $t('common.confirm')
+          $t('pages.system.messageTemplate.submitBtn')
         }}</ElButton>
       </template>
     </ElDialog>
@@ -80,135 +132,158 @@
 </template>
 
 <script setup lang="ts">
-  import { h, reactive } from 'vue'
-  import { ElButton, ElMessage, ElMessageBox } from 'element-plus'
-  import { useTable } from '@/hooks/core/useTable'
-  import { hasPerm } from '@/utils/permission'
-  import {
-    fetchMsgTemplatePage,
-    fetchMsgTemplateDetail,
-    fetchSaveMsgTemplate,
-    fetchRemoveMsgTemplate
-  } from '@/api/message'
-  import { formatTableTime } from '@/utils/date'
+  import { computed, onMounted, reactive, ref } from 'vue'
+  import type { FormInstance, FormRules } from 'element-plus'
+  import { ElMessage, ElMessageBox } from 'element-plus'
   import { useI18n } from 'vue-i18n'
+  import { fetchMsgTemplatePage, fetchRemoveMsgTemplate, fetchSaveMsgTemplate } from '@/api/message'
 
   defineOptions({ name: 'MessageTemplate' })
 
   const { t } = useI18n()
-
-  const {
-    columns,
-    columnChecks,
-    data,
-    loading,
-    pagination,
-    handleSizeChange,
-    handleCurrentChange,
-    refreshData
-  } = useTable({
-    core: {
-      apiFn: fetchMsgTemplatePage,
-      apiParams: { pageNum: 1, pageSize: 10 },
-      paginationKey: { current: 'pageNum', size: 'pageSize' },
-      columnsFactory: () => [
-        { prop: 'code', label: t('pages.system.messageTemplate.colCode'), width: 160 },
-        { prop: 'title', label: t('pages.system.messageTemplate.titleLabel'), minWidth: 220 },
-        {
-          prop: 'createTime',
-          label: t('pages.system.messageTemplate.colCreateTime'),
-          minWidth: 180,
-          formatter: (row: any) => formatTableTime(row.createTime)
-        },
-        {
-          prop: 'operation',
-          label: t('pages.system.messageTemplate.colOperation'),
-          width: 140,
-          fixed: 'right',
-          // 操作列由 h() 渲染（指令够不到），用 hasPerm() 函数按真实权限码门控
-          formatter: (row: any) =>
-            h('div', { class: 'flex gap-1' }, [
-              hasPerm('sys:message:manage')
-                ? h(
-                    ElButton,
-                    {
-                      size: 'small',
-                      link: true,
-                      type: 'primary',
-                      onClick: () => showDialog('edit', row)
-                    },
-                    () => t('common.edit')
-                  )
-                : null,
-              hasPerm('sys:message:manage')
-                ? h(
-                    ElButton,
-                    {
-                      size: 'small',
-                      link: true,
-                      type: 'danger',
-                      onClick: () => remove(row)
-                    },
-                    () => t('common.delete')
-                  )
-                : null
-            ])
-        }
-      ]
-    },
-    transform: {
-      responseAdapter: (resp: any) => ({
-        records: resp?.records ?? [],
-        total: resp?.totalRow ?? 0,
-        current: resp?.pageNumber ?? 1,
-        size: resp?.pageSize ?? 10
-      })
-    }
-  })
-
+  const BUILTIN = new Set(['welcome'])
+  const tableData = ref<any[]>([])
+  const loading = ref(false)
+  const keyword = ref('')
+  const filtering = ref(false)
+  const selectedRows = ref<any[]>([])
+  const pageNum = ref(1)
+  const pageSize = ref(10)
+  const total = ref(0)
   const dialogVisible = ref(false)
   const dialogSaving = ref(false)
-  const form = reactive<any>({ id: undefined, code: '', title: '', content: '' })
+  const formRef = ref<FormInstance>()
+  const form = reactive({ id: undefined as string | undefined, code: '', title: '', content: '' })
 
-  const showDialog = async (type: 'add' | 'edit', row?: any) => {
-    if (type === 'add') {
-      Object.assign(form, { id: undefined, code: '', title: '', content: '' })
-    } else {
-      const detail = await fetchMsgTemplateDetail(row.id)
-      Object.assign(form, {
-        id: detail.id,
-        code: detail.code,
-        title: detail.title,
-        content: detail.content || ''
+  const emptyText = computed(() =>
+    filtering.value
+      ? t('pages.system.messageTemplate.emptySearch')
+      : t('pages.system.messageTemplate.emptyList')
+  )
+  const canSelect = (row: { code?: string }) => !BUILTIN.has(row.code || '')
+  const rules = computed<FormRules>(() => ({
+    code: [
+      { required: true, message: t('pages.system.messageTemplate.ruleCode'), trigger: 'blur' },
+      {
+        pattern: /^[a-z][a-z0-9_]{0,63}$/,
+        message: t('pages.system.messageTemplate.ruleCodeFormat'),
+        trigger: 'blur'
+      }
+    ],
+    title: [
+      { required: true, message: t('pages.system.messageTemplate.ruleTitle'), trigger: 'blur' }
+    ]
+  }))
+
+  const loadData = async () => {
+    loading.value = true
+    try {
+      const res = await fetchMsgTemplatePage({
+        pageNum: pageNum.value,
+        pageSize: pageSize.value,
+        name: filtering.value ? keyword.value.trim() : undefined
       })
+      tableData.value = res?.records || []
+      total.value = res?.totalRow ?? 0
+    } finally {
+      loading.value = false
     }
+  }
+
+  const search = () => {
+    filtering.value = !!keyword.value.trim()
+    pageNum.value = 1
+    loadData()
+  }
+
+  const resetSearch = () => {
+    keyword.value = ''
+    filtering.value = false
+    pageNum.value = 1
+    loadData()
+  }
+
+  const onSelectionChange = (rows: any[]) => {
+    selectedRows.value = rows
+  }
+
+  const showDialog = (type: 'add' | 'edit', row?: any) => {
+    Object.assign(form, {
+      id: type === 'edit' ? row.id : undefined,
+      code: type === 'edit' ? row.code : '',
+      title: type === 'edit' ? row.title : '',
+      content: type === 'edit' ? row.content || '' : ''
+    })
     dialogVisible.value = true
+    nextTick(() => formRef.value?.clearValidate())
   }
 
   const submit = async () => {
-    if (!form.code?.trim() || !form.title?.trim()) {
-      return ElMessage.warning(t('pages.system.messageTemplate.requiredWarning'))
-    }
+    const valid = await formRef.value?.validate().catch(() => false)
+    if (!valid) return
     dialogSaving.value = true
     try {
       await fetchSaveMsgTemplate({ ...form })
-      ElMessage.success(t('pages.system.messageTemplate.saveSuccess'))
       dialogVisible.value = false
-      refreshData()
+      await loadData()
     } finally {
       dialogSaving.value = false
     }
   }
 
-  const remove = (row: any) => {
-    ElMessageBox.confirm(
-      t('pages.system.messageTemplate.deleteConfirm', { name: row.code }),
+  const deleteRow = async (row: any) => {
+    await ElMessageBox.confirm(
+      t('pages.system.messageTemplate.deleteConfirm', { name: row.title }),
       t('pages.system.messageTemplate.deleteTitle'),
       { type: 'warning' }
-    ).then(async () => {
-      await fetchRemoveMsgTemplate([row.id])
-      ElMessage.success(t('pages.system.messageTemplate.deleteSuccess'))
-      refreshData()
-    })
+    )
+    await fetchRemoveMsgTemplate([row.id])
+    await loadData()
   }
+
+  const deleteSelected = async () => {
+    if (!selectedRows.value.length) {
+      ElMessage.warning(t('pages.system.messageTemplate.deleteEmpty'))
+      return
+    }
+    await ElMessageBox.confirm(
+      t('pages.system.messageTemplate.deleteBatchConfirm', { count: selectedRows.value.length }),
+      t('pages.system.messageTemplate.deleteTitle'),
+      { type: 'warning' }
+    )
+    await fetchRemoveMsgTemplate(selectedRows.value.map((row) => row.id))
+    await loadData()
+  }
+
+  onMounted(loadData)
 </script>
+
+<style lang="scss" scoped>
+  .mt-body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .mt-table-wrap {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .mt-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .mt-search {
+    width: 220px;
+  }
+
+  .mt-pager {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+  }
+</style>

@@ -58,9 +58,17 @@ export function fetchMsgTemplateDetail(id: number | string) {
 }
 
 export function fetchSaveMsgTemplate(data: Record<string, any>) {
-  return request.post<void>({ url: '/api/system/message-template/submit', data })
+  return request.post<void>({
+    url: '/api/system/message-template/submit',
+    data,
+    showSuccessMessage: true
+  })
 }
 
 export function fetchRemoveMsgTemplate(ids: (number | string)[]) {
-  return request.post<void>({ url: '/api/system/message-template/remove', data: ids })
+  return request.post<void>({
+    url: '/api/system/message-template/remove',
+    data: ids,
+    showSuccessMessage: true
+  })
 }
