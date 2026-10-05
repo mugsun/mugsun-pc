@@ -383,8 +383,20 @@ export function fetchAiMessageList(sessionId: AiId) {
 export function fetchAiChatStream(data: Record<string, any>, handlers: AiSseHandlers) {
   return consumeAiSse('/api/system/ai/chat/stream', data, handlers)
 }
-export function fetchAiChatReceive(requestId: string, handlers: AiSseHandlers) {
-  return consumeAiSse(`/api/system/ai/chat/receive/${requestId}`, undefined, handlers, 'GET')
+export function fetchAiChatReceive(requestId: string) {
+  return request.post<any>({
+    url: '/api/system/ai/chat/receive',
+    data: { requestId },
+    showSuccessMessage: true
+  })
+}
+export function fetchAiChatReplay(requestId: string, handlers: AiSseHandlers) {
+  return consumeAiSse(
+    `/api/system/ai/chat/replay?requestId=${encodeURIComponent(requestId)}`,
+    undefined,
+    handlers,
+    'GET'
+  )
 }
 export function fetchAiChatStop(requestId: string) {
   return request.post<void>({

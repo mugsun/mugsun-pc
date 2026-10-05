@@ -76,6 +76,15 @@
               </ElCollapseItem>
             </ElCollapse>
             <div class="ai-msg__content" v-html="renderMd(msg.content)" />
+            <ElButton
+              v-if="msg.role === 'assistant' && msg.requestId"
+              link
+              type="primary"
+              :disabled="streaming"
+              @click="replayMessage(msg)"
+            >
+              续传
+            </ElButton>
             <div v-if="msg.refs?.length" class="ai-msg__refs">
               <div class="ai-msg__refs-title">引用 {{ msg.refs.length }}</div>
               <div v-for="(r, ri) in msg.refs" :key="ri" class="ai-msg__ref">
@@ -130,6 +139,7 @@
   import DOMPurify from 'dompurify'
   import hljs from 'highlight.js'
   import {
+    fetchAiChatReplay,
     fetchAiChatStop,
     fetchAiChatStream,
     fetchAiMessageList,
@@ -152,6 +162,7 @@
     modelName?: string
     tokens?: number
     durationMs?: number
+    requestId?: string
     refs?: Array<{ content?: string; score?: number; source?: string; segmentId?: string | number }>
   }
 
@@ -255,7 +266,8 @@
       thinkContent: m.thinkContent,
       modelName: m.modelName,
       tokens: m.tokens,
-      durationMs: m.durationMs
+      durationMs: m.durationMs,
+      requestId: m.requestId
     }))
     await scrollBottom()
   }
@@ -404,6 +416,38 @@
         }
       }
     )
+  }
+
+  async function replayMessage(msg: ChatMsg) {
+    if (!msg.requestId || streaming.value) return
+    let failed = false
+    streaming.value = true
+    abortCtrl.value = await fetchAiChatReplay(msg.requestId, {
+      onChunk: (c) => {
+        if (c && !msg.content.includes(c)) msg.content += c
+      },
+      onThink: (t) => {
+        if (t && !(msg.thinkContent || '').includes(t)) {
+          msg.thinkContent = (msg.thinkContent || '') + t
+        }
+      },
+      onError: (m) => {
+        failed = true
+        streaming.value = false
+        abortCtrl.value = null
+        ElMessage.error(m || '没有可续传的回答。请重新发送')
+      },
+      onDone: (payload) => {
+        streaming.value = false
+        abortCtrl.value = null
+        if (failed) return
+        const text =
+          payload && typeof payload === 'object' && 'message' in payload
+            ? String((payload as { message?: unknown }).message || '')
+            : ''
+        ElMessage.success(text || '已取回这段回答。内容已经补在这条消息上')
+      }
+    })
   }
 
   async function stopStream() {
