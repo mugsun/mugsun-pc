@@ -82,12 +82,17 @@ export function fetchMailTemplatePage(params: Record<string, any>) {
   return request.get<any>({ url: '/api/system/mail-template/page', params })
 }
 export function fetchSaveMailTemplate(data: Record<string, any>) {
-  return request.post<void>({ url: '/api/system/mail-template/submit', data })
+  return request.post<void>({
+    url: '/api/system/mail-template/submit',
+    data,
+    showSuccessMessage: true
+  })
 }
 export function fetchRemoveMailTemplate(ids: (number | string)[] | number | string) {
   return request.post<void>({
     url: '/api/system/mail-template/remove',
-    data: Array.isArray(ids) ? ids : [ids]
+    data: Array.isArray(ids) ? ids : [ids],
+    showSuccessMessage: true
   })
 }
 export function fetchSendTestMail(data: Record<string, any>) {

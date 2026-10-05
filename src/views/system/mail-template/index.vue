@@ -6,6 +6,17 @@
            防卡片体 overflow:hidden 裁掉分页器（同全局 .art-table-card 契约） -->
       <div class="mail-template-body">
         <div class="mt-toolbar">
+          <ElInput
+            v-model="keyword"
+            clearable
+            class="mt-search"
+            :placeholder="$t('pages.system.mailTemplate.searchPlaceholder')"
+            @keyup.enter="search"
+          />
+          <ElButton type="primary" @click="search">{{
+            $t('pages.system.mailTemplate.search')
+          }}</ElButton>
+          <ElButton @click="resetSearch">{{ $t('pages.system.mailTemplate.reset') }}</ElButton>
           <ElButton
             v-perm="'sys:mail-template:save'"
             type="primary"
@@ -13,10 +24,25 @@
             v-ripple
             >{{ $t('pages.system.mailTemplate.addBtn') }}</ElButton
           >
+          <ElButton
+            v-perm="'sys:mail-template:remove'"
+            type="danger"
+            plain
+            @click="deleteSelected"
+            >{{ $t('pages.system.mailTemplate.deleteSelected') }}</ElButton
+          >
         </div>
 
         <div class="mt-table-wrap">
-          <ElTable v-loading="loading" :data="tableData" border height="100%">
+          <ElTable
+            v-loading="loading"
+            :data="tableData"
+            border
+            height="100%"
+            :empty-text="emptyText"
+            @selection-change="onSelectionChange"
+          >
+            <ElTableColumn type="selection" width="48" :selectable="canSelect" />
             <ElTableColumn
               type="index"
               :label="$t('pages.system.mailTemplate.colIndex')"
@@ -70,6 +96,7 @@
                   >{{ $t('pages.system.mailTemplate.sendTestBtn') }}</ElButton
                 >
                 <ElButton
+                  v-if="canSelect(row)"
                   v-perm="'sys:mail-template:remove'"
                   link
                   type="danger"
@@ -105,7 +132,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted } from 'vue'
+  import { ref, computed, onMounted } from 'vue'
   import {
     fetchMailTemplatePage,
     fetchSaveMailTemplate,
@@ -121,8 +148,18 @@
 
   const { t } = useI18n()
 
+  const BUILTIN = new Set(['login_2fa', 'forget_password'])
   const tableData = ref<any[]>([])
   const loading = ref(false)
+  const keyword = ref('')
+  const filtering = ref(false)
+  const selectedRows = ref<any[]>([])
+  const emptyText = computed(() =>
+    filtering.value
+      ? t('pages.system.mailTemplate.emptySearch')
+      : t('pages.system.mailTemplate.emptyList')
+  )
+  const canSelect = (row: { code?: string }): boolean => !BUILTIN.has(row.code || '')
   const pageNum = ref(1)
   const pageSize = ref(10)
   const total = ref(0)
@@ -136,7 +173,8 @@
     try {
       const res = await fetchMailTemplatePage({
         pageNum: pageNum.value,
-        pageSize: pageSize.value
+        pageSize: pageSize.value,
+        name: filtering.value ? keyword.value.trim() : undefined
       })
       tableData.value = res?.records || []
       total.value = res?.totalRow ?? 0
@@ -146,6 +184,23 @@
   }
 
   onMounted(loadData)
+
+  const search = (): void => {
+    filtering.value = !!keyword.value.trim()
+    pageNum.value = 1
+    loadData()
+  }
+
+  const resetSearch = (): void => {
+    keyword.value = ''
+    filtering.value = false
+    pageNum.value = 1
+    loadData()
+  }
+
+  const onSelectionChange = (rows: any[]): void => {
+    selectedRows.value = rows || []
+  }
 
   const showDialog = (type: DialogType, row?: Record<string, any>): void => {
     dialogType.value = type
@@ -162,11 +217,35 @@
         cancelButtonText: t('common.cancel'),
         type: 'warning'
       }
-    ).then(async () => {
-      await fetchRemoveMailTemplate(row.id)
-      ElMessage.success(t('pages.system.mailTemplate.deleteSuccess'))
-      loadData()
-    })
+    )
+      .then(async () => {
+        await fetchRemoveMailTemplate(row.id)
+        selectedRows.value = []
+        loadData()
+      })
+      .catch(() => {})
+  }
+
+  const deleteSelected = (): void => {
+    if (!selectedRows.value.length) {
+      ElMessage.warning(t('pages.system.mailTemplate.deleteEmpty'))
+      return
+    }
+    ElMessageBox.confirm(
+      t('pages.system.mailTemplate.deleteBatchConfirm', { count: selectedRows.value.length }),
+      t('pages.system.mailTemplate.deleteTitle'),
+      {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
+        type: 'warning'
+      }
+    )
+      .then(async () => {
+        await fetchRemoveMailTemplate(selectedRows.value.map((row) => row.id))
+        selectedRows.value = []
+        loadData()
+      })
+      .catch(() => {})
   }
 
   const sendTest = async (row: any): Promise<void> => {
@@ -192,7 +271,6 @@
     try {
       await fetchSaveMailTemplate(form)
       dialogVisible.value = false
-      ElMessage.success(t('pages.system.mailTemplate.saveSuccess'))
       loadData()
     } finally {
       dialogSaving.value = false
@@ -213,7 +291,14 @@
   }
 
   .mt-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
     margin-bottom: 12px;
+  }
+
+  .mt-search {
+    width: 220px;
   }
 
   .mt-pager {

@@ -98,7 +98,14 @@
   })
 
   const rules: FormRules = {
-    code: [{ required: true, message: t('pages.system.mailTemplate.ruleCode'), trigger: 'blur' }],
+    code: [
+      { required: true, message: t('pages.system.mailTemplate.ruleCode'), trigger: 'blur' },
+      {
+        pattern: /^[a-z][a-z0-9_]{0,63}$/,
+        message: t('pages.system.mailTemplate.ruleCodeFormat'),
+        trigger: 'blur'
+      }
+    ],
     name: [
       {
         required: true,
