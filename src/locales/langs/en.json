@@ -3528,7 +3528,7 @@
         "stepCol": "Step",
         "stepDetail": "Step details",
         "stepNameDup": "Step event names must be unique",
-        "stepNameRequired": "Step event names cannot be empty",
+        "stepNameRequired": "Pick an event for every step. Funnels follow the order",
         "stepRateCol": "Conversion vs previous step",
         "stepsTitle": "Funnel steps",
         "totalRateCol": "Overall conversion rate",

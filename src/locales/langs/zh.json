@@ -3528,7 +3528,7 @@
         "stepCol": "步骤",
         "stepDetail": "步骤明细",
         "stepNameDup": "步骤事件名不能重复",
-        "stepNameRequired": "步骤事件名不能为空",
+        "stepNameRequired": "请先为每个步骤选择事件。漏斗要按顺序看转化",
         "stepRateCol": "相对上一步转化率",
         "stepsTitle": "漏斗步骤",
         "totalRateCol": "总转化率",
