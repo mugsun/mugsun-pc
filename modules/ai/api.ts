@@ -157,13 +157,21 @@ export function fetchAiPromptPage(params: Record<string, any>) {
   return request.get<any>({ url: '/api/system/ai/prompt/page', params })
 }
 export function fetchSaveAiPrompt(data: Record<string, any>) {
-  return request.post<any>({ url: '/api/system/ai/prompt/submit', data })
+  return request.post<any>({ url: '/api/system/ai/prompt/submit', data, showSuccessMessage: true })
 }
 export function fetchRemoveAiPrompt(id: AiId) {
-  return request.post<void>({ url: '/api/system/ai/prompt/remove', data: { id } })
+  return request.post<void>({
+    url: '/api/system/ai/prompt/remove',
+    data: { id },
+    showSuccessMessage: true
+  })
 }
 export function fetchOptimizeAiPrompt(data: Record<string, any>) {
-  return request.post<any>({ url: '/api/system/ai/prompt/optimize', data })
+  return request.post<any>({
+    url: '/api/system/ai/prompt/optimize',
+    data,
+    showSuccessMessage: true
+  })
 }
 export function fetchAiPromptVersions(params: Record<string, any>) {
   return request.get<any[]>({ url: '/api/system/ai/prompt/version/list', params })

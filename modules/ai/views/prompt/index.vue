@@ -23,7 +23,7 @@
         <ElCard v-for="row in records" :key="row.id" shadow="hover">
           <div class="title"
             >{{ row.name }}
-            <ElTag size="small">{{ row.category }}</ElTag>
+            <ElTag size="small">{{ categoryLabel(row.category) }}</ElTag>
             <ElTag size="small" effect="plain">v{{ row.version || 1 }}</ElTag>
           </div>
           <div class="scene">{{ row.scene || '-' }}</div>
@@ -38,7 +38,7 @@
             <ElButton link type="danger" @click="remove(row)">删除</ElButton>
           </div>
         </ElCard>
-        <ElEmpty v-if="!loading && !records.length" description="暂无提示词" />
+        <ElEmpty v-if="!loading && !records.length" :description="emptyText" />
       </div>
       <ElPagination
         class="pager"
@@ -71,7 +71,7 @@
           <ElInput
             v-model="form.content"
             type="textarea"
-            :rows="10"
+            :rows="6"
             maxlength="8000"
             show-word-limit
           />
@@ -105,7 +105,7 @@
   </div>
 </template>
 <script setup lang="ts">
-  import { onMounted, reactive, ref } from 'vue'
+  import { computed, onMounted, reactive, ref } from 'vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import {
     fetchAiPromptPage,
@@ -116,6 +116,7 @@
   defineOptions({ name: 'AiPrompt' })
   const category = ref('')
   const keyword = ref('')
+  const searching = ref(false)
   const loading = ref(false)
   const records = ref<any[]>([])
   const pageNum = ref(1)
@@ -129,13 +130,29 @@
   const optResult = ref('')
   const optRow = ref<any>(null)
 
+  const emptyText = computed(() =>
+    searching.value ? '没有符合条件的提示词。换个名称再查' : '还没有提示词。点添加提示词开始写'
+  )
+  function categoryLabel(value: string) {
+    return (
+      (
+        {
+          chat: '对话类',
+          content: '内容生成类',
+          analyze: '分析处理类',
+          creative: '创意设计类'
+        } as any
+      )[value] || value
+    )
+  }
   async function reload() {
     loading.value = true
+    searching.value = !!keyword.value.trim()
     try {
       const res = await fetchAiPromptPage({
         pageNum: pageNum.value,
         pageSize: pageSize.value,
-        name: keyword.value || undefined,
+        name: keyword.value.trim() || undefined,
         category: category.value || undefined
       })
       records.value = res?.records ?? []
@@ -153,7 +170,6 @@
     saving.value = true
     try {
       await fetchSaveAiPrompt({ ...form })
-      ElMessage.success('已保存')
       visible.value = false
       await reload()
     } finally {
@@ -171,7 +187,6 @@
   async function adoptOptimize() {
     if (!optRow.value) return
     await fetchSaveAiPrompt({ id: optRow.value.id, content: optResult.value })
-    ElMessage.success('已采纳')
     optVisible.value = false
     await reload()
   }
@@ -180,9 +195,8 @@
     ElMessage.success('已复制')
   }
   async function remove(row: any) {
-    await ElMessageBox.confirm(`删除提示词「${row.name}」？`, '确认')
+    await ElMessageBox.confirm(`删除「${row.name}」后，列表里不会再出现。正文也会一起清掉`, '确认')
     await fetchRemoveAiPrompt(row.id)
-    ElMessage.success('已删除')
     await reload()
   }
   onMounted(reload)
@@ -190,6 +204,7 @@
 <style scoped>
   .toolbar {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     margin: 8px 0 12px;
   }
