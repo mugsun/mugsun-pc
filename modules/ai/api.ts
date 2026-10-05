@@ -285,13 +285,21 @@ export function fetchAiAppPage(params: Record<string, any>) {
   return request.get<any>({ url: '/api/system/ai/app/page', params })
 }
 export function fetchSaveAiApp(data: Record<string, any>) {
-  return request.post<any>({ url: '/api/system/ai/app/submit', data })
+  return request.post<any>({ url: '/api/system/ai/app/submit', data, showSuccessMessage: true })
 }
 export function fetchRemoveAiApp(id: AiId) {
-  return request.post<void>({ url: '/api/system/ai/app/remove', data: { id } })
+  return request.post<void>({
+    url: '/api/system/ai/app/remove',
+    data: { id },
+    showSuccessMessage: true
+  })
 }
 export function fetchCopyAiApp(id: AiId) {
-  return request.post<any>({ url: '/api/system/ai/app/copy', data: { id } })
+  return request.post<any>({
+    url: '/api/system/ai/app/copy',
+    data: { id },
+    showSuccessMessage: true
+  })
 }
 export function fetchExportAiApp(id: AiId) {
   return request.download({ url: '/api/system/ai/app/export', params: { id } })

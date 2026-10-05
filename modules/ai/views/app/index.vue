@@ -34,7 +34,7 @@
             <ElButton link type="danger" @click="remove(row)">删除</ElButton>
           </div>
         </ElCard>
-        <ElEmpty v-if="!loading && !records.length" description="暂无应用" />
+        <ElEmpty v-if="!loading && !records.length" :description="emptyText" />
       </div>
     </ElCard>
     <ElDialog v-model="visible" :title="form.id ? '编辑应用' : '新建应用'" width="560px">
@@ -63,9 +63,9 @@
   </div>
 </template>
 <script setup lang="ts">
-  import { onMounted, reactive, ref } from 'vue'
+  import { computed, onMounted, reactive, ref } from 'vue'
   import { useRouter } from 'vue-router'
-  import { ElMessage, ElMessageBox } from 'element-plus'
+  import { ElMessageBox } from 'element-plus'
   import {
     fetchAiAppPage,
     fetchCopyAiApp,
@@ -77,6 +77,7 @@
   const router = useRouter()
   const appType = ref('')
   const keyword = ref('')
+  const searching = ref(false)
   const loading = ref(false)
   const records = ref<any[]>([])
   const visible = ref(false)
@@ -89,14 +90,18 @@
       ] || t
     )
   }
+  const emptyText = computed(() =>
+    searching.value ? '没有符合条件的应用。换个名称再查' : '还没有应用。点新建应用开始设计'
+  )
   async function reload() {
     loading.value = true
+    searching.value = !!keyword.value.trim()
     try {
       const res = await fetchAiAppPage({
         pageNum: 1,
         pageSize: 50,
         appType: appType.value || undefined,
-        name: keyword.value || undefined
+        name: keyword.value.trim() || undefined
       })
       records.value = res?.records ?? []
     } finally {
@@ -115,7 +120,6 @@
     saving.value = true
     try {
       await fetchSaveAiApp({ ...form })
-      ElMessage.success('已保存')
       visible.value = false
       await reload()
     } finally {
@@ -124,14 +128,16 @@
   }
   async function copy(row: any) {
     await fetchCopyAiApp(row.id)
-    ElMessage.success('已复制')
     await reload()
   }
   async function doExport(row: any) {
     await fetchExportAiApp(row.id)
   }
   async function remove(row: any) {
-    await ElMessageBox.confirm(`删除应用「${row.name}」？`, '确认')
+    await ElMessageBox.confirm(
+      `删除「${row.name}」后，列表里不会再出现。编排内容也会一起清掉`,
+      '确认'
+    )
     await fetchRemoveAiApp(row.id)
     await reload()
   }
@@ -140,6 +146,7 @@
 <style scoped>
   .toolbar {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     margin: 8px 0 12px;
   }
