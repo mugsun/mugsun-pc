@@ -1915,7 +1915,7 @@
         "colStatus": "状态",
         "colTime": "时间",
         "colOperation": "操作",
-        "removeConfirm": "确定删除该错误日志吗？",
+        "removeConfirm": "确定删除「{target}」这条错误日志吗？列表里不会再出现。",
         "removeTitle": "删除确认",
         "removed": "已删除",
         "handleSuccess": "处理成功",

@@ -275,13 +275,19 @@
 
   const removeRow = (row: Record<string, any>): void => {
     ElMessageBox.confirm(
-      t('pages.system.errorLog.removeConfirm'),
+      t('pages.system.errorLog.removeConfirm', {
+        target:
+          `${row.requestMethod || ''} ${row.requestUri || ''}`.trim() || row.exceptionClass || ''
+      }),
       t('pages.system.errorLog.removeTitle'),
       { type: 'warning' }
     )
       .then(async () => {
-        await fetchRemoveErrorLog(row.id)
-        ElMessage.success(t('pages.system.errorLog.removed'))
+        try {
+          await fetchRemoveErrorLog(row.id)
+        } catch {
+          return
+        }
         refreshRemove()
       })
       .catch(() => {})

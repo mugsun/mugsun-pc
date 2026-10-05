@@ -256,7 +256,11 @@ export function fetchHandleErrorLog(data: { id: number | string; status: number;
   return request.post<void>({ url: '/api/system/error-log/handle', data })
 }
 export function fetchRemoveErrorLog(id: number | string) {
-  return request.del<void>({ url: '/api/system/error-log/remove', params: { id } })
+  return request.del<void>({
+    url: '/api/system/error-log/remove',
+    params: { id },
+    showSuccessMessage: true
+  })
 }
 
 // ===== 服务监控 =====

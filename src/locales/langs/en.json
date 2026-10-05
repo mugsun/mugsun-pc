@@ -1915,7 +1915,7 @@
         "colStatus": "Status",
         "colTime": "Time",
         "colOperation": "Operation",
-        "removeConfirm": "Delete this error log?",
+        "removeConfirm": "Delete the error log \"{target}\"? It will leave the list.",
         "removeTitle": "Delete Confirmation",
         "removed": "Deleted",
         "handleSuccess": "Handled successfully",
