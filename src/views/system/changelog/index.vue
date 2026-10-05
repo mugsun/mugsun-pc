@@ -1,27 +1,89 @@
-<!-- 版本更新记录管理：分页 CRUD + 类型分类 + 富文本 -->
+<!-- 版本更新记录：按标题查找，版本号和类型不合法时停在表单里 -->
 <template>
   <div class="changelog-page art-full-height">
-    <ElCard class="art-table-card" shadow="never">
-      <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
-        <template #left>
-          <ElButton
-            v-perm="'sys:changelog:manage'"
-            type="primary"
-            @click="showDialog('add')"
-            v-ripple
-            >{{ $t('pages.system.changelog.addRecord') }}</ElButton
-          >
-        </template>
-      </ArtTableHeader>
+    <ElCard class="art-table-card">
+      <div class="cl-body">
+        <div class="cl-toolbar">
+          <ElInput
+            v-model="keyword"
+            clearable
+            class="cl-search"
+            :placeholder="$t('pages.system.changelog.searchPlaceholder')"
+            @keyup.enter="search"
+          />
+          <ElButton type="primary" @click="search">{{
+            $t('pages.system.changelog.search')
+          }}</ElButton>
+          <ElButton @click="resetSearch">{{ $t('pages.system.changelog.reset') }}</ElButton>
+          <ElButton v-perm="'sys:changelog:manage'" type="primary" @click="showDialog('add')">{{
+            $t('pages.system.changelog.addRecord')
+          }}</ElButton>
+          <ElButton v-perm="'sys:changelog:manage'" type="danger" plain @click="deleteSelected">{{
+            $t('pages.system.changelog.deleteSelected')
+          }}</ElButton>
+        </div>
 
-      <ArtTable
-        :loading="loading"
-        :data="data as any[]"
-        :columns="columns"
-        :pagination="pagination"
-        @pagination:size-change="handleSizeChange"
-        @pagination:current-change="handleCurrentChange"
-      />
+        <div class="cl-table-wrap">
+          <ElTable
+            v-loading="loading"
+            :data="tableData"
+            border
+            height="100%"
+            :empty-text="emptyText"
+            @selection-change="onSelectionChange"
+          >
+            <ElTableColumn type="selection" width="48" />
+            <ElTableColumn
+              prop="version"
+              :label="$t('pages.system.changelog.version')"
+              width="110"
+            />
+            <ElTableColumn :label="$t('pages.system.changelog.type')" width="90">
+              <template #default="{ row }">
+                <ElTag :type="typeMeta(row.type).tag">{{ typeMeta(row.type).label }}</ElTag>
+              </template>
+            </ElTableColumn>
+            <ElTableColumn
+              prop="title"
+              :label="$t('pages.system.changelog.title')"
+              min-width="200"
+              show-overflow-tooltip
+            />
+            <ElTableColumn :label="$t('pages.system.changelog.publishTime')" width="170">
+              <template #default="{ row }">{{ formatTableTime(row.publishTime) }}</template>
+            </ElTableColumn>
+            <ElTableColumn :label="$t('pages.system.changelog.colOperation')" width="140">
+              <template #default="{ row }">
+                <ElButton
+                  v-perm="'sys:changelog:manage'"
+                  link
+                  type="primary"
+                  @click="showDialog('edit', row)"
+                  >{{ $t('common.edit') }}</ElButton
+                >
+                <ElButton
+                  v-perm="'sys:changelog:manage'"
+                  link
+                  type="danger"
+                  @click="deleteRow(row)"
+                  >{{ $t('common.delete') }}</ElButton
+                >
+              </template>
+            </ElTableColumn>
+          </ElTable>
+        </div>
+
+        <div class="cl-pager">
+          <ElPagination
+            v-model:current-page="pageNum"
+            :page-size="pageSize"
+            :total="total"
+            layout="total, prev, pager, next"
+            background
+            @current-change="loadData"
+          />
+        </div>
+      </div>
     </ElCard>
 
     <ElDialog
@@ -31,27 +93,31 @@
           ? $t('pages.system.changelog.editRecordTitle')
           : $t('pages.system.changelog.addRecordTitle')
       "
-      width="780px"
-      top="6vh"
-      class="changelog-dialog"
+      width="640px"
+      align-center
       destroy-on-close
     >
-      <ElForm :model="form" label-width="80px">
-        <ElFormItem :label="$t('pages.system.changelog.version')" required>
+      <ElForm ref="formRef" :model="form" :rules="rules" label-width="80px">
+        <ElFormItem :label="$t('pages.system.changelog.version')" prop="version">
           <ElInput
             v-model="form.version"
             :placeholder="$t('pages.system.changelog.versionPlaceholder')"
-            style="width: 220px"
           />
         </ElFormItem>
-        <ElFormItem :label="$t('pages.system.changelog.type')" required>
-          <ElSelect v-model="form.type" style="width: 220px">
-            <ElOption v-for="t in TYPES" :key="t.value" :label="$t(t.label)" :value="t.value" />
+        <ElFormItem :label="$t('pages.system.changelog.type')" prop="type">
+          <ElSelect v-model="form.type" class="cl-full">
+            <ElOption
+              v-for="item in TYPES"
+              :key="item.value"
+              :label="$t(item.label)"
+              :value="item.value"
+            />
           </ElSelect>
         </ElFormItem>
-        <ElFormItem :label="$t('pages.system.changelog.title')" required>
+        <ElFormItem :label="$t('pages.system.changelog.title')" prop="title">
           <ElInput
             v-model="form.title"
+            maxlength="255"
             :placeholder="$t('pages.system.changelog.titlePlaceholder')"
           />
         </ElFormItem>
@@ -63,17 +129,16 @@
             :placeholder="$t('pages.system.changelog.publishTimePlaceholder')"
           />
         </ElFormItem>
-        <ElFormItem :label="$t('pages.system.changelog.sort')">
-          <ElInputNumber v-model="form.sort" :min="0" />
-        </ElFormItem>
         <ElFormItem :label="$t('pages.system.changelog.content')">
-          <ArtWangEditor v-model="form.content" height="280px" />
+          <ArtWangEditor v-model="form.content" height="120px" />
         </ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="dialogVisible = false">{{ $t('common.cancel') }}</ElButton>
+        <ElButton :disabled="submitting" @click="dialogVisible = false">{{
+          $t('common.cancel')
+        }}</ElButton>
         <ElButton type="primary" :loading="submitting" @click="submit">{{
-          $t('common.confirm')
+          $t('pages.system.changelog.submitBtn')
         }}</ElButton>
       </template>
     </ElDialog>
@@ -81,211 +146,180 @@
 </template>
 
 <script setup lang="ts">
-  import { h, onDeactivated, reactive } from 'vue'
-  import { ElButton, ElTag, ElMessage, ElMessageBox } from 'element-plus'
-  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
+  import { computed, onMounted, reactive, ref } from 'vue'
+  import type { FormInstance, FormRules } from 'element-plus'
+  import { ElMessage, ElMessageBox } from 'element-plus'
   import ArtWangEditor from '@/components/core/forms/art-wang-editor/index.vue'
-  import { useTable } from '@/hooks/core/useTable'
-  import { hasPerm } from '@/utils/permission'
   import { formatTableTime } from '@/utils/date'
-  import {
-    fetchChangelogPage,
-    fetchChangelogDetail,
-    fetchSaveChangelog,
-    fetchRemoveChangelog
-  } from '@/api/feedback'
+  import { fetchChangelogPage, fetchRemoveChangelog, fetchSaveChangelog } from '@/api/feedback'
   import { useI18n } from 'vue-i18n'
 
   defineOptions({ name: 'ChangeLog' })
 
   const { t } = useI18n()
-
   const TYPES = [
-    { label: 'pages.system.changelog.typeFeature', value: 'feature', tag: 'primary' },
-    { label: 'pages.system.changelog.typeOptimize', value: 'optimize', tag: 'warning' },
-    { label: 'pages.system.changelog.typeFix', value: 'fix', tag: 'danger' }
+    { label: 'pages.system.changelog.typeFeature', value: 'feature', tag: 'primary' as const },
+    { label: 'pages.system.changelog.typeOptimize', value: 'optimize', tag: 'warning' as const },
+    { label: 'pages.system.changelog.typeFix', value: 'fix', tag: 'danger' as const }
   ]
-  const typeMeta = (v: string) => {
-    const hit = TYPES.find((x) => x.value === v)
-    return hit ? { label: t(hit.label), tag: hit.tag } : { label: v, tag: 'info' }
+  const typeMeta = (value: string) => {
+    const hit = TYPES.find((item) => item.value === value)
+    return hit ? { label: t(hit.label), tag: hit.tag } : { label: value, tag: 'info' as const }
   }
 
-  // 语义版本比较（v1.3.0 > v1.10.0）：非数字段兜底字符串比较，非法版本排最后
-  const compareVersion = (a: string, b: string): number => {
-    const pa = String(a || '')
-      .replace(/^v/i, '')
-      .split('.')
-    const pb = String(b || '')
-      .replace(/^v/i, '')
-      .split('.')
-    for (let i = 0; i < Math.max(pa.length, pb.length); i++) {
-      const na = pa[i]
-      const nb = pb[i]
-      if (na === undefined) return -1
-      if (nb === undefined) return 1
-      const diff =
-        /^\d+$/.test(na) && /^\d+$/.test(nb) ? Number(na) - Number(nb) : na.localeCompare(nb)
-      if (diff !== 0) return diff
-    }
-    return 0
-  }
-
-  const {
-    columns,
-    columnChecks,
-    data,
-    loading,
-    pagination,
-    handleSizeChange,
-    handleCurrentChange,
-    refreshData
-  } = useTable({
-    core: {
-      apiFn: fetchChangelogPage,
-      apiParams: { pageNum: 1, pageSize: 10 },
-      paginationKey: { current: 'pageNum', size: 'pageSize' },
-      columnsFactory: () => [
-        { prop: 'version', label: t('pages.system.changelog.version'), width: 120 },
-        {
-          prop: 'type',
-          label: t('pages.system.changelog.type'),
-          width: 100,
-          formatter: (row: any) => {
-            const m = typeMeta(row.type)
-            return h(ElTag, { type: m.tag as any }, () => m.label)
-          }
-        },
-        { prop: 'title', label: t('pages.system.changelog.title'), minWidth: 220 },
-        {
-          prop: 'publishTime',
-          label: t('pages.system.changelog.publishTime'),
-          minWidth: 170,
-          formatter: (row: any) => formatTableTime(row.publishTime)
-        },
-        { prop: 'sort', label: t('pages.system.changelog.sort'), width: 80 },
-        {
-          prop: 'operation',
-          label: t('pages.system.changelog.colOperation'),
-          width: 140,
-          fixed: 'right',
-          // 操作列由 h() 渲染（指令够不到），用 hasPerm() 函数按真实权限码门控
-          formatter: (row: any) =>
-            h('div', [
-              hasPerm('sys:changelog:manage')
-                ? h(ArtButtonTable, { type: 'edit', onClick: () => showDialog('edit', row) })
-                : null,
-              hasPerm('sys:changelog:manage')
-                ? h(ArtButtonTable, { type: 'delete', onClick: () => remove(row) })
-                : null
-            ])
-        }
-      ]
-    },
-    transform: {
-      // 后端按 sort 字段倒序返回（sort 默认 0，新版本易排老版本后），前端按语义版本倒序重排
-      responseAdapter: (resp: any) => ({
-        records: [...(resp?.records ?? [])].sort((a: any, b: any) =>
-          compareVersion(b.version, a.version)
-        ),
-        total: resp?.totalRow ?? 0,
-        current: resp?.pageNumber ?? 1,
-        size: resp?.pageSize ?? 10
-      })
-    }
-  })
-
+  const tableData = ref<any[]>([])
+  const loading = ref(false)
+  const keyword = ref('')
+  const filtering = ref(false)
+  const selectedRows = ref<any[]>([])
+  const pageNum = ref(1)
+  const pageSize = ref(10)
+  const total = ref(0)
   const dialogVisible = ref(false)
   const submitting = ref(false)
-  const form = reactive<any>({
-    id: undefined,
+  const formRef = ref<FormInstance>()
+  const form = reactive({
+    id: undefined as string | undefined,
     version: '',
     type: 'feature',
     title: '',
     content: '',
-    publishTime: '',
-    sort: 0
+    publishTime: ''
   })
 
-  const closeDialog = (): void => {
-    dialogVisible.value = false
+  const emptyText = computed(() =>
+    filtering.value
+      ? t('pages.system.changelog.emptySearch')
+      : t('pages.system.changelog.emptyList')
+  )
+  const rules = computed<FormRules>(() => ({
+    version: [
+      { required: true, message: t('pages.system.changelog.ruleVersion'), trigger: 'blur' },
+      {
+        pattern: /^v?\d{1,4}(\.\d{1,4}){0,3}$/,
+        message: t('pages.system.changelog.ruleVersionFormat'),
+        trigger: 'blur'
+      }
+    ],
+    type: [{ required: true, message: t('pages.system.changelog.ruleType'), trigger: 'change' }],
+    title: [{ required: true, message: t('pages.system.changelog.ruleTitle'), trigger: 'blur' }]
+  }))
+
+  const loadData = async () => {
+    loading.value = true
+    try {
+      const res = await fetchChangelogPage({
+        pageNum: pageNum.value,
+        pageSize: pageSize.value,
+        name: filtering.value ? keyword.value.trim() : undefined
+      })
+      tableData.value = res?.records || []
+      total.value = res?.totalRow ?? 0
+    } finally {
+      loading.value = false
+    }
   }
 
-  const showDialog = async (type: 'add' | 'edit', row?: any) => {
-    if (type === 'add') {
-      Object.assign(form, {
-        id: undefined,
-        version: '',
-        type: 'feature',
-        title: '',
-        content: '',
-        publishTime: '',
-        sort: 0
-      })
-    } else {
-      const detail = await fetchChangelogDetail(row.id)
-      Object.assign(form, {
-        id: detail.id,
-        version: detail.version,
-        type: detail.type,
-        title: detail.title,
-        content: detail.content || '',
-        publishTime: detail.publishTime || '',
-        sort: detail.sort
-      })
-    }
+  const search = () => {
+    filtering.value = !!keyword.value.trim()
+    pageNum.value = 1
+    loadData()
+  }
+
+  const resetSearch = () => {
+    keyword.value = ''
+    filtering.value = false
+    pageNum.value = 1
+    loadData()
+  }
+
+  const onSelectionChange = (rows: any[]) => {
+    selectedRows.value = rows
+  }
+
+  const showDialog = (type: 'add' | 'edit', row?: any) => {
+    Object.assign(form, {
+      id: type === 'edit' ? row.id : undefined,
+      version: type === 'edit' ? row.version : '',
+      type: type === 'edit' ? row.type : 'feature',
+      title: type === 'edit' ? row.title : '',
+      content: type === 'edit' ? row.content || '' : '',
+      publishTime: type === 'edit' ? row.publishTime || '' : ''
+    })
     dialogVisible.value = true
+    nextTick(() => formRef.value?.clearValidate())
   }
 
   const submit = async () => {
-    if (!form.version?.trim() || !form.title?.trim()) {
-      return ElMessage.warning(t('pages.system.changelog.versionTitleRequired'))
-    }
+    const valid = await formRef.value?.validate().catch(() => false)
+    if (!valid) return
     submitting.value = true
     try {
-      await fetchSaveChangelog({ ...form })
-      ElMessage.success(t('pages.system.changelog.saveSuccess'))
+      await fetchSaveChangelog({ ...form, publishTime: form.publishTime || null })
       dialogVisible.value = false
-      refreshData()
+      await loadData()
     } finally {
       submitting.value = false
     }
   }
 
-  const remove = (row: any) => {
-    ElMessageBox.confirm(
+  const deleteRow = async (row: any) => {
+    await ElMessageBox.confirm(
       t('pages.system.changelog.removeConfirm', { version: row.version, title: row.title }),
       t('pages.system.changelog.removeTitle'),
-      {
-        type: 'warning'
-      }
+      { type: 'warning' }
     )
-      .then(async () => {
-        await fetchRemoveChangelog([row.id])
-        ElMessage.success(t('pages.system.changelog.removeSuccess'))
-        refreshData()
-      })
-      .catch(() => {})
+    await fetchRemoveChangelog([row.id])
+    await loadData()
   }
 
-  let seenChangelog = false
-  onActivated(() => {
-    if (!seenChangelog) {
-      seenChangelog = true
+  const deleteSelected = async () => {
+    if (!selectedRows.value.length) {
+      ElMessage.warning(t('pages.system.changelog.deleteEmpty'))
       return
     }
-    refreshData()
-  })
+    await ElMessageBox.confirm(
+      t('pages.system.changelog.deleteBatchConfirm', { count: selectedRows.value.length }),
+      t('pages.system.changelog.removeTitle'),
+      { type: 'warning' }
+    )
+    await fetchRemoveChangelog(selectedRows.value.map((row) => row.id))
+    await loadData()
+  }
 
-  onDeactivated(() => {
-    ElMessageBox.close()
-    closeDialog()
-  })
+  onMounted(loadData)
 </script>
 
-<!-- 弹窗内容 teleport 到 body，表单项+富文本叠加超高时需非 scoped 类限定滚动（同 notice-dialog 范式），防矮视口下操作按钮挤出视口 -->
-<style>
-  .changelog-dialog .el-dialog__body {
-    max-height: 72vh;
-    overflow-y: auto;
+<style lang="scss" scoped>
+  .cl-body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .cl-table-wrap {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .cl-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .cl-search {
+    width: 220px;
+  }
+
+  .cl-pager {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+  }
+
+  .cl-full {
+    width: 100%;
   }
 </style>

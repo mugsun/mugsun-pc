@@ -44,9 +44,17 @@ export function fetchChangelogDetail(id: number | string) {
 }
 
 export function fetchSaveChangelog(data: Record<string, any>) {
-  return request.post<void>({ url: '/api/system/changelog/submit', data })
+  return request.post<void>({
+    url: '/api/system/changelog/submit',
+    data,
+    showSuccessMessage: true
+  })
 }
 
 export function fetchRemoveChangelog(ids: (number | string)[]) {
-  return request.post<void>({ url: '/api/system/changelog/remove', data: ids })
+  return request.post<void>({
+    url: '/api/system/changelog/remove',
+    data: ids,
+    showSuccessMessage: true
+  })
 }
