@@ -3,6 +3,17 @@
   <div class="form-page art-full-height">
     <ElCard class="art-table-card">
       <div class="form-toolbar">
+        <ElInput
+          v-model="keyword"
+          clearable
+          :placeholder="$t('pages.system.formDesigner.searchPlaceholder')"
+          style="width: 220px"
+          @keyup.enter="loadData"
+          @clear="loadData"
+        />
+        <ElButton type="primary" @click="loadData">{{
+          $t('pages.system.formDesigner.search')
+        }}</ElButton>
         <ElButton v-perm="'sys:form:save'" type="primary" @click="showCreate">{{
           $t('pages.system.formDesigner.createForm')
         }}</ElButton>
@@ -11,6 +22,13 @@
       <!-- 表格自由增长（一页 50 条）：包一层 flex:1 定高壳内部滚动，防矮视口裁切 -->
       <div class="form-table-wrap">
         <ElTable :data="tableData" border height="100%" v-loading="loading">
+          <template #empty>
+            <span>{{
+              keyword.trim()
+                ? $t('pages.system.formDesigner.emptySearch')
+                : $t('pages.system.formDesigner.emptyList')
+            }}</span>
+          </template>
           <ElTableColumn type="index" :label="$t('table.column.index')" width="60" />
           <ElTableColumn
             prop="name"
@@ -150,6 +168,9 @@
       destroy-on-close
     >
       <ElTable v-if="recordsVisible" :data="records" border max-height="420">
+        <template #empty>
+          <span>{{ $t('pages.system.formDesigner.emptyRecords') }}</span>
+        </template>
         <ElTableColumn type="index" :label="$t('table.column.index')" width="60" />
         <ElTableColumn :label="$t('pages.system.formDesigner.recordData')" min-width="360">
           <template #default="{ row }">
@@ -173,7 +194,7 @@
 <script setup lang="ts">
   import { ref, reactive, onMounted, onDeactivated, nextTick } from 'vue'
   import type { FormInstance, FormRules } from 'element-plus'
-  import { ElMessage, ElMessageBox } from 'element-plus'
+  import { ElMessageBox } from 'element-plus'
   import formCreate from '@form-create/element-ui'
   import {
     fetchFormPage,
@@ -192,6 +213,7 @@
 
   const tableData = ref<any[]>([])
   const loading = ref(false)
+  const keyword = ref('')
   const current = ref<any>(null)
 
   // 新建
@@ -234,7 +256,11 @@
   const loadData = async (): Promise<void> => {
     loading.value = true
     try {
-      const resp = await fetchFormPage({ pageNum: 1, pageSize: 50 })
+      const resp = await fetchFormPage({
+        pageNum: 1,
+        pageSize: 50,
+        name: keyword.value.trim() || undefined
+      })
       tableData.value = resp?.records ?? []
     } finally {
       loading.value = false
@@ -268,7 +294,6 @@
       creating.value = true
       try {
         await fetchSubmitForm({ ...createForm, status: 1 })
-        ElMessage.success(t('pages.system.formDesigner.createSuccess'))
         createVisible.value = false
         await loadData()
         // 直接进入设计
@@ -316,7 +341,6 @@
         status: current.value.status ?? 1,
         remark: current.value.remark
       })
-      ElMessage.success(t('pages.system.formDesigner.designSaved'))
       designerVisible.value = false
       loadData()
     } finally {
@@ -350,7 +374,6 @@
     fillSubmitting.value = true
     try {
       await fetchSubmitFormData(current.value.formKey, formData)
-      ElMessage.success(t('pages.system.formDesigner.submitSuccess'))
       fillVisible.value = false
     } finally {
       fillSubmitting.value = false
@@ -386,7 +409,6 @@
       }
     ).then(async () => {
       await fetchRemoveForm(row.id)
-      ElMessage.success(t('pages.system.formDesigner.removeSuccess'))
       loadData()
     })
   }
@@ -396,6 +418,9 @@
 
 <style scoped>
   .form-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
     margin-bottom: 12px;
   }
 

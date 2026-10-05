@@ -2408,6 +2408,11 @@
         "removeSuccess": "Deleted successfully"
       },
       "formDesigner": {
+        "search": "Search",
+        "searchPlaceholder": "Search by name",
+        "emptyList": "No forms yet. Create one, then design it before people fill it in",
+        "emptySearch": "No forms match. Try another name",
+        "emptyRecords": "No submissions yet. They show up here after someone fills the form",
         "createForm": "New Form",
         "formName": "Form Name",
         "formNamePlaceholder": "Please enter form name",
@@ -2436,7 +2441,7 @@
         "createSuccess": "Created successfully",
         "designSaved": "Design saved",
         "submitSuccess": "Submitted successfully",
-        "removeConfirm": "Delete form \"{name}\"?",
+        "removeConfirm": "Delete \"{name}\"? Its submissions will be removed too",
         "removeTitle": "Delete Form",
         "removeSuccess": "Deleted successfully"
       },
