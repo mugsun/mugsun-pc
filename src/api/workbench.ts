@@ -12,5 +12,9 @@ export function fetchWorkbenchShortcuts() {
 
 /** 保存当前用户快捷入口（原子 upsert） */
 export function saveWorkbenchShortcuts(configJson: string) {
-  return request.post<void>({ url: '/api/system/workbench/shortcuts', data: { configJson } })
+  return request.post<void>({
+    url: '/api/system/workbench/shortcuts',
+    data: { configJson },
+    showSuccessMessage: true
+  })
 }

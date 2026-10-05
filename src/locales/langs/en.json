@@ -712,7 +712,7 @@
         "noChangelog": "No changelog entries",
         "shortcuts": "Shortcuts",
         "edit": "Edit",
-        "shortcutsEmpty": "No shortcuts configured. Click Edit in the top-right corner to add some",
+        "shortcutsEmpty": "No shortcuts yet. Click Edit at the top right and pick the pages you use",
         "shortcutsDialogTitle": "Configure Shortcuts",
         "shortcutsDialogTip": "Select the feature pages to show on the console (multiple selection allowed)",
         "save": "Save",

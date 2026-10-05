@@ -169,7 +169,6 @@
 
 <script setup lang="ts">
   import { echarts } from '@/plugins/echarts'
-  import { ElMessage } from 'element-plus'
   import { fetchChangelogRecent } from '@/api/feedback'
   import { fetchFlowMyTodo, fetchMyNoticePage } from '@/api/system-manage'
   import {
@@ -444,7 +443,6 @@
       await saveWorkbenchShortcuts(JSON.stringify(list))
       shortcuts.value = list
       editorVisible.value = false
-      ElMessage.success(t('pages.dashboard.console.saveSuccess'))
     } finally {
       saving.value = false
     }

@@ -712,7 +712,7 @@
         "noChangelog": "暂无更新日志",
         "shortcuts": "快捷入口",
         "edit": "编辑",
-        "shortcutsEmpty": "未配置快捷入口，点击右上角编辑添加",
+        "shortcutsEmpty": "还没有快捷入口。点右上角编辑，勾选常用页面",
         "shortcutsDialogTitle": "配置快捷入口",
         "shortcutsDialogTip": "勾选需要在工作台展示的功能页（可多选）",
         "save": "保存",
