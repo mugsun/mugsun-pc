@@ -1,20 +1,32 @@
 <!-- 通知公告管理页面：CRUD + 可见范围 + 阅读记录/UV -->
 <template>
   <div class="notice-page art-full-height">
+    <ArtSearchBar
+      v-model="searchForm"
+      :items="searchItems"
+      @search="handleSearch"
+      @reset="handleResetSearch"
+    />
     <ElCard class="art-table-card">
       <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData">
         <template #left>
           <ElButton v-perm="'sys:notice:manage'" @click="showDialog('add')" v-ripple>{{
             $t('pages.system.notice.addBtn')
           }}</ElButton>
+          <ElButton v-perm="'sys:notice:manage'" @click="deleteSelected" v-ripple>{{
+            $t('pages.system.notice.deleteSelectedBtn')
+          }}</ElButton>
         </template>
       </ArtTableHeader>
 
       <ArtTable
+        ref="tableRef"
         :loading="loading"
         :data="data as any[]"
         :columns="columns"
         :pagination="pagination"
+        :empty-text="emptyText"
+        @selection-change="onSelectionChange"
         @pagination:size-change="handleSizeChange"
         @pagination:current-change="handleCurrentChange"
       >
@@ -35,6 +47,7 @@
 
 <script setup lang="ts">
   import { h, ref, nextTick } from 'vue'
+  import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
   import ArtDictTag from '@/components/core/base/art-dict-tag/index.vue'
   import { useTable } from '@/hooks/core/useTable'
   import { fetchNoticePage, fetchSaveNotice, fetchRemoveNotice } from '@/api/system-manage'
@@ -56,6 +69,57 @@
   const dialogSaving = ref(false)
   const readVisible = ref(false)
   const currentData = ref<Record<string, any>>({})
+  const tableRef = ref<{ elTableRef?: { clearSelection: () => void } }>()
+  const selectedRows = ref<any[]>([])
+  const searchForm = ref({
+    title: '',
+    category: undefined as string | undefined,
+    timeRange: undefined as string[] | undefined
+  })
+  const searchItems = computed(() => [
+    {
+      key: 'title',
+      label: t('pages.system.notice.colTitle'),
+      type: 'input',
+      props: { placeholder: t('pages.system.notice.searchTitlePlaceholder'), clearable: true }
+    },
+    {
+      key: 'category',
+      label: t('pages.system.notice.colCategory'),
+      type: 'select',
+      props: {
+        placeholder: t('pages.system.notice.formCategoryPlaceholder'),
+        clearable: true,
+        options: [
+          { label: t('pages.system.notice.categoryNotice'), value: 'notice' },
+          { label: t('pages.system.notice.categoryAnnouncement'), value: 'announcement' },
+          { label: t('pages.system.notice.categoryWarning'), value: 'warning' }
+        ]
+      }
+    },
+    {
+      key: 'timeRange',
+      label: t('pages.system.notice.colReleaseTime'),
+      type: 'datetimerange',
+      span: 8,
+      props: {
+        type: 'datetimerange',
+        valueFormat: 'YYYY-MM-DD HH:mm:ss',
+        startPlaceholder: t('pages.system.notice.beginTime'),
+        endPlaceholder: t('pages.system.notice.endTime'),
+        clearable: true
+      }
+    }
+  ])
+  const searched = computed(
+    () =>
+      !!searchForm.value.title ||
+      !!searchForm.value.category ||
+      (Array.isArray(searchForm.value.timeRange) && searchForm.value.timeRange.length === 2)
+  )
+  const emptyText = computed(() =>
+    searched.value ? t('pages.system.notice.emptySearch') : t('pages.system.notice.emptyList')
+  )
 
   const {
     columns,
@@ -65,13 +129,17 @@
     pagination,
     handleSizeChange,
     handleCurrentChange,
-    refreshData
+    refreshData,
+    fetchData,
+    replaceSearchParams,
+    resetSearchParams
   } = useTable({
     core: {
       apiFn: fetchNoticePage,
       apiParams: { pageNum: 1, pageSize: 20 },
       paginationKey: { current: 'pageNum', size: 'pageSize' },
       columnsFactory: () => [
+        { type: 'selection', width: 48, fixed: 'left' },
         { type: 'index', width: 60, label: t('pages.system.notice.colIndex') },
         { prop: 'title', label: t('pages.system.notice.colTitle'), minWidth: 200 },
         {
@@ -111,7 +179,7 @@
         {
           prop: 'operation',
           label: t('pages.system.notice.colOperation'),
-          width: 180,
+          width: 220,
           fixed: 'right',
           // 操作列由 h() 渲染（指令够不到），用 hasPerm() 函数按真实权限码门控
           formatter: (row: any) =>
@@ -176,6 +244,27 @@
     })
   }
 
+  const onSelectionChange = (rows: any[]): void => {
+    selectedRows.value = rows || []
+  }
+
+  const handleSearch = async (params: Record<string, any>): Promise<void> => {
+    const { timeRange, ...rest } = params
+    const query: Record<string, any> = { ...rest, pageNum: 1, pageSize: 20 }
+    if (Array.isArray(timeRange) && timeRange.length === 2) {
+      query.beginTime = timeRange[0]
+      query.endTime = timeRange[1]
+    }
+    replaceSearchParams(query)
+    await fetchData()
+  }
+
+  const handleResetSearch = async (): Promise<void> => {
+    searchForm.value = { title: '', category: undefined, timeRange: undefined }
+    resetSearchParams()
+    await fetchData()
+  }
+
   const deleteRow = (row: any): void => {
     ElMessageBox.confirm(
       t('pages.system.notice.deleteConfirm', { name: row.title }),
@@ -188,6 +277,30 @@
     ).then(async () => {
       await fetchRemoveNotice(row.id)
       ElMessage.success(t('pages.system.notice.deleteSuccess'))
+      selectedRows.value = []
+      tableRef.value?.elTableRef?.clearSelection()
+      refreshData()
+    })
+  }
+
+  const deleteSelected = (): void => {
+    if (!selectedRows.value.length) {
+      ElMessage.warning(t('pages.system.notice.deleteEmpty'))
+      return
+    }
+    ElMessageBox.confirm(
+      t('pages.system.notice.deleteBatchConfirm', { count: selectedRows.value.length }),
+      t('pages.system.notice.deleteTitle'),
+      {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
+        type: 'warning'
+      }
+    ).then(async () => {
+      await fetchRemoveNotice(selectedRows.value.map((row) => row.id))
+      ElMessage.success(t('pages.system.notice.deleteSuccess'))
+      selectedRows.value = []
+      tableRef.value?.elTableRef?.clearSelection()
       refreshData()
     })
   }
