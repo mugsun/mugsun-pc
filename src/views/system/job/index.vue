@@ -3,10 +3,30 @@
   <div class="job-page art-full-height">
     <ElCard class="art-table-card">
       <div class="job-toolbar">
+        <ElSelect
+          v-if="servers.length"
+          v-model="serverId"
+          class="job-server-select"
+          @change="loadData"
+        >
+          <ElOption
+            v-for="item in servers"
+            :key="item.id"
+            :label="`${item.serverName}（${item.serverUrl}）`"
+            :value="String(item.id)"
+          />
+        </ElSelect>
         <ElButton v-perm="'sys:job:save'" type="primary" @click="showDialog()">{{
           $t('pages.system.job.createJob')
         }}</ElButton>
       </div>
+      <ElAlert
+        v-if="!servers.length"
+        class="job-default-hint"
+        type="info"
+        :closable="false"
+        :title="$t('pages.system.jobServer.defaultHint')"
+      />
 
       <!-- 表格自由增长：包一层 flex:1 定高壳内部滚动，防矮视口裁切 -->
       <div class="job-table-wrap">
@@ -180,7 +200,8 @@
     fetchEnableJob,
     fetchDisableJob,
     fetchDeleteJob,
-    fetchJobInstances
+    fetchJobInstances,
+    fetchJobServerOptions
   } from '@/api/system-manage'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import { useI18n } from 'vue-i18n'
@@ -196,6 +217,8 @@
   const logs = ref<any[]>([])
   const formRef = ref<FormInstance>()
   const processorOptions = ref<Array<{ label: string; value: string }>>([])
+  const servers = ref<Array<{ id: string; serverName: string; serverUrl: string }>>([])
+  const serverId = ref('')
   const saving = ref(false)
 
   const form = reactive<Record<string, any>>({
@@ -236,7 +259,7 @@
   const loadData = async (): Promise<void> => {
     loading.value = true
     try {
-      tableData.value = (await fetchJobList()) || []
+      tableData.value = (await fetchJobList(serverId.value || undefined)) || []
     } finally {
       loading.value = false
     }
@@ -247,7 +270,13 @@
   }
 
   // 注册表与列表并行拉：串行等列表回来再拉处理器，会让"列表还在转就点新建"的用户看到空下拉
-  onMounted(() => {
+  onMounted(async () => {
+    try {
+      servers.value = (await fetchJobServerOptions()) || []
+      if (servers.value.length) serverId.value = String(servers.value[0].id)
+    } catch {
+      servers.value = []
+    }
     loadData()
     loadProcessors()
   })
@@ -289,7 +318,7 @@
       if (!valid) return
       saving.value = true
       try {
-        await fetchSaveJob({ ...form })
+        await fetchSaveJob({ ...form, serverId: serverId.value || undefined })
         dialogVisible.value = false
         ElMessage.success(t('pages.system.job.saveSuccess'))
         loadData()
@@ -300,7 +329,7 @@
   }
 
   const run = async (row: any): Promise<void> => {
-    const instanceId = await fetchRunJob(row.id)
+    const instanceId = await fetchRunJob(row.id, serverId.value || undefined)
     ElMessage.success(t('pages.system.job.triggered', { id: instanceId }))
   }
 
@@ -311,10 +340,10 @@
         t('pages.system.job.disableTitle'),
         { type: 'warning' }
       )
-      await fetchDisableJob(row.id)
+      await fetchDisableJob(row.id, serverId.value || undefined)
       ElMessage.success(t('pages.system.job.disabled'))
     } else {
-      await fetchEnableJob(row.id)
+      await fetchEnableJob(row.id, serverId.value || undefined)
       ElMessage.success(t('pages.system.job.enabled'))
     }
     loadData()
@@ -330,7 +359,7 @@
         type: 'warning'
       }
     ).then(async () => {
-      await fetchDeleteJob(row.id)
+      await fetchDeleteJob(row.id, serverId.value || undefined)
       ElMessage.success(t('pages.system.job.removeSuccess'))
       loadData()
     })
@@ -338,7 +367,7 @@
 
   const showLogs = async (row: any): Promise<void> => {
     dialogVisible.value = false
-    logs.value = (await fetchJobInstances(row.id)) || []
+    logs.value = (await fetchJobInstances(row.id, serverId.value || undefined)) || []
     logsVisible.value = true
   }
 
@@ -369,6 +398,17 @@
 
 <style scoped>
   .job-toolbar {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .job-server-select {
+    width: 280px;
+  }
+
+  .job-default-hint {
     margin-bottom: 12px;
   }
 

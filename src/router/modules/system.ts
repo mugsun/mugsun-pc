@@ -265,6 +265,16 @@ export const systemRoutes: AppRouteRecord = {
       }
     },
     {
+      path: 'job-server',
+      name: 'JobServer',
+      component: '/system/job-server',
+      meta: {
+        title: 'menus.system.jobServer',
+        icon: 'ri:server-line',
+        keepAlive: true
+      }
+    },
+    {
       path: 'report',
       name: 'Report',
       component: '/system/report',

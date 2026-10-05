@@ -535,8 +535,11 @@ export function fetchFlowHistory(instanceId: number | string) {
 }
 
 // ===== 定时任务 =====
-export function fetchJobList() {
-  return request.get<any[]>({ url: '/api/system/job/list' })
+export function fetchJobList(serverId?: string) {
+  return request.get<any[]>({
+    url: '/api/system/job/list',
+    params: serverId ? { serverId } : undefined
+  })
 }
 /** 处理器注册表（BasicProcessor 实现，value=全限定类名 label=简单类名） */
 export function fetchJobProcessors() {
@@ -545,20 +548,59 @@ export function fetchJobProcessors() {
 export function fetchSaveJob(data: Record<string, any>) {
   return request.post<number>({ url: '/api/system/job/save', data })
 }
-export function fetchRunJob(jobId: number | string) {
-  return request.post<string>({ url: `/api/system/job/run/${jobId}` })
+export function fetchRunJob(jobId: number | string, serverId?: string) {
+  return request.post<string>({
+    url: `/api/system/job/run/${jobId}`,
+    params: serverId ? { serverId } : undefined
+  })
 }
-export function fetchEnableJob(jobId: number | string) {
-  return request.post<void>({ url: `/api/system/job/enable/${jobId}` })
+export function fetchEnableJob(jobId: number | string, serverId?: string) {
+  return request.post<void>({
+    url: `/api/system/job/enable/${jobId}`,
+    params: serverId ? { serverId } : undefined
+  })
 }
-export function fetchDisableJob(jobId: number | string) {
-  return request.post<void>({ url: `/api/system/job/disable/${jobId}` })
+export function fetchDisableJob(jobId: number | string, serverId?: string) {
+  return request.post<void>({
+    url: `/api/system/job/disable/${jobId}`,
+    params: serverId ? { serverId } : undefined
+  })
 }
-export function fetchDeleteJob(jobId: number | string) {
-  return request.post<void>({ url: `/api/system/job/delete/${jobId}` })
+export function fetchDeleteJob(jobId: number | string, serverId?: string) {
+  return request.post<void>({
+    url: `/api/system/job/delete/${jobId}`,
+    params: serverId ? { serverId } : undefined
+  })
 }
-export function fetchJobInstances(jobId: number | string) {
-  return request.get<any[]>({ url: '/api/system/job/instances', params: { jobId } })
+export function fetchJobInstances(jobId: number | string, serverId?: string) {
+  return request.get<any[]>({
+    url: '/api/system/job/instances',
+    params: serverId ? { jobId, serverId } : { jobId }
+  })
+}
+
+export function fetchJobServerPage(params: Record<string, any>) {
+  return request.get<any>({ url: '/api/system/job-server/page', params })
+}
+export function fetchJobServerOptions() {
+  return request.get<Array<{ id: string; serverName: string; serverUrl: string }>>({
+    url: '/api/system/job-server/options'
+  })
+}
+export function fetchSaveJobServer(data: Record<string, any>) {
+  return request.post<{ id: string; synced: boolean; message: string }>({
+    url: '/api/system/job-server/save',
+    data
+  })
+}
+export function fetchRemoveJobServer(ids: Array<string | number>) {
+  return request.post<void>({ url: '/api/system/job-server/remove', data: { ids } })
+}
+export function fetchSyncJobServer(id?: string) {
+  return request.post<{ ok: number; fail: number; message: string }>({
+    url: '/api/system/job-server/sync',
+    data: id ? { id } : {}
+  })
 }
 
 // ===== 报表 =====
