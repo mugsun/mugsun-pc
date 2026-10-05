@@ -187,6 +187,16 @@ export const systemRoutes: AppRouteRecord = {
       }
     },
     {
+      path: 'gen-scheme',
+      name: 'GenScheme',
+      component: '/system/gen-scheme',
+      meta: {
+        title: 'menus.system.genScheme',
+        icon: 'ri:settings-4-line',
+        keepAlive: true
+      }
+    },
+    {
       path: 'online-form',
       name: 'OnlineForm',
       component: '/system/online-form',

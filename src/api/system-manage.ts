@@ -312,6 +312,30 @@ export function fetchTestGenDatasource(id: string) {
     data: { id }
   })
 }
+export function fetchGenSchemePage(params: { pageNum: number; pageSize: number; name?: string }) {
+  return request.get<{ records: any[]; totalRow: number }>({
+    url: '/api/system/gen-scheme/page',
+    params
+  })
+}
+export function fetchEnabledGenScheme() {
+  return request.get<any>({ url: '/api/system/gen-scheme/enabled' })
+}
+export function fetchSaveGenScheme(data: Record<string, any>) {
+  return request.post<{ id: string; enabled: boolean }>({
+    url: '/api/system/gen-scheme/save',
+    data
+  })
+}
+export function fetchEnableGenScheme(id: string) {
+  return request.post<{ id: string; schemeName: string }>({
+    url: '/api/system/gen-scheme/enable',
+    data: { id }
+  })
+}
+export function fetchRemoveGenScheme(ids: Array<string | number>) {
+  return request.post<void>({ url: '/api/system/gen-scheme/remove', data: { ids } })
+}
 // 元数据驱动代码生成（gen_table/gen_column）
 export function fetchGenImport(data: {
   tableName: string

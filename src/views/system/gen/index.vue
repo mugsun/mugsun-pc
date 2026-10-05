@@ -23,6 +23,21 @@
           selectedSource ? $t('pages.system.gen.registeredSource') : datasource.url || '-'
         }}</ElDescriptionsItem>
       </ElDescriptions>
+      <ElAlert
+        class="gen-ds"
+        :type="scheme ? 'success' : 'info'"
+        :closable="false"
+        :title="
+          scheme
+            ? $t('pages.system.genScheme.using', {
+                name: scheme.schemeName,
+                module: scheme.moduleName,
+                pkg: scheme.basePackage,
+                author: scheme.author
+              })
+            : $t('pages.system.genScheme.none')
+        "
+      />
 
       <div class="gen-form">
         <span class="gen-label">{{ $t('pages.system.gen.source') }}</span>
@@ -263,6 +278,7 @@
     fetchGenDatasource,
     fetchGenDatasourceOptions,
     fetchGenTables,
+    fetchEnabledGenScheme,
     fetchGenImport,
     fetchGenList,
     fetchGenRemove,
@@ -282,6 +298,7 @@
   const datasource = ref<Record<string, any>>({})
   const sources = ref<Array<{ id: string; dsName: string }>>([])
   const sourceId = ref('primary')
+  const scheme = ref<any>(null)
   const selectedSource = computed(
     () => sources.value.find((item) => String(item.id) === sourceId.value) || null
   )
@@ -425,6 +442,13 @@
   onMounted(async () => {
     datasource.value = (await fetchGenDatasource()) || {}
     sources.value = (await fetchGenDatasourceOptions()) || []
+    scheme.value = await fetchEnabledGenScheme()
+    if (scheme.value) {
+      importForm.moduleName = scheme.value.moduleName || importForm.moduleName
+      importForm.basePackage = scheme.value.basePackage || importForm.basePackage
+      importForm.tablePrefix = scheme.value.tablePrefix || ''
+      importForm.author = scheme.value.author || importForm.author
+    }
     tables.value = (await fetchGenTables()) || []
     await loadList()
   })
