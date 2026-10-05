@@ -26,7 +26,7 @@
         <span>{{ fmtTrackSize(meta.sizeBytes) }}</span>
       </div>
       <ElAlert
-        v-if="skippedBlocks > 0"
+        v-if="skippedBlocks > 0 && !errorMsg"
         type="warning"
         :closable="false"
         show-icon
