@@ -268,7 +268,10 @@ export function useTableColumns<T = any>(
      * 重置所有列
      */
     resetColumns: () => {
-      dynamicColumns.value = columnsFactory()
+      const next = columnsFactory()
+      dynamicColumns.value = next
+      // 列变化会先沿用旧的显隐。恢复默认要改回出厂勾选，所以这里再写一次。
+      columnChecks.value = getColumnChecks(next)
     },
 
     /**

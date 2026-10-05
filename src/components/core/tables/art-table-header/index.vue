@@ -61,7 +61,7 @@
           </div>
         </template>
         <div>
-          <ElScrollbar max-height="380px">
+          <ElScrollbar max-height="460px">
             <VueDraggable
               v-model="columns"
               :disabled="false"
@@ -320,6 +320,10 @@
 
 <style scoped>
   @reference '@styles/core/tailwind.css';
+
+  .column-option :deep(.el-checkbox) {
+    height: 26px;
+  }
 
   .button {
     @apply ml-2 

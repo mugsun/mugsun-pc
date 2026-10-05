@@ -473,7 +473,6 @@
   // 恢复默认列
   const handleResetColumns = async (): Promise<void> => {
     await resetToDefault()
-    ElMessage.success(t('pages.system.user.columnsRestored'))
   }
 
   // ===== 查询栏联动 =====

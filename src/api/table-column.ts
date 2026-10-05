@@ -9,12 +9,15 @@ export function fetchGetTableColumn(tableKey: string) {
 export function fetchSaveTableColumn(tableKey: string, configJson: string) {
   return request.post<void>({
     url: '/api/system/table-column/save',
-    data: { tableKey, configJson },
-    showErrorMessage: false
+    data: { tableKey, configJson }
   })
 }
 
 /** 恢复默认：删除当前用户该表配置 */
 export function fetchResetTableColumn(tableKey: string) {
-  return request.post<void>({ url: `/api/system/table-column/reset/${tableKey}` })
+  return request.post<void>({
+    url: `/api/system/table-column/reset/${tableKey}`,
+    data: {},
+    showSuccessMessage: true
+  })
 }

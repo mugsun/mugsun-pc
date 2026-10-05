@@ -121,14 +121,14 @@ export function useTableColumnPersist(options: UseTableColumnPersistOptions) {
     if (timer) flushSave()
   })
 
-  /** 恢复默认：删后端记录 + 回出厂默认列 */
+  /** 恢复默认：删后端记录成功后才回出厂默认列 */
   const resetToDefault = async () => {
     applying = true
     try {
       await fetchResetTableColumn(tableKey)
-    } finally {
       resetColumns()
       await nextTick()
+    } finally {
       applying = false
     }
   }
