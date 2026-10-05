@@ -244,7 +244,9 @@
       { min: PASSWORD_MIN_LENGTH, message: t('register.rule.passwordLength'), trigger: 'blur' }
     ],
     confirmPassword: [{ required: true, validator: validateConfirmPassword, trigger: 'blur' }],
-    phone: [{ pattern: /^1\d{10}$/, message: t('pages.auth.phoneInvalid'), trigger: 'blur' }],
+    phone: [
+      { pattern: /^1\d{10}$/, message: t('pages.auth.register.phoneInvalid'), trigger: 'blur' }
+    ],
     captchaCode: [{ required: true, message: t('pages.auth.captchaPlaceholder'), trigger: 'blur' }],
     agreement: [{ validator: validateAgreement, trigger: 'change' }]
   }))

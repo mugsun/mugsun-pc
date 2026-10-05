@@ -654,6 +654,7 @@
       },
       "register": {
         "phonePlaceholder": "请输入手机号（选填，可用于短信登录）",
+        "phoneInvalid": "手机号格式不正确。请改成 11 位、以 1 开头的手机号后再注册",
         "successMessage": "注册成功，请登录"
       },
       "forgetPassword": {
