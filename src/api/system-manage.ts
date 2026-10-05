@@ -632,6 +632,13 @@ export function fetchApiKeyLogDetail(id: string | number) {
   return request.get<any>({ url: '/api/system/api-key-log/detail', params: { id } })
 }
 
+export function fetchUsualLogPage(params: Record<string, any>) {
+  return request.get<any>({ url: '/api/system/usual-log/page', params })
+}
+export function fetchUsualLogDetail(id: string | number) {
+  return request.get<any>({ url: '/api/system/usual-log/detail', params: { id } })
+}
+
 // ===== 行政区划 =====
 export function fetchRegionLazyTree(parentCode: string) {
   return request.get<any[]>({ url: '/api/system/region/lazy-tree', params: { parentCode } })

@@ -353,6 +353,16 @@ export const systemRoutes: AppRouteRecord = {
       }
     },
     {
+      path: 'usual-log',
+      name: 'UsualLog',
+      component: '/system/usual-log',
+      meta: {
+        title: 'menus.system.usualLog',
+        icon: 'ri:file-list-2-line',
+        keepAlive: true
+      }
+    },
+    {
       path: 'monitor',
       name: 'ServerMonitor',
       component: '/system/monitor',
