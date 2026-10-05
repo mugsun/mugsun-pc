@@ -1126,6 +1126,16 @@
         "edit": "Edit",
         "delete": "Delete",
         "label": "Parameter",
+        "deleteSelectedBtn": "Delete selected",
+        "deleteEmpty": "Select the parameters to delete first",
+        "deleteBatchConfirm": "Delete the {count} selected parameters? They will disappear from the list",
+        "deleteConfirm": "Delete \"{name}\"? It will disappear from the list",
+        "deleteSuccess": "Deleted. These parameters will no longer appear in the list",
+        "saveSuccess": "Saved. You can find this parameter in the list",
+        "emptyList": "No parameters yet. Click Add Parameter to create one",
+        "emptySearch": "No parameters match. Change the name, key, or value and search again",
+        "hiddenValue": "Hidden. Leave it blank while editing to keep the current value",
+        "keyLocked": "The key cannot be changed after it is created. Add a new parameter to use another key",
         "fields": {
           "paramName": "Parameter Name",
           "paramKey": "Parameter Key",
@@ -1137,6 +1147,7 @@
           "paramName": "Please enter parameter name",
           "paramKey": "Please enter parameter key",
           "paramValue": "Please enter parameter value",
+          "paramValueKeep": "Leave blank to keep the current value",
           "remark": "Please enter remark"
         }
       },

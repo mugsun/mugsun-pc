@@ -1126,6 +1126,16 @@
         "edit": "编辑",
         "delete": "删除",
         "label": "参数",
+        "deleteSelectedBtn": "删除所选",
+        "deleteEmpty": "请先勾选要删除的参数",
+        "deleteBatchConfirm": "确定删除选中的 {count} 条参数吗？删掉后列表里不会再出现",
+        "deleteConfirm": "确定删除「{name}」吗？删掉后列表里不会再出现",
+        "deleteSuccess": "已删除。列表里不会再出现这些参数",
+        "saveSuccess": "已保存。可以在列表里查看这条参数",
+        "emptyList": "还没有参数。点「新增参数」添加一条",
+        "emptySearch": "没有符合条件的参数。请改名称、键或值后再查",
+        "hiddenValue": "已隐藏。编辑时留空则不修改",
+        "keyLocked": "参数键创建后不能修改。要换键请新增一条",
         "fields": {
           "paramName": "参数名称",
           "paramKey": "参数键",
@@ -1137,6 +1147,7 @@
           "paramName": "请输入参数名称",
           "paramKey": "请输入参数键",
           "paramValue": "请输入参数值",
+          "paramValueKeep": "留空表示不修改原来的值",
           "remark": "请输入备注"
         }
       },

@@ -16,13 +16,21 @@
       <ElFormItem :label="$t('pages.system.param.fields.paramKey')" prop="paramKey">
         <ElInput
           v-model="formData.paramKey"
+          :disabled="type === 'edit'"
           :placeholder="$t('pages.system.param.placeholder.paramKey')"
         />
+        <div v-if="type === 'edit'" class="param-hint">{{
+          $t('pages.system.param.keyLocked')
+        }}</div>
       </ElFormItem>
       <ElFormItem :label="$t('pages.system.param.fields.paramValue')" prop="paramValue">
         <ElInput
           v-model="formData.paramValue"
-          :placeholder="$t('pages.system.param.placeholder.paramValue')"
+          :placeholder="
+            formData.sensitive
+              ? $t('pages.system.param.placeholder.paramValueKeep')
+              : $t('pages.system.param.placeholder.paramValue')
+          "
         />
       </ElFormItem>
       <ElFormItem :label="$t('pages.system.param.fields.remark')" prop="remark">
@@ -79,7 +87,8 @@
     paramName: '',
     paramKey: '',
     paramValue: '',
-    remark: ''
+    remark: '',
+    sensitive: false
   })
 
   const rules = computed<FormRules>(() => ({
@@ -88,7 +97,16 @@
     ],
     paramKey: [
       { required: true, message: t('pages.system.param.placeholder.paramKey'), trigger: 'blur' }
-    ]
+    ],
+    paramValue: formData.sensitive
+      ? []
+      : [
+          {
+            required: true,
+            message: t('pages.system.param.placeholder.paramValue'),
+            trigger: 'blur'
+          }
+        ]
   }))
 
   watch(
@@ -97,7 +115,14 @@
       if (visible) {
         Object.assign(
           formData,
-          { id: undefined, paramName: '', paramKey: '', paramValue: '', remark: '' },
+          {
+            id: undefined,
+            paramName: '',
+            paramKey: '',
+            paramValue: '',
+            remark: '',
+            sensitive: false
+          },
           props.paramData || {}
         )
         nextTick(() => formRef.value?.clearValidate())
@@ -115,3 +140,12 @@
     })
   }
 </script>
+
+<style scoped>
+  .param-hint {
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--el-text-color-secondary);
+  }
+</style>

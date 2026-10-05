@@ -14,14 +14,20 @@
         <ElButton v-perm="'sys:param:save'" @click="showDialog('add')" v-ripple>{{
           $t('pages.system.param.addParam')
         }}</ElButton>
+        <ElButton v-perm="'sys:param:remove'" @click="deleteSelected" v-ripple>{{
+          $t('pages.system.param.deleteSelectedBtn')
+        }}</ElButton>
       </div>
 
       <ArtTable
+        ref="tableRef"
         :loading="loading"
         :data="data as any[]"
         :columns="columns"
         :pagination="pagination"
+        :empty-text="emptyText"
         border
+        @selection-change="onSelectionChange"
         @pagination:size-change="handleSizeChange"
         @pagination:current-change="handleCurrentChange"
       />
@@ -39,7 +45,7 @@
 
 <script setup lang="ts">
   import { h, ref } from 'vue'
-  import { ElMessage } from 'element-plus'
+  import { ElMessage, ElMessageBox } from 'element-plus'
   import { useI18n } from 'vue-i18n'
   import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
   import { useCrud } from '@/hooks/core/useCrud'
@@ -55,9 +61,12 @@
   const dialogSaving = ref(false)
 
   // ===== 查询栏 =====
+  const tableRef = ref()
+  const selectedRows = ref<any[]>([])
   const searchForm = ref({
     paramName: '',
-    paramKey: ''
+    paramKey: '',
+    paramValue: ''
   })
   const searchItems = computed(() => [
     {
@@ -71,18 +80,34 @@
       label: t('pages.system.param.fields.paramKey'),
       type: 'input',
       props: { placeholder: t('pages.system.param.placeholder.paramKey'), clearable: true }
+    },
+    {
+      key: 'paramValue',
+      label: t('pages.system.param.fields.paramValue'),
+      type: 'input',
+      props: { placeholder: t('pages.system.param.placeholder.paramValue'), clearable: true }
     }
   ])
+  const searched = computed(
+    () =>
+      !!searchForm.value.paramName || !!searchForm.value.paramKey || !!searchForm.value.paramValue
+  )
+  const emptyText = computed(() =>
+    searched.value ? t('pages.system.param.emptySearch') : t('pages.system.param.emptyList')
+  )
 
   const columnsFactory = (): ColumnOption[] => [
+    { type: 'selection', width: 48 },
     { type: 'index', width: 60, label: t('table.column.index') },
     { prop: 'paramName', label: t('pages.system.param.fields.paramName'), minWidth: 160 },
     { prop: 'paramKey', label: t('pages.system.param.fields.paramKey'), minWidth: 180 },
     {
       prop: 'paramValue',
       label: t('pages.system.param.fields.paramValue'),
-      minWidth: 160,
-      showOverflowTooltip: true
+      minWidth: 180,
+      showOverflowTooltip: true,
+      formatter: (row: any) =>
+        row.sensitive ? t('pages.system.param.hiddenValue') : row.paramValue || '—'
     },
     {
       prop: 'remark',
@@ -113,7 +138,7 @@
           hasPerm('sys:param:remove')
             ? h(
                 ElButton,
-                { link: true, type: 'danger', size: 'small', onClick: () => handleDelete(row) },
+                { link: true, type: 'danger', size: 'small', onClick: () => deleteRow(row) },
                 () => t('pages.system.param.delete')
               )
             : null
@@ -133,8 +158,8 @@
     dialogType,
     currentRow,
     showDialog,
-    handleDelete,
     fetchData,
+    refreshRemove,
     refreshCreate,
     refreshUpdate,
     replaceSearchParams,
@@ -158,7 +183,8 @@
   const handleResetSearch = async (): Promise<void> => {
     searchForm.value = {
       paramName: '',
-      paramKey: ''
+      paramKey: '',
+      paramValue: ''
     }
     resetSearchParams()
     await fetchData()
@@ -169,16 +195,62 @@
     try {
       await fetchSaveParam(form)
       dialogVisible.value = false
-      ElMessage.success(t('common.saveSuccess'))
+      ElMessage.success(t('pages.system.param.saveSuccess'))
       await (dialogType.value === 'add' ? refreshCreate() : refreshUpdate())
     } finally {
       dialogSaving.value = false
     }
   }
+
+  const onSelectionChange = (rows: any[]): void => {
+    selectedRows.value = rows
+  }
+
+  const deleteRow = (row: any): void => {
+    ElMessageBox.confirm(
+      t('pages.system.param.deleteConfirm', { name: row.paramName }),
+      t('pages.system.param.label'),
+      {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
+        type: 'warning'
+      }
+    ).then(async () => {
+      await fetchRemoveParam(row.id)
+      ElMessage.success(t('pages.system.param.deleteSuccess'))
+      selectedRows.value = []
+      tableRef.value?.elTableRef?.clearSelection()
+      await refreshRemove()
+    })
+  }
+
+  const deleteSelected = (): void => {
+    if (!selectedRows.value.length) {
+      ElMessage.warning(t('pages.system.param.deleteEmpty'))
+      return
+    }
+    ElMessageBox.confirm(
+      t('pages.system.param.deleteBatchConfirm', { count: selectedRows.value.length }),
+      t('pages.system.param.label'),
+      {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
+        type: 'warning'
+      }
+    ).then(async () => {
+      await fetchRemoveParam(selectedRows.value.map((row) => row.id))
+      ElMessage.success(t('pages.system.param.deleteSuccess'))
+      selectedRows.value = []
+      tableRef.value?.elTableRef?.clearSelection()
+      await refreshRemove()
+    })
+  }
 </script>
 
 <style scoped>
   .param-toolbar {
+    display: flex;
+    gap: 8px;
     margin-bottom: 12px;
   }
 </style>
