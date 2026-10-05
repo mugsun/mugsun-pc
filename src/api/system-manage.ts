@@ -587,6 +587,10 @@ export function fetchLoginLogPage(params: Record<string, any>) {
   return request.get<any>({ url: '/api/system/login-log/page', params })
 }
 
+export function fetchLoginLogDetail(id: string | number) {
+  return request.get<any>({ url: '/api/system/login-log/detail', params: { id } })
+}
+
 // ===== 在线会话 =====
 /** 在线会话列表（每行 = 一个在线终端，会话落 Redis 重启不失效） */
 export function fetchOnlineList() {

@@ -120,6 +120,7 @@
 
 <script setup lang="ts">
   import { h, ref, nextTick } from 'vue'
+  import { useRouter } from 'vue-router'
   import { useI18n } from 'vue-i18n'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtDictTag from '@/components/core/base/art-dict-tag/index.vue'
@@ -151,6 +152,7 @@
   defineOptions({ name: 'User' })
 
   const { t } = useI18n()
+  const router = useRouter()
 
   // ===== 查询栏 =====
   const searchForm = ref({
@@ -330,7 +332,7 @@
     {
       prop: 'operation',
       label: t('pages.system.user.fields.operation'),
-      width: 330,
+      width: 400,
       fixed: 'right',
       // 操作列由 h() 渲染（指令够不到），用 hasPerm() 函数按真实权限码门控
       formatter: (row: any) =>
@@ -383,6 +385,22 @@
                       ? 'pages.system.user.unsetLeader'
                       : 'pages.system.user.setLeader'
                   )
+              )
+            : null,
+          hasPerm('sys:login-log:list')
+            ? h(
+                ElButton,
+                {
+                  link: true,
+                  type: 'primary',
+                  size: 'small',
+                  onClick: () =>
+                    router.push({
+                      path: '/system/login-log',
+                      query: { username: row.username, exact: '1' }
+                    })
+                },
+                () => t('pages.system.user.authLog')
               )
             : null
         ])
