@@ -647,14 +647,16 @@ export function fetchFlowOperation(
 ) {
   return request.post<void>({
     url: `/api/system/flow/task/operation/${taskId}`,
-    data: { op, handlers: handlers.map(String), message }
+    data: { op, handlers: handlers.map(String), message },
+    showSuccessMessage: true
   })
 }
 /** 抄送 */
 export function fetchFlowCopy(taskId: number | string, userIds: (number | string)[]) {
   return request.post<void>({
     url: `/api/system/flow/task/copy/${taskId}`,
-    data: { userIds: userIds.map(String) }
+    data: { userIds: userIds.map(String) },
+    showSuccessMessage: true
   })
 }
 /** 可退回的历史审批节点 */

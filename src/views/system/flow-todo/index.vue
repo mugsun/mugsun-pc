@@ -361,10 +361,19 @@
 
   const submitOp = async (): Promise<void> => {
     if (submitting.value) return
+    if (opKind.value === 'user' && !opForm.handlers.length) {
+      ElMessage.warning(t('pages.system.flowTodo.selectUserWarn'))
+      return
+    }
+    if (opKind.value === 'node' && !opForm.nodeCode) {
+      ElMessage.warning(t('pages.system.flowTodo.selectHistoryNode'))
+      return
+    }
     submitting.value = true
     try {
       await ACTIONS[opAction.value].run(opRow.value)
-      ElMessage.success(t('pages.system.flowTodo.msgSuccess'))
+      const serverToast = opKind.value === 'user'
+      if (!serverToast) ElMessage.success(t('pages.system.flowTodo.msgSuccess'))
       opVisible.value = false
       loadTodo()
     } finally {

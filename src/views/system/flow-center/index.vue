@@ -673,7 +673,8 @@
     submitting.value = true
     try {
       await OP[opAction.value].run(current.value)
-      ElMessage.success(t('pages.system.flowCenter.msgSuccess'))
+      const serverToast = opKind.value === 'user'
+      if (!serverToast) ElMessage.success(t('pages.system.flowCenter.msgSuccess'))
       opVisible.value = false
       detailVisible.value = false
       load()
