@@ -11,7 +11,11 @@ export function uploadFeedbackFile(file: File) {
 
 /** 用户提交反馈 */
 export function submitFeedback(data: Record<string, any>) {
-  return request.post<void>({ url: '/api/system/feedback/submit', data })
+  return request.post<void>({
+    url: '/api/system/feedback/submit',
+    data,
+    showSuccessMessage: true
+  })
 }
 
 /** 后台反馈分页 */
@@ -21,12 +25,19 @@ export function fetchFeedbackPage(params: Record<string, any>) {
 
 /** 切换处理状态 */
 export function fetchFeedbackStatus(id: number | string) {
-  return request.post<void>({ url: `/api/system/feedback/status/${id}` })
+  return request.post<void>({
+    url: `/api/system/feedback/status/${id}`,
+    showSuccessMessage: true
+  })
 }
 
 /** 删除反馈 */
 export function fetchRemoveFeedback(ids: (number | string)[]) {
-  return request.post<void>({ url: '/api/system/feedback/remove', data: ids })
+  return request.post<void>({
+    url: '/api/system/feedback/remove',
+    data: ids,
+    showSuccessMessage: true
+  })
 }
 
 // ------------------------- 版本更新记录 -------------------------

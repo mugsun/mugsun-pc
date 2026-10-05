@@ -1,179 +1,231 @@
-<!-- 意见反馈管理：查看用户反馈、附件、处理状态 -->
+<!-- 意见反馈：按内容查找，处理状态和删除会说明下一步 -->
 <template>
   <div class="feedback-page art-full-height">
-    <ElCard class="art-table-card" shadow="never">
-      <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData" />
-      <ArtTable
-        :loading="loading"
-        :data="data as any[]"
-        :columns="columns"
-        :pagination="pagination"
-        @pagination:size-change="handleSizeChange"
-        @pagination:current-change="handleCurrentChange"
-      />
+    <ElCard class="art-table-card">
+      <div class="fb-body">
+        <div class="fb-toolbar">
+          <ElInput
+            v-model="keyword"
+            clearable
+            class="fb-search"
+            :placeholder="$t('pages.system.feedback.searchPlaceholder')"
+            @keyup.enter="search"
+          />
+          <ElSelect
+            v-model="status"
+            clearable
+            class="fb-status"
+            :placeholder="$t('pages.system.feedback.colStatus')"
+          >
+            <ElOption :value="0" :label="$t('pages.system.feedback.statusPending')" />
+            <ElOption :value="1" :label="$t('pages.system.feedback.statusHandled')" />
+          </ElSelect>
+          <ElButton type="primary" @click="search">{{
+            $t('pages.system.feedback.search')
+          }}</ElButton>
+          <ElButton @click="resetSearch">{{ $t('pages.system.feedback.reset') }}</ElButton>
+          <ElButton v-perm="'sys:feedback:manage'" type="danger" plain @click="deleteSelected">{{
+            $t('pages.system.feedback.deleteSelected')
+          }}</ElButton>
+        </div>
+
+        <div class="fb-table-wrap">
+          <ElTable
+            v-loading="loading"
+            :data="tableData"
+            border
+            height="100%"
+            :empty-text="emptyText"
+            @selection-change="onSelectionChange"
+          >
+            <ElTableColumn type="selection" width="48" />
+            <ElTableColumn
+              prop="content"
+              :label="$t('pages.system.feedback.colContent')"
+              min-width="220"
+              show-overflow-tooltip
+            />
+            <ElTableColumn
+              prop="contact"
+              :label="$t('pages.system.feedback.colContact')"
+              width="140"
+              show-overflow-tooltip
+            />
+            <ElTableColumn :label="$t('pages.system.feedback.colStatus')" width="100">
+              <template #default="{ row }">
+                <ElTag :type="row.status === 1 ? 'success' : 'warning'">
+                  {{
+                    row.status === 1
+                      ? $t('pages.system.feedback.statusHandled')
+                      : $t('pages.system.feedback.statusPending')
+                  }}
+                </ElTag>
+              </template>
+            </ElTableColumn>
+            <ElTableColumn :label="$t('pages.system.feedback.colCreateTime')" width="170">
+              <template #default="{ row }">{{ formatTableTime(row.createTime) }}</template>
+            </ElTableColumn>
+            <ElTableColumn :label="$t('pages.system.feedback.colOperation')" width="180">
+              <template #default="{ row }">
+                <ElButton
+                  v-perm="'sys:feedback:manage'"
+                  link
+                  type="primary"
+                  @click="toggleStatus(row)"
+                >
+                  {{
+                    row.status === 1
+                      ? $t('pages.system.feedback.markPending')
+                      : $t('pages.system.feedback.markHandled')
+                  }}
+                </ElButton>
+                <ElButton
+                  v-perm="'sys:feedback:manage'"
+                  link
+                  type="danger"
+                  @click="deleteRow(row)"
+                  >{{ $t('common.delete') }}</ElButton
+                >
+              </template>
+            </ElTableColumn>
+          </ElTable>
+        </div>
+
+        <div class="fb-pager">
+          <ElPagination
+            v-model:current-page="pageNum"
+            :page-size="pageSize"
+            :total="total"
+            layout="total, prev, pager, next"
+            background
+            @current-change="loadData"
+          />
+        </div>
+      </div>
     </ElCard>
   </div>
 </template>
 
 <script setup lang="ts">
-  import { h, onDeactivated } from 'vue'
-  import { ElButton, ElMessage, ElMessageBox, ElTooltip } from 'element-plus'
-  import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
-  import ArtDictTag from '@/components/core/base/art-dict-tag/index.vue'
-  import request from '@/utils/http'
-  import { useTable } from '@/hooks/core/useTable'
-  import { fetchFeedbackPage, fetchFeedbackStatus, fetchRemoveFeedback } from '@/api/feedback'
-  import { DICT_CODE } from '@/utils/constants'
-  import { hasPerm } from '@/utils/permission'
+  import { computed, onMounted, ref } from 'vue'
+  import { ElMessage, ElMessageBox } from 'element-plus'
   import { formatTableTime } from '@/utils/date'
+  import { fetchFeedbackPage, fetchFeedbackStatus, fetchRemoveFeedback } from '@/api/feedback'
   import { useI18n } from 'vue-i18n'
 
   defineOptions({ name: 'Feedback' })
 
   const { t } = useI18n()
+  const tableData = ref<any[]>([])
+  const loading = ref(false)
+  const keyword = ref('')
+  const status = ref<number | undefined>()
+  const filtering = ref(false)
+  const selectedRows = ref<any[]>([])
+  const pageNum = ref(1)
+  const pageSize = ref(10)
+  const total = ref(0)
 
-  const {
-    columns,
-    columnChecks,
-    data,
-    loading,
-    pagination,
-    handleSizeChange,
-    handleCurrentChange,
-    refreshData
-  } = useTable({
-    core: {
-      apiFn: fetchFeedbackPage,
-      apiParams: { pageNum: 1, pageSize: 10 },
-      paginationKey: { current: 'pageNum', size: 'pageSize' },
-      columnsFactory: () => [
-        {
-          prop: 'content',
-          label: t('pages.system.feedback.colContent'),
-          minWidth: 260,
-          showOverflowTooltip: true
-        },
-        {
-          prop: 'contact',
-          label: t('pages.system.feedback.colContact'),
-          width: 150,
-          showOverflowTooltip: true
-        },
-        {
-          prop: 'attachName',
-          label: t('pages.system.feedback.colAttach'),
-          width: 160,
-          // 附件名截断补省略号 + tooltip（link 按钮无内建省略，样式内联：scoped 够不到 h() 渲染的 vnode）
-          formatter: (row: any) =>
-            row.attachId
-              ? h(
-                  ElTooltip,
-                  {
-                    content: row.attachName || t('pages.system.feedback.downloadAttach'),
-                    placement: 'top'
-                  },
-                  () =>
-                    h(
-                      ElButton,
-                      {
-                        link: true,
-                        type: 'primary',
-                        style:
-                          'max-width:130px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle',
-                        onClick: () =>
-                          request.download({
-                            url: `/api/system/file/download-stream/${row.attachId}`
-                          })
-                      },
-                      () => row.attachName || t('pages.system.feedback.downloadAttach')
-                    )
-                )
-              : '—'
-        },
-        {
-          prop: 'status',
-          label: t('pages.system.feedback.colStatus'),
-          width: 100,
-          // 字典运行时驱动：改用 ArtDictTag，不再手写 已处理/未处理 判断
-          formatter: (row: any) =>
-            h(ArtDictTag, { code: DICT_CODE.FEEDBACK_STATUS, value: row.status })
-        },
-        {
-          prop: 'createTime',
-          label: t('pages.system.feedback.colCreateTime'),
-          minWidth: 170,
-          formatter: (row: any) => formatTableTime(row.createTime)
-        },
-        {
-          prop: 'operation',
-          label: t('pages.system.feedback.colOperation'),
-          width: 160,
-          fixed: 'right',
-          // 操作列由 h() 渲染（指令够不到），用 hasPerm() 函数按真实权限码门控
-          formatter: (row: any) =>
-            h('div', [
-              hasPerm('sys:feedback:manage')
-                ? h(
-                    ElButton,
-                    {
-                      link: true,
-                      type: 'primary',
-                      size: 'small',
-                      onClick: () => toggleStatus(row)
-                    },
-                    () =>
-                      row.status === 1
-                        ? t('pages.system.feedback.markPending')
-                        : t('pages.system.feedback.markHandled')
-                  )
-                : null,
-              hasPerm('sys:feedback:manage')
-                ? h(ArtButtonTable, { type: 'delete', onClick: () => remove(row) })
-                : null
-            ])
-        }
-      ]
-    },
-    transform: {
-      responseAdapter: (resp: any) => ({
-        records: resp?.records ?? [],
-        total: resp?.totalRow ?? 0,
-        current: resp?.pageNumber ?? 1,
-        size: resp?.pageSize ?? 10
+  const emptyText = computed(() =>
+    filtering.value ? t('pages.system.feedback.emptySearch') : t('pages.system.feedback.emptyList')
+  )
+
+  const loadData = async () => {
+    loading.value = true
+    try {
+      const res = await fetchFeedbackPage({
+        pageNum: pageNum.value,
+        pageSize: pageSize.value,
+        name: keyword.value.trim() || undefined,
+        status: status.value === 0 || status.value === 1 ? status.value : undefined
       })
+      tableData.value = res?.records || []
+      total.value = res?.totalRow ?? 0
+    } finally {
+      loading.value = false
     }
-  })
+  }
+
+  const search = () => {
+    filtering.value = !!keyword.value.trim() || status.value === 0 || status.value === 1
+    pageNum.value = 1
+    loadData()
+  }
+
+  const resetSearch = () => {
+    keyword.value = ''
+    status.value = undefined
+    filtering.value = false
+    pageNum.value = 1
+    loadData()
+  }
+
+  const onSelectionChange = (rows: any[]) => {
+    selectedRows.value = rows
+  }
 
   const toggleStatus = async (row: any) => {
     await fetchFeedbackStatus(row.id)
-    ElMessage.success(t('pages.system.feedback.opSuccess'))
-    refreshData()
+    await loadData()
   }
 
-  const remove = (row: any) => {
-    ElMessageBox.confirm(
-      t('pages.system.feedback.removeConfirm'),
+  const deleteRow = async (row: any) => {
+    await ElMessageBox.confirm(
+      t('pages.system.feedback.removeConfirm', { content: row.content }),
       t('pages.system.feedback.removeTitle'),
       { type: 'warning' }
     )
-      .then(async () => {
-        await fetchRemoveFeedback([row.id])
-        ElMessage.success(t('pages.system.feedback.removeSuccess'))
-        refreshData()
-      })
-      .catch(() => {})
+    await fetchRemoveFeedback([row.id])
+    await loadData()
   }
 
-  let seenFeedback = false
-  onActivated(() => {
-    if (!seenFeedback) {
-      seenFeedback = true
+  const deleteSelected = async () => {
+    if (!selectedRows.value.length) {
+      ElMessage.warning(t('pages.system.feedback.deleteEmpty'))
       return
     }
-    refreshData()
-  })
+    await ElMessageBox.confirm(
+      t('pages.system.feedback.deleteBatchConfirm', { count: selectedRows.value.length }),
+      t('pages.system.feedback.removeTitle'),
+      { type: 'warning' }
+    )
+    await fetchRemoveFeedback(selectedRows.value.map((row) => row.id))
+    await loadData()
+  }
 
-  onDeactivated(() => {
-    ElMessageBox.close()
-  })
+  onMounted(loadData)
 </script>
+
+<style lang="scss" scoped>
+  .fb-body {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .fb-table-wrap {
+    flex: 1;
+    min-height: 0;
+  }
+
+  .fb-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .fb-search {
+    width: 220px;
+  }
+
+  .fb-status {
+    width: 140px;
+  }
+
+  .fb-pager {
+    display: flex;
+    justify-content: flex-end;
+    margin-top: 12px;
+  }
+</style>

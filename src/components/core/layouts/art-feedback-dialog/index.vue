@@ -7,7 +7,7 @@
           v-model="form.content"
           type="textarea"
           :rows="5"
-          maxlength="500"
+          maxlength="2000"
           show-word-limit
           :placeholder="$t('components.feedbackDialog.contentPlaceholder')"
         />
@@ -15,6 +15,7 @@
       <ElFormItem :label="$t('components.feedbackDialog.contactLabel')">
         <ElInput
           v-model="form.contact"
+          maxlength="64"
           :placeholder="$t('components.feedbackDialog.contactPlaceholder')"
         />
       </ElFormItem>
@@ -123,7 +124,6 @@
     submitting.value = true
     try {
       await submitFeedback({ ...form })
-      ElMessage.success(t('components.feedbackDialog.thanksMessage'))
       visible.value = false
     } finally {
       submitting.value = false
