@@ -19,11 +19,12 @@ export function fetchCustomerPage(params: Record<string, any>) {
   return request.get<any>({ url: '/api/system/customer/page', params })
 }
 export function fetchSubmitCustomer(data: Record<string, any>) {
-  return request.post<void>({ url: '/api/system/customer/submit', data })
+  return request.post<void>({ url: '/api/system/customer/submit', data, showSuccessMessage: true })
 }
 export function fetchRemoveCustomer(ids: (number | string)[] | number | string) {
   return request.post<void>({
     url: '/api/system/customer/remove',
-    data: Array.isArray(ids) ? ids : [ids]
+    data: Array.isArray(ids) ? ids : [ids],
+    showSuccessMessage: true
   })
 }

@@ -3,6 +3,15 @@
   <div class="customer-page art-full-height">
     <ElCard class="art-table-card">
       <div class="customer-toolbar">
+        <ElInput
+          v-model="keyword"
+          clearable
+          :placeholder="$t('pages.system.customer.searchPlaceholder')"
+          style="width: 220px"
+          @keyup.enter="search"
+          @clear="search"
+        />
+        <ElButton type="primary" @click="search">{{ $t('pages.system.customer.search') }}</ElButton>
         <ElButton type="primary" @click="showCreate">{{
           $t('pages.system.customer.create')
         }}</ElButton>
@@ -11,7 +20,14 @@
       <!-- 表格为自由增长内容：art-table-card 卡片体是 height:100%+overflow:hidden 裁剪，
            内部须自备滚动，否则矮视口下底部行被切断且不可达（同 track/user 修法） -->
       <div v-loading="loading" class="customer-table-wrap">
-        <ElTable :data="tableData" border>
+        <ElTable :data="tableData" border height="100%">
+          <template #empty>
+            <span>{{
+              keyword.trim()
+                ? $t('pages.system.customer.emptySearch')
+                : $t('pages.system.customer.emptyList')
+            }}</span>
+          </template>
           <ElTableColumn type="index" :label="$t('table.column.index')" width="60" />
           <ElTableColumn prop="tenantId" :label="$t('pages.system.customer.tenant')" width="120" />
           <ElTableColumn prop="name" :label="$t('pages.system.customer.name')" min-width="160" />
@@ -36,7 +52,7 @@
       </div>
 
       <!-- 分页器放滚动区外并禁止收缩：翻页始终可见可达（同 mail-template 范式） -->
-      <div class="customer-pager">
+      <div v-if="total > pageSize" class="customer-pager">
         <ElPagination
           v-model:current-page="pageNum"
           :page-size="pageSize"
@@ -88,7 +104,7 @@
   import { useI18n } from 'vue-i18n'
   import { onBeforeRouteLeave } from 'vue-router'
   import type { FormInstance, FormRules } from 'element-plus'
-  import { ElMessage, ElMessageBox } from 'element-plus'
+  import { ElMessageBox } from 'element-plus'
   import { fetchCustomerPage, fetchSubmitCustomer, fetchRemoveCustomer } from '@/api/datasource'
 
   defineOptions({ name: 'Customer' })
@@ -99,6 +115,7 @@
   const loading = ref(false)
   const pageNum = ref(1)
   const pageSize = ref(10)
+  const keyword = ref('')
   const total = ref(0)
   const dialogVisible = ref(false)
   const dialogSaving = ref(false)
@@ -113,12 +130,21 @@
   const loadData = async (): Promise<void> => {
     loading.value = true
     try {
-      const resp = await fetchCustomerPage({ pageNum: pageNum.value, pageSize: pageSize.value })
+      const resp = await fetchCustomerPage({
+        pageNum: pageNum.value,
+        pageSize: pageSize.value,
+        name: keyword.value.trim() || undefined
+      })
       tableData.value = resp?.records ?? []
       total.value = resp?.totalRow ?? 0
     } finally {
       loading.value = false
     }
+  }
+
+  const search = (): void => {
+    pageNum.value = 1
+    loadData()
   }
 
   onMounted(loadData)
@@ -145,7 +171,6 @@
       dialogSaving.value = true
       try {
         await fetchSubmitCustomer({ ...form })
-        ElMessage.success(t('pages.system.customer.msgSaved'))
         dialogVisible.value = false
         loadData()
       } finally {
@@ -166,7 +191,6 @@
     )
       .then(async () => {
         await fetchRemoveCustomer(row.id)
-        ElMessage.success(t('pages.system.customer.msgDeleted'))
         loadData()
       })
       .catch(() => {
@@ -194,14 +218,16 @@
   }
 
   .customer-toolbar {
+    display: flex;
     flex-shrink: 0;
+    flex-wrap: wrap;
+    gap: 8px;
     margin-bottom: 12px;
   }
 
   .customer-table-wrap {
     flex: 1;
     min-height: 0;
-    overflow-y: auto;
   }
 
   .customer-pager {
