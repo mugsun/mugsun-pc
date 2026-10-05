@@ -32,6 +32,9 @@
 
   type RestoreState = 'idle' | 'loading' | 'done' | 'none'
 
+  /** 符号表原文没读到：把服务端说明留在原处，不要当成还原失败一闪而过 */
+  class SourcemapReadError extends Error {}
+
   interface RestoreLine {
     /** 帧前缀（at fn ( / fn@ 等原样保留）；非帧行整行放 pre */
     pre: string
@@ -77,6 +80,16 @@
           if (!c) {
             // raw 为裸 JSON 直发（skipEnvelope），axios 已解析为对象，可直接构造 consumer
             const raw = await fetchTrackSourcemapRaw({ id: row.id })
+            // 原文端点失败时仍是 HTTP 200 的结果信封。旁路信封后不能把它当成符号表去解析。
+            if (
+              raw &&
+              typeof raw === 'object' &&
+              raw.success === false &&
+              typeof raw.msg === 'string' &&
+              raw.msg
+            ) {
+              throw new SourcemapReadError(raw.msg)
+            }
             c = new SourceMapConsumer(raw)
             consumers.set(row.id, c)
           }
@@ -119,7 +132,12 @@
         // destroy 释放 wasm 映射内存（运行时有此方法，类型定义未声明）
         consumers.forEach((c) => (c as any).destroy?.())
       }
-    } catch {
+    } catch (e) {
+      if (e instanceof SourcemapReadError) {
+        hint.value = e.message
+        state.value = 'none'
+        return
+      }
       // 失败提示已由 http 层弹出；回到待还原态可重试
       state.value = 'idle'
     }
