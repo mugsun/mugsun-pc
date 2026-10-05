@@ -31,7 +31,7 @@
         </div>
         <ElEmpty
           v-if="!sessionLoading && !sessions.length"
-          description="暂无会话"
+          description="还没有会话。点新对话开始提问"
           :image-size="64"
         />
       </div>
@@ -97,7 +97,11 @@
             </div>
           </div>
         </div>
-        <ElEmpty v-if="!messages.length" description="开始提问吧" :image-size="72" />
+        <ElEmpty
+          v-if="!messages.length"
+          description="还没有消息。在下面输入问题后发送"
+          :image-size="72"
+        />
       </div>
 
       <footer class="ai-chat-input">
@@ -286,7 +290,10 @@
   }
 
   async function removeSession(s: any) {
-    await ElMessageBox.confirm(`确定删除会话「${s.title || s.id}」？`, '删除确认')
+    await ElMessageBox.confirm(
+      `删除「${s.title || '这条会话'}」后，列表里不会再出现。消息也会一起清掉`,
+      '确认'
+    )
     await fetchRemoveAiSession(s.id)
     if (activeId.value === s.id) {
       activeId.value = null
@@ -298,7 +305,7 @@
 
   async function clearMessages() {
     if (!activeId.value) return
-    await ElMessageBox.confirm('清空当前会话全部消息？', '清空确认')
+    await ElMessageBox.confirm('清空后，这条会话里的消息不会再出现。会话还在', '确认')
     await fetchClearAiSession(activeId.value)
     messages.value = []
   }
@@ -483,6 +490,7 @@
 
   .ai-chat-main__hd {
     display: flex;
+    flex-wrap: wrap;
     gap: 12px;
     align-items: center;
     padding: 10px 12px;
@@ -496,6 +504,7 @@
 
   .ai-chat-main__tools {
     display: flex;
+    flex-wrap: wrap;
     gap: 8px;
     align-items: center;
   }

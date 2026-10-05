@@ -274,13 +274,25 @@ export function fetchAiSessionPage(params: Record<string, any>) {
   return request.get<any>({ url: '/api/system/ai/session/page', params })
 }
 export function fetchSaveAiSession(data: Record<string, any>) {
-  return request.post<any>({ url: '/api/system/ai/session/submit', data })
+  return request.post<any>({
+    url: '/api/system/ai/session/submit',
+    data,
+    showSuccessMessage: true
+  })
 }
 export function fetchRemoveAiSession(id: AiId) {
-  return request.post<void>({ url: '/api/system/ai/session/remove', data: { id } })
+  return request.post<void>({
+    url: '/api/system/ai/session/remove',
+    data: { id },
+    showSuccessMessage: true
+  })
 }
 export function fetchClearAiSession(id: AiId) {
-  return request.post<void>({ url: '/api/system/ai/session/clear', data: { id } })
+  return request.post<void>({
+    url: '/api/system/ai/session/clear',
+    data: { id },
+    showSuccessMessage: true
+  })
 }
 export function fetchExportAiSession(id: AiId) {
   return request.download({ url: '/api/system/ai/session/export', params: { id } })
