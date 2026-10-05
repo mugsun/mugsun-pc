@@ -2509,7 +2509,7 @@
         "leaveTimeRequired": "请选择开始时间和结束时间",
         "leaveReasonRequired": "请填写请假理由，说明为什么要请假",
         "leaveEndAfterStart": "结束时间要晚于开始时间",
-        "msgCodeNameRequired": "请填写流程编码与名称",
+        "msgCodeNameRequired": "流程编码与名称不能为空。请填上编码和名称后再发布",
         "msgNodeRequired": "至少添加一个审批节点",
         "msgCandidateRequired": "每个节点需选择候选人",
         "msgDeployed": "流程已部署"
@@ -2540,7 +2540,7 @@
         "publish1": "已发布",
         "publish9": "已失效",
         "publishUnknown": "未知",
-        "msgCodeNameRequired": "请填写流程编码与名称",
+        "msgCodeNameRequired": "流程编码与名称不能为空。请填上编码和名称后再发布",
         "msgNodeRequired": "至少设计一个节点",
         "msgDeployed": "流程已部署",
         "msgSuspended": "已停用",

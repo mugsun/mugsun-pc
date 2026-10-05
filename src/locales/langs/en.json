@@ -2509,7 +2509,7 @@
         "leaveTimeRequired": "Choose a start time and an end time",
         "leaveReasonRequired": "Enter a reason so the approver knows why",
         "leaveEndAfterStart": "The end time must be later than the start time",
-        "msgCodeNameRequired": "Please enter the flow code and name",
+        "msgCodeNameRequired": "Flow code and name cannot be empty. Enter both, then publish again.",
         "msgNodeRequired": "Add at least one approval node",
         "msgCandidateRequired": "Each node requires a candidate",
         "msgDeployed": "Flow deployed"
@@ -2540,7 +2540,7 @@
         "publish1": "Published",
         "publish9": "Expired",
         "publishUnknown": "Unknown",
-        "msgCodeNameRequired": "Please enter the flow code and name",
+        "msgCodeNameRequired": "Flow code and name cannot be empty. Enter both, then publish again.",
         "msgNodeRequired": "Design at least one node",
         "msgDeployed": "Flow deployed",
         "msgSuspended": "Suspended",
