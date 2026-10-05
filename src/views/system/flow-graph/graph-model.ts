@@ -97,6 +97,10 @@ export const validateTree = (nodes: GNode[]): string => {
   for (const n of nodes) {
     if (!NODE_TYPES.has(n.type)) return $t('pages.system.flowGraph.errNodeType')
     if (n.type === 'approval') {
+      const ratio = (n.nodeRatio || '').trim()
+      if (ratio && (!/^-?\d+$/.test(ratio) || Number(ratio) < 0 || Number(ratio) > 100)) {
+        return $t('pages.system.flowGraph.errRatio')
+      }
       if (!n.candidates.map(candidateToken).filter(Boolean).length)
         return $t('pages.system.flowGraph.errNodeNoCandidate', { name: n.name })
     } else {
