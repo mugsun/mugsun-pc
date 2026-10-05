@@ -3391,7 +3391,7 @@
         "networkError": "Network error: {msg}",
         "networkFailed": "Network failure",
         "rangeSeparator": "to",
-        "rangeTooLongWarn": "Time range cannot exceed 7 days",
+        "rangeTooLongWarn": "Time range cannot exceed 7 days. Narrow the start and end to within 7 days, then search again.",
         "responseSizeLine": "Response size {value}",
         "selectRangeWarn": "Pick a start and end time. The end must be later",
         "selectUserWarn": "Select a user first, or switch to guest and enter an id",
