@@ -82,7 +82,7 @@
               @keyup.enter="loadSourcemaps"
               @clear="loadSourcemaps"
             />
-            <ElButton @click="loadSourcemaps" v-ripple>{{
+            <ElButton @click="searchSourcemaps" v-ripple>{{
               $t('pages.track.shared.search')
             }}</ElButton>
             <ElButton
@@ -667,6 +667,14 @@ const track = createTracker({
     if (smRelease.value) params.release = smRelease.value
     replaceSmParams(params)
     await fetchSourcemaps()
+  }
+
+  const searchSourcemaps = (): void => {
+    if (!appKey.value) {
+      ElMessage.warning(t('pages.track.app.sourcemapNeedApp'))
+      return
+    }
+    void loadSourcemaps()
   }
 
   // 切到符号表 tab / 应用变化时加载（首载在 appKey 就绪后触发）

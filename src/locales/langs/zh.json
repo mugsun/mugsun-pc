@@ -3490,6 +3490,7 @@
         "sampleRate": "采样率",
         "sampleRateHint": "百分比 1 ~ 100，100 表示全量采集",
         "selectAppFirst": "请先选择应用",
+        "sourcemapNeedApp": "请先选择应用。符号表是按应用分开的",
         "selector": "选择器",
         "snippetLabel": "接入代码片段：",
         "tabApp": "应用管理",

@@ -3490,6 +3490,7 @@
         "sampleRate": "Sample rate",
         "sampleRateHint": "Percentage 1 ~ 100; 100 means full sampling",
         "selectAppFirst": "Please select an application first",
+        "sourcemapNeedApp": "Select an app first. Sourcemaps are kept per app.",
         "selector": "Selector",
         "snippetLabel": "Integration snippet:",
         "tabApp": "Applications",
