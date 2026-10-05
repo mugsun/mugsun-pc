@@ -3289,6 +3289,7 @@
         "geoHeat": "Visit heat",
         "geoEmpty": "No region data yet. Enable IP geolocation for provinces; turn on precise location for the heat map.",
         "geoCount": "{n} events with coordinates",
+        "needApp": "Select an app first. Analysis is kept per app.",
         "region": "Region",
         "topPages": "Top pages",
         "uvLabel": "Unique visitors (UV)",

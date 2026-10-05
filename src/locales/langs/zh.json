@@ -3289,6 +3289,7 @@
         "geoHeat": "访问热力",
         "geoEmpty": "暂无地域数据。开通 IP 属地后按省份统计；开启精确位置后可看热力。",
         "geoCount": "精确坐标 {n} 条",
+        "needApp": "请先选择应用。分析是按应用分开的",
         "region": "地域",
         "topPages": "Top 页面",
         "uvLabel": "访客数(UV)",

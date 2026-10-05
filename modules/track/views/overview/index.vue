@@ -16,7 +16,7 @@
         <ElRadioButton :value="7">{{ $t('pages.track.shared.last7Days') }}</ElRadioButton>
         <ElRadioButton :value="30">{{ $t('pages.track.shared.last30Days') }}</ElRadioButton>
       </ElRadioGroup>
-      <ElButton :loading="loading" @click="loadAll" v-ripple>{{
+      <ElButton :loading="loading" @click="refreshOverview" v-ripple>{{
         $t('pages.track.shared.refresh')
       }}</ElButton>
     </div>
@@ -189,7 +189,14 @@
   import { fmtTrackClock, fmtTrackDuration, useTrackApp } from '@/views/track/shared/useTrackApp'
   import { useChartOps } from '@/hooks/core/useChart'
   import type { LineDataItem, PieDataItem } from '@/types/component/chart'
-  import { ElButton, ElOption, ElRadioButton, ElRadioGroup, ElSelect } from 'element-plus'
+  import {
+    ElButton,
+    ElMessage,
+    ElOption,
+    ElRadioButton,
+    ElRadioGroup,
+    ElSelect
+  } from 'element-plus'
 
   defineOptions({ name: 'TrackOverview' })
 
@@ -326,6 +333,14 @@
 
   // ===== 数据加载 =====
   const loading = ref(false)
+
+  const refreshOverview = (): void => {
+    if (!appKey.value) {
+      ElMessage.warning(t('pages.track.overview.needApp'))
+      return
+    }
+    void loadAll()
+  }
 
   const loadAll = async (): Promise<void> => {
     if (!appKey.value) return
