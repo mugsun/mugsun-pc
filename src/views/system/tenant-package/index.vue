@@ -14,12 +14,19 @@
         <ElButton v-perm="'sys:tenant-package:save'" type="primary" @click="showCreate">{{
           $t('pages.system.tenantPackage.create')
         }}</ElButton>
+        <ElButton v-perm="'sys:tenant-package:remove'" @click="removeSelected">{{
+          $t('pages.system.tenantPackage.deleteSelected')
+        }}</ElButton>
       </div>
 
       <!-- 表格为自由增长内容：art-table-card 卡片体是 height:100%+overflow:hidden 裁剪，
            内部须自备滚动，否则矮视口下底部行被切断且不可达（同 track/user 修法） -->
       <div v-loading="loading" class="tpkg-table-wrap">
-        <ElTable :data="tableData" border>
+        <ElTable :data="tableData" border @selection-change="onSelectionChange">
+          <template #empty>
+            <span>{{ emptyText }}</span>
+          </template>
+          <ElTableColumn type="selection" width="48" />
           <ElTableColumn type="index" :label="$t('table.column.index')" width="60" />
           <ElTableColumn
             prop="name"
@@ -115,7 +122,7 @@
             class="tpkg-tree"
           />
         </ElFormItem>
-        <ElFormItem :label="$t('pages.system.tenantPackage.remark')">
+        <ElFormItem :label="$t('pages.system.tenantPackage.remark')" prop="remark">
           <ElInput
             v-model="form.remark"
             type="textarea"
@@ -200,6 +207,8 @@
   const menuTree = buildTree(asyncRoutes)
 
   const tableData = ref<any[]>([])
+  const selectedRows = ref<any[]>([])
+  const filtering = ref(false)
   const loading = ref(false)
   const pageNum = ref(1)
   const pageSize = ref(20)
@@ -213,11 +222,23 @@
 
   const rules: FormRules = {
     name: [
-      { required: true, message: t('pages.system.tenantPackage.namePlaceholder'), trigger: 'blur' }
-    ]
+      { required: true, message: t('pages.system.tenantPackage.namePlaceholder'), trigger: 'blur' },
+      { max: 64, message: t('pages.system.tenantPackage.nameTooLong'), trigger: 'blur' }
+    ],
+    remark: [{ max: 255, message: t('pages.system.tenantPackage.remarkTooLong'), trigger: 'blur' }]
   }
 
   const keyCount = (keys: string): number => (keys ? keys.split(',').filter(Boolean).length : 0)
+
+  const emptyText = computed(() =>
+    filtering.value
+      ? t('pages.system.tenantPackage.emptySearch')
+      : t('pages.system.tenantPackage.empty')
+  )
+
+  const onSelectionChange = (rows: any[]): void => {
+    selectedRows.value = rows
+  }
 
   // 查询条件以 searchForm 为唯一事实源（v-model 已同步），CRUD 刷新后过滤仍生效
   const currentParams = (): Record<string, any> => ({
@@ -227,7 +248,9 @@
 
   const loadData = async (): Promise<void> => {
     loading.value = true
+    filtering.value = Boolean(searchForm.value.name || searchForm.value.status !== undefined)
     try {
+      selectedRows.value = []
       const resp = await fetchTenantPackagePage({
         pageNum: pageNum.value,
         pageSize: pageSize.value,
@@ -288,24 +311,35 @@
     })
   }
 
-  const remove = (row: any): void => {
-    ElMessageBox.confirm(
-      t('pages.system.tenantPackage.confirmDelete', { name: row.name }),
-      t('pages.system.tenantPackage.deleteTitle'),
-      {
-        confirmButtonText: t('common.confirm'),
-        cancelButtonText: t('common.cancel'),
-        type: 'warning'
-      }
-    )
+  const confirmRemove = (message: string, ids: (number | string)[]): void => {
+    ElMessageBox.confirm(message, t('pages.system.tenantPackage.deleteTitle'), {
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
+      type: 'warning'
+    })
       .then(async () => {
-        await fetchRemoveTenantPackage(row.id)
+        await fetchRemoveTenantPackage(ids)
         ElMessage.success(t('pages.system.tenantPackage.msgDeleted'))
         loadData()
       })
       .catch(() => {
-        /* cancel */
+        /* cancel or request error toast */
       })
+  }
+
+  const remove = (row: any): void => {
+    confirmRemove(t('pages.system.tenantPackage.confirmDelete', { name: row.name }), [row.id])
+  }
+
+  const removeSelected = (): void => {
+    if (!selectedRows.value.length) {
+      ElMessage.warning(t('pages.system.tenantPackage.selectFirst'))
+      return
+    }
+    confirmRemove(
+      t('pages.system.tenantPackage.confirmDeleteSelected', { count: selectedRows.value.length }),
+      selectedRows.value.map((row) => row.id)
+    )
   }
 
   const closeOverlays = (): void => {
