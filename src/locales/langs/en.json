@@ -2510,7 +2510,7 @@
         "leaveReasonRequired": "Enter a reason so the approver knows why",
         "leaveEndAfterStart": "The end time must be later than the start time",
         "msgCodeNameRequired": "Flow code and name cannot be empty. Enter both, then publish again.",
-        "msgNodeRequired": "Add at least one approval node",
+        "msgNodeRequired": "Design at least one approval node. Add one, then publish again.",
         "msgCandidateRequired": "Each node requires a candidate",
         "msgDeployed": "Flow deployed"
       },

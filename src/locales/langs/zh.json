@@ -2510,7 +2510,7 @@
         "leaveReasonRequired": "请填写请假理由，说明为什么要请假",
         "leaveEndAfterStart": "结束时间要晚于开始时间",
         "msgCodeNameRequired": "流程编码与名称不能为空。请填上编码和名称后再发布",
-        "msgNodeRequired": "至少添加一个审批节点",
+        "msgNodeRequired": "至少设计一个审批节点。请加上一个审批节点后再发布",
         "msgCandidateRequired": "每个节点需选择候选人",
         "msgDeployed": "流程已部署"
       },
