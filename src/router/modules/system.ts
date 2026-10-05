@@ -487,6 +487,16 @@ export const systemRoutes: AppRouteRecord = {
         icon: 'ri:layout-top-line',
         keepAlive: true
       }
+    },
+    {
+      path: 'data-scope',
+      name: 'DataScope',
+      component: '/system/data-scope',
+      meta: {
+        title: 'menus.system.dataScope',
+        icon: 'ri:shield-keyhole-line',
+        keepAlive: true
+      }
     }
   ]
 }
