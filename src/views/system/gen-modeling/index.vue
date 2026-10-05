@@ -14,6 +14,7 @@
             <ElButton type="primary" :loading="drafting" @click="genDraft">{{
               $t('pages.system.genModeling.genDraft')
             }}</ElButton>
+            <ElButton @click="startBlank">{{ $t('pages.system.genModeling.startBlank') }}</ElButton>
             <span class="modeling-tip">{{ $t('pages.system.genModeling.ruleTip') }}</span>
           </div>
 
@@ -38,11 +39,38 @@
                   <ElInput v-model="row.columnComment" size="small" />
                 </template>
               </ElTableColumn>
-              <ElTableColumn :label="$t('pages.system.genModeling.colType')" width="160">
+              <ElTableColumn :label="$t('pages.system.genModeling.colType')" width="140">
                 <template #default="{ row }">
                   <ElSelect v-model="row.javaType" size="small">
                     <ElOption v-for="t in javaTypes" :key="t" :label="t" :value="t" />
                   </ElSelect>
+                </template>
+              </ElTableColumn>
+              <ElTableColumn
+                :label="$t('pages.system.genModeling.colList')"
+                width="64"
+                align="center"
+              >
+                <template #default="{ row }">
+                  <ElCheckbox v-model="row.isList" :true-value="1" :false-value="0" />
+                </template>
+              </ElTableColumn>
+              <ElTableColumn
+                :label="$t('pages.system.genModeling.colRequired')"
+                width="64"
+                align="center"
+              >
+                <template #default="{ row }">
+                  <ElCheckbox v-model="row.isRequired" :true-value="1" :false-value="0" />
+                </template>
+              </ElTableColumn>
+              <ElTableColumn
+                :label="$t('pages.system.genModeling.colQuery')"
+                width="64"
+                align="center"
+              >
+                <template #default="{ row }">
+                  <ElCheckbox v-model="row.isQuery" :true-value="1" :false-value="0" />
                 </template>
               </ElTableColumn>
               <ElTableColumn :label="$t('pages.system.genModeling.colOperation')" width="70">
@@ -75,6 +103,13 @@
 
         <ElTabPane :label="$t('pages.system.genModeling.tabManage')" name="manage">
           <ElButton @click="loadTables">{{ $t('pages.system.genModeling.refresh') }}</ElButton>
+          <ElAlert
+            v-if="!loading && tables.length === 0"
+            class="modeling-empty"
+            type="info"
+            :closable="false"
+            :title="$t('pages.system.genModeling.emptyManage')"
+          />
           <ElTable :data="tables" border v-loading="loading" style="margin-top: 10px">
             <ElTableColumn type="index" label="#" width="50" />
             <ElTableColumn
@@ -185,6 +220,25 @@
               </ElSelect>
             </template>
           </ElTableColumn>
+          <ElTableColumn :label="$t('pages.system.genModeling.colList')" width="64" align="center">
+            <template #default="{ row }">
+              <ElCheckbox v-model="row.isList" :true-value="1" :false-value="0" />
+            </template>
+          </ElTableColumn>
+          <ElTableColumn
+            :label="$t('pages.system.genModeling.colRequired')"
+            width="64"
+            align="center"
+          >
+            <template #default="{ row }">
+              <ElCheckbox v-model="row.isRequired" :true-value="1" :false-value="0" />
+            </template>
+          </ElTableColumn>
+          <ElTableColumn :label="$t('pages.system.genModeling.colQuery')" width="64" align="center">
+            <template #default="{ row }">
+              <ElCheckbox v-model="row.isQuery" :true-value="1" :false-value="0" />
+            </template>
+          </ElTableColumn>
           <ElTableColumn :label="$t('pages.system.genModeling.colOperation')" width="70">
             <template #default="{ $index }">
               <ElButton
@@ -269,6 +323,27 @@
     }
   }
 
+  const startBlank = (): void => {
+    candidate.value = {
+      table: { tableName: '', tableComment: '' },
+      columns: [
+        {
+          columnName: 'id',
+          columnComment: '主键',
+          javaType: 'Long',
+          htmlType: 'input',
+          isPk: 1,
+          isRequired: 1,
+          isInsert: 0,
+          isEdit: 0,
+          isList: 0,
+          isQuery: 0,
+          queryType: 'EQ'
+        }
+      ]
+    }
+  }
+
   const addCol = (): void => {
     candidate.value.columns.push({
       columnName: '',
@@ -285,6 +360,18 @@
   }
 
   const confirmBuild = async (build: boolean): Promise<void> => {
+    const tableName = candidate.value?.table?.tableName?.trim() || ''
+    if (!tableName) {
+      ElMessage.warning(t('pages.system.genModeling.tableRequired'))
+      return
+    }
+    const named = (candidate.value.columns || []).filter(
+      (col: any) => col.columnName && String(col.columnName).trim() && col.columnName !== 'id'
+    )
+    if (!named.length) {
+      ElMessage.warning(t('pages.system.genModeling.columnRequired'))
+      return
+    }
     confirming.value = true
     try {
       await fetchAiConfirm({
@@ -417,6 +504,10 @@
   .modeling-tip {
     font-size: 12px;
     color: var(--art-text-gray-500);
+  }
+
+  .modeling-empty {
+    margin-top: 12px;
   }
 
   .candidate-box {
