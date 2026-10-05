@@ -497,6 +497,16 @@ export const systemRoutes: AppRouteRecord = {
         icon: 'ri:shield-keyhole-line',
         keepAlive: true
       }
+    },
+    {
+      path: 'api-scope',
+      name: 'ApiScope',
+      component: '/system/api-scope',
+      meta: {
+        title: 'menus.system.apiScope',
+        icon: 'ri:route-line',
+        keepAlive: true
+      }
     }
   ]
 }
