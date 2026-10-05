@@ -110,7 +110,11 @@ export function fetchUploadTrackSourcemap(data: FormData) {
   return request.post<any>({ url: '/api/system/track/sourcemap/upload', data })
 }
 export function fetchRemoveTrackSourcemap(id: number | string) {
-  return request.post<void>({ url: '/api/system/track/sourcemap/remove', data: { id } })
+  return request.post<void>({
+    url: '/api/system/track/sourcemap/remove',
+    data: { id },
+    showSuccessMessage: true
+  })
 }
 /** .map 原文（application/json 直发，非 R 信封 → skipEnvelope；axios 已解析为对象，可直接喂 source-map-js） */
 export function fetchTrackSourcemapRaw(params: Record<string, any>) {

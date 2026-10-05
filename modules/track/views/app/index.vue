@@ -693,8 +693,11 @@ const track = createTracker({
     } catch {
       return
     }
-    await fetchRemoveTrackSourcemap(row.id)
-    ElMessage.success(t('pages.track.shared.deletedSuccess'))
+    try {
+      await fetchRemoveTrackSourcemap(row.id)
+    } catch {
+      return
+    }
     await fetchSourcemaps()
   }
 
