@@ -3002,7 +3002,7 @@
       "notConfigured": "未配置",
       "save": "保存",
       "remove": "清除配置",
-      "removeConfirm": "确定删除「{name}」的密钥配置吗？",
+      "removeConfirm": "确定清除「{name}」的密钥吗？清除后地图会改用其他已配置的底图",
       "removeTitle": "清除底图",
       "saveSuccess": "已保存",
       "removeSuccess": "已清除",

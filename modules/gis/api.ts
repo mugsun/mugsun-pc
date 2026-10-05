@@ -43,11 +43,19 @@ export function fetchGisProviderList() {
 }
 
 export function fetchSaveGisProvider(data: Record<string, unknown>) {
-  return request.post<void>({ url: '/api/system/gis/provider/submit', data })
+  return request.post<void>({
+    url: '/api/system/gis/provider/submit',
+    data,
+    showSuccessMessage: true
+  })
 }
 
 export function fetchRemoveGisProvider(ids: number[]) {
-  return request.post<void>({ url: '/api/system/gis/provider/remove', data: ids })
+  return request.post<void>({
+    url: '/api/system/gis/provider/remove',
+    data: ids,
+    showSuccessMessage: true
+  })
 }
 
 export function fetchGisScenePage(params: Record<string, unknown>) {

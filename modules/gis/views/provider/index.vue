@@ -92,7 +92,7 @@
   } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { onBeforeRouteLeave } from 'vue-router'
-  import { ElMessage, ElMessageBox } from 'element-plus'
+  import { ElMessageBox } from 'element-plus'
   import {
     fetchGisStatus,
     fetchSaveGisProvider,
@@ -172,7 +172,6 @@
       }
       await fetchSaveGisProvider(body)
       draft[provider].apiKey = ''
-      ElMessage.success(t('pages.gis.saveSuccess'))
       await load()
     } finally {
       saving.value = ''
@@ -188,7 +187,6 @@
     )
       .then(async () => {
         await fetchRemoveGisProvider([card.id!])
-        ElMessage.success(t('pages.gis.removeSuccess'))
         await load()
       })
       .catch(() => {
@@ -233,15 +231,15 @@
   }
 
   .gis-panel-lead {
-    margin: 0 0 8px;
+    margin: 0 0 4px;
     font-size: 12px;
-    line-height: 1.6;
+    line-height: 1.4;
     color: var(--el-text-color-secondary);
   }
 
   .gis-provider-card {
-    padding: 8px;
-    margin-bottom: 8px;
+    padding: 6px;
+    margin-bottom: 4px;
     cursor: pointer;
     border: 1px solid var(--el-border-color-extra-light);
     border-radius: 8px;
@@ -258,6 +256,10 @@
     justify-content: space-between;
   }
 
+  .gis-provider-card :deep(.el-form-item) {
+    margin-bottom: 8px;
+  }
+
   .gis-provider-actions {
     display: flex;
     gap: 8px;
@@ -269,9 +271,9 @@
 
   .gis-help-mini {
     padding-left: 16px;
-    margin: 4px 0 0;
+    margin: 2px 0 0;
     font-size: 12px;
-    line-height: 1.7;
+    line-height: 1.35;
     color: var(--el-text-color-secondary);
   }
 </style>

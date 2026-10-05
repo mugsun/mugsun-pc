@@ -3002,7 +3002,7 @@
       "notConfigured": "Not configured",
       "save": "Save",
       "remove": "Clear",
-      "removeConfirm": "Delete the key for \"{name}\"?",
+      "removeConfirm": "Clear the key for \"{name}\"? The map will switch to another configured basemap",
       "removeTitle": "Clear basemap",
       "saveSuccess": "Saved",
       "removeSuccess": "Cleared",
