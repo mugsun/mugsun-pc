@@ -18,7 +18,7 @@
     </div>
 
     <ElCard class="art-table-card">
-      <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData" />
+      <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshReplays" />
 
       <ArtTable
         :loading="loading"
@@ -51,7 +51,7 @@
   import ReplayPlayerDrawer from '@/views/track/shared/ReplayPlayerDrawer.vue'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { hasPerm } from '@/utils/permission'
-  import { ElOption, ElRadioButton, ElRadioGroup, ElSelect, ElTag } from 'element-plus'
+  import { ElMessage, ElOption, ElRadioButton, ElRadioGroup, ElSelect, ElTag } from 'element-plus'
 
   defineOptions({ name: 'TrackReplay' })
 
@@ -180,8 +180,23 @@
     await fetchData()
   }
 
-  // 应用/筛选变化即重查（首载同样在 appKey 就绪后触发）
-  watch([appKey, hasError], loadPage, { immediate: true })
+  const refreshReplays = (): void => {
+    if (!appKey.value) {
+      ElMessage.warning(t('pages.track.replay.needApp'))
+      return
+    }
+    refreshData()
+  }
+
+  // 应用变化即重查（首载在 appKey 就绪后触发；没选应用时不打请求）
+  watch(appKey, loadPage, { immediate: true })
+  watch(hasError, () => {
+    if (!appKey.value) {
+      ElMessage.warning(t('pages.track.replay.needApp'))
+      return
+    }
+    void loadPage()
+  })
 
   // ===== 播放器抽屉 =====
   const playerVisible = ref(false)

@@ -3347,6 +3347,7 @@
         "errorCol": "Error",
         "none": "None",
         "onlyError": "With errors only",
+        "needApp": "Select an app first. Replays are kept per app.",
         "pageCount": "Pages",
         "play": "Play",
         "startTime": "Start time"

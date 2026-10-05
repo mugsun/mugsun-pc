@@ -3347,6 +3347,7 @@
         "errorCol": "错误",
         "none": "无",
         "onlyError": "仅含错误",
+        "needApp": "请先选择应用。回放是按应用分开的",
         "pageCount": "页面数",
         "play": "播放",
         "startTime": "开始时间"
