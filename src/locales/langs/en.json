@@ -2401,15 +2401,19 @@
       },
       "onlineForm": {
         "formLabel": "Form",
-        "formPlaceholder": "Select online form",
+        "formPlaceholder": "Select an imported business table",
         "add": "Add",
         "edit": "Edit",
         "remove": "Delete",
         "colOperation": "Operation",
-        "emptyDesc": "Please select an online form above",
+        "emptyDesc": "No form selected. Pick an imported business table above",
+        "emptyList": "No rows yet. Add one to see it here",
+        "emptySearch": "No rows match. Change the filters and search again",
         "noDictPlaceholder": "{name} (no dict configured, input instead)",
         "opSuccess": "Operation successful",
-        "removeConfirm": "Confirm deletion?",
+        "removeTitle": "Delete row",
+        "removeConfirm": "Delete \"{name}\"? It will disappear from the list",
+        "removeConfirmPlain": "Delete this row? It will disappear from the list",
         "removeSuccess": "Deleted successfully"
       },
       "formDesigner": {

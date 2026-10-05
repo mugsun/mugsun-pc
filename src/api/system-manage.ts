@@ -456,13 +456,19 @@ export function fetchOnlineDetail(tableId: number | string, id: number | string)
   return request.get<any>({ url: '/api/system/online-form/detail', params: { tableId, id } })
 }
 export function fetchOnlineSave(tableId: number | string, data: Record<string, any>) {
-  return request.post<void>({ url: '/api/system/online-form/save', params: { tableId }, data })
+  return request.post<void>({
+    url: '/api/system/online-form/save',
+    params: { tableId },
+    data,
+    showSuccessMessage: true
+  })
 }
 export function fetchOnlineRemove(tableId: number | string, ids: (number | string)[]) {
   return request.post<void>({
     url: '/api/system/online-form/remove',
     params: { tableId },
-    data: ids
+    data: ids,
+    showSuccessMessage: true
   })
 }
 

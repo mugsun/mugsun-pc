@@ -2401,15 +2401,19 @@
       },
       "onlineForm": {
         "formLabel": "表单",
-        "formPlaceholder": "选择在线表单",
+        "formPlaceholder": "选择已经导入的业务表",
         "add": "新增",
         "edit": "编辑",
         "remove": "删除",
         "colOperation": "操作",
-        "emptyDesc": "请选择上方在线表单",
+        "emptyDesc": "还没有选表单。先在上面选一张已经导入的业务表",
+        "emptyList": "还没有数据。点新增写一条",
+        "emptySearch": "没有符合条件的记录。改一下查询条件再查",
         "noDictPlaceholder": "{name}（未配置字典，暂以输入代替）",
         "opSuccess": "操作成功",
-        "removeConfirm": "确认删除？",
+        "removeTitle": "删除记录",
+        "removeConfirm": "确定删除「{name}」吗？删除后列表里不会再出现",
+        "removeConfirmPlain": "确定删除这条记录吗？删除后列表里不会再出现",
         "removeSuccess": "删除成功"
       },
       "formDesigner": {

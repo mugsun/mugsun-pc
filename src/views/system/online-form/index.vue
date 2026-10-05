@@ -75,6 +75,13 @@
       <!-- 表格自由增长：包一层 flex:1 定高壳内部滚动，分页器固定在壳外，防矮视口裁切 -->
       <div v-else class="online-table-wrap">
         <ElTable :data="rows" border height="100%" v-loading="loading">
+          <template #empty>
+            <span>{{
+              searching
+                ? $t('pages.system.onlineForm.emptySearch')
+                : $t('pages.system.onlineForm.emptyList')
+            }}</span>
+          </template>
           <ElTableColumn type="index" label="#" width="50" />
           <ElTableColumn
             v-for="col in listColumns"
@@ -201,7 +208,7 @@
 
 <script setup lang="ts">
   import { ref, reactive, computed, onMounted, onDeactivated } from 'vue'
-  import { ElMessage, ElMessageBox } from 'element-plus'
+  import { ElMessageBox } from 'element-plus'
   import {
     fetchOnlineForms,
     fetchOnlineMeta,
@@ -234,6 +241,9 @@
   const queryColumns = computed(() => columns.value.filter((c) => isOne(c.isQuery)))
   const listColumns = computed(() => columns.value.filter((c) => isOne(c.isList)))
   const formColumns = computed(() => columns.value.filter((c) => isOne(c.isEdit)))
+  const searching = computed(() =>
+    Object.values(query).some((v) => v !== undefined && v !== null && String(v).trim() !== '')
+  )
   // select 控件字典项（无 dictType 时为空数组，select 无可选项）
   const dictOptions = (dictType?: string): Array<{ label: string; value: any }> =>
     dictType
@@ -310,7 +320,6 @@
     submitting.value = true
     try {
       await fetchOnlineSave(tableId.value, form.value)
-      ElMessage.success(t('pages.system.onlineForm.opSuccess'))
       dialogVisible.value = false
       await load()
     } finally {
@@ -319,11 +328,16 @@
   }
 
   const remove = async (row: any): Promise<void> => {
-    await ElMessageBox.confirm(t('pages.system.onlineForm.removeConfirm'), t('common.tips'), {
-      type: 'warning'
-    })
+    const nameCol = listColumns.value[0]
+    const name = nameCol ? row[nameCol.columnName] : ''
+    await ElMessageBox.confirm(
+      name
+        ? t('pages.system.onlineForm.removeConfirm', { name })
+        : t('pages.system.onlineForm.removeConfirmPlain'),
+      t('pages.system.onlineForm.removeTitle'),
+      { type: 'warning' }
+    )
     await fetchOnlineRemove(tableId.value, [row.id])
-    ElMessage.success(t('pages.system.onlineForm.removeSuccess'))
     await load()
   }
 
