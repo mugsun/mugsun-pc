@@ -827,9 +827,12 @@ const track = createTracker({
     } catch {
       return
     }
-    await fetchTrackVisualDiscard({ token: visualToken.value, draftId: draft.draftId })
+    try {
+      await fetchTrackVisualDiscard({ token: visualToken.value, draftId: draft.draftId })
+    } catch {
+      return
+    }
     visualDrafts.value = visualDrafts.value.filter((d) => d.draftId !== draft.draftId)
-    ElMessage.success(t('pages.track.app.discarded'))
   }
 
   const {

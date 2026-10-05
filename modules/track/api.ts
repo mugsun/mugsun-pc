@@ -181,7 +181,11 @@ export function fetchTrackVisualConfirm(data: Record<string, any>) {
 }
 /** 草稿丢弃 */
 export function fetchTrackVisualDiscard(data: Record<string, any>) {
-  return request.post<void>({ url: '/api/system/track/visual/drafts/discard', data })
+  return request.post<void>({
+    url: '/api/system/track/visual/drafts/discard',
+    data,
+    showSuccessMessage: true
+  })
 }
 /** 圈选规则分页 */
 export function fetchTrackVisualRulePage(params: Record<string, any>) {
