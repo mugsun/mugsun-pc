@@ -13,12 +13,12 @@ export function fetchUserDetail(id: number | string) {
 
 /** 保存用户（新增/编辑同端点） */
 export function saveUser(data: UserForm) {
-  return request.post<void>({ url: '/api/system/user/submit', data })
+  return request.post<void>({ url: '/api/system/user/submit', data, showSuccessMessage: true })
 }
 
 /** 删除用户（批量 id 数组） */
 export function removeUser(ids: Array<number | string>) {
-  return request.post<void>({ url: '/api/system/user/remove', data: ids })
+  return request.post<void>({ url: '/api/system/user/remove', data: ids, showSuccessMessage: true })
 }
 
 /** 启用/停用用户 */

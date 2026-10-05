@@ -767,9 +767,14 @@
         "resetPwdConfirm": "Reset the password of user \"{name}\" to the initial password?",
         "resetPwdSuccess": "Password has been reset to the initial password",
         "deleteUser": "Delete User",
-        "deleteConfirm": "Are you sure you want to delete this user?",
-        "deleteSuccess": "Deleted successfully",
-        "saveSuccess": "Saved successfully",
+        "deleteSelected": "Delete selected",
+        "deleteConfirm": "Delete user \"{name}\"? They will not be able to sign in.",
+        "deleteBatchConfirm": "Delete the {count} selected users? They will not be able to sign in.",
+        "deleteEmpty": "Select users to delete first",
+        "deleteSuccess": "Deleted. They can no longer sign in.",
+        "saveSuccess": "Saved. Their department and status are on the list.",
+        "emptyList": "No users yet. Add one and give them the account and initial password.",
+        "emptySearch": "No matching users. Change the account, nickname, phone, status, or department.",
         "fields": {
           "username": "Username",
           "nickname": "Nickname",
@@ -819,8 +824,10 @@
           "disabled": "Disabled"
         },
         "rules": {
-          "emailFormat": "Invalid email format",
-          "phoneFormat": "Invalid phone number format",
+          "usernameFormat": "Start with a letter. Use letters, digits, and underscores only.",
+          "nicknameLen": "Nickname must be 64 characters or fewer",
+          "emailFormat": "Use an address like name@example.com, or leave it empty.",
+          "phoneFormat": "Use an 11-digit mobile number starting with 1, or leave it empty.",
           "idCardFormat": "Invalid ID number format"
         },
         "importDialog": {

@@ -217,8 +217,14 @@
 
   const rules = computed<FormRules>(() => ({
     username: [
-      { required: true, message: t('pages.system.user.placeholder.username'), trigger: 'blur' }
+      { required: true, message: t('pages.system.user.placeholder.username'), trigger: 'blur' },
+      {
+        pattern: /^[A-Za-z][A-Za-z0-9_]{1,63}$/,
+        message: t('pages.system.user.rules.usernameFormat'),
+        trigger: 'blur'
+      }
     ],
+    nickname: [{ max: 64, message: t('pages.system.user.rules.nicknameLen'), trigger: 'blur' }],
     email: [{ type: 'email', message: t('pages.system.user.rules.emailFormat'), trigger: 'blur' }],
     phone: [
       { pattern: /^1\d{10}$/, message: t('pages.system.user.rules.phoneFormat'), trigger: 'blur' }

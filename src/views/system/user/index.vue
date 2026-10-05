@@ -15,6 +15,9 @@
           <ElButton v-perm="'sys:user:add'" @click="showDialog('add')" v-ripple>{{
             $t('pages.system.user.addUser')
           }}</ElButton>
+          <ElButton v-perm="'sys:user:remove'" type="danger" plain @click="deleteSelected">{{
+            $t('pages.system.user.deleteSelected')
+          }}</ElButton>
           <ElButton :loading="exporting" @click="handleExport" v-ripple>{{
             $t('pages.system.user.export')
           }}</ElButton>
@@ -36,7 +39,9 @@
         :data="data as any[]"
         :columns="columns"
         :pagination="pagination"
+        :empty-text="emptyText"
         border
+        @selection-change="onSelectionChange"
         @header-dragend="onHeaderDragend"
         @pagination:size-change="handleSizeChange"
         @pagination:current-change="handleCurrentChange"
@@ -145,6 +150,7 @@
   import { ElButton, ElMessageBox, ElMessage } from 'element-plus'
   import { DICT_CODE } from '@/utils/constants'
   import { hasPerm } from '@/utils/permission'
+  import { useUserStore } from '@/store/modules/user'
   import { formatTableTime } from '@/utils/date'
   import { DialogType } from '@/types'
   import type { ColumnOption } from '@/types/component'
@@ -153,6 +159,13 @@
 
   const { t } = useI18n()
   const router = useRouter()
+  const userStore = useUserStore()
+  const filtering = ref(false)
+  const selectedRows = ref<any[]>([])
+  const emptyText = computed(() =>
+    filtering.value ? t('pages.system.user.emptySearch') : t('pages.system.user.emptyList')
+  )
+  const selfId = computed(() => String(userStore.getUserInfo?.userId ?? ''))
 
   // ===== 查询栏 =====
   const searchForm = ref({
@@ -274,6 +287,12 @@
 
   // 表格列工厂（与列持久化共用同一份出厂默认）
   const columnsFactory = (): ColumnOption[] => [
+    {
+      type: 'selection',
+      width: 48,
+      fixed: 'left',
+      selectable: (row: any) => String(row.id) !== selfId.value
+    },
     { type: 'index', width: 60, label: t('table.column.index') },
     { prop: 'username', label: t('pages.system.user.fields.username'), minWidth: 120 },
     { prop: 'realName', label: t('pages.system.user.fields.realName'), minWidth: 110 },
@@ -340,7 +359,7 @@
           hasPerm('sys:user:edit')
             ? h(ArtButtonTable, { type: 'edit', onClick: () => showDialog('edit', row) })
             : null,
-          hasPerm('sys:user:remove')
+          hasPerm('sys:user:remove') && String(row.id) !== selfId.value
             ? h(ArtButtonTable, { type: 'delete', onClick: () => deleteUser(row) })
             : null,
           hasPerm('sys:user:grant')
@@ -459,12 +478,20 @@
 
   // ===== 查询栏联动 =====
   const handleSearch = async (params: Record<string, any>): Promise<void> => {
+    filtering.value = !!(
+      params.username ||
+      params.nickname ||
+      params.phone ||
+      (params.status !== undefined && params.status !== '') ||
+      params.deptId
+    )
     // 替换全部查询参数（防旧条件残留），回到第一页
     replaceSearchParams({ ...params, pageNum: 1, pageSize: 20 })
     await fetchData()
   }
 
   const handleResetSearch = async (): Promise<void> => {
+    filtering.value = false
     searchForm.value = {
       username: '',
       nickname: '',
@@ -533,16 +560,48 @@
     lockRows.value = (await fetchUserLocks()) || []
   }
 
+  const onSelectionChange = (rows: any[]): void => {
+    selectedRows.value = rows || []
+  }
+
   const deleteUser = (row: any): void => {
-    ElMessageBox.confirm(t('pages.system.user.deleteConfirm'), t('pages.system.user.deleteUser'), {
-      confirmButtonText: t('common.confirm'),
-      cancelButtonText: t('common.cancel'),
-      type: 'warning'
-    }).then(async () => {
-      await removeUser([row.id])
-      ElMessage.success(t('pages.system.user.deleteSuccess'))
-      refreshData()
-    })
+    ElMessageBox.confirm(
+      t('pages.system.user.deleteConfirm', { name: row.username }),
+      t('pages.system.user.deleteUser'),
+      {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
+        type: 'warning'
+      }
+    )
+      .then(async () => {
+        await removeUser([row.id])
+        selectedRows.value = []
+        refreshData()
+      })
+      .catch(() => {})
+  }
+
+  const deleteSelected = (): void => {
+    if (!selectedRows.value.length) {
+      ElMessage.warning(t('pages.system.user.deleteEmpty'))
+      return
+    }
+    ElMessageBox.confirm(
+      t('pages.system.user.deleteBatchConfirm', { count: selectedRows.value.length }),
+      t('pages.system.user.deleteUser'),
+      {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
+        type: 'warning'
+      }
+    )
+      .then(async () => {
+        await removeUser(selectedRows.value.map((row) => row.id))
+        selectedRows.value = []
+        refreshData()
+      })
+      .catch(() => {})
   }
 
   const handleDialogSubmit = async (form: Record<string, any>): Promise<void> => {
@@ -550,7 +609,6 @@
     try {
       await saveUser(form)
       dialogVisible.value = false
-      ElMessage.success(t('pages.system.user.saveSuccess'))
       refreshData()
     } finally {
       dialogSaving.value = false
