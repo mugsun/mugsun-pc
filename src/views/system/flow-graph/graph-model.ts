@@ -101,7 +101,9 @@ export const validateTree = (nodes: GNode[]): string => {
         return $t('pages.system.flowGraph.errNodeNoCandidate', { name: n.name })
     } else {
       if (n.type === 'parallel' && n.branches.length < 2)
-        return $t('pages.system.flowGraph.errParallelMinBranch', { name: n.name })
+        return $t('pages.system.flowGraph.errParallelMinBranch', {
+          name: (n.name || '').trim() || '未命名'
+        })
       if (!n.branches.length)
         return $t('pages.system.flowGraph.errBranchMin', {
           name: (n.name || '').trim() || '未命名'

@@ -2585,7 +2585,7 @@
         "branchTwo": "分支二",
         "branchElse": "否则",
         "errNodeNoCandidate": "审批节点「{name}」未配置候选人。请为这个节点选上候选人后再发布",
-        "errParallelMinBranch": "并行「{name}」至少两个分支",
+        "errParallelMinBranch": "并行分支「{name}」至少需两个分支。请补到至少两个分支后再发布",
         "errBranchMin": "条件分支「{name}」至少需一个分支。请加上一个分支后再发布",
         "errConditionRequired": "条件分支「{name}」需配置条件或标记为默认",
         "errRuleIncomplete": "条件规则缺少字段或运算符。请补上字段和运算符后再发布",
