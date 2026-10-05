@@ -15,6 +15,9 @@
           <ElButton :loading="uploading" @click="triggerUpload" v-ripple>{{
             $t('pages.system.attach.uploadBtn')
           }}</ElButton>
+          <ElButton @click="deleteSelected" v-ripple>{{
+            $t('pages.system.attach.deleteSelectedBtn')
+          }}</ElButton>
           <input ref="uploadInput" type="file" style="display: none" @change="handleUpload" />
           <ElProgress
             v-if="uploading && directUploading"
@@ -25,11 +28,14 @@
       </ArtTableHeader>
 
       <ArtTable
+        ref="tableRef"
         :loading="loading"
         :data="data as any[]"
         :columns="columns"
         :pagination="pagination"
+        :empty-text="emptyText"
         border
+        @selection-change="onSelectionChange"
         @pagination:size-change="handleSizeChange"
         @pagination:current-change="handleCurrentChange"
       >
@@ -82,6 +88,8 @@
   ])
 
   const uploadInput = ref<HTMLInputElement>()
+  const tableRef = ref<{ elTableRef?: { clearSelection: () => void } }>()
+  const selectedRows = ref<any[]>([])
   const uploading = ref(false)
   /** 是否命中两段式直传（云存储平台），决定进度条可见性 */
   const directUploading = ref(false)
@@ -151,6 +159,7 @@
       // 后端分页参数为 pageNum/pageSize
       paginationKey: { current: 'pageNum', size: 'pageSize' },
       columnsFactory: () => [
+        { type: 'selection', width: 48, fixed: 'left' },
         { type: 'index', width: 60, label: t('pages.system.attach.colIndex') },
         {
           prop: 'preview',
@@ -191,7 +200,7 @@
         {
           prop: 'operation',
           label: t('pages.system.attach.colOperation'),
-          width: 130,
+          width: 160,
           fixed: 'right',
           formatter: (row: any) =>
             h('div', { class: 'flex gap-1' }, [
@@ -244,6 +253,16 @@
     await fetchData()
   }
 
+  const emptyText = computed(() =>
+    searchForm.value.filename || searchForm.value.ext
+      ? t('pages.system.attach.emptySearch')
+      : t('pages.system.attach.emptyList')
+  )
+
+  const onSelectionChange = (rows: any[]): void => {
+    selectedRows.value = rows || []
+  }
+
   const triggerUpload = (): void => {
     uploadInput.value?.click()
   }
@@ -273,6 +292,11 @@
     const input = event.target as HTMLInputElement
     const file = input.files?.[0]
     if (!file) return
+    if (file.size === 0) {
+      ElMessage.warning(t('pages.system.attach.emptyFile'))
+      input.value = ''
+      return
+    }
     uploading.value = true
     directUploading.value = false
     uploadPercent.value = 0
@@ -319,6 +343,30 @@
     ).then(async () => {
       await fetchRemoveAttach(row.id)
       ElMessage.success(t('pages.system.attach.deleteSuccess'))
+      selectedRows.value = []
+      tableRef.value?.elTableRef?.clearSelection()
+      refreshData()
+    })
+  }
+
+  const deleteSelected = (): void => {
+    if (!selectedRows.value.length) {
+      ElMessage.warning(t('pages.system.attach.deleteEmpty'))
+      return
+    }
+    ElMessageBox.confirm(
+      t('pages.system.attach.deleteBatchConfirm', { count: selectedRows.value.length }),
+      t('pages.system.attach.deleteTitle'),
+      {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
+        type: 'warning'
+      }
+    ).then(async () => {
+      await fetchRemoveAttach(selectedRows.value.map((row) => row.id))
+      ElMessage.success(t('pages.system.attach.deleteSuccess'))
+      selectedRows.value = []
+      tableRef.value?.elTableRef?.clearSelection()
       refreshData()
     })
   }

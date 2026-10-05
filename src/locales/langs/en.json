@@ -1315,11 +1315,17 @@
         "colUploadTime": "Uploaded At",
         "colOperation": "Actions",
         "downloadBtn": "Download",
-        "directUploadFailed": "Direct upload failed, please try again",
+        "directUploadFailed": "The file did not reach storage. Check the active storage address, then upload again",
         "uploadSuccess": "Uploaded successfully",
+        "emptyFile": "This file is empty. Choose a file that has content, then upload again",
+        "emptyList": "No attachments yet. Click Upload Attachment and choose a file",
+        "emptySearch": "No attachments match. Change the name or type, then search again",
+        "deleteSelectedBtn": "Delete Selected",
+        "deleteEmpty": "Select the attachments to delete first",
         "deleteTitle": "Delete Attachment",
         "deleteConfirm": "Delete attachment \"{name}\"?",
-        "deleteSuccess": "Deleted successfully"
+        "deleteBatchConfirm": "Delete the {count} selected attachments? They will disappear from the list",
+        "deleteSuccess": "Deleted. These attachments will no longer appear in the list"
       },
       "oss": {
         "addBtn": "Add Storage",

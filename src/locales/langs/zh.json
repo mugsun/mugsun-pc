@@ -1315,11 +1315,17 @@
         "colUploadTime": "上传时间",
         "colOperation": "操作",
         "downloadBtn": "下载",
-        "directUploadFailed": "直传失败，请重试",
+        "directUploadFailed": "文件没有传到存储。请到存储配置里检查当前启用的地址，然后再上传",
         "uploadSuccess": "上传成功",
+        "emptyFile": "这个文件是空的。请换一个有内容的文件再上传",
+        "emptyList": "还没有附件。点「上传附件」选一个文件",
+        "emptySearch": "没有符合条件的附件。请改文件名或类型后再查",
+        "deleteSelectedBtn": "删除所选",
+        "deleteEmpty": "请先勾选要删除的附件",
         "deleteTitle": "删除附件",
         "deleteConfirm": "确定删除附件\"{name}\"吗？",
-        "deleteSuccess": "删除成功"
+        "deleteBatchConfirm": "确定删除选中的 {count} 个附件吗？删掉后列表里不会再出现",
+        "deleteSuccess": "已删除。列表里不会再出现这些附件"
       },
       "oss": {
         "addBtn": "新增存储",
