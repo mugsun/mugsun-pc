@@ -14,18 +14,41 @@
         <ElButton v-perm="'sys:dept:save'" @click="showDialog('add')" v-ripple>{{
           $t('pages.system.dept.addDept')
         }}</ElButton>
+        <ElButton v-perm="'sys:dept:remove'" @click="deleteSelected" v-ripple>{{
+          $t('pages.system.dept.deleteSelectedBtn')
+        }}</ElButton>
       </div>
 
       <!-- 树表为自由增长内容：art-table-card 卡片体是 height:100%+overflow:hidden 裁剪，
            内部须自备滚动，否则矮视口下深层节点被切断且不可达（同 track/user 修法） -->
       <div v-loading="loading" class="dept-table-wrap">
-        <ElTable :data="treeData" row-key="id" default-expand-all border>
+        <ElTable
+          ref="tableRef"
+          :data="treeData"
+          row-key="id"
+          default-expand-all
+          border
+          :empty-text="emptyText"
+          @selection-change="onSelectionChange"
+        >
+          <ElTableColumn type="selection" width="48" />
           <ElTableColumn
             prop="deptName"
             :label="$t('pages.system.dept.fields.deptName')"
-            min-width="220"
+            min-width="180"
           />
-          <ElTableColumn prop="sort" :label="$t('pages.system.dept.fields.sort')" width="100" />
+          <ElTableColumn
+            prop="fullName"
+            :label="$t('pages.system.dept.fields.fullName')"
+            min-width="160"
+          />
+          <ElTableColumn :label="$t('pages.system.dept.fields.category')" width="100">
+            <template #default="{ row }">{{ categoryLabel(row.category) }}</template>
+          </ElTableColumn>
+          <ElTableColumn :label="$t('pages.system.dept.fields.leader')" min-width="120">
+            <template #default="{ row }">{{ row.leaderName || '—' }}</template>
+          </ElTableColumn>
+          <ElTableColumn prop="sort" :label="$t('pages.system.dept.fields.sort')" width="80" />
           <ElTableColumn
             prop="createTime"
             :label="$t('pages.system.dept.fields.createTime')"
@@ -62,6 +85,7 @@
         :type="dialogType"
         :dept-data="currentData"
         :dept-options="deptOptions"
+        :leader-options="leaderOptions"
         :saving="dialogSaving"
         @submit="handleDialogSubmit"
       />
@@ -76,6 +100,7 @@
   import {
     fetchDeptTree,
     fetchDeptSelect,
+    fetchDeptLeaders,
     fetchSaveDept,
     fetchRemoveDept
   } from '@/api/system-manage'
@@ -89,20 +114,41 @@
   const { t } = useI18n()
 
   // ===== 查询栏 =====
+  const tableRef = ref()
+  const selectedRows = ref<any[]>([])
   const searchForm = ref({
-    deptName: ''
+    deptName: '',
+    fullName: ''
   })
+  const categoryOptions = computed(() => [
+    { label: t('pages.system.dept.categoryCompany'), value: 'company' },
+    { label: t('pages.system.dept.categoryDept'), value: 'dept' },
+    { label: t('pages.system.dept.categoryTeam'), value: 'team' }
+  ])
   const searchItems = computed(() => [
     {
       key: 'deptName',
       label: t('pages.system.dept.fields.deptName'),
       type: 'input',
       props: { placeholder: t('pages.system.dept.placeholder.deptName'), clearable: true }
+    },
+    {
+      key: 'fullName',
+      label: t('pages.system.dept.fields.fullName'),
+      type: 'input',
+      props: { placeholder: t('pages.system.dept.placeholder.fullName'), clearable: true }
     }
   ])
+  const searched = computed(() => !!searchForm.value.deptName || !!searchForm.value.fullName)
+  const emptyText = computed(() =>
+    searched.value ? t('pages.system.dept.emptySearch') : t('pages.system.dept.emptyList')
+  )
+  const categoryLabel = (value: string) =>
+    categoryOptions.value.find((item) => item.value === value)?.label || '—'
 
   const treeData = ref<any[]>([])
   const deptOptions = ref<Array<{ label: string; value: string }>>([])
+  const leaderOptions = ref<Array<{ label: string; value: string }>>([])
   const loading = ref(false)
   const dialogType = ref<DialogType>('add')
   const dialogVisible = ref(false)
@@ -110,14 +156,21 @@
   const dialogSaving = ref(false)
 
   // 查询条件以 searchForm 为唯一事实源（v-model 已同步），CRUD 刷新后过滤仍生效
-  const currentParams = (): Record<string, any> | undefined =>
-    searchForm.value.deptName ? { deptName: searchForm.value.deptName } : undefined
+  const currentParams = (): Record<string, any> | undefined => {
+    const params: Record<string, any> = {}
+    if (searchForm.value.deptName) params.deptName = searchForm.value.deptName
+    if (searchForm.value.fullName) params.fullName = searchForm.value.fullName
+    return Object.keys(params).length ? params : undefined
+  }
 
   const loadData = async (): Promise<void> => {
     loading.value = true
     try {
       treeData.value = (await fetchDeptTree(currentParams())) || []
       deptOptions.value = (await fetchDeptSelect()) || []
+      leaderOptions.value = (await fetchDeptLeaders().catch(() => [])) || []
+      selectedRows.value = []
+      tableRef.value?.clearSelection?.()
     } finally {
       loading.value = false
     }
@@ -133,7 +186,8 @@
 
   const handleResetSearch = async (): Promise<void> => {
     searchForm.value = {
-      deptName: ''
+      deptName: '',
+      fullName: ''
     }
     await loadData()
   }
@@ -144,6 +198,10 @@
     dialogVisible.value = true
   }
 
+  const onSelectionChange = (rows: any[]): void => {
+    selectedRows.value = rows
+  }
+
   const deleteRow = (row: any): void => {
     ElMessageBox.confirm(t('pages.system.dept.deleteConfirm'), t('pages.system.dept.deleteDept'), {
       confirmButtonText: t('common.confirm'),
@@ -151,6 +209,26 @@
       type: 'warning'
     }).then(async () => {
       await fetchRemoveDept(row.id)
+      ElMessage.success(t('pages.system.dept.deleteSuccess'))
+      loadData()
+    })
+  }
+
+  const deleteSelected = (): void => {
+    if (!selectedRows.value.length) {
+      ElMessage.warning(t('pages.system.dept.deleteEmpty'))
+      return
+    }
+    ElMessageBox.confirm(
+      t('pages.system.dept.deleteBatchConfirm', { count: selectedRows.value.length }),
+      t('pages.system.dept.deleteDept'),
+      {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
+        type: 'warning'
+      }
+    ).then(async () => {
+      await fetchRemoveDept(selectedRows.value.map((row) => row.id))
       ElMessage.success(t('pages.system.dept.deleteSuccess'))
       loadData()
     })
@@ -177,7 +255,9 @@
   }
 
   .dept-toolbar {
+    display: flex;
     flex-shrink: 0;
+    gap: 8px;
     margin-bottom: 12px;
   }
 

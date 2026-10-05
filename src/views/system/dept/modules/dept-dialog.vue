@@ -3,10 +3,10 @@
   <ElDialog
     v-model="dialogVisible"
     :title="type === 'add' ? $t('pages.system.dept.addDept') : $t('pages.system.dept.editDept')"
-    width="500px"
+    width="560px"
     align-center
   >
-    <ElForm ref="formRef" :model="formData" :rules="rules" label-width="80px">
+    <ElForm ref="formRef" :model="formData" :rules="rules" label-width="96px">
       <ElFormItem :label="$t('pages.system.dept.fields.parent')" prop="parentId">
         <ElSelect
           v-model="formData.parentId"
@@ -27,6 +27,39 @@
           v-model="formData.deptName"
           :placeholder="$t('pages.system.dept.placeholder.deptName')"
         />
+      </ElFormItem>
+      <ElFormItem :label="$t('pages.system.dept.fields.fullName')" prop="fullName">
+        <ElInput
+          v-model="formData.fullName"
+          :placeholder="$t('pages.system.dept.placeholder.fullName')"
+        />
+      </ElFormItem>
+      <ElFormItem :label="$t('pages.system.dept.fields.category')" prop="category">
+        <ElSelect
+          v-model="formData.category"
+          :placeholder="$t('pages.system.dept.placeholder.category')"
+          style="width: 100%"
+        >
+          <ElOption :label="$t('pages.system.dept.categoryCompany')" value="company" />
+          <ElOption :label="$t('pages.system.dept.categoryDept')" value="dept" />
+          <ElOption :label="$t('pages.system.dept.categoryTeam')" value="team" />
+        </ElSelect>
+      </ElFormItem>
+      <ElFormItem :label="$t('pages.system.dept.fields.leader')" prop="leaderId">
+        <ElSelect
+          v-model="formData.leaderId"
+          :placeholder="$t('pages.system.dept.placeholder.leader')"
+          filterable
+          clearable
+          style="width: 100%"
+        >
+          <ElOption
+            v-for="opt in leaderOptions"
+            :key="opt.value"
+            :label="opt.label"
+            :value="opt.value"
+          />
+        </ElSelect>
       </ElFormItem>
       <ElFormItem :label="$t('pages.system.dept.fields.sort')" prop="sort">
         <ElInputNumber v-model="formData.sort" :min="0" />
@@ -52,6 +85,7 @@
     type: string
     deptData?: Record<string, any>
     deptOptions?: Array<{ label: string; value: string }>
+    leaderOptions?: Array<{ label: string; value: string }>
     /** 父级保存进行中（防重复提交） */
     saving?: boolean
   }
@@ -77,12 +111,21 @@
     id: undefined,
     parentId: 0,
     deptName: '',
+    fullName: '',
+    category: 'dept',
+    leaderId: undefined,
     sort: 0
   })
 
   const rules = computed<FormRules>(() => ({
     deptName: [
       { required: true, message: t('pages.system.dept.placeholder.deptName'), trigger: 'blur' }
+    ],
+    fullName: [
+      { required: true, message: t('pages.system.dept.placeholder.fullName'), trigger: 'blur' }
+    ],
+    category: [
+      { required: true, message: t('pages.system.dept.placeholder.category'), trigger: 'change' }
     ]
   }))
 
@@ -92,7 +135,15 @@
       if (visible) {
         Object.assign(
           formData,
-          { id: undefined, parentId: 0, deptName: '', sort: 0 },
+          {
+            id: undefined,
+            parentId: 0,
+            deptName: '',
+            fullName: '',
+            category: 'dept',
+            leaderId: undefined,
+            sort: 0
+          },
           props.deptData || {}
         )
         nextTick(() => formRef.value?.clearValidate())

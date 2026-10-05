@@ -13,6 +13,12 @@ export function fetchDeptOptions() {
 export function fetchDeptSelect() {
   return request.get<Array<{ label: string; value: string }>>({ url: '/api/system/dept/select' })
 }
+export function fetchDeptLeaders(keyword?: string) {
+  return request.get<Array<{ label: string; value: string }>>({
+    url: '/api/system/dept/leaders',
+    params: keyword ? { keyword } : undefined
+  })
+}
 export function fetchSaveDept(data: Record<string, any>) {
   return request.post<void>({ url: '/api/system/dept/submit', data })
 }
