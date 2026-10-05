@@ -189,7 +189,11 @@ export function fetchTrackVisualRulePage(params: Record<string, any>) {
 }
 /** 规则编辑（eventName/routePath/matchText/status 可改，selector 只读） */
 export function fetchSaveTrackVisualRule(data: Record<string, any>) {
-  return request.post<void>({ url: '/api/system/track/visual/rule/submit', data })
+  return request.post<void>({
+    url: '/api/system/track/visual/rule/submit',
+    data,
+    showSuccessMessage: true
+  })
 }
 export function fetchRemoveTrackVisualRule(id: number | string) {
   return request.post<void>({

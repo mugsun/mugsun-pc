@@ -953,9 +953,6 @@ const track = createTracker({
         status
       })
       row.status = status
-      ElMessage.success(
-        status === 1 ? t('pages.track.app.enabledMsg') : t('pages.track.app.disabledMsg')
-      )
     } catch {
       // 开关为受控渲染（不绑 update:modelValue），失败刷新整表对齐服务端
       await refreshVisualRules()
@@ -968,15 +965,18 @@ const track = createTracker({
   }
 
   const onSubmitRule = async (form: Record<string, any>): Promise<void> => {
-    await fetchSaveTrackVisualRule({
-      id: form.id,
-      eventName: form.eventName,
-      routePath: form.routePath,
-      matchText: form.matchText,
-      status: form.status
-    })
+    try {
+      await fetchSaveTrackVisualRule({
+        id: form.id,
+        eventName: form.eventName,
+        routePath: form.routePath,
+        matchText: form.matchText,
+        status: form.status
+      })
+    } catch {
+      return
+    }
     vrDialogVisible.value = false
-    ElMessage.success(t('pages.track.shared.saveSuccess'))
     await refreshVisualRules()
   }
 
