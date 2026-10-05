@@ -188,7 +188,11 @@ export function fetchSaveTrackVisualRule(data: Record<string, any>) {
   return request.post<void>({ url: '/api/system/track/visual/rule/submit', data })
 }
 export function fetchRemoveTrackVisualRule(id: number | string) {
-  return request.post<void>({ url: '/api/system/track/visual/rule/remove', data: { id } })
+  return request.post<void>({
+    url: '/api/system/track/visual/rule/remove',
+    data: { id },
+    showSuccessMessage: true
+  })
 }
 
 /** 地域分布 + 精确热力点（G106） */

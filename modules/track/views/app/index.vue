@@ -991,8 +991,11 @@ const track = createTracker({
     } catch {
       return
     }
-    await fetchRemoveTrackVisualRule(row.id)
-    ElMessage.success(t('pages.track.shared.deletedSuccess'))
+    try {
+      await fetchRemoveTrackVisualRule(row.id)
+    } catch {
+      return
+    }
     await refreshVisualRules()
   }
 
