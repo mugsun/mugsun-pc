@@ -2594,6 +2594,10 @@
         "disabled": "停用",
         "edit": "编辑",
         "delete": "删除",
+        "deleteSelected": "删除所选",
+        "empty": "还没有独立数据源。点「新增数据源」后，该租户的业务数据会写到单独的库",
+        "emptySearch": "没有符合条件的数据源。换个租户编号后再查",
+        "selectFirst": "请先勾选要删除的数据源",
         "editTitle": "编辑数据源",
         "tenantCodePlaceholder": "如 866786",
         "isolationDb": "独立库（独立 JDBC 连接）",
@@ -2608,10 +2612,11 @@
         "tenantCodeRequired": "请输入租户编号",
         "dsUrlRequired": "请输入数据源 URL",
         "usernameRequired": "请输入用户名",
-        "msgSaved": "保存成功",
-        "confirmDelete": "确定删除租户\"{code}\"的独立数据源吗？",
+        "msgSaved": "已保存。启用后会先试连，连上后该租户的业务数据写到这里",
+        "confirmDelete": "确定删除租户「{code}」的独立数据源吗？删除后该租户的业务数据会回到主库",
+        "confirmDeleteSelected": "确定删除所选的 {count} 个数据源吗？这些租户的业务数据会回到主库",
         "deleteTitle": "删除数据源",
-        "msgDeleted": "删除成功"
+        "msgDeleted": "已删除。这些租户的业务数据会回到主库"
       },
       "customer": {
         "create": "新增客户",

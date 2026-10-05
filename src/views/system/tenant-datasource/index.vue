@@ -1,10 +1,20 @@
 <!-- 租户独立数据源配置（对接 /system/tenant-datasource）：配置后该租户业务数据落独立库 -->
 <template>
   <div class="tds-page art-full-height">
+    <ArtSearchBar
+      v-model="searchForm"
+      :items="searchItems"
+      :span="6"
+      @search="handleSearch"
+      @reset="handleResetSearch"
+    />
     <ElCard class="art-table-card">
       <div class="tds-toolbar">
         <ElButton v-perm="'sys:tenant-datasource:save'" type="primary" @click="showCreate">{{
           $t('pages.system.tenantDatasource.create')
+        }}</ElButton>
+        <ElButton v-perm="'sys:tenant-datasource:remove'" @click="removeSelected">{{
+          $t('pages.system.tenantDatasource.deleteSelected')
         }}</ElButton>
         <ElAlert
           type="info"
@@ -16,7 +26,11 @@
       <!-- 表格为自由增长内容：art-table-card 卡片体是 height:100%+overflow:hidden 裁剪，
            内部须自备滚动，否则矮视口下底部行被切断且不可达（同 track/user 修法） -->
       <div v-loading="loading" class="tds-table-wrap">
-        <ElTable :data="tableData" border>
+        <ElTable :data="tableData" border @selection-change="onSelectionChange">
+          <template #empty>
+            <span>{{ emptyText }}</span>
+          </template>
+          <ElTableColumn type="selection" width="48" />
           <ElTableColumn type="index" :label="$t('table.column.index')" width="60" />
           <ElTableColumn
             prop="tenantCode"
@@ -177,6 +191,7 @@
   import { onBeforeRouteLeave } from 'vue-router'
   import type { FormInstance, FormRules } from 'element-plus'
   import { ElMessage, ElMessageBox } from 'element-plus'
+  import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
   import {
     fetchTenantDatasourcePage,
     fetchSubmitTenantDatasource,
@@ -186,6 +201,26 @@
   defineOptions({ name: 'TenantDatasource' })
 
   const { t } = useI18n()
+
+  const searchForm = ref({ tenantCode: '' })
+  const filtering = ref(false)
+  const selectedRows = ref<any[]>([])
+  const searchItems = computed(() => [
+    {
+      key: 'tenantCode',
+      label: t('pages.system.tenantDatasource.tenantCode'),
+      type: 'input',
+      props: {
+        placeholder: t('pages.system.tenantDatasource.tenantCodePlaceholder'),
+        clearable: true
+      }
+    }
+  ])
+  const emptyText = computed(() =>
+    filtering.value
+      ? t('pages.system.tenantDatasource.emptySearch')
+      : t('pages.system.tenantDatasource.empty')
+  )
 
   const tableData = ref<any[]>([])
   const loading = ref(false)
@@ -230,19 +265,37 @@
 
   const loadData = async (): Promise<void> => {
     loading.value = true
+    filtering.value = Boolean(searchForm.value.tenantCode)
     try {
+      selectedRows.value = []
       const resp = await fetchTenantDatasourcePage({
         pageNum: pageNum.value,
-        pageSize: pageSize.value
+        pageSize: pageSize.value,
+        tenantCode: searchForm.value.tenantCode || undefined
       })
       tableData.value = resp?.records ?? []
-      total.value = resp?.total ?? 0
+      total.value = resp?.totalRow ?? resp?.total ?? 0
     } finally {
       loading.value = false
     }
   }
 
   onMounted(loadData)
+
+  const onSelectionChange = (rows: any[]): void => {
+    selectedRows.value = rows
+  }
+
+  const handleSearch = async (): Promise<void> => {
+    pageNum.value = 1
+    await loadData()
+  }
+
+  const handleResetSearch = async (): Promise<void> => {
+    searchForm.value = { tenantCode: '' }
+    pageNum.value = 1
+    await loadData()
+  }
 
   const showCreate = (): void => {
     Object.assign(form, {
@@ -290,24 +343,39 @@
     })
   }
 
-  const remove = (row: any): void => {
-    ElMessageBox.confirm(
-      t('pages.system.tenantDatasource.confirmDelete', { code: row.tenantCode }),
-      t('pages.system.tenantDatasource.deleteTitle'),
-      {
-        confirmButtonText: t('common.confirm'),
-        cancelButtonText: t('common.cancel'),
-        type: 'warning'
-      }
-    )
+  const confirmRemove = (message: string, ids: (number | string)[]): void => {
+    ElMessageBox.confirm(message, t('pages.system.tenantDatasource.deleteTitle'), {
+      confirmButtonText: t('common.confirm'),
+      cancelButtonText: t('common.cancel'),
+      type: 'warning'
+    })
       .then(async () => {
-        await fetchRemoveTenantDatasource(row.id)
+        await fetchRemoveTenantDatasource(ids)
         ElMessage.success(t('pages.system.tenantDatasource.msgDeleted'))
         loadData()
       })
       .catch(() => {
-        /* cancel */
+        /* cancel or request error toast */
       })
+  }
+
+  const remove = (row: any): void => {
+    confirmRemove(t('pages.system.tenantDatasource.confirmDelete', { code: row.tenantCode }), [
+      row.id
+    ])
+  }
+
+  const removeSelected = (): void => {
+    if (!selectedRows.value.length) {
+      ElMessage.warning(t('pages.system.tenantDatasource.selectFirst'))
+      return
+    }
+    confirmRemove(
+      t('pages.system.tenantDatasource.confirmDeleteSelected', {
+        count: selectedRows.value.length
+      }),
+      selectedRows.value.map((row) => row.id)
+    )
   }
 
   const closeOverlays = (): void => {

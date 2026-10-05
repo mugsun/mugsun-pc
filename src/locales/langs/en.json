@@ -2594,6 +2594,10 @@
         "disabled": "Disabled",
         "edit": "Edit",
         "delete": "Delete",
+        "deleteSelected": "Delete Selected",
+        "empty": "No dedicated datasource yet. Add one and that tenant's business data will use its own database",
+        "emptySearch": "No datasource matches. Try another tenant code",
+        "selectFirst": "Select datasources to delete first",
         "editTitle": "Edit Datasource",
         "tenantCodePlaceholder": "e.g. 866786",
         "isolationDb": "Dedicated DB (independent JDBC connection)",
@@ -2608,10 +2612,11 @@
         "tenantCodeRequired": "Please enter the tenant code",
         "dsUrlRequired": "Please enter the datasource URL",
         "usernameRequired": "Please enter the username",
-        "msgSaved": "Saved successfully",
-        "confirmDelete": "Delete the dedicated datasource for tenant \"{code}\"?",
+        "msgSaved": "Saved. Enabling it tests the connection, then that tenant's business data is written there",
+        "confirmDelete": "Delete the dedicated datasource for tenant \"{code}\"? Its business data will return to the main database",
+        "confirmDeleteSelected": "Delete the {count} selected datasources? Those tenants' business data will return to the main database",
         "deleteTitle": "Delete Datasource",
-        "msgDeleted": "Deleted successfully"
+        "msgDeleted": "Deleted. Those tenants' business data returns to the main database"
       },
       "customer": {
         "create": "New Customer",
