@@ -685,14 +685,20 @@ export function fetchSyncJobServer(id?: string) {
 export function fetchReportDatasets() {
   return request.get<any[]>({ url: '/api/system/report/datasets' })
 }
-export function fetchReportList() {
-  return request.get<any[]>({ url: '/api/system/report/list' })
+export function fetchReportList(name?: string) {
+  return request.get<any[]>({
+    url: '/api/system/report/list',
+    params: name ? { name } : {}
+  })
 }
 export function fetchSaveReport(data: Record<string, any>) {
   return request.post<void>({ url: '/api/system/report/submit', data })
 }
 export function fetchRemoveReport(id: number | string) {
   return request.post<void>({ url: `/api/system/report/remove/${id}` })
+}
+export function fetchRemoveReports(ids: Array<string | number>) {
+  return request.post<void>({ url: '/api/system/report/remove', data: { ids } })
 }
 export function fetchReportPreview(id: number | string) {
   return request.get<any[]>({ url: '/api/system/report/preview', params: { id } })

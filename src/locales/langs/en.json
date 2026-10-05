@@ -1807,6 +1807,13 @@
       },
       "report": {
         "createReport": "New Report",
+        "searchName": "Search by report name",
+        "search": "Search",
+        "removeSelected": "Delete selected",
+        "removeSelectedConfirm": "Delete the {n} selected reports? They will leave the list.",
+        "selectFirst": "Select the reports to delete first",
+        "empty": "No reports yet. Create one, enter a name, and add at least one chart.",
+        "emptySearch": "No report matches this name. Try another name, or clear the search.",
         "editReport": "Edit Report",
         "reportName": "Report Name",
         "reportNamePlaceholder": "Please enter report name",

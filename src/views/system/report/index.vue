@@ -3,14 +3,42 @@
   <div class="report-page art-full-height">
     <ElCard class="art-table-card">
       <div class="report-toolbar">
+        <ElInput
+          v-model="keyword"
+          clearable
+          class="report-keyword"
+          :placeholder="$t('pages.system.report.searchName')"
+          @keyup.enter="loadData"
+          @clear="loadData"
+        />
+        <ElButton @click="loadData">{{ $t('pages.system.report.search') }}</ElButton>
         <ElButton v-perm="'sys:report:save'" type="primary" @click="showDialog()">{{
           $t('pages.system.report.createReport')
         }}</ElButton>
+        <ElButton v-perm="'sys:report:remove'" type="danger" plain @click="removeSelected">{{
+          $t('pages.system.report.removeSelected')
+        }}</ElButton>
       </div>
+      <ElAlert
+        v-if="!loading && tableData.length === 0"
+        class="report-empty"
+        type="info"
+        :closable="false"
+        :title="
+          keyword.trim() ? $t('pages.system.report.emptySearch') : $t('pages.system.report.empty')
+        "
+      />
 
       <!-- 表格自由增长：包一层 flex:1 定高壳内部滚动，防矮视口裁切 -->
       <div class="report-table-wrap">
-        <ElTable :data="tableData" border height="100%" v-loading="loading">
+        <ElTable
+          :data="tableData"
+          border
+          height="100%"
+          v-loading="loading"
+          @selection-change="onSelect"
+        >
+          <ElTableColumn type="selection" width="48" />
           <ElTableColumn type="index" :label="$t('table.column.index')" width="60" />
           <ElTableColumn
             prop="reportName"
@@ -139,6 +167,7 @@
     fetchReportList,
     fetchSaveReport,
     fetchRemoveReport,
+    fetchRemoveReports,
     fetchReportPreviewDataset
   } from '@/api/system-manage'
   import { ElMessage, ElMessageBox } from 'element-plus'
@@ -155,6 +184,8 @@
   }
 
   const tableData = ref<any[]>([])
+  const selected = ref<any[]>([])
+  const keyword = ref('')
   const datasets = ref<any[]>([])
   const loading = ref(false)
   const dialogVisible = ref(false)
@@ -199,7 +230,7 @@
   const loadData = async (): Promise<void> => {
     loading.value = true
     try {
-      tableData.value = (await fetchReportList()) || []
+      tableData.value = (await fetchReportList(keyword.value.trim())) || []
     } finally {
       loading.value = false
     }
@@ -280,6 +311,30 @@
     })
   }
 
+  const onSelect = (rows: any[]): void => {
+    selected.value = rows
+  }
+
+  const removeSelected = (): void => {
+    if (!selected.value.length) {
+      ElMessage.warning(t('pages.system.report.selectFirst'))
+      return
+    }
+    ElMessageBox.confirm(
+      t('pages.system.report.removeSelectedConfirm', { n: selected.value.length }),
+      t('pages.system.report.removeTitle'),
+      {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
+        type: 'warning'
+      }
+    ).then(async () => {
+      await fetchRemoveReports(selected.value.map((row) => row.id))
+      ElMessage.success(t('pages.system.report.removeSuccess'))
+      loadData()
+    })
+  }
+
   const remove = (row: any): void => {
     ElMessageBox.confirm(
       t('pages.system.report.removeConfirm', { name: row.reportName }),
@@ -344,6 +399,17 @@
 
 <style scoped>
   .report-toolbar {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 12px;
+  }
+
+  .report-keyword {
+    width: 220px;
+  }
+
+  .report-empty {
     margin-bottom: 12px;
   }
 

@@ -1807,6 +1807,13 @@
       },
       "report": {
         "createReport": "新建报表",
+        "searchName": "按报表名称查找",
+        "search": "查询",
+        "removeSelected": "删除所选",
+        "removeSelectedConfirm": "删除选中的 {n} 张报表？删除后列表里不再显示。",
+        "selectFirst": "请先勾选要删除的报表",
+        "empty": "还没有报表。点新建报表，填好名称并至少加一张图。",
+        "emptySearch": "没有名称匹配的报表。换个名称，或清空条件后再查。",
         "editReport": "编辑报表",
         "reportName": "报表名称",
         "reportNamePlaceholder": "请输入报表名称",
