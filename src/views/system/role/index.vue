@@ -15,6 +15,9 @@
           <ElButton v-perm="'sys:role:save'" @click="showDialog('add')" v-ripple>{{
             $t('pages.system.role.addRole')
           }}</ElButton>
+          <ElButton v-perm="'sys:role:remove'" type="danger" plain @click="deleteSelected">{{
+            $t('pages.system.role.deleteSelectedBtn')
+          }}</ElButton>
         </template>
       </ArtTableHeader>
 
@@ -23,6 +26,8 @@
         :data="data as any[]"
         :columns="columns"
         :pagination="pagination"
+        :empty-text="emptyText"
+        @selection-change="onSelectionChange"
         @pagination:size-change="handleSizeChange"
         @pagination:current-change="handleCurrentChange"
       >
@@ -46,7 +51,7 @@
 </template>
 
 <script setup lang="ts">
-  import { h, ref, nextTick } from 'vue'
+  import { h, ref, nextTick, computed } from 'vue'
   import { useI18n } from 'vue-i18n'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
@@ -90,6 +95,12 @@
     5: t('pages.system.role.scope.custom')
   }
 
+  const filtering = ref(false)
+  const selectedRows = ref<any[]>([])
+  const emptyText = computed(() =>
+    filtering.value ? t('pages.system.role.emptySearch') : t('pages.system.role.emptyList')
+  )
+
   const dialogType = ref<DialogType>('add')
   const dialogVisible = ref(false)
   const currentData = ref<Record<string, any>>({})
@@ -120,6 +131,7 @@
       apiParams: { pageNum: 1, pageSize: 20 },
       paginationKey: { current: 'pageNum', size: 'pageSize' },
       columnsFactory: () => [
+        { type: 'selection', width: 48, fixed: 'left' },
         { type: 'index', width: 60, label: t('table.column.index') },
         { prop: 'roleName', label: t('pages.system.role.fields.roleName'), minWidth: 140 },
         { prop: 'roleCode', label: t('pages.system.role.fields.roleCode'), minWidth: 140 },
@@ -173,18 +185,23 @@
 
   // ===== 查询栏联动 =====
   const handleSearch = async (params: Record<string, any>): Promise<void> => {
-    // 替换全部查询参数（防旧条件残留），回到第一页
+    filtering.value = !!(params.roleName || params.roleCode)
     replaceSearchParams({ ...params, pageNum: 1, pageSize: 20 })
     await fetchData()
   }
 
   const handleResetSearch = async (): Promise<void> => {
+    filtering.value = false
     searchForm.value = {
       roleName: '',
       roleCode: ''
     }
     resetSearchParams()
     await fetchData()
+  }
+
+  const onSelectionChange = (rows: any[]): void => {
+    selectedRows.value = rows || []
   }
 
   const showDialog = (type: DialogType, row?: Record<string, any>): void => {
@@ -204,11 +221,37 @@
         cancelButtonText: t('common.cancel'),
         type: 'warning'
       }
-    ).then(async () => {
-      await removeRole([row.id])
-      ElMessage.success(t('pages.system.role.deleteSuccess'))
-      refreshData()
-    })
+    )
+      .then(async () => {
+        await removeRole([row.id])
+        ElMessage.success(t('pages.system.role.deleteSuccess'))
+        selectedRows.value = []
+        refreshData()
+      })
+      .catch(() => {})
+  }
+
+  const deleteSelected = (): void => {
+    if (!selectedRows.value.length) {
+      ElMessage.warning(t('pages.system.role.deleteEmpty'))
+      return
+    }
+    ElMessageBox.confirm(
+      t('pages.system.role.deleteBatchConfirm', { count: selectedRows.value.length }),
+      t('pages.system.role.deleteRole'),
+      {
+        confirmButtonText: t('common.confirm'),
+        cancelButtonText: t('common.cancel'),
+        type: 'warning'
+      }
+    )
+      .then(async () => {
+        await removeRole(selectedRows.value.map((row) => row.id))
+        ElMessage.success(t('pages.system.role.deleteSuccess'))
+        selectedRows.value = []
+        refreshData()
+      })
+      .catch(() => {})
   }
 
   const handleDialogSubmit = async (form: Record<string, any>): Promise<void> => {

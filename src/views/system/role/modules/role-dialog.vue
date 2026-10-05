@@ -16,8 +16,12 @@
       <ElFormItem :label="$t('pages.system.role.fields.roleCode')" prop="roleCode">
         <ElInput
           v-model="formData.roleCode"
+          :disabled="type === 'edit'"
           :placeholder="$t('pages.system.role.placeholder.roleCode')"
         />
+        <div v-if="type === 'edit'" class="field-hint">{{
+          $t('pages.system.role.codeLocked')
+        }}</div>
       </ElFormItem>
       <ElFormItem :label="$t('pages.system.role.fields.dataScope')" prop="dataScope">
         <ElSelect v-model="formData.dataScope" style="width: 100%">
@@ -151,3 +155,12 @@
     })
   }
 </script>
+
+<style scoped>
+  .field-hint {
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--el-text-color-secondary);
+  }
+</style>
