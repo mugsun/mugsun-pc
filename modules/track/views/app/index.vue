@@ -577,15 +577,18 @@ const track = createTracker({
 
   const onSubmitDef = async (form: Record<string, any>): Promise<void> => {
     // 仅 displayName/description/owner/status 可改（后端契约）
-    await fetchSaveTrackEventDef({
-      id: form.id,
-      displayName: form.displayName,
-      description: form.description,
-      owner: form.owner,
-      status: form.status
-    })
+    try {
+      await fetchSaveTrackEventDef({
+        id: form.id,
+        displayName: form.displayName,
+        description: form.description,
+        owner: form.owner,
+        status: form.status
+      })
+    } catch {
+      return
+    }
     defDialogVisible.value = false
-    ElMessage.success(t('pages.track.shared.saveSuccess'))
     await fetchDefs()
   }
 

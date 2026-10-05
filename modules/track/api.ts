@@ -127,7 +127,11 @@ export function fetchTrackEventDefPage(params: Record<string, any>) {
 }
 /** 仅 displayName/description/owner/status 可改 */
 export function fetchSaveTrackEventDef(data: Record<string, any>) {
-  return request.post<void>({ url: '/api/system/track/event-def/submit', data })
+  return request.post<void>({
+    url: '/api/system/track/event-def/submit',
+    data,
+    showSuccessMessage: true
+  })
 }
 
 // ===== 漏斗分析（G103） =====
