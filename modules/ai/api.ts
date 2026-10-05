@@ -619,19 +619,35 @@ export function fetchAiDashboardPage(params: Record<string, any>) {
   return request.get<any>({ url: '/api/system/ai/dashboard/page', params })
 }
 export function fetchSaveAiDashboard(data: Record<string, any>) {
-  return request.post<any>({ url: '/api/system/ai/dashboard/submit', data })
+  return request.post<any>({
+    url: '/api/system/ai/dashboard/submit',
+    data,
+    showSuccessMessage: true
+  })
 }
 export function fetchRemoveAiDashboard(id: AiId) {
-  return request.post<void>({ url: '/api/system/ai/dashboard/remove', data: { id } })
+  return request.post<void>({
+    url: '/api/system/ai/dashboard/remove',
+    data: { id },
+    showSuccessMessage: true
+  })
 }
 export function fetchAiDashboardDetail(id: AiId) {
   return request.get<any>({ url: '/api/system/ai/dashboard/detail', params: { id } })
 }
 export function fetchSaveAiDashboardDsl(data: Record<string, any>) {
-  return request.post<any>({ url: '/api/system/ai/dashboard/dsl/save', data })
+  return request.post<any>({
+    url: '/api/system/ai/dashboard/dsl/save',
+    data,
+    showSuccessMessage: true
+  })
 }
 export function fetchShareAiDashboard(data: Record<string, any>) {
-  return request.post<any>({ url: '/api/system/ai/dashboard/share', data })
+  return request.post<any>({
+    url: '/api/system/ai/dashboard/share',
+    data,
+    showSuccessMessage: true
+  })
 }
 export function fetchDashboardChartSessions(datasetId: AiId) {
   return request.get<any[]>({
