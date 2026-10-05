@@ -1,8 +1,24 @@
 <!-- 数据变更记录：字段级 diff 时间轴 + 原始快照前后对比高亮 -->
 <template>
   <div class="data-audit-page art-full-height">
+    <ArtSearchBar
+      v-model="searchForm"
+      :items="searchItems"
+      :span="6"
+      @search="handleSearch"
+      @reset="handleResetSearch"
+    />
     <ElCard class="art-table-card">
       <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData" />
+      <ElAlert
+        v-if="!loading && (data as any[]).length === 0"
+        class="data-audit-empty"
+        type="info"
+        :closable="false"
+        :title="
+          hasFilter ? $t('pages.system.dataAudit.emptySearch') : $t('pages.system.dataAudit.empty')
+        "
+      />
 
       <ArtTable
         :loading="loading || detailLoading"
@@ -33,6 +49,18 @@
           }}</ElDescriptionsItem>
           <ElDescriptionsItem :label="$t('pages.system.dataAudit.time')">{{
             formatTableTime(current.createTime)
+          }}</ElDescriptionsItem>
+          <ElDescriptionsItem :label="$t('pages.system.dataAudit.action')">{{
+            actionLabel(current.action)
+          }}</ElDescriptionsItem>
+          <ElDescriptionsItem :label="$t('pages.system.dataAudit.httpMethod')">{{
+            current.httpMethod || '—'
+          }}</ElDescriptionsItem>
+          <ElDescriptionsItem :label="$t('pages.system.dataAudit.requestPath')">{{
+            current.requestPath || '—'
+          }}</ElDescriptionsItem>
+          <ElDescriptionsItem :label="$t('pages.system.dataAudit.clientIp')">{{
+            current.clientIp || '—'
           }}</ElDescriptionsItem>
         </ElDescriptions>
 
@@ -72,7 +100,7 @@
 </template>
 
 <script setup lang="ts">
-  import { h, onDeactivated, ref } from 'vue'
+  import { h, computed, onDeactivated, ref } from 'vue'
   import ArtButtonTable from '@/components/core/forms/art-button-table/index.vue'
   import { useTable } from '@/hooks/core/useTable'
   import { fetchDataAuditPage, fetchDataAuditDetail } from '@/api/system-manage'
@@ -95,6 +123,46 @@
 
   const BIZ_LABEL_KEYS: Record<string, string> = { sys_user: 'pages.system.dataAudit.bizSysUser' }
   const bizLabel = (key: string): string => (BIZ_LABEL_KEYS[key] ? t(BIZ_LABEL_KEYS[key]) : key)
+
+  const actionLabel = (value?: string): string => {
+    if (value === 'create') return t('pages.system.dataAudit.create')
+    if (value === 'update') return t('pages.system.dataAudit.update')
+    if (value === 'delete') return t('pages.system.dataAudit.delete')
+    return value || '—'
+  }
+
+  const searchForm = ref({ bizTable: '', action: '', requestPath: '' })
+  const hasFilter = computed(
+    () => !!(searchForm.value.bizTable || searchForm.value.action || searchForm.value.requestPath)
+  )
+  const searchItems = computed(() => [
+    {
+      key: 'bizTable',
+      label: t('pages.system.dataAudit.bizObject'),
+      type: 'input',
+      props: { placeholder: t('pages.system.dataAudit.bizTablePlaceholder'), clearable: true }
+    },
+    {
+      key: 'action',
+      label: t('pages.system.dataAudit.action'),
+      type: 'select',
+      props: {
+        placeholder: t('pages.system.dataAudit.actionAll'),
+        clearable: true,
+        options: [
+          { label: t('pages.system.dataAudit.create'), value: 'create' },
+          { label: t('pages.system.dataAudit.update'), value: 'update' },
+          { label: t('pages.system.dataAudit.delete'), value: 'delete' }
+        ]
+      }
+    },
+    {
+      key: 'requestPath',
+      label: t('pages.system.dataAudit.requestPath'),
+      type: 'input',
+      props: { placeholder: t('pages.system.dataAudit.requestPathPlaceholder'), clearable: true }
+    }
+  ])
 
   const detailVisible = ref(false)
   const detailLoading = ref(false)
@@ -170,7 +238,10 @@
     pagination,
     handleSizeChange,
     handleCurrentChange,
-    refreshData
+    refreshData,
+    fetchData,
+    replaceSearchParams,
+    resetSearchParams
   } = useTable({
     core: {
       apiFn: fetchDataAuditPage,
@@ -191,7 +262,20 @@
           minWidth: 160,
           formatter: (row: any) => summary(row)
         },
-        { prop: 'operator', label: t('pages.system.dataAudit.operator'), minWidth: 170 },
+        { prop: 'operator', label: t('pages.system.dataAudit.operator'), minWidth: 140 },
+        {
+          prop: 'action',
+          label: t('pages.system.dataAudit.action'),
+          width: 90,
+          formatter: (row: any) => actionLabel(row.action)
+        },
+        {
+          prop: 'requestPath',
+          label: t('pages.system.dataAudit.requestPath'),
+          minWidth: 180,
+          formatter: (row: any) =>
+            row.httpMethod ? `${row.httpMethod} ${row.requestPath || ''}` : row.requestPath || '—'
+        },
         {
           prop: 'createTime',
           label: t('pages.system.dataAudit.time'),
@@ -218,6 +302,17 @@
     }
   })
 
+  const handleSearch = async (params: Record<string, any>): Promise<void> => {
+    replaceSearchParams({ ...params, pageNum: 1, pageSize: 20 })
+    await fetchData()
+  }
+
+  const handleResetSearch = async (): Promise<void> => {
+    searchForm.value = { bizTable: '', action: '', requestPath: '' }
+    resetSearchParams()
+    await fetchData()
+  }
+
   let seenAudit = false
   onActivated(() => {
     if (!seenAudit) {
@@ -231,6 +326,10 @@
 </script>
 
 <style scoped>
+  .data-audit-empty {
+    margin-bottom: 12px;
+  }
+
   .change-line {
     display: flex;
     gap: 10px;

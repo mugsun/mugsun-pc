@@ -1697,7 +1697,19 @@
         "summarySep": ", ",
         "changedFields": "Changed Fields",
         "colOperation": "Operation",
-        "bizSysUser": "User"
+        "bizSysUser": "User",
+        "action": "Action",
+        "actionAll": "All actions",
+        "create": "Create",
+        "update": "Update",
+        "delete": "Delete",
+        "httpMethod": "Method",
+        "requestPath": "Request path",
+        "requestPathPlaceholder": "For example /system/user",
+        "clientIp": "Client address",
+        "bizTablePlaceholder": "For example sys_user",
+        "empty": "No change records yet. Edit a user, then come back to see which fields changed and which request did it.",
+        "emptySearch": "No records match. Try another object, action, or path, or clear the filters."
       },
       "helpDoc": {
         "catalogTitle": "Help Catalog",

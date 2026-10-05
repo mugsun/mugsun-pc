@@ -1697,7 +1697,19 @@
         "summarySep": "、",
         "changedFields": "变更字段",
         "colOperation": "操作",
-        "bizSysUser": "用户"
+        "bizSysUser": "用户",
+        "action": "操作类型",
+        "actionAll": "全部类型",
+        "create": "新增",
+        "update": "修改",
+        "delete": "删除",
+        "httpMethod": "请求方法",
+        "requestPath": "请求路径",
+        "requestPathPlaceholder": "例如 /system/user",
+        "clientIp": "来源地址",
+        "bizTablePlaceholder": "例如 sys_user",
+        "empty": "还没有变更记录。修改一个用户后再回来，就能看到改了哪些字段，以及从哪个请求改的。",
+        "emptySearch": "没有符合条件的变更记录。换个业务对象、操作类型或路径，或清空条件后再查。"
       },
       "helpDoc": {
         "catalogTitle": "帮助目录",
