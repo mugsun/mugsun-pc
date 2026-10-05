@@ -561,13 +561,25 @@ export function fetchAiSecretPage(params: Record<string, any>) {
   return request.get<any>({ url: '/api/system/ai/secret/page', params })
 }
 export function fetchSaveAiSecret(data: Record<string, any>) {
-  return request.post<any>({ url: '/api/system/ai/secret/submit', data })
+  return request.post<any>({
+    url: '/api/system/ai/secret/submit',
+    data,
+    showSuccessMessage: true
+  })
 }
 export function fetchRemoveAiSecret(id: AiId) {
-  return request.post<void>({ url: '/api/system/ai/secret/remove', data: { id } })
+  return request.post<void>({
+    url: '/api/system/ai/secret/remove',
+    data: { id },
+    showSuccessMessage: true
+  })
 }
 export function fetchStatusAiSecret(data: Record<string, any>) {
-  return request.post<void>({ url: '/api/system/ai/secret/status', data })
+  return request.post<void>({
+    url: '/api/system/ai/secret/status',
+    data,
+    showSuccessMessage: true
+  })
 }
 
 // ===== 对话记录 / 账单 / 配额 =====

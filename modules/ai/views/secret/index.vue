@@ -7,6 +7,7 @@
         :data="records"
         :columns="columns"
         :pagination="pager"
+        empty-text="还没有密钥。点新增密钥开始发放"
         @pagination:size-change="
           (s: number) => {
             pageSize = s
@@ -55,7 +56,7 @@
 <script setup lang="ts">
   import type { ColumnOption } from '@/types/component'
   import { computed, h, onMounted, reactive, ref } from 'vue'
-  import { ElButton, ElMessage, ElMessageBox, ElSwitch } from 'element-plus'
+  import { ElButton, ElMessageBox, ElSwitch } from 'element-plus'
   import {
     fetchAiSecretPage,
     fetchRemoveAiSecret,
@@ -85,7 +86,13 @@
       minWidth: 160,
       formatter: (r: any) => r.apiKeyMask || r.apiKey || '***'
     },
-    { prop: 'scopeType', label: '作用域', width: 100 },
+    {
+      prop: 'scopeType',
+      label: '作用域',
+      width: 100,
+      formatter: (row: any) =>
+        row.scopeType === 'user' ? '用户' : row.scopeType === 'app' ? '应用' : '租户'
+    },
     { prop: 'rateLimit', label: '限流', width: 90 },
     { prop: 'usedCount', label: '调用次数', width: 100 },
     {
@@ -96,8 +103,12 @@
         h(ElSwitch, {
           modelValue: row.status === 1,
           'onUpdate:modelValue': async (v: string | number | boolean) => {
-            await fetchStatusAiSecret({ id: row.id, status: v ? 1 : 0 })
-            row.status = v ? 1 : 0 // coerce
+            try {
+              await fetchStatusAiSecret({ id: row.id, status: v ? 1 : 0 })
+              row.status = v ? 1 : 0
+            } catch {
+              /* 失败文案由请求层弹出，开关保持原状态 */
+            }
           }
         })
     },
@@ -140,16 +151,22 @@
     saving.value = true
     try {
       const r = await fetchSaveAiSecret({ ...form })
-      if (r?.apiKey) ElMessageBox.alert(`请妥善保存密钥：${r.apiKey}`, '密钥仅展示一次')
-      else ElMessage.success('已保存')
+      if (r?.apiKey) {
+        await ElMessageBox.alert(String(r.apiKey), '请立刻复制。关掉后无法再查看')
+      }
       visible.value = false
       await reload()
+    } catch {
+      /* 失败文案由请求层弹出，弹窗留着方便改 */
     } finally {
       saving.value = false
     }
   }
   async function remove(row: any) {
-    await ElMessageBox.confirm('确定删除该密钥？', '确认')
+    await ElMessageBox.confirm(
+      `删除「${row.description || '这把密钥'}」后，列表里不会再出现，也不能再调用`,
+      '确认'
+    )
     await fetchRemoveAiSecret(row.id)
     await reload()
   }
@@ -157,6 +174,8 @@
 </script>
 <style scoped>
   .toolbar {
+    display: flex;
+    flex-wrap: wrap;
     margin-bottom: 12px;
   }
 </style>
