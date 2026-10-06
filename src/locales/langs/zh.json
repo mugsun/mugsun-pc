@@ -637,6 +637,7 @@
         "accountTab": "账号登录",
         "smsTab": "短信登录",
         "captchaCodePlaceholder": "请输入验证码",
+        "captchaRequired": "请输入验证码。请填上图形验证码后再继续",
         "phonePlaceholder": "请输入手机号",
         "smsCodePlaceholder": "请输入短信验证码",
         "socialDivider": "第三方登录",

@@ -293,7 +293,7 @@
     username: [{ required: true, message: t('login.placeholder.username'), trigger: 'blur' }],
     password: [{ required: true, message: t('login.placeholder.password'), trigger: 'blur' }],
     captchaCode: [
-      { required: true, message: t('pages.auth.login.captchaCodePlaceholder'), trigger: 'blur' }
+      { required: true, message: t('pages.auth.login.captchaRequired'), trigger: 'blur' }
     ]
   }))
 

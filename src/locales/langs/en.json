@@ -637,6 +637,7 @@
         "accountTab": "Account Login",
         "smsTab": "SMS Login",
         "captchaCodePlaceholder": "Please enter the captcha",
+        "captchaRequired": "Enter the image captcha. Fill it in, then continue.",
         "phonePlaceholder": "Please enter your phone number",
         "smsCodePlaceholder": "Please enter the SMS verification code",
         "socialDivider": "Third-party Login",
