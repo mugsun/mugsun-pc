@@ -673,7 +673,7 @@
       },
       "socialCallback": {
         "processing": "Processing third-party login…",
-        "missingParams": "Missing callback parameters",
+        "missingParams": "The third-party source and authorization code are required. Fill in both, then sign in or bind again.",
         "redirecting": "Redirecting shortly…",
         "bindSuccess": "Bound successfully",
         "bindSuccessMessage": "Third-party account bound successfully",

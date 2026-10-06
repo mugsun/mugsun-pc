@@ -673,7 +673,7 @@
       },
       "socialCallback": {
         "processing": "正在处理第三方登录…",
-        "missingParams": "回调参数缺失",
+        "missingParams": "社交来源与授权码不能为空。请填上来源和授权码后再登录或绑定",
         "redirecting": "即将自动跳转…",
         "bindSuccess": "绑定成功",
         "bindSuccessMessage": "第三方账号绑定成功",
