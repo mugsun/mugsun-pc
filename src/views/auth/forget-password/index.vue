@@ -248,19 +248,21 @@
   }
 
   const rules = computed<FormRules<ForgetForm>>(() => ({
-    username: [{ required: true, message: t('login.placeholder.username'), trigger: 'blur' }],
+    username: [
+      { required: true, message: t('pages.auth.forgetPassword.resetRequired'), trigger: 'blur' }
+    ],
     captchaCode: [{ required: true, message: t('pages.auth.captchaPlaceholder'), trigger: 'blur' }],
     code: [
       {
         required: true,
-        message: t('pages.auth.forgetPassword.emailCodePlaceholder'),
+        message: t('pages.auth.forgetPassword.resetRequired'),
         trigger: 'blur'
       }
     ],
     newPassword: [
       {
         required: true,
-        message: t('pages.auth.forgetPassword.newPasswordPlaceholder'),
+        message: t('pages.auth.forgetPassword.resetRequired'),
         trigger: 'blur'
       },
       {
@@ -270,7 +272,11 @@
             Number(/[A-Z]/.test(v || '')) +
             Number(/\d/.test(v || '')) +
             Number(/[^a-zA-Z0-9]/.test(v || ''))
-          if (!v || v.length < 8 || kinds < 3) {
+          if (!v) {
+            cb()
+            return
+          }
+          if (v.length < 8 || kinds < 3) {
             cb(new Error(t('pages.auth.forgetPassword.passwordRule')))
           } else cb()
         },

@@ -664,6 +664,7 @@
         "newPasswordPlaceholder": "Please enter a new password",
         "confirmPasswordPlaceholder": "Please enter the new password again",
         "enterUsernameFirst": "Account is required. Enter the account, then request a verification code.",
+        "resetRequired": "Account, verification code, and new password are required. Fill in all three, then reset again.",
         "enterCaptchaFirst": "Please enter the image captcha first",
         "codeSent": "If the account exists and has a bound email, the verification code has been sent",
         "passwordMismatch": "The two passwords do not match",
