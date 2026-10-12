@@ -121,7 +121,7 @@
     tableOptions.value = []
     if (!datasourceId.value) return
     try {
-      const schema = await fetchAiDatasourceTables(datasourceId.value)
+      const schema: any = await fetchAiDatasourceTables(datasourceId.value)
       const tables = Array.isArray(schema) ? schema : schema?.tables || []
       tableOptions.value = (tables as any[]).map((t) => ({
         key: typeof t === 'string' ? t : t.name || t.tableName,
