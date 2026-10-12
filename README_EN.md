@@ -2,137 +2,162 @@
 
 English | [简体中文](./README.md)
 
-The PC admin frontend of the mugsun low-code platform — built with Vue 3 + TypeScript + Vite + Element Plus, shipping 60+ pages across system administration, low-code tooling, workflow, monitoring, open platform, analytics dashboards, and tenant operations.
+PC admin frontend for the mugsun platform. Built with Vue 3 + TypeScript + Vite + Element Plus against [mugsun-boot](https://github.com/mugsun/mugsun-boot): server-driven menus and button permissions, system admin, low-code forms, workflow, monitoring, open platform, and tenant ops. GIS, analytics dashboards, and the AI assistant ship as **optional modules** — not a catch-all “low-code everything” pitch.
 
-[![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vuedotjs&logoColor=white)](https://vuejs.org/) [![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/) [![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)](https://vite.dev/) [![Element Plus](https://img.shields.io/badge/Element%20Plus-2.11-409EFF?logo=element&logoColor=white)](https://element-plus.org/) [![pnpm](https://img.shields.io/badge/pnpm-11-F69220?logo=pnpm&logoColor=white)](https://pnpm.io/) [![License](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
+Docs: [docs.mugsun.com](https://docs.mugsun.com/) · Site: [mugsun.com](https://mugsun.com)
 
-## ✨ Highlights
+[![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vuedotjs&logoColor=white)](https://vuejs.org/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.6-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
+[![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)](https://vite.dev/)
+[![Element Plus](https://img.shields.io/badge/Element%20Plus-2.11-409EFF?logo=element&logoColor=white)](https://element-plus.org/)
+[![pnpm](https://img.shields.io/badge/pnpm-11.9-F69220?logo=pnpm&logoColor=white)](https://pnpm.io/)
+[![License](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 
-- **Server-driven menus**: the sidebar renders straight from the backend menu tree — role grants and hidden menus take effect on refresh. Button-level permission gating via the `v-perm` directive and `hasPerm`
-- **Composable CRUD toolkit**: `useTable` / `useCrud` / `useDict` (deduplicated concurrent dictionary loads, colored tags), persisted custom table columns — far less boilerplate per business page
-- **Low-code forms**: form-create designer + runtime renderer deeply integrated, so forms are configured, not coded
-- **Self-monitoring analytics**: the `@mugsun/track-web` SDK is wired in globally — pageview, pageleave, web-vitals, error tracking, API monitoring, exposure, visual tracking, and session replay all report automatically, with feature toggles delivered by backend config
-- **Realtime messaging**: WebSocket push (notification badges, forced logout), with first-class `ws` support in the dev proxy
-- **Secure login**: credentials encrypted in transit with the SM2 national cryptographic algorithm
-- **Bilingual UI**: Chinese / English switching powered by vue-i18n
-- **Contract sync**: one `pnpm gen:api` regenerates the full TypeScript contract from the backend OpenAPI spec — zero type drift between frontend and backend
-- **Real end-to-end tests**: the Playwright suite drives a real browser through the real captcha flow — no shallow smoke tests
+## Features (from source)
 
-## 🧱 Architecture & Data Flow
+| Area | What ships |
+| --- | --- |
+| Server menus & permissions | `VITE_ACCESS_MODE=backend`; sidebar from backend menu tree; `v-perm` / `hasPerm` gate on `/auth/info` button codes |
+| CRUD composables | `useTable` / `useCrud` / `useDict`, persisted table columns (`src/hooks/core`) |
+| Low-code forms | `@form-create/designer` + `@form-create/element-ui` |
+| Workflow | Definitions, todos, running instances, graph (`src/views/system/flow-*`) |
+| Monitoring & open platform | Online users, cache, logs; OAuth client / consent / debug; API keys |
+| Tenant ops | Tenants, packages, datasources (`tenant*`) |
+| Self-monitoring analytics | Optional `modules/track` wiring `@mugsun/track-web` (API monitor, visual track, replay, geo) |
+| GIS | Optional `modules/gis` (OpenLayers / Cesium, …) |
+| AI assistant | Optional `modules/ai` (models, knowledge, chat, billing, … + global drawer) |
+| Realtime messaging | WebSocket `/api/ws/message?token=…` (`src/utils/socket`); dev proxy `ws: true` |
+| Login transport | Passwords encrypted with SM2 before submit (`src/utils/gm.ts`) |
+| Bilingual UI | vue-i18n — `src/locales/langs/{zh,en}.json` |
+| Contract sync | `pnpm gen:api` from `http://localhost:8080/v3/api-docs` → `openapi.d.ts` |
+| E2E | Playwright on `http://localhost:3007` with real captcha (Redis-backed answers) |
 
-Pages never touch HTTP directly. Requests flow through layered stages — page → hooks → api → backend — while the analytics SDK reports out-of-band through the same proxy:
+## Architecture
+
+Pages do not call HTTP directly. Traffic flows views → hooks → api → backend; the analytics SDK reports through the same `/api` proxy:
 
 ```mermaid
 flowchart LR
-    subgraph FE[mugsun-pc frontend]
-        V[views — pages] --> H[hooks — composables<br/>useTable / useCrud / useDict]
-        H --> A[api — request layer<br/>axios wrapped in client.ts]
-        V -. auto-captured pageview / web-vitals / api-monitor .-> T[analytics SDK<br/>@mugsun/track-web]
-    end
-    A -- /api/** --> P{vite dev proxy<br/>:3006 → :8080}
-    T -- /api/track/collect --> P
-    P -- /api prefix stripped --> B[mugsun-boot backend :8080]
-    B --> DB[(PostgreSQL / Redis)]
+  subgraph FE[mugsun-pc]
+    V[views] --> H[hooks<br/>useTable / useCrud / useDict]
+    H --> A[api / axios]
+    V -. pageview / vitals / error .-> T["@mugsun/track-web"]
+  end
+  A -- /api/** --> P{vite proxy :3006 → :8080}
+  T -- /api/track/collect --> P
+  P --> B[mugsun-boot :8080]
 ```
 
-## 🚀 Quick Start
-
-Prerequisites: **Node.js ≥ 20.19**, **pnpm ≥ 8.8** (the repo pins `pnpm@11.9.0` — run `corepack enable` to match it automatically).
-
-This repo works alongside three sibling repositories. Clone them **side by side**:
+Clone sibling repos **side by side** (this app depends on the SDK via `file:../mugsun-track`):
 
 ```
 mugsun/
-├── mugsun-core     # backend core dependencies
-├── mugsun-boot     # backend service (:8080)
-├── mugsun-pc       # this repo (admin frontend)
-└── mugsun-track    # analytics SDK
+├── mugsun-core
+├── mugsun-boot      # :8080
+├── mugsun-pc        # this repo
+└── mugsun-track     # @mugsun/track-web sources
 ```
 
-> ⚠️ **Read before your first run**: this repo depends on the analytics SDK via `file:../mugsun-track`, and the SDK's `dist/` is not distributed with its repository. A bare `pnpm install && pnpm dev` will fail with a module-not-found error — **build the SDK first**:
+## Quick start
+
+**Requires** Node.js ≥ 20.19 and pnpm ≥ 8.8 (`packageManager` pins `pnpm@11.9.0`). Start Postgres / Redis and [mugsun-boot](https://github.com/mugsun/mugsun-boot) on `:8080` first.
+
+`@mugsun/track-web` is declared as **`file:../mugsun-track`** — it is **not** resolved from npm in this repo. The SDK’s `dist/` is not committed; a bare `pnpm install && pnpm dev` fails until you build the SDK once (skip if `VITE_ENABLE_TRACK=false`):
 
 ```bash
-# 1. Build the local analytics SDK (first time only, or after SDK updates)
+# 1. Build the local analytics SDK
 cd ../mugsun-track
 pnpm install && pnpm build
 
-# 2. Back to this repo — install dependencies and start
+# Or from mugsun-pc:
+# pnpm setup:sdk
+
+# 2. Install and run this app
 cd ../mugsun-pc
 pnpm install
 pnpm dev
 ```
 
-The dev server opens http://localhost:3006 automatically (port from `VITE_PORT` in `.env`, currently **3006**).
+Dev server uses `VITE_PORT` from `.env` (**3006**) and opens the browser. `/api/**` proxies to `VITE_API_PROXY_URL` in `.env.development` (default `http://localhost:8080`). No mock layer.
 
-There is no mock layer: every `/api/**` request is proxied by vite to the local backend at `http://localhost:8080` (see `VITE_API_PROXY_URL` in `.env.development`). Make sure mugsun-boot is running first.
+## Optional modules
 
-## 📜 Scripts
-
-| Command | Description |
-| --- | --- |
-| `pnpm dev` | Start the dev server (`vite --open`, port 3006) |
-| `pnpm dev:e2e` | Launch a dedicated e2e instance on port 3007, kept out of your daily dev server's way |
-| `pnpm build` | Full `vue-tsc` type check + production build |
-| `pnpm serve` | Preview the build via `vite preview` (same `/api` proxy applies) |
-| `pnpm gen:api` | Regenerate `src/types/api/openapi.d.ts` from the backend's `http://localhost:8080/v3/api-docs` |
-| `pnpm test:e2e` | Run the Playwright end-to-end suite |
-| `pnpm lint` / `pnpm fix` | ESLint check / auto-fix |
-| `pnpm lint:prettier` | Format with Prettier |
-| `pnpm lint:stylelint` | Lint and auto-fix styles |
-| `pnpm lint:lint-staged` | Run lint-staged against staged files |
-| `pnpm commit` | Interactive conventional commits via git-cz |
-| `pnpm clean:dev` | Remove the template's sample routes / pages / copy to start fresh |
-
-`gen:api` deserves a special mention: whenever the backend contract changes, keep the backend running on :8080 and run `pnpm gen:api` once — every TypeScript type is back in sync. No more drifting "verbal contracts" between frontend and backend.
-
-## 🧪 End-to-End Testing
-
-`playwright.config.ts` defaults `baseURL` to **http://localhost:3007** — deliberately separate from the daily dev port (3006), so the e2e suite runs against its own instance without interfering with your work.
+Sources live under `modules/gis`, `modules/track`, and `modules/ai`. Toggles in root `.env` (enabled unless set to `false`):
 
 ```bash
-# Prerequisites: mugsun-boot (:8080) is up, and the PostgreSQL / Redis
-# Docker containers are running
-pnpm dev:e2e        # terminal A: dedicated instance on :3007
-pnpm test:e2e       # terminal B: full suite (serial — shares one backend)
-
-# Point at any instance (e.g. production smoke against a preview build)
-E2E_BASE_URL=http://localhost:4173 pnpm test:e2e
+VITE_ENABLE_GIS=true
+VITE_ENABLE_TRACK=true
+VITE_ENABLE_AI=true
 ```
 
-Login tests go through the real captcha flow: the suite reads the captcha answer the backend wrote into Redis via `docker exec <redis container> redis-cli` — no backend shortcuts. Override the container name and database number with `E2E_REDIS_CONTAINER` / `E2E_REDIS_DB` (default DB: 3).
+`false` skips route/plugin registration; delete the module directory to remove sources entirely. Aliases and Cesium asset copy: `vite.config.ts`.
 
-## 🗂 Project Structure
+## Scripts
+
+| Command | Purpose |
+| --- | --- |
+| `pnpm dev` | Dev server (`vite --open`, port 3006) |
+| `pnpm dev:e2e` | Isolated instance on **3007** for Playwright |
+| `pnpm setup:sdk` | `install` + `build` in `../mugsun-track` |
+| `pnpm build` | `vue-tsc --noEmit` + production build |
+| `pnpm serve` | `vite preview` |
+| `pnpm gen:api` | Regenerate `openapi.d.ts` from backend OpenAPI |
+| `pnpm test` / `pnpm test:watch` | Vitest |
+| `pnpm test:e2e` | Playwright (serial, `workers: 1`) |
+| `pnpm lint` / `pnpm fix` | ESLint |
+| `pnpm lint:prettier` / `pnpm lint:stylelint` | Format / styles |
+| `pnpm commit` | git-cz |
+| `pnpm clean:dev` | Strip template sample routes/pages |
+
+## End-to-end tests
+
+```bash
+# Prerequisites: mugsun-boot(:8080), containers mugsun-pg / mugsun-redis
+pnpm setup:sdk
+pnpm dev:e2e          # terminal A
+pnpm test:e2e         # terminal B
+```
+
+Auth flows read captcha answers via `docker exec <redis> redis-cli`. Override with `E2E_REDIS_CONTAINER` (default `mugsun-redis`), `E2E_REDIS_DB` (default `3`), `E2E_BASE_URL`. Some suites also expect PowerJob Server (see `playwright.config.ts`).
+
+## Layout
 
 ```
 src/
-├── api/          # request layer organized by backend module (axios wrapped in client.ts)
-├── assets/       # styles / images / icons
-├── components/   # core generic components + business components
-├── config/       # global site and theme configuration
-├── directives/   # custom directives (v-perm for button-level permissions, etc.)
-├── enums/        # global enums
-├── hooks/        # composables (useTable / useCrud / useDict …)
-├── locales/      # vue-i18n language packs (langs/zh.json, langs/en.json)
-├── plugins/      # plugin wiring (analytics SDK setupTrack, etc.)
-├── router/       # routing: guards + static routes + dynamic registration from backend menus
-├── store/        # Pinia stores (user / menu / dict / setting / worktab / message …)
-├── types/        # TypeScript types (api/openapi.d.ts is generated by gen:api — do not edit)
-├── utils/        # utilities and the http wrapper
-└── views/        # pages (system / dashboard / track / auth …)
+├── api/
+├── components/
+├── directives/      # v-perm, …
+├── hooks/core/      # useTable / useCrud / useDict, …
+├── locales/langs/
+├── plugins/         # echarts, track façade
+├── router/
+├── store/modules/
+├── types/api/       # openapi.d.ts (generated)
+├── utils/           # http, gm (SM2), socket, …
+└── views/
+modules/
+├── gis/
+├── track/
+└── ai/
 ```
 
-## 🌍 Internationalization
+## Related
 
-Language packs live in `src/locales/langs/{zh,en}.json` and are loaded through vue-i18n; the UI language can be switched at runtime, with Element Plus locale text following along.
+| Repo | Role |
+| --- | --- |
+| [mugsun-boot](https://github.com/mugsun/mugsun-boot) | Backend service |
+| [mugsun-core](https://github.com/mugsun/mugsun-core) | Backend kernel |
+| [mugsun-track](https://github.com/mugsun/mugsun-track) | Web analytics SDK (`file:` dep here) |
+| [mugsun-docs](https://github.com/mugsun/mugsun-docs) | Docs → [docs.mugsun.com](https://docs.mugsun.com/) |
 
-## ⭐ Star History
+## Contributing
 
-[![Star History Chart](https://api.star-history.com/svg?repos=mugsun/mugsun-pc&type=Date)](https://star-history.com/#mugsun/mugsun-pc&Date)
+Issues and PRs welcome. Commit style: [.github/COMMIT_CONVENTION.md](.github/COMMIT_CONVENTION.md).
 
-## 📄 License
+## Attribution
 
-Released under the [MIT License](./LICENSE).
+The UI shell is derived from [art-design-pro](https://github.com/Daymychen/art-design-pro) (MIT), Copyright (c) 2025 SuperManTT. See [NOTICE](./NOTICE) and [LICENSE](./LICENSE).
 
----
+## License
 
-This repo is the admin frontend of the mugsun low-code platform and runs alongside the mugsun-boot backend service; analytics capabilities come from the sibling mugsun-track SDK. Issues and PRs are welcome — and if the project helps you, a Star ⭐ means a lot.
+[MIT License](./LICENSE)
