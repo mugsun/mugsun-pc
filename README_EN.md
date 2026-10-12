@@ -1,15 +1,10 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/mugsun/mugsun-docs/main/public/brand/banners/github-banner-dark.png" alt="mugsun" width="100%" />
-</p>
-
 # mugsun-pc
 
 [简体中文](./README.md) | English
 
-**Admin UI for boot: server menus into the sidebar; GIS / analytics / AI opt-in.**  
-Vue 3 · Vite · Element Plus — permissions from the API, not another feature wall.
+This repository is the mugsun admin console. Menus and button permissions are delivered by [mugsun-boot](https://github.com/mugsun/mugsun-boot). GIS, analytics, and AI capabilities are assembled as optional front-end modules. In development, Vite proxies `/api` to the local boot service.
 
-[Docs](https://docs.mugsun.com/en/pc/) · [Getting started](https://docs.mugsun.com/en/guide/getting-started) · [Demo (coming soon)](https://docs.mugsun.com/en/demo)
+[Documentation](https://docs.mugsun.com/en/pc/) · [Getting started](https://docs.mugsun.com/en/guide/getting-started) · [Demo](https://docs.mugsun.com/en/demo)
 
 ![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vuedotjs&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)
@@ -17,62 +12,109 @@ Vue 3 · Vite · Element Plus — permissions from the API, not another feature 
 ![pnpm](https://img.shields.io/badge/pnpm-11.9-F69220?logo=pnpm&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
----
+## Overview
 
-## Why this
+| Item | Detail |
+| --- | --- |
+| Package | `mugsun-pc` |
+| Version | `0.0.1` (see `package.json`) |
+| Runtime | Node.js ≥ 20.19; pnpm ≥ 8.8 (`packageManager` locks `pnpm@11.9.0`) |
+| Stack | Vue 3.5 · Vite 7 · Element Plus 2.11 · Pinia · Vue Router |
+| Backend | [mugsun-boot](https://github.com/mugsun/mugsun-boot) (development default `http://localhost:8080`) |
+| License | [MIT](./LICENSE); UI-base credit in [NOTICE](./NOTICE) |
+| Docs | [docs.mugsun.com/en/pc](https://docs.mugsun.com/en/pc/) |
 
-1. **Same vertical as boot** — menus, button codes, `/auth/info` from one backend; `/api` proxies to `:8080` in dev, no mock.
-2. **Optional modules are real switches** — `modules/gis` · `modules/track` · `modules/ai` via `VITE_ENABLE_*`; `false` skips routes, deleting the folder removes the code.
-3. **Analytics dashboard in-repo** — `@mugsun/track-web` via `file:../mugsun-track`; collect + board without a second SaaS bill.
+The console does not maintain a separate permission model: sidebar menus, button codes, and user context come from boot APIs such as `/api/auth/info`. Optional modules are gated by build-time environment variables; when disabled, routes and plugins are not registered, and removing the module directory removes the source.
 
-Not a “ship-and-sell” low-code shell. UI base derives from [art-design-pro](https://github.com/Daymychen/art-design-pro) (MIT); see [NOTICE](./NOTICE).
+## Deployment
 
----
-
-## Shortest local path
-
-Needs Node.js ≥ 20.19, pnpm ≥ 8.8 (`packageManager` locks `pnpm@11.9.0`); [mugsun-boot](https://github.com/mugsun/mugsun-boot) on `:8080`; [mugsun-track](https://github.com/mugsun/mugsun-track) as a **sibling** (required when track is enabled, the default).
+Prerequisites: Node.js ≥ 20.19, pnpm ≥ 8.8; [mugsun-boot](https://github.com/mugsun/mugsun-boot) running on `:8080`. When the track module is enabled (the default), clone [mugsun-track](https://github.com/mugsun/mugsun-track) as a **sibling** (`@mugsun/track-web` is referenced as `file:../mugsun-track`; the SDK repository does not commit `dist/`).
 
 ```bash
-pnpm setup:sdk   # builds ../mugsun-track (file: dep; dist not shipped)
+pnpm setup:sdk   # install + build ../mugsun-track; skip when VITE_ENABLE_TRACK=false
 pnpm install
 pnpm dev
 ```
 
-Open http://localhost:3006 (`VITE_PORT`). `/api/**` → `VITE_API_PROXY_URL` (default `http://localhost:8080`). Login matches boot (default `admin` / `123456`).
+Development URL: http://localhost:3006 (`VITE_PORT`). `/api/**` proxies to `VITE_API_PROXY_URL` in `.env.development` (default `http://localhost:8080`). Login credentials match boot (default `admin` / `123456`).
 
-Skip `setup:sdk` when `VITE_ENABLE_TRACK=false`. Walkthrough: [docs](https://docs.mugsun.com/en/guide/getting-started).
+Sibling layout:
 
----
-
-## Shape
-
-```mermaid
-flowchart LR
-  V[views / hooks] --> A[api / axios]
-  V -. pageview / error .-> T["@mugsun/track-web"]
-  A -->|/api| P["vite :3006"]
-  T -->|/api/track/collect| P
-  P -->|proxy| B["mugsun-boot :8080"]
+```text
+mugsun/
+  mugsun-core/
+  mugsun-boot/     # :8080
+  mugsun-pc/       # this repository :3006
+  mugsun-track/    # file: dependency when track is enabled
 ```
 
-> **Screenshot placeholder** — login / system / analytics shots go here when ready. See [Demo](https://docs.mugsun.com/en/demo).
+Walkthrough: [Documentation · Getting started](https://docs.mugsun.com/en/guide/getting-started).
 
-Module flags and scripts live in [docs](https://docs.mugsun.com/en/pc/) and source — this README is not a feature wall.
+Package:
 
----
+```bash
+pnpm build
+# preview: pnpm serve
+```
 
-## Honest boundaries
+## Composition
 
-| Includes | Does not / not yet |
+```text
+mugsun-pc/
+  src/                 # shell: router, auth, system views, API client
+  modules/
+    gis/               # optional: layers, scenes, spatial analysis
+    track/             # optional: access management and analytics console (depends on @mugsun/track-web)
+    ai/                # optional: models, chat, knowledge base, MCP admin pages
+```
+
+Build-time flags (all enabled by default; set to `false` to disable):
+
+| Variable | Effect |
 | --- | --- |
-| Backend menus + admin pages (CRUD, flow, …) | A live public demo |
-| Optional GIS / track dashboard / AI | A backend without boot |
-| Dev proxy to real `:8080` | A full replaceable mock layer |
+| `VITE_ENABLE_GIS` | Registers GIS routes and aliases; `modules/gis` may be removed when off |
+| `VITE_ENABLE_TRACK` | Registers track routes and SDK plugin; skip `setup:sdk` and remove `modules/track` when off |
+| `VITE_ENABLE_AI` | Registers AI routes and plugin; `modules/ai` may be removed when off |
 
-Free OSS line: `boot` · `core` · `pc` · `track`. More: [docs.mugsun.com](https://docs.mugsun.com/en/).
+Request path: views and hooks call `/api` via axios; Vite proxies to boot in development. The analytics SDK posts to same-origin `/api/track/collect`, which is likewise proxied into boot’s track module.
 
----
+The UI base derives from [art-design-pro](https://github.com/Daymychen/art-design-pro) (MIT). See [NOTICE](./NOTICE).
+
+## Scope
+
+**Provided**
+
+- Backend-driven menus and system administration pages aligned with boot
+- Optional GIS / analytics console / AI front-end modules with build-time switches
+- Development reverse proxy to a live boot instance (no full replaceable mock layer)
+- Sibling integration path for `@mugsun/track-web` (`pnpm setup:sdk`)
+
+**Not provided**
+
+- A backend independent of boot, or a complete replaceable mock service
+- A publicly accessible demo environment (local verification uses boot + this repository; see [Demo](https://docs.mugsun.com/en/demo))
+
+Routes, environment variables, and scripts are defined in the [documentation](https://docs.mugsun.com/en/pc/) and source tree.
+
+## Related projects
+
+Open-source line: `boot` · `core` · `pc` · `track` · [mugsun-docs](https://github.com/mugsun/mugsun-docs).
+
+| Repository | Relationship |
+| --- | --- |
+| [mugsun-boot](https://github.com/mugsun/mugsun-boot) | Backend APIs; CORS / OAuth redirect defaults to this console’s development port `3006` |
+| [mugsun-track](https://github.com/mugsun/mugsun-track) | Browser SDK; this repository uses `file:`; application projects should prefer the npm package |
+| [mugsun-core](https://github.com/mugsun/mugsun-core) | Shared backend kernel; not a direct dependency of this repository |
+| [mugsun-docs](https://github.com/mugsun/mugsun-docs) | Documentation site [docs.mugsun.com](https://docs.mugsun.com/) |
+
+## Local development
+
+```bash
+pnpm test          # vitest
+pnpm test:e2e      # playwright (see repository config)
+pnpm lint          # eslint
+pnpm gen:api       # generate types from boot OpenAPI (boot must be running)
+```
 
 ## License
 

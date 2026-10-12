@@ -1,15 +1,10 @@
-<p align="center">
-  <img src="https://raw.githubusercontent.com/mugsun/mugsun-docs/main/public/brand/banners/github-banner-dark.png" alt="mugsun" width="100%" />
-</p>
-
 # mugsun-pc
 
 **中文** | [English](./README_EN.md)
 
-**对接 boot 的管理台：服务端菜单进侧边栏，GIS / 埋点 / AI 按需挂。**  
-Vue 3 · Vite · Element Plus；默认权限来自后端，不是再摆一张功能墙。
+本仓库为 mugsun 管理端。菜单与按钮权限由 [mugsun-boot](https://github.com/mugsun/mugsun-boot) 下发；地理信息、行为分析与人工智能能力以可选前端模块装配。开发期通过 Vite 将 `/api` 代理至本机 boot 服务。
 
-[文档](https://docs.mugsun.com/pc/) · [快速开始](https://docs.mugsun.com/guide/getting-started) · [演示（即将上线）](https://docs.mugsun.com/demo)
+[文档](https://docs.mugsun.com/pc/) · [快速开始](https://docs.mugsun.com/guide/getting-started) · [演示说明](https://docs.mugsun.com/demo)
 
 ![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vuedotjs&logoColor=white)
 ![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)
@@ -17,48 +12,31 @@ Vue 3 · Vite · Element Plus；默认权限来自后端，不是再摆一张功
 ![pnpm](https://img.shields.io/badge/pnpm-11.9-F69220?logo=pnpm&logoColor=white)
 ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
----
+## 概述
 
-## 为什么选它
+| 项 | 说明 |
+| --- | --- |
+| 包名 | `mugsun-pc` |
+| 版本 | `0.0.1`（以 `package.json` 为准） |
+| 运行时 | Node.js ≥ 20.19；pnpm ≥ 8.8（`packageManager` 锁定 `pnpm@11.9.0`） |
+| 技术栈 | Vue 3.5 · Vite 7 · Element Plus 2.11 · Pinia · Vue Router |
+| 后端 | [mugsun-boot](https://github.com/mugsun/mugsun-boot)（开发默认 `http://localhost:8080`） |
+| 许可 | [MIT](./LICENSE)；UI 基座致谢见 [NOTICE](./NOTICE) |
+| 文档 | [docs.mugsun.com/pc](https://docs.mugsun.com/pc/) |
 
-1. **和 boot 是一条竖切**：菜单、按钮码、`/auth/info` 同源；开发期 `/api` 代理到 `:8080`，无 mock。
-2. **可选模块真可关**：`modules/gis` · `modules/track` · `modules/ai` 由 `VITE_ENABLE_*` 控制；设 `false` 不注册路由，删目录可彻底去源码。
-3. **埋点看板同仓**：`@mugsun/track-web` 以 `file:../mugsun-track` 接入，采集与看板不另购一套云。
+管理端不维护独立权限模型：侧边栏菜单、按钮码与用户信息来自 boot 的 `/api/auth/info` 等接口。可选模块由构建期环境变量控制；关闭后不注册路由与插件，删除对应目录可去除源码。
 
-它不是又一个「装上就能卖」的低代码壳；UI 基座衍生自 [art-design-pro](https://github.com/Daymychen/art-design-pro)（MIT），详见 [NOTICE](./NOTICE)。
+## 部署
 
----
-
-## 最短路径（本地）
-
-前置：Node.js ≥ 20.19、pnpm ≥ 8.8（锁定 `pnpm@11.9.0`）；[mugsun-boot](https://github.com/mugsun/mugsun-boot) 已在 `:8080` 跑着；与 [mugsun-track](https://github.com/mugsun/mugsun-track) **平级** clone（默认开启埋点时需要）。
+前置条件：Node.js ≥ 20.19、pnpm ≥ 8.8；[mugsun-boot](https://github.com/mugsun/mugsun-boot) 已在 `:8080` 运行。默认开启埋点模块时，须与 [mugsun-track](https://github.com/mugsun/mugsun-track) **平级** clone（`@mugsun/track-web` 以 `file:../mugsun-track` 引用，源码仓不提交 `dist/`）。
 
 ```bash
-# 1. 本地埋点 SDK（file: 依赖，dist 不随仓分发）
-pnpm setup:sdk
-# 等价：cd ../mugsun-track && pnpm install && pnpm build
-
-# 2. 本仓
+pnpm setup:sdk   # 对 ../mugsun-track 执行 install + build；VITE_ENABLE_TRACK=false 时可跳过
 pnpm install
 pnpm dev
 ```
 
-打开 http://localhost:3006 （`VITE_PORT`）。`/api/**` 代理到 `.env.development` 的 `VITE_API_PROXY_URL`（默认 `http://localhost:8080`）。登录账号与 boot 一致（默认 `admin` / `123456`）。
-
-`VITE_ENABLE_TRACK=false` 时可跳过 `setup:sdk`。逐步说明：[文档 · 快速开始](https://docs.mugsun.com/guide/getting-started)。
-
----
-
-## 它长什么样
-
-```mermaid
-flowchart LR
-  V[views / hooks] --> A[api / axios]
-  V -. pageview / error .-> T["@mugsun/track-web"]
-  A -->|/api| P["vite :3006"]
-  T -->|/api/track/collect| P
-  P -->|proxy| B["mugsun-boot :8080"]
-```
+开发地址：http://localhost:3006（`VITE_PORT`）。`/api/**` 代理至 `.env.development` 中的 `VITE_API_PROXY_URL`（默认 `http://localhost:8080`）。登录账号与 boot 一致（默认 `admin` / `123456`）。
 
 平级目录约定：
 
@@ -67,27 +45,77 @@ mugsun/
   mugsun-core/
   mugsun-boot/     # :8080
   mugsun-pc/       # 本仓 :3006
-  mugsun-track/    # file: 依赖
+  mugsun-track/    # file: 依赖（埋点开启时）
 ```
 
-> **截图占位**：登录、系统管理、埋点看板截图就绪后放这里。公网 Demo 见 [演示](https://docs.mugsun.com/demo)。
+逐步说明见 [文档 · 快速开始](https://docs.mugsun.com/guide/getting-started)。
 
-能力清单、可选模块开关与脚本说明以 [文档](https://docs.mugsun.com/pc/) 和源码为准，本页不堆功能表。
+打包：
 
----
+```bash
+pnpm build
+# 预览：pnpm serve
+```
 
-## 诚实边界
+## 组成
 
-| 有 | 没有 / 尚未 |
+```text
+mugsun-pc/
+  src/                 # 壳层：路由、鉴权、系统管理视图、API 封装
+  modules/
+    gis/               # 可选：图层、场景、空间分析等
+    track/             # 可选：接入管理与分析看板（依赖 @mugsun/track-web）
+    ai/                # 可选：模型、对话、知识库、MCP 等管理页
+```
+
+构建期开关（默认均为开启；设为 `false` 关闭）：
+
+| 变量 | 作用 |
 | --- | --- |
-| 后端菜单权限 + CRUD / 流程等管理页 | 保证开箱即用的公网 Demo |
-| 可选 GIS / 埋点看板 / AI 模块 | 脱离 boot 的独立后端 |
-| 开发代理到真实 `:8080` | 内置可替换的完整 mock 层 |
+| `VITE_ENABLE_GIS` | 注册 GIS 路由与相关别名；关闭时可删除 `modules/gis` |
+| `VITE_ENABLE_TRACK` | 注册埋点路由与 SDK 插件；关闭时可跳过 `setup:sdk` 并删除 `modules/track` |
+| `VITE_ENABLE_AI` | 注册 AI 路由与插件；关闭时可删除 `modules/ai` |
 
-免费开源主线：`boot` · `core` · `pc` · `track`。更多：[docs.mugsun.com](https://docs.mugsun.com/)。
+请求链路：视图与 hooks 经 axios 访问 `/api`；开发期由 Vite 代理至 boot。埋点 SDK 经同源 `/api/track/collect` 上报，同样经代理进入 boot 的 track 模块。
 
----
+UI 基座衍生自 [art-design-pro](https://github.com/Daymychen/art-design-pro)（MIT），版权与许可说明见 [NOTICE](./NOTICE)。
 
-## License
+## 能力范围
+
+**已提供**
+
+- 与 boot 同源的菜单权限与系统管理页面
+- 可选 GIS / 埋点看板 / AI 前端模块及构建期开关
+- 开发期对真实 boot 的反向代理（无独立完整 mock 层）
+- 与 `@mugsun/track-web` 平级联调路径（`pnpm setup:sdk`）
+
+**暂未提供**
+
+- 脱离 boot 的独立后端或可替换完整 mock 服务
+- 可公开访问的在线演示环境（本地通过 boot + 本仓联调，见 [演示说明](https://docs.mugsun.com/demo)）
+
+页面路由、环境变量与脚本以 [文档](https://docs.mugsun.com/pc/) 及源码为准。
+
+## 关联项目
+
+开源主线：`boot` · `core` · `pc` · `track` · [mugsun-docs](https://github.com/mugsun/mugsun-docs)。
+
+| 仓库 | 与本仓库的关系 |
+| --- | --- |
+| [mugsun-boot](https://github.com/mugsun/mugsun-boot) | 后端 API；CORS / OAuth 回跳默认指向本仓开发端口 `3006` |
+| [mugsun-track](https://github.com/mugsun/mugsun-track) | 浏览器 SDK；本仓以 `file:` 引用，业务项目宜用 npm 包 |
+| [mugsun-core](https://github.com/mugsun/mugsun-core) | 后端共享内核；本仓不直接依赖 |
+| [mugsun-docs](https://github.com/mugsun/mugsun-docs) | 文档站 [docs.mugsun.com](https://docs.mugsun.com/) |
+
+## 本地开发
+
+```bash
+pnpm test          # vitest
+pnpm test:e2e      # playwright（见仓库配置）
+pnpm lint          # eslint
+pnpm gen:api       # 自 boot OpenAPI 生成类型（须 boot 已启动）
+```
+
+## 许可
 
 [MIT](./LICENSE) · UI 基座致谢见 [NOTICE](./NOTICE)
