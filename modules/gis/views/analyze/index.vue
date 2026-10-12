@@ -217,7 +217,7 @@
       try {
         pasted = parsePayload()
       } catch {
-        result.value = undefined
+        result.value = null
         bag?.overlays.clear()
         ElMessage.warning(t('pages.gis.layerBadPayload'))
         return
@@ -241,7 +241,7 @@
       await nextTick()
       await preview()
     } catch {
-      result.value = undefined
+      result.value = null
       bag?.overlays.clear()
     } finally {
       running.value = false

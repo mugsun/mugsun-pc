@@ -300,7 +300,7 @@
 
   const showDialog = (type: 'add' | 'edit', row?: Record<string, any>): void => {
     dialogType.value = type
-    const next =
+    const next: Record<string, any> =
       type === 'add' ? { parentId: row?.id ?? 0, code: row?.code ?? '' } : { ...(row || {}) }
     if (next.parentId === '0' || next.parentId === 0) next.parentId = 0
     if (next.isSealed == null) next.isSealed = 0
