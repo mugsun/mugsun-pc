@@ -6,8 +6,6 @@ import language from './locales'
 import { provideGlobalConfig } from 'element-plus'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import en from 'element-plus/es/locale/lang/en'
-import formCreate from '@form-create/element-ui'
-import FcDesigner from '@form-create/designer'
 import '@styles/core/tailwind.css'
 import '@styles/index.scss'
 import '@utils/sys/console.ts'
@@ -69,8 +67,6 @@ async function bootstrap() {
       provideGlobalConfig({ locale: elementLocale(lang) }, app, true)
     }
   )
-  app.use(formCreate)
-  app.use(FcDesigner)
 
   if (enableGis) {
     const loaders = Object.values(gisPickMods)
