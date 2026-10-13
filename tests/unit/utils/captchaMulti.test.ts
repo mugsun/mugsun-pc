@@ -2,6 +2,7 @@ import { describe, expect, it, vi } from 'vitest'
 
 vi.mock('@/locales', () => ({ $t: (key: string) => key }))
 
+const { HttpError } = await import('@/utils/http/error')
 const m = await import('@/utils/captcha')
 
 describe('题型分发', () => {
@@ -112,5 +113,25 @@ describe('buildPayload', () => {
     const p = m.buildPayload({ captchaId: 'a', displayWidth: 300, inputMode: 'keyboard', part })
     expect(p.keyPresses).toBe(18)
     expect(p).not.toHaveProperty('type')
+  })
+})
+
+describe('v0.4 verify 错误', () => {
+  it('触发锁定的 verify 返回 40012：限流并带 retryAfter（立即倒计时）', () => {
+    const e = new HttpError('尝试次数过多', 40012, { data: { retryAfter: 600 } })
+    expect(m.classifyVerifyError(e)).toMatchObject({ kind: 'rateLimited', retryAfter: 600 })
+  })
+  it('verify 连接错误按 40011 处理', () => {
+    expect(m.classifyVerifyError(new HttpError('net', 400))).toMatchObject({
+      kind: 'failed',
+      code: 40011
+    })
+    expect(m.classifyVerifyError(new TypeError('Failed to fetch'))).toMatchObject({
+      kind: 'failed'
+    })
+  })
+  it('40011 / 40010 原样', () => {
+    expect(m.classifyVerifyError(new HttpError('x', 40011)).kind).toBe('failed')
+    expect(m.classifyVerifyError(new HttpError('x', 40010)).kind).toBe('expired')
   })
 })

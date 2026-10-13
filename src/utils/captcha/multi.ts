@@ -8,7 +8,12 @@
  * @module utils/captcha/multi
  */
 import type { CaptchaAnswer, InputMode, TrackPoint, VerifyPayload } from './index'
-import { clampDisplayWidth } from './index'
+import {
+  CaptchaCode,
+  clampDisplayWidth,
+  classifyCaptchaError,
+  type CaptchaErrorInfo
+} from './index'
 
 export const CAPTCHA_TYPES = ['SLIDER', 'ROTATE', 'WORD_CLICK', 'ICON_CLICK', 'JIGSAW'] as const
 export type BehaviorCaptchaType = (typeof CAPTCHA_TYPES)[number]
@@ -18,8 +23,8 @@ export const KEYBOARD_TYPES: readonly BehaviorCaptchaType[] = ['SLIDER', 'ROTATE
 
 /** 点选需要点击的数量 */
 export const CLICK_COUNT = 3
-/** 旋转键盘缺省步长（度） */
-export const DEFAULT_ROTATE_STEP_DEG = 5
+/** 旋转键盘缺省步长（度）；15° 让键盘几下就能转正 */
+export const DEFAULT_ROTATE_STEP_DEG = 15
 
 export type CaptchaPanelKind = 'slider' | 'rotate' | 'click' | 'jigsaw'
 
@@ -160,4 +165,15 @@ export function buildPayload(input: {
     answer: part.answer,
     keyPresses: input.inputMode === 'keyboard' ? (part.keyPresses ?? 0) : null
   }
+}
+
+/**
+ * verify 阶段错误分类（v0.4）：
+ * - 40012（触发锁定的那次失败）→ rateLimited，带 retryAfter，壳组件立即倒计时；
+ * - 连接错误 / 被截断 → 按 40011 处理（failed，换图重试）。
+ */
+export function classifyVerifyError(err: unknown): CaptchaErrorInfo {
+  const info = classifyCaptchaError(err)
+  if (info.kind === 'network') return { ...info, kind: 'failed', code: CaptchaCode.FAILED }
+  return info
 }

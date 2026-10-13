@@ -4,7 +4,8 @@
  *
  * 指定题型（仅 mock）：URL `?captchaType=ROTATE` 或 sessionStorage `captchaMockType`；缺省随机。
  * keyboard 题只出 SLIDER / ROTATE（与后端约定一致）。
- * 规则模拟服务端：一次一机会、过期 120s、连续失败 5 次限流 10 秒；容差放宽（难度低）。
+ * 规则模拟服务端：一次一机会、过期 120s、连续失败 5 次限流 10 秒。
+ * 难度低（目标 1–2 秒）：滑块 ±8px、旋转 ±25°（键盘 15°/步）、点选 3 个无干扰项且半径 32px、拼图 2×2 只交换一对（一步还原）。
  */
 import { HttpError } from '@/utils/http/error'
 import {
@@ -13,7 +14,6 @@ import {
   CAPTCHA_TYPES,
   CLICK_COUNT,
   DEFAULT_KEYBOARD_STEP_PX,
-  DEFAULT_ROTATE_STEP_DEG,
   KEYBOARD_TYPES,
   isBehaviorType,
   type BehaviorCaptchaType,
@@ -28,9 +28,10 @@ const PIECE = 46
 const PIECE_W = 68
 const ROT_SIZE = 200
 const EXPIRE = 120
-const TOLERANCE = 6
-const ROT_TOLERANCE = 12
-const CLICK_RADIUS = 24
+const TOLERANCE = 8
+const ROT_TOLERANCE = 25
+const CLICK_RADIUS = 32
+const ROTATE_KEY_STEP = 15
 
 type Answer =
   | { type: 'SLIDER'; x: number }
@@ -146,7 +147,7 @@ function genSlider() {
 
 function genRotate() {
   // 图片被逆时针转了 r°，用户顺时针转 r° 即正
-  const r = rand(40, 320)
+  const r = rand(60, 300)
   const [c, ctx] = canvas(ROT_SIZE, ROT_SIZE)
   ctx.save()
   ctx.beginPath()
@@ -199,10 +200,10 @@ const ICONS: { draw: (c: CanvasRenderingContext2D, s: number) => void }[] = [
 ]
 
 function iconImage(i: number) {
-  const [c, ctx] = canvas(40, 40)
-  ctx.translate(20, 20)
+  const [c, ctx] = canvas(48, 48)
+  ctx.translate(24, 24)
   ctx.fillStyle = '#2B4FCC'
-  ICONS[i].draw(ctx, 13)
+  ICONS[i].draw(ctx, 16)
   return c.toDataURL('image/png')
 }
 
@@ -210,8 +211,8 @@ function iconImage(i: number) {
 function spots(n: number) {
   const pts: { x: number; y: number }[] = []
   while (pts.length < n) {
-    const p = { x: rand(30, BG_W - 30), y: rand(28, BG_H - 28) }
-    if (pts.every((q) => Math.hypot(q.x - p.x, q.y - p.y) > 60)) pts.push(p)
+    const p = { x: rand(36, BG_W - 36), y: rand(36, BG_H - 36) }
+    if (pts.every((q) => Math.hypot(q.x - p.x, q.y - p.y) > 96)) pts.push(p)
   }
   return pts
 }
@@ -226,7 +227,7 @@ function shuffle<T>(arr: T[]) {
 }
 
 function genClick(kind: 'WORD_CLICK' | 'ICON_CLICK') {
-  const total = CLICK_COUNT + 1 // 多一个干扰项
+  const total = CLICK_COUNT // 难度低：不放干扰项
   const pool =
     kind === 'WORD_CLICK' ? shuffle(WORDS.map((_, i) => i)) : shuffle(ICONS.map((_, i) => i))
   const chosen = pool.slice(0, total)
@@ -239,17 +240,17 @@ function genClick(kind: 'WORD_CLICK' | 'ICON_CLICK') {
     b.translate(p.x, p.y)
     b.fillStyle = 'rgba(255,255,255,0.85)'
     b.beginPath()
-    b.arc(0, 0, 19, 0, Math.PI * 2)
+    b.arc(0, 0, 26, 0, Math.PI * 2)
     b.fill()
     b.fillStyle = '#2B4FCC'
     if (kind === 'WORD_CLICK') {
-      b.rotate(((i % 2 ? 1 : -1) * rand(5, 20) * Math.PI) / 180)
-      b.font = 'bold 24px "PingFang SC","Microsoft YaHei",sans-serif'
+      b.rotate(((i % 2 ? 1 : -1) * rand(0, 6) * Math.PI) / 180)
+      b.font = 'bold 32px "PingFang SC","Microsoft YaHei",sans-serif'
       b.textAlign = 'center'
       b.textBaseline = 'middle'
       b.fillText(WORDS[id], 0, 1)
     } else {
-      ICONS[id].draw(b, 12)
+      ICONS[id].draw(b, 16)
     }
     b.restore()
   })
@@ -271,8 +272,12 @@ function genClick(kind: 'WORD_CLICK' | 'ICON_CLICK') {
 function genJigsaw() {
   const grid = 2
   const n = grid * grid
-  let perm = shuffle(Array.from({ length: n }, (_, i) => i))
-  while (perm.every((v, i) => v === i)) perm = shuffle(perm)
+  // 难度低：只交换一对格子，一步即可还原
+  const perm = Array.from({ length: n }, (_, i) => i)
+  const a = rand(0, n - 1)
+  let b2 = rand(0, n - 2)
+  if (b2 >= a) b2++
+  ;[perm[a], perm[b2]] = [perm[b2], perm[a]]
   // 原图
   const [src, s] = canvas(BG_W, BG_H)
   paintScene(s, BG_W, BG_H)
@@ -348,7 +353,7 @@ export async function mockChallenge(inputMode: InputMode = 'pointer'): Promise<C
   const keyboardStep =
     mode === 'keyboard'
       ? type === 'ROTATE'
-        ? DEFAULT_ROTATE_STEP_DEG
+        ? ROTATE_KEY_STEP
         : DEFAULT_KEYBOARD_STEP_PX
       : undefined
   return {
@@ -370,18 +375,16 @@ function judge(answer: Answer, data: VerifyPayload): boolean {
     case 'SLIDER': {
       const real = Number(a.x) * scale
       const modeOk = kb
-        ? presses >= 3 &&
-          dur >= 600 &&
-          Math.abs(presses - Math.round(real / DEFAULT_KEYBOARD_STEP_PX)) <= 1
-        : dur >= 300 && data.track.length >= 8
+        ? presses >= 1 && Math.abs(presses - Math.round(real / DEFAULT_KEYBOARD_STEP_PX)) <= 1
+        : dur >= 150 && data.track.length >= 4
       return modeOk && Math.abs(real - answer.x) <= TOLERANCE
     }
     case 'ROTATE': {
       const angle = Number(a.angle)
       const diff = Math.abs(((angle - answer.angle + 540) % 360) - 180)
       const modeOk = kb
-        ? presses >= 3 && Math.abs(presses - Math.round(angle / DEFAULT_ROTATE_STEP_DEG)) <= 1
-        : dur >= 300 && data.track.length >= 4
+        ? presses >= 1 && Math.abs(presses - Math.round(angle / ROTATE_KEY_STEP)) <= 1
+        : dur >= 150 && data.track.length >= 4
       return modeOk && diff <= ROT_TOLERANCE
     }
     case 'CLICK': {

@@ -102,6 +102,7 @@
     buildPayload,
     clampDisplayWidth,
     classifyCaptchaError,
+    classifyVerifyError,
     resolvePanel,
     type CaptchaPanelKind,
     type InputMode,
@@ -236,14 +237,12 @@
     }, 1000)
   }
 
-  function handleError(err: unknown) {
+  function handleError(err: unknown, verifying = false) {
     if (!alive) return
-    const info = classifyCaptchaError(err)
+    // v0.4：verify 阶段 40012 直接倒计时；连接错误按 40011 处理
+    const info = verifying ? classifyVerifyError(err) : classifyCaptchaError(err)
     switch (info.kind) {
       case 'failed':
-      case 'network':
-        // v0.4：verify 被截断的连接错误按 40011 处理
-        if (info.kind === 'network' && status.value !== 'verifying') break
         announce.value = t('pages.auth.slider.failed')
         status.value = 'failed'
         shaking.value = true
@@ -292,7 +291,7 @@
         emit('update:visible', false)
       }, 600)
     } catch (err) {
-      handleError(err)
+      handleError(err, true)
     }
   }
 
@@ -527,10 +526,11 @@
     display: inline-flex;
     align-items: center;
     justify-content: center;
-    min-width: 30px;
-    height: 30px;
-    padding: 0 4px;
-    font-size: 18px;
+    min-width: 38px;
+    height: 38px;
+    padding: 0 6px;
+    font-size: 22px;
+    font-weight: 600;
     color: var(--el-color-primary);
     background: var(--el-color-primary-light-9);
     border: 1px solid var(--el-color-primary-light-5);
@@ -538,8 +538,8 @@
   }
 
   .captcha-box .cp-chip--icon {
-    width: 30px;
-    padding: 3px;
+    width: 38px;
+    padding: 4px;
   }
 
   .captcha-box .cp-chip.is-done {

@@ -667,7 +667,7 @@
         "enterUsernameFirst": "Account is required. Enter the account, then request a verification code.",
         "resetRequired": "Account, verification code, and new password are required. Fill in all three, then reset again.",
         "enterCaptchaFirst": "Please enter the image captcha first",
-        "codeSent": "If the account exists, a verification code has been sent to its email",
+        "codeSent": "If the account exists, a verification code has been sent to its linked email.",
         "passwordMismatch": "The two passwords do not match",
         "passwordRule": "At least 8 characters, containing at least 3 of: uppercase, lowercase, digit, special character",
         "resetSuccess": "Password has been reset. Please log in with your new password"
