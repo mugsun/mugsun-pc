@@ -51,6 +51,15 @@
     </div>
 
     <ElCard class="art-table-card">
+      <ElAlert
+        v-if="devicesTruncated"
+        type="warning"
+        show-icon
+        :closable="false"
+        class="track-devices-truncated"
+        data-testid="track-devices-truncated"
+        :title="$t('pages.track.user.devicesTruncated', { n: deviceCount })"
+      />
       <div v-loading="loading && records.length === 0" class="track-timeline">
         <ElEmpty v-if="!searched" :description="$t('pages.track.user.emptyPrompt')" />
         <ElEmpty
@@ -201,6 +210,7 @@
   import ReplayPlayerDrawer from '@/views/track/shared/ReplayPlayerDrawer.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import {
+    ElAlert,
     ElButton,
     ElDatePicker,
     ElEmpty,
@@ -258,6 +268,9 @@
   // ===== 时间线数据（游标分页） =====
   const records = ref<any[]>([])
   const nextCursor = ref<string | null>(null)
+  /** 按 userId 查询时服务端最多归并 1000 台设备；超出时 devicesTruncated=true，提示改按 distinctId 查 */
+  const devicesTruncated = ref(false)
+  const deviceCount = ref(0)
   const loading = ref(false)
   const loadingMore = ref(false)
   /** 是否已发起过查询（区分「未选用户」与「无数据」空态） */
@@ -419,6 +432,7 @@
     }
     records.value = []
     nextCursor.value = null
+    devicesTruncated.value = false
     expandedId.value = ''
     searched.value = true
     loading.value = true
@@ -454,12 +468,17 @@
     const resp: any = await fetchTrackUserTimeline(params)
     records.value = [...records.value, ...(resp?.records ?? [])]
     nextCursor.value = resp?.nextCursor ?? null
+    if (!cursor) {
+      devicesTruncated.value = resp?.devicesTruncated === true
+      deviceCount.value = Number(resp?.deviceCount ?? 0)
+    }
   }
 
   // 应用切换：旧应用的时间线结果作废，回到待查询空态
   watch(appKey, () => {
     records.value = []
     nextCursor.value = null
+    devicesTruncated.value = false
     searched.value = false
     expandedId.value = ''
   })
@@ -701,5 +720,9 @@
         text-align: center;
       }
     }
+  }
+
+  .track-devices-truncated {
+    margin-bottom: 12px;
   }
 </style>
