@@ -159,6 +159,13 @@ export class TrackRecorder {
   }
 }
 
+/** 各题型答案（多类型为假设字段，待契约 v0.5） */
+export type CaptchaAnswer =
+  | { x: number }
+  | { angle: number }
+  | { points: { x: number; y: number }[] }
+  | { order: number[] }
+
 export interface VerifyPayload {
   captchaId: string
   bgDisplayWidth: number
@@ -166,7 +173,7 @@ export interface VerifyPayload {
   endTime: number
   inputMode: InputMode
   track: TrackPoint[]
-  answer: { x: number }
+  answer: CaptchaAnswer
   /** keyboard 模式必填：按键次数；pointer 模式为 null */
   keyPresses: number | null
 }
@@ -265,3 +272,5 @@ export function classifyCaptchaError(err: unknown): CaptchaErrorInfo {
 export function isCaptchaRequired(err: unknown): boolean {
   return classifyCaptchaError(err).kind === 'required'
 }
+
+export * from './multi'

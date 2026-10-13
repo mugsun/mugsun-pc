@@ -714,7 +714,25 @@
         "close": "关闭",
         "ariaLabel": "拼图滑块，拖动或使用方向键移动拼图块",
         "keyboardHint": "使用左右方向键移动拼图块，按住 Shift 大步移动，按 Enter 提交",
-        "modeSwitched": "已切换输入方式，请重新完成验证"
+        "modeSwitched": "已切换输入方式，请重新完成验证",
+        "fallback": "验证方式已切换为图形验证码，请填写后重新提交",
+        "useKeyboard": "改用键盘",
+        "usePointer": "改用鼠标 / 触屏",
+        "rotateHint": "拖动滑块，把图片转正",
+        "rotateAria": "旋转滑块，拖动或使用左右方向键旋转图片，当前 {deg} 度",
+        "rotateKeyboardHint": "使用左右方向键旋转图片，按 Enter 提交",
+        "wordHint": "请依次点击：",
+        "iconHint": "请依次点击图标：",
+        "clickAria": "点选区域，按提示顺序点击图中内容",
+        "clickProgress": "已选 {n} / {total}",
+        "clickMarker": "第 {n} 个点，点击撤销",
+        "undo": "撤销",
+        "clickKeyboardNote": "点选题不支持键盘，可点「改用键盘」换一种题",
+        "jigsawHint": "点击两块交换位置，还原图片",
+        "jigsawTile": "第 {n} 块",
+        "jigsawSelected": "已选中第 {n} 块，再点另一块交换",
+        "jigsawSubmit": "完成",
+        "jigsawKeyboardNote": "拼图题不支持键盘，可点「改用键盘」换一种题"
       }
     },
     "dashboard": {

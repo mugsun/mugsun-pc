@@ -94,4 +94,28 @@ describe('useCaptchaGate', () => {
     expect(fn).toHaveBeenCalledTimes(2)
     expect(fn).toHaveBeenLastCalledWith('t2')
   })
+
+  it('config.type=RANDOM / ROTATE：走行为验证码', async () => {
+    fetchCaptchaConfig.mockResolvedValueOnce({ enabled: true, type: 'RANDOM' })
+    const g = useCaptchaGate('login')
+    await g.loadConfig()
+    expect(g.sliderEnabled.value).toBe(true)
+    expect(g.legacyEnabled.value).toBe(false)
+    fetchCaptchaConfig.mockResolvedValueOnce({ enabled: true, type: 'ROTATE' })
+    await g.loadConfig()
+    expect(g.sliderEnabled.value).toBe(true)
+  })
+
+  it('challenge 下发未知题型：onFallback 取消本次并切旧数字码', async () => {
+    fetchCaptchaConfig.mockResolvedValue({ enabled: true, type: 'RANDOM' })
+    const g = useCaptchaGate('login')
+    await g.loadConfig()
+    const fn = vi.fn()
+    const p = g.run(fn)
+    g.onFallback()
+    await expect(p).rejects.toSatisfy(isCaptchaCancelled)
+    expect(fn).not.toHaveBeenCalled()
+    expect(g.legacyEnabled.value).toBe(true)
+    expect(g.sliderEnabled.value).toBe(false)
+  })
 })

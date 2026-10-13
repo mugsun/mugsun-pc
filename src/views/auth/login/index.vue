@@ -209,8 +209,8 @@
       </div>
     </div>
 
-    <!-- 滑块验证码弹层：账号登录（scene=login） -->
-    <SliderCaptcha
+    <!-- 行为验证码弹层（多题型）：账号登录（scene=login） -->
+    <CaptchaDialog
       v-model:visible="captchaGate.visible.value"
       scene="login"
       :client-id="captchaGate.clientId"
@@ -218,9 +218,10 @@
       @success="captchaGate.onSuccess"
       @skip="captchaGate.onSkip"
       @close="captchaGate.onClose"
+      @fallback="onCaptchaFallback(captchaGate)"
     />
-    <!-- 滑块验证码弹层：发送短信验证码（scene=sms，sms-login 不再需要 token） -->
-    <SliderCaptcha
+    <!-- 行为验证码弹层（多题型）：发送短信验证码（scene=sms，sms-login 不再需要 token） -->
+    <CaptchaDialog
       v-model:visible="smsGate.visible.value"
       scene="sms"
       :client-id="smsGate.clientId"
@@ -228,6 +229,7 @@
       @success="smsGate.onSuccess"
       @skip="smsGate.onSkip"
       @close="smsGate.onClose"
+      @fallback="onCaptchaFallback(smsGate)"
     />
   </div>
 </template>
@@ -240,7 +242,7 @@
   import { fetchLogin, fetchCaptcha, fetchTwoFactor, fetchSmsCode, fetchSmsLogin } from '@/api/auth'
   import { encryptPassword, isGmEncryptError } from '@/utils/gm'
   import { fetchSocialRender, fetchSocialSources } from '@/api/auth'
-  import SliderCaptcha from '@/components/core/captcha/SliderCaptcha.vue'
+  import CaptchaDialog from '@/components/core/captcha/CaptchaDialog.vue'
   import { useCaptchaGate, isCaptchaCancelled } from '@/hooks/core/useCaptchaGate'
   import { classifyCaptchaError } from '@/utils/captcha'
   import { connectMessageSocket } from '@/utils/socket'
@@ -461,6 +463,14 @@
   })
 
   // 加载图形验证码（仅旧数字码模式）
+  /** challenge 下发未知题型：回退旧数字码，提示用户填写后重新提交 */
+  const onCaptchaFallback = (gate: ReturnType<typeof useCaptchaGate>) => {
+    captchaGate.onFallback()
+    if (gate !== captchaGate) gate.onFallback()
+    loadCaptcha()
+    ElMessage.info(t('pages.auth.slider.fallback'))
+  }
+
   const loadCaptcha = async () => {
     if (!captchaGate.legacyEnabled.value) return
     try {

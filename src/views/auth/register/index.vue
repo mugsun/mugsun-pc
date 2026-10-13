@@ -118,7 +118,7 @@
         </div>
       </div>
     </div>
-    <SliderCaptcha
+    <CaptchaDialog
       v-model:visible="captchaGate.visible.value"
       scene="register"
       :client-id="captchaGate.clientId"
@@ -126,6 +126,7 @@
       @success="captchaGate.onSuccess"
       @skip="captchaGate.onSkip"
       @close="captchaGate.onClose"
+      @fallback="onCaptchaFallback"
     />
   </div>
 </template>
@@ -135,7 +136,7 @@
   import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
   import { fetchRegister, fetchCaptcha } from '@/api/auth'
   import { encryptPassword, isGmEncryptError } from '@/utils/gm'
-  import SliderCaptcha from '@/components/core/captcha/SliderCaptcha.vue'
+  import CaptchaDialog from '@/components/core/captcha/CaptchaDialog.vue'
   import { useCaptchaGate, isCaptchaCancelled } from '@/hooks/core/useCaptchaGate'
 
   defineOptions({ name: 'Register' })
@@ -179,6 +180,13 @@
   const captchaUuid = ref('')
   // 验证码闸门：滑块（SLIDER）/ 旧数字码（IMAGE 或旧后端）/ 关闭
   const captchaGate = useCaptchaGate('register')
+  /** challenge 下发未知题型：回退旧数字码，提示用户填写后重新提交 */
+  const onCaptchaFallback = () => {
+    captchaGate.onFallback()
+    loadCaptcha()
+    ElMessage.info(t('pages.auth.slider.fallback'))
+  }
+
   const loadCaptcha = async () => {
     if (!captchaGate.legacyEnabled.value) return
     try {

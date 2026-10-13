@@ -714,7 +714,25 @@
         "close": "Close",
         "ariaLabel": "Puzzle slider. Drag or use arrow keys to move the piece",
         "keyboardHint": "Use the Left/Right arrow keys to move the piece, hold Shift for larger steps, press Enter to submit",
-        "modeSwitched": "Input mode changed — please complete the puzzle again"
+        "modeSwitched": "Input mode changed — please complete the puzzle again",
+        "fallback": "Switched to the image code. Fill it in and submit again",
+        "useKeyboard": "Use keyboard",
+        "usePointer": "Use mouse / touch",
+        "rotateHint": "Drag the slider to turn the picture upright",
+        "rotateAria": "Rotation slider. Drag or use the Left/Right arrow keys to rotate, currently {deg} degrees",
+        "rotateKeyboardHint": "Use the Left/Right arrow keys to rotate the picture, press Enter to submit",
+        "wordHint": "Click in order:",
+        "iconHint": "Click the icons in order:",
+        "clickAria": "Click area. Click the items in the order shown",
+        "clickProgress": "{n} / {total} selected",
+        "clickMarker": "Point {n}, click to undo",
+        "undo": "Undo",
+        "clickKeyboardNote": "This puzzle can't be done by keyboard. Choose “Use keyboard” for another one",
+        "jigsawHint": "Tap two tiles to swap them and restore the picture",
+        "jigsawTile": "Tile {n}",
+        "jigsawSelected": "Tile {n} selected, tap another tile to swap",
+        "jigsawSubmit": "Done",
+        "jigsawKeyboardNote": "This puzzle can't be done by keyboard. Choose “Use keyboard” for another one"
       }
     },
     "dashboard": {
