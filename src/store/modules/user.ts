@@ -24,8 +24,11 @@
  *
  * ## 持久化
  *
- * - 使用 localStorage 存储
- * - 存储键：sys-v{version}-user
+ * - localStorage（键 sys-v{version}-user）：仅非敏感字段 language、info、searchHistory
+ * - sessionStorage（键 sys-v{version}-user-session）：accessToken、refreshToken、isLogin
+ *   （仅当前标签页有效，关闭即失效；新标签页需重新登录）
+ * - 不持久化：lockPassword、isLock（刷新后锁屏态丢失，可接受：锁屏态无密码时不应单独恢复）
+ * - isLogin 与 token 同存 sessionStorage，避免出现「已登录但无 token」的异常态
  * - 登出时自动清理
  *
  * @module store/modules/user
@@ -235,9 +238,17 @@ export const useUserStore = defineStore(
     }
   },
   {
-    persist: {
-      key: 'user',
-      storage: localStorage
-    }
+    persist: [
+      {
+        key: 'user',
+        storage: localStorage,
+        pick: ['language', 'info', 'searchHistory']
+      },
+      {
+        key: 'user-session',
+        storage: sessionStorage,
+        pick: ['accessToken', 'refreshToken', 'isLogin']
+      }
+    ]
   }
 )
