@@ -165,8 +165,19 @@
       width="460px"
       destroy-on-close
     >
-      <ElForm :model="catalogForm" label-width="90px">
-        <ElFormItem :label="$t('pages.system.helpDoc.catalogName')" required>
+      <ElForm ref="catalogFormRef" :model="catalogForm" label-width="90px">
+        <ElFormItem
+          :label="$t('pages.system.helpDoc.catalogName')"
+          prop="name"
+          :rules="[
+            {
+              required: true,
+              whitespace: true,
+              message: t('pages.system.helpDoc.catalogNamePlaceholder'),
+              trigger: 'blur'
+            }
+          ]"
+        >
           <ElInput
             v-model="catalogForm.name"
             :placeholder="$t('pages.system.helpDoc.catalogNamePlaceholder')"
@@ -192,8 +203,19 @@
       align-center
       destroy-on-close
     >
-      <ElForm :model="docForm" label-width="70px">
-        <ElFormItem :label="$t('pages.system.helpDoc.title')" required>
+      <ElForm ref="docFormRef" :model="docForm" label-width="70px">
+        <ElFormItem
+          :label="$t('pages.system.helpDoc.title')"
+          prop="title"
+          :rules="[
+            {
+              required: true,
+              whitespace: true,
+              message: t('pages.system.helpDoc.docTitlePlaceholder'),
+              trigger: 'blur'
+            }
+          ]"
+        >
           <ElInput
             v-model="docForm.title"
             :placeholder="$t('pages.system.helpDoc.docTitlePlaceholder')"
@@ -247,7 +269,8 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, onDeactivated, onMounted, reactive, ref } from 'vue'
+  import type { FormInstance } from 'element-plus'
+  import { computed, nextTick, onDeactivated, onMounted, reactive, ref } from 'vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import ArtWangEditor from '@/components/core/forms/art-wang-editor/index.vue'
   import {
@@ -294,6 +317,8 @@
   }
 
   const catalogDialog = ref(false)
+  const catalogFormRef = ref<FormInstance>()
+  const docFormRef = ref<FormInstance>()
   const catalogForm = reactive<any>({ id: undefined, parentId: 0, name: '', sort: 0 })
 
   const closeDialogs = (): void => {
@@ -316,11 +341,11 @@
       })
     }
     catalogDialog.value = true
+    nextTick(() => catalogFormRef.value?.clearValidate())
   }
 
   const submitCatalog = async () => {
-    if (!catalogForm.name?.trim())
-      return ElMessage.warning(t('pages.system.helpDoc.catalogNamePlaceholder'))
+    if (!(await catalogFormRef.value?.validate().catch(() => false))) return
     submitting.value = true
     try {
       await fetchSaveHelpCatalog({ ...catalogForm })
@@ -419,11 +444,11 @@
       })
     }
     docDialog.value = true
+    nextTick(() => docFormRef.value?.clearValidate())
   }
 
   const submitDoc = async () => {
-    if (!docForm.title?.trim())
-      return ElMessage.warning(t('pages.system.helpDoc.docTitlePlaceholder'))
+    if (!(await docFormRef.value?.validate().catch(() => false))) return
     submitting.value = true
     try {
       await fetchSaveHelpDoc({ ...docForm })
