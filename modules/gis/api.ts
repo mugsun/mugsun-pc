@@ -1,4 +1,5 @@
 import request from '@/utils/http'
+import { rememberAttributions } from './lib/attribution'
 
 export type GisId = string | number
 
@@ -7,6 +8,34 @@ export interface GisProviderStatus {
   configured: boolean
   enabled: boolean
   id?: number
+  /** 底图版权归属文本（纯文本），地图右下角显示 */
+  attribution?: string
+  /** 自定义瓦片的最大缩放级别 */
+  maxZoom?: number | null
+}
+
+export interface GisXyzTemplate {
+  url: string
+  subdomains: string[]
+  attribution: string
+  maxZoom: number
+  code?: string
+}
+
+export interface GisXyzConfig {
+  available: boolean
+  allowedHosts: string[]
+  usingDefault: boolean
+  current: GisXyzTemplate | null
+  presets: GisXyzTemplate[]
+}
+
+export interface GisProviderTestResult {
+  ok: boolean
+  status?: number
+  bytes?: number
+  millis?: number
+  message?: string
 }
 
 export interface GisStatus {
@@ -35,7 +64,20 @@ export interface GisScene {
 }
 
 export function fetchGisStatus() {
-  return request.get<GisStatus>({ url: '/api/system/gis/status' })
+  return request.get<GisStatus>({ url: '/api/system/gis/status' }).then((status) => {
+    rememberAttributions(status?.providers)
+    return status
+  })
+}
+
+/** 自定义瓦片：当前配置、预设与部署白名单 */
+export function fetchGisXyzConfig() {
+  return request.get<GisXyzConfig>({ url: '/api/system/gis/provider/xyz' })
+}
+
+/** 测试取一张瓦片（可带未保存的草稿 extraJson） */
+export function fetchTestGisProvider(data: Record<string, unknown>) {
+  return request.post<GisProviderTestResult>({ url: '/api/system/gis/provider/test', data })
 }
 
 export function fetchGisProviderList() {
