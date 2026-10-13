@@ -196,6 +196,7 @@
   import type { FormInstance, FormRules } from 'element-plus'
   import { ElMessageBox } from 'element-plus'
   import formCreate from '@form-create/element-ui'
+  import { useFcDesigner } from '@/plugins/form-create'
   import {
     fetchFormPage,
     fetchFormDetail,
@@ -208,6 +209,9 @@
   import { useI18n } from 'vue-i18n'
 
   defineOptions({ name: 'FormDesigner' })
+
+  // 按需注册 form-create + FcDesigner（随本路由懒加载）
+  useFcDesigner()
 
   const { t } = useI18n()
 
