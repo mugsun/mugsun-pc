@@ -12,6 +12,20 @@ import ElementPlus from 'element-plus'
 import 'element-plus/dist/index.css'
 import formCreate from '@form-create/element-ui'
 import FcDesigner from '@form-create/designer'
+import { enableGis } from '@/modules/flags'
+
+// 可选 GIS 模块的「地图选点」组件依赖 form-create / FcDesigner，
+// 随本插件（仅表单相关路由引入）一起加载，避免启动时把两大包拉进首屏
+const gisPickMods = import.meta.glob<{ registerGisPick: () => void }>(
+  '../../modules/gis/components/registerGisPick.ts',
+  { eager: true }
+)
+let gisPickRegistered = false
+function registerOptionalGisPick(): void {
+  if (gisPickRegistered || !enableGis) return
+  gisPickRegistered = true
+  Object.values(gisPickMods)[0]?.registerGisPick()
+}
 
 const installed = new WeakMap<App, { formCreate?: boolean; designer?: boolean }>()
 
@@ -30,6 +44,7 @@ export function useFormCreate(): void {
     //（app.use 对同一插件幂等，与入口全量注册并存时无副作用）
     app.use(ElementPlus)
     app.use(formCreate)
+    registerOptionalGisPick()
     state.formCreate = true
     installed.set(app, state)
   }
