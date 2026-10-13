@@ -8,6 +8,8 @@
  * @author Mugsun
  */
 import { getCurrentInstance, type App } from 'vue'
+import ElementPlus from 'element-plus'
+import 'element-plus/dist/index.css'
 import formCreate from '@form-create/element-ui'
 import FcDesigner from '@form-create/designer'
 
@@ -24,6 +26,9 @@ export function useFormCreate(): void {
   const app = currentApp()
   const state = installed.get(app) ?? {}
   if (!state.formCreate) {
+    // form-create 通过 resolveComponent 使用全局 El 组件；入口改为按需后需在此补全局注册
+    //（app.use 对同一插件幂等，与入口全量注册并存时无副作用）
+    app.use(ElementPlus)
     app.use(formCreate)
     state.formCreate = true
     installed.set(app, state)
