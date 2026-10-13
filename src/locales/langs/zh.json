@@ -3431,6 +3431,7 @@
       },
       "app": {
         "tabHealth": "接入健康",
+        "healthNote": "拒绝计数按请求里的 appKey 归属。appKey 在浏览器中公开，计数可能包含并非来自 SDK 的请求（例如他人伪造的请求），请结合 SDK 自检 tracker.selfCheck() 判断。",
         "healthRefresh": "刷新",
         "healthEmpty": "暂无埋点应用，先在「应用管理」新增应用",
         "healthLoadFailed": "接入健康加载失败",

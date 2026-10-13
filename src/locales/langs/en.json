@@ -3431,6 +3431,7 @@
       },
       "app": {
         "tabHealth": "Integration health",
+        "healthNote": "Rejections are attributed by the appKey in the request. The appKey is public, so counts may include requests that didn't come from the SDK (for example forged ones); confirm with the SDK self-check tracker.selfCheck().",
         "healthRefresh": "Refresh",
         "healthEmpty": "No apps yet. Add one under App management first",
         "healthLoadFailed": "Failed to load integration health",

@@ -8,6 +8,19 @@ import { login } from './fixtures/auth'
  * 登录走真实后端。前置同其它 track 用例：mugsun-boot(:8080) + vite dev(:3007)。
  */
 const HOUR = 3_600_000
+/** 设置 E2E_SHOTS_DIR 时顺带留截图（文档/评审用），默认不截 */
+const SHOTS = process.env.E2E_SHOTS_DIR
+
+async function shot(page: Page, name: string): Promise<void> {
+  if (!SHOTS) return
+  // 等登录通知消失、抽屉过渡动画结束再截
+  await page
+    .locator('.el-notification')
+    .waitFor({ state: 'hidden', timeout: 8000 })
+    .catch(() => {})
+  await page.waitForTimeout(600)
+  await page.screenshot({ path: `${SHOTS}/${name}.png`, fullPage: false })
+}
 
 function ok(route: Route, data: unknown): Promise<void> {
   return route.fulfill({
@@ -30,6 +43,7 @@ test('空态：无应用', async ({ page }) => {
   await page.route('**/api/system/track/app/health/summary', (r) => ok(r, []))
   await openHealth(page)
   await expect(page.getByTestId('track-health-empty')).toBeVisible()
+  await shot(page, 'health-empty')
 })
 
 test('错误态 + 重试恢复', async ({ page }) => {
@@ -120,11 +134,15 @@ test('超时告警 / 从未收到 / 拒绝原因与修复建议', async ({ page 
   await expect(fresh.getByTestId('track-health-stale')).toHaveCount(0)
   await expect(fresh.getByTestId('track-health-last')).toContainText('分钟')
 
+  await expect(page.getByTestId('track-health-note')).toContainText('SDK')
+  await shot(page, 'health-tab')
+
   await stale.getByTestId('track-health-detail').click()
   const reasons = page.getByTestId('track-health-reason')
   await expect(reasons).toHaveCount(2)
   await expect(reasons.first()).toContainText('APP_DISABLED')
   await expect(reasons.first()).toContainText('在应用管理中启用')
+  await shot(page, 'health-drawer')
 })
 
 test('用户细查：devicesTruncated 提示改用 distinctId', async ({ page }) => {
@@ -135,6 +153,14 @@ test('用户细查：devicesTruncated 提示改用 distinctId', async ({ page })
   // 访客模式（distinctId）无需选用户；应用默认取种子应用，时间范围有默认值
   await page.locator('.el-radio-button').nth(1).click()
   await page.locator('.track-user-select input').fill('00000000-0000-0000-0000-000000000001')
-  await page.locator('.track-toolbar').getByRole('button').last().click()
+  // 应用列表加载完（选中应用）后查询按钮才可用；等到时间线请求真正发出
+  const searchBtn = page.locator('.track-toolbar').getByRole('button', { name: '查询' })
+  await expect(page.locator('.track-app-select')).not.toContainText('请选择', { timeout: 10_000 })
+  await expect(searchBtn).toBeEnabled()
+  await Promise.all([
+    page.waitForResponse('**/api/system/track/user/timeline?*'),
+    searchBtn.click()
+  ])
   await expect(page.getByTestId('track-devices-truncated')).toContainText('1000')
+  await shot(page, 'devices-truncated')
 })

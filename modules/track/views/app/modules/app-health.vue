@@ -6,6 +6,9 @@
         {{ $t('pages.track.app.healthRefresh') }}
       </ElButton>
     </div>
+    <p class="track-health-note" data-testid="track-health-note">
+      {{ $t('pages.track.app.healthNote') }}
+    </p>
 
     <div
       v-if="loading && !loaded"
@@ -243,6 +246,12 @@
 </script>
 
 <style scoped lang="scss">
+  .track-health-note {
+    margin: 0 0 12px;
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+  }
+
   .track-health-loading {
     min-height: 160px;
   }
