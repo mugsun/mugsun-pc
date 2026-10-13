@@ -20,6 +20,7 @@ jobs:
       - name: Checkout analytics SDK (mugsun-track)
         run: git clone --depth 1 https://github.com/mugsun/mugsun-track.git ../mugsun-track
 
+      # 版本取自 package.json 的 packageManager（pnpm@11.9.0，与 mugsun-track 一致）
       - name: Set up pnpm
         uses: pnpm/action-setup@v4
 
@@ -30,17 +31,21 @@ jobs:
           cache: pnpm
 
       - name: Build analytics SDK
-        run: pnpm --dir ../mugsun-track install && pnpm --dir ../mugsun-track build
+        run: pnpm --dir ../mugsun-track install --frozen-lockfile && pnpm --dir ../mugsun-track build
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # 为 ESLint 生成 auto-import 的全局声明文件，避免缺失导致 Lint 读取失败
-      - name: Generate ESLint auto-imports
-        run: pnpm exec vite build --emptyOutDir=false
+      # 先跑 vite（unplugin-auto-import / components）生成 src/types/import/*.d.ts，
+      # 这两个文件不入库；vue-tsc 与 ESLint 都依赖它们，必须在其之前生成
+      - name: Generate auto-imports.d.ts (vite build)
+        run: pnpm exec vite build
+
+      - name: Verify generated declarations
+        run: test -s src/types/import/auto-imports.d.ts && test -s src/types/import/components.d.ts
+
+      - name: Typecheck (vue-tsc)
+        run: pnpm run typecheck
 
       - name: Lint
         run: pnpm run lint
-
-      - name: Build
-        run: pnpm run build
