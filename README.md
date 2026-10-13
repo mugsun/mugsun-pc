@@ -120,4 +120,4 @@ pnpm gen:api       # 自 boot OpenAPI 生成类型（须 boot 已启动）
 
 ## 许可
 
-[MIT](./LICENSE) · UI 基座致谢见 [NOTICE](./NOTICE)
+[MIT](./LICENSE) · UI 基座致谢见 [NOTICE](./NOTICE) · © 2026 北京定旭晨 / mugsun
