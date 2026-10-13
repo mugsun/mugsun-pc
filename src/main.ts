@@ -3,10 +3,9 @@ import { createApp, watch } from 'vue'
 import { initStore } from './store'
 import { initRouter } from './router'
 import language from './locales'
-import ElementPlus, { provideGlobalConfig } from 'element-plus'
+import { provideGlobalConfig } from 'element-plus'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import en from 'element-plus/es/locale/lang/en'
-import 'element-plus/dist/index.css'
 import formCreate from '@form-create/element-ui'
 import FcDesigner from '@form-create/designer'
 import '@styles/core/tailwind.css'
@@ -18,7 +17,10 @@ import { installTrackApi, setupTrack } from './plugins/track'
 import { enableAi, enableGis, enableTrack } from '@/modules/flags'
 import { useUserStore } from './store/modules/user'
 
-/** MessageBox 渲染在组件树外，读的是 app.use 写入的全局 locale，不读 ConfigProvider。 */
+/**
+ * MessageBox 渲染在组件树外，不读 App.vue 的 ConfigProvider，
+ * 因此通过 provideGlobalConfig 写入 app 级全局 locale（组件与样式由 unplugin 按需引入）。
+ */
 function elementLocale(lang: string) {
   return lang === 'en' ? en : zhCn
 }
@@ -60,7 +62,7 @@ async function bootstrap() {
   }
 
   const userStore = useUserStore()
-  app.use(ElementPlus, { locale: elementLocale(userStore.language) })
+  provideGlobalConfig({ locale: elementLocale(userStore.language) }, app, true)
   watch(
     () => userStore.language,
     (lang) => {
