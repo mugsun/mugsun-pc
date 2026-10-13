@@ -1,24 +1,34 @@
-<!-- 旋转面板：拖滑条把圆图转正；键盘 ←/→ 按 keyboardStep（度）旋转，带 keyPresses -->
+<!--
+  旋转题（契约 v0.6.1）：background 浅化底图 + 居中叠放已旋转的圆图 piece；
+  拖动条与显示底图等宽，按滑块左边缘位移算，最大行程 = bgDisplayWidth（拖到最右 = 360°）。
+  键盘：每次 ←/→ 转 keyboardStep 度（服务端施加角为其整数倍，可精确转正）。
+-->
 <template>
   <div class="cp-panel">
-    <div class="cp-rotate-stage" :style="{ width: `${width}px`, height: `${diameter + 16}px` }">
-      <div class="cp-rotate-ring" :style="{ width: `${diameter}px`, height: `${diameter}px` }">
-        <img
-          class="cp-rotate-img"
-          :src="challenge.image"
-          alt=""
-          draggable="false"
-          :style="{ transform: `rotate(${angle}deg)` }"
-        />
-      </div>
+    <div class="cp-stage" :style="{ width: `${width}px`, height: `${stageHeight}px` }">
+      <img class="cp-img" :src="challenge.background" alt="" draggable="false" />
+      <img
+        class="cp-rotate-piece"
+        :src="challenge.piece"
+        alt=""
+        draggable="false"
+        :style="{
+          width: `${diameter}px`,
+          height: `${diameter}px`,
+          left: `${(width - diameter) / 2}px`,
+          top: `${(stageHeight - diameter) / 2}px`,
+          transform: `rotate(${angle}deg)`
+        }"
+      />
       <slot name="overlay" />
     </div>
     <div
+      ref="trackRef"
       class="cp-track"
       :class="{ 'is-active': dragging || offset > 0 }"
       :style="{ width: `${width}px` }"
     >
-      <div class="cp-fill" :style="{ width: `${offset + 22}px` }" />
+      <div class="cp-fill" :style="{ width: `${handleLeft + 22}px` }" />
       <span class="cp-track-text" aria-hidden="true">{{
         dragging ? '' : t('pages.auth.slider.rotateHint')
       }}</span>
@@ -34,7 +44,7 @@
         :aria-valuetext="`${Math.round(angle)}°`"
         :aria-disabled="disabled"
         aria-describedby="cp-rotate-kbd"
-        :style="{ transform: `translateX(${offset}px)` }"
+        :style="{ transform: `translateX(${handleLeft}px)` }"
         @pointerdown="onPointerDown"
         @pointermove="onPointerMove"
         @pointerup="onPointerUp"
@@ -55,10 +65,13 @@
     buildRotateAnswer,
     clampOffset,
     clampRotateSteps,
+    cssScale,
     keyboardPressCount,
     normalizeAngle,
-    offsetToAngle,
+    rotateAngleToTravel,
     rotateKeyboardStep,
+    rotateTravelToAngle,
+    toDisplay,
     type InputMode,
     type PanelSubmit
   } from '@/utils/captcha'
@@ -75,16 +88,29 @@
   const { t } = useI18n()
 
   const HANDLE = 44
+  /** 逻辑行程（显示像素，左边缘位移），[0, width] */
   const offset = ref(0)
   const angle = ref(0)
   const dragging = ref(false)
   const handleRef = ref<HTMLElement>()
+  const trackRef = ref<HTMLElement>()
   let recorder: TrackRecorder | null = null
   let startX = 0
+  let startY = 0
+  let scale = 1
   let keySteps = 0
 
-  const diameter = computed(() => Math.round(Math.min(170, props.width * 0.56)))
-  const max = computed(() => Math.max(1, props.width - HANDLE))
+  const bgW = computed(() => props.challenge.bgWidth || 320)
+  const stageHeight = computed(() =>
+    Math.round(toDisplay(props.challenge.bgHeight || 180, bgW.value, props.width))
+  )
+  const diameter = computed(() =>
+    Math.round(toDisplay(props.challenge.pieceSize || 160, bgW.value, props.width))
+  )
+  /** 滑块视觉位置：逻辑行程 [0, width] 映射到可视轨道 [0, width − 把手宽] */
+  const handleLeft = computed(
+    () => Math.round(((offset.value * (props.width - HANDLE)) / props.width) * 10) / 10
+  )
 
   function submit() {
     if (!recorder) return
@@ -105,23 +131,28 @@
       return
     }
     ;(e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId)
+    const el = trackRef.value
+    scale = el ? cssScale(el.getBoundingClientRect().width, el.offsetWidth) : 1
     dragging.value = true
-    startX = e.clientX - offset.value
-    recorder = new TrackRecorder(Date.now(), e.clientX, e.clientY)
+    offset.value = 0
+    startX = e.clientX
+    startY = e.clientY
+    // 轨迹 x = 逻辑行程（布局像素），首末位移 = answer 换算行程
+    recorder = new TrackRecorder(Date.now())
   }
   function onPointerMove(e: PointerEvent) {
     if (!dragging.value || !recorder) return
     e.preventDefault()
-    offset.value = clampOffset(e.clientX - startX, max.value)
-    angle.value = offsetToAngle(offset.value, max.value)
-    recorder.sample(e.clientX, e.clientY, Date.now())
+    offset.value = clampOffset((e.clientX - startX) / scale, props.width)
+    angle.value = rotateTravelToAngle(offset.value, props.width)
+    recorder.sample(offset.value, (e.clientY - startY) / scale, Date.now())
   }
   function onPointerUp(e: PointerEvent) {
     if (!dragging.value || !recorder) return
     dragging.value = false
     const el = e.currentTarget as HTMLElement
     if (el.hasPointerCapture?.(e.pointerId)) el.releasePointerCapture(e.pointerId)
-    recorder.sample(e.clientX, e.clientY, Date.now(), true)
+    recorder.sample(offset.value, (e.clientY - startY) / scale, Date.now(), true)
     if (offset.value <= 0) {
       recorder = null
       return
@@ -147,8 +178,9 @@
     const step = rotateKeyboardStep(props.challenge.keyboardStep)
     keySteps = clampRotateSteps(keySteps + presses, step)
     angle.value = normalizeAngle(keySteps * step)
-    offset.value = clampOffset((angle.value / 360) * max.value, max.value)
+    offset.value = rotateAngleToTravel(angle.value, props.width)
     recorder.key(offset.value, Date.now(), Math.abs(presses))
+    // 按键次数 = 净步数，服务端校验 |keyPresses − round(angle/step)| ≤ 1
     recorder.setKeyPresses(keySteps)
   }
 

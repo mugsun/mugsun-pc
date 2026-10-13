@@ -10,7 +10,8 @@
       :style="{
         width: `${width}px`,
         height: `${bgHeight}px`,
-        gridTemplateColumns: `repeat(${grid}, 1fr)`
+        gridTemplateColumns: `repeat(${cols}, 1fr)`,
+        gridTemplateRows: `repeat(${rows}, 1fr)`
       }"
     >
       <button
@@ -23,11 +24,7 @@
         :aria-label="t('pages.auth.slider.jigsawTile', { n: pos + 1 })"
         :aria-pressed="selected === pos"
         :disabled="disabled"
-        :style="{
-          backgroundImage: `url(${challenge.image})`,
-          backgroundSize: `${grid * 100}% ${grid * 100}%`,
-          backgroundPosition: tileBackgroundPosition(cell, grid)
-        }"
+        :style="{ backgroundImage: `url(${challenge.tiles[cell]})`, backgroundSize: '100% 100%' }"
         @pointerdown="onPointerDown($event, pos)"
         @pointermove="onPointerMove"
         @pointerup="onPointerUp($event, pos)"
@@ -58,7 +55,6 @@
     buildJigsawAnswer,
     initialOrder,
     swapTiles,
-    tileBackgroundPosition,
     toDisplay,
     type InputMode,
     type PanelSubmit,
@@ -76,15 +72,24 @@
   const emit = defineEmits<{ submit: [part: PanelSubmit]; wantMode: [mode: InputMode] }>()
   const { t } = useI18n()
 
-  const grid = computed(() => props.challenge.grid || 2)
-  const order = ref<number[]>(initialOrder(grid.value))
+  // tiles 按当前打乱后的位置给出：初始 order = [0..n-1]，order[cell] = 该格放的 tiles 下标
+  const rows = computed(() => props.challenge.grid?.rows || 2)
+  const cols = computed(() => props.challenge.grid?.cols || 2)
+  const order = ref<number[]>(initialOrder(rows.value, cols.value))
   const selected = ref<number | null>(null)
   const overPos = ref<number | null>(null)
   const moved = ref(false)
   const live = ref('')
   const stageRef = ref<HTMLElement>()
+  // bgDisplayWidth = 整个网格显示宽度；高度按原始网格比例
   const bgHeight = computed(() =>
-    Math.round(toDisplay(props.challenge.bgHeight, props.challenge.bgWidth, props.width))
+    Math.round(
+      toDisplay(
+        props.challenge.bgHeight || props.challenge.tileHeight * rows.value,
+        props.challenge.bgWidth || props.challenge.tileWidth * cols.value,
+        props.width
+      )
+    )
   )
   let startTime = 0
   let track: TrackPoint[] = []
@@ -92,7 +97,7 @@
 
   function record(pos: number) {
     if (!startTime) startTime = Date.now()
-    track.push({ x: pos % grid.value, y: Math.floor(pos / grid.value), t: Date.now() - startTime })
+    track.push({ x: pos % cols.value, y: Math.floor(pos / cols.value), t: Date.now() - startTime })
   }
 
   function swap(a: number, b: number) {

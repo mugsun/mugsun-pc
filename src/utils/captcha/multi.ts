@@ -1,7 +1,7 @@
 /**
  * 多类型行为验证码纯函数：题型分发 / 各题型 answer 构造 / 键盘步长。
  *
- * 题型：SLIDER | ROTATE | WORD_CLICK | ICON_CLICK | JIGSAW（假设字段，待契约 v0.5 定稿）。
+ * 题型：SLIDER | ROTATE | WORD_CLICK | ICON_CLICK | JIGSAW（契约 v0.6.1 / mugsun-boot#35）。
  * - 题型只看 challenge 响应 type；config.type 为 RANDOM 或具体类型。
  * - keyboard 题服务端只出 SLIDER / ROTATE；点选与拼图不做键盘操作，切到键盘即重新取题。
  *
@@ -23,8 +23,12 @@ export const KEYBOARD_TYPES: readonly BehaviorCaptchaType[] = ['SLIDER', 'ROTATE
 
 /** 点选需要点击的数量 */
 export const CLICK_COUNT = 3
-/** 旋转键盘缺省步长（度）；15° 让键盘几下就能转正 */
-export const DEFAULT_ROTATE_STEP_DEG = 15
+/** 旋转键盘缺省步长（度）；服务端 keyboard 题必返回 keyboardStep（默认 5），此值仅兜底 */
+export const DEFAULT_ROTATE_STEP_DEG = 5
+/** 点选命中半径下限（原始像素，契约 §3） */
+export const CLICK_MIN_RADIUS = 22
+/** 点选命中半径系数：max(itemSize × 0.75, 22) */
+export const CLICK_RADIUS_RATIO = 0.75
 
 export type CaptchaPanelKind = 'slider' | 'rotate' | 'click' | 'jigsaw'
 
@@ -72,6 +76,58 @@ export function offsetToAngle(offset: number, max: number): number {
   return normalizeAngle((Math.min(max, Math.max(0, offset)) / max) * 360)
 }
 
+/**
+ * ROTATE pointer（v0.6.1 §3）：按滑块左边缘位移算，最大行程 = bgDisplayWidth，
+ * angle = 位移 / bgDisplayWidth × 360（拖到最右 = 360° ≡ 0°）。
+ */
+export function rotateTravelToAngle(travel: number, displayWidth: number): number {
+  return offsetToAngle(travel, displayWidth)
+}
+
+/** 角度 → 左边缘位移（显示像素），offsetToAngle 的逆 */
+export function rotateAngleToTravel(angle: number, displayWidth: number): number {
+  if (!displayWidth || displayWidth <= 0) return 0
+  return Math.round((normalizeAngle(angle) / 360) * displayWidth * 10) / 10
+}
+
+/** 服务端施加角 rot → 正确纠正量 (360 − rot) mod 360（契约 §3 例子；仅 mock / 测试用） */
+export function correctionAngle(applied: number): number {
+  return normalizeAngle(360 - applied)
+}
+
+/** 点选命中半径（原始像素）：max(itemSize × 0.75, 22)；itemSize 缺省按下限 */
+export function clickHitRadius(itemSize?: number): number {
+  const s = Number(itemSize)
+  return Number.isFinite(s) && s > 0
+    ? Math.max(CLICK_MIN_RADIUS, Math.round(s * CLICK_RADIUS_RATIO))
+    : CLICK_MIN_RADIUS
+}
+
+/** 显示坐标 → 原图坐标（服务端乘 bgWidth / bgDisplayWidth） */
+export function toOriginal(v: number, bgWidth: number, displayWidth: number): number {
+  return displayWidth > 0 ? (v * bgWidth) / displayWidth : v
+}
+
+/**
+ * 外壳被 CSS 缩放时（容器 < 260px，v0.6.1 #7），屏幕像素 → 布局像素的比例。
+ * rectWidth = getBoundingClientRect().width，layoutWidth = offsetWidth。
+ */
+export function cssScale(rectWidth: number, layoutWidth: number): number {
+  if (!rectWidth || !layoutWidth) return 1
+  const r = rectWidth / layoutWidth
+  return Number.isFinite(r) && r > 0 ? r : 1
+}
+
+/** 外壳宽度：上报宽度 ≥ 260，容器更窄时整体 scale(container/260) */
+export function shellLayout(containerWidth: number): { width: number; scale: number } {
+  const width = clampDisplayWidth(containerWidth)
+  const scale =
+    Number.isFinite(containerWidth) && containerWidth > 0 && containerWidth < width
+      ? Math.round((containerWidth / width) * 1000) / 1000
+      : 1
+  return { width, scale }
+}
+
 /** 旋转键盘步长（度），缺省 / 非法回退 5° */
 export function rotateKeyboardStep(step: number | undefined): number {
   return step && step > 0 && step < 360 ? step : DEFAULT_ROTATE_STEP_DEG
@@ -113,8 +169,8 @@ export function swapTiles(order: number[], a: number, b: number): number[] {
 }
 
 /** 拼图初始排列：每个位置放自己序号的打乱格 */
-export function initialOrder(grid: number): number[] {
-  return Array.from({ length: grid * grid }, (_, i) => i)
+export function initialOrder(grid: number, cols = grid): number[] {
+  return Array.from({ length: grid * cols }, (_, i) => i)
 }
 
 /** 拼图格在打乱图中的背景偏移（百分比） */

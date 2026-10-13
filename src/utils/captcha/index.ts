@@ -28,7 +28,9 @@ export const CaptchaCode = {
   FAILED: 40011,
   RATE_LIMITED: 40012,
   REQUIRED: 40013,
-  DISABLED: 40014
+  DISABLED: 40014,
+  /** v0.6.1：keyboard 取题时租户未启用 SLIDER/ROTATE（不自动重试，提示改用鼠标/触屏） */
+  NO_ACCESSIBLE: 40015
 } as const
 
 export interface TrackPoint {
@@ -159,7 +161,7 @@ export class TrackRecorder {
   }
 }
 
-/** 各题型答案（多类型为假设字段，待契约 v0.5） */
+/** 各题型答案（契约 v0.6.1 §3） */
 export type CaptchaAnswer =
   | { x: number }
   | { angle: number }
@@ -205,6 +207,7 @@ export type CaptchaErrorKind =
   | 'rateLimited'
   | 'required'
   | 'disabled'
+  | 'noAccessible'
   | 'network'
   | 'other'
 
@@ -238,7 +241,7 @@ export function classifyCaptchaError(err: unknown): CaptchaErrorInfo {
     payload &&
     typeof payload.code === 'number' &&
     payload.code >= 40010 &&
-    payload.code <= 40014
+    payload.code <= 40015
   ) {
     code = payload.code
     payload = (payload.data && typeof payload.data === 'object' ? payload.data : undefined) as
@@ -259,6 +262,8 @@ export function classifyCaptchaError(err: unknown): CaptchaErrorInfo {
       return { ...base, kind: 'required' }
     case CaptchaCode.DISABLED:
       return { ...base, kind: 'disabled' }
+    case CaptchaCode.NO_ACCESSIBLE:
+      return { ...base, kind: 'noAccessible' }
   }
   const isNetwork =
     (err instanceof HttpError &&

@@ -135,3 +135,54 @@ describe('v0.4 verify 错误', () => {
     expect(m.classifyVerifyError(new HttpError('x', 40010)).kind).toBe('expired')
   })
 })
+
+describe('契约 v0.6.1 对齐', () => {
+  it('ROTATE：左边缘行程 / bgDisplayWidth × 360，拖满 = 360° ≡ 0°', () => {
+    expect(m.rotateTravelToAngle(0, 320)).toBe(0)
+    expect(m.rotateTravelToAngle(80, 320)).toBe(90)
+    expect(m.rotateTravelToAngle(160, 260)).toBe(221.5)
+    expect(m.rotateTravelToAngle(320, 320)).toBe(0)
+    expect(m.rotateTravelToAngle(999, 320)).toBe(0)
+    expect(m.rotateAngleToTravel(90, 320)).toBe(80)
+    expect(m.rotateAngleToTravel(m.rotateTravelToAngle(123.4, 300), 300)).toBeCloseTo(123.4, 0)
+  })
+  it('ROTATE：answer.angle = (360 − 施加角) mod 360', () => {
+    expect(m.correctionAngle(40)).toBe(320)
+    expect(m.correctionAngle(330)).toBe(30)
+    expect(m.correctionAngle(360)).toBe(0)
+  })
+  it('ROTATE 键盘：步长 5° 时施加角为步长整数倍可精确命中', () => {
+    const step = m.rotateKeyboardStep(5)
+    for (const applied of [30, 35, 180, 325, 330]) {
+      const target = m.correctionAngle(applied)
+      const presses = m.clampRotateSteps(target / step, step)
+      expect(m.normalizeAngle(presses * step)).toBe(target)
+      expect(presses).toBeGreaterThanOrEqual(1)
+      expect(presses).toBeLessThanOrEqual(72)
+    }
+    expect(m.rotateKeyboardStep(undefined)).toBe(5)
+  })
+  it('点选命中半径 max(itemSize × 0.75, 22)', () => {
+    expect(m.clickHitRadius(29)).toBe(22)
+    expect(m.clickHitRadius(35)).toBe(26)
+    expect(m.clickHitRadius(39)).toBe(29)
+    expect(m.clickHitRadius(undefined)).toBe(22)
+  })
+  it('显示坐标 → 原图坐标', () => {
+    expect(m.toOriginal(130, 320, 260)).toBe(160)
+    expect(m.toOriginal(160, 320, 320)).toBe(160)
+  })
+  it('外壳宽度：上报 ≥ 260，更窄时整体缩放', () => {
+    expect(m.shellLayout(400)).toEqual({ width: 320, scale: 1 })
+    expect(m.shellLayout(300)).toEqual({ width: 300, scale: 1 })
+    expect(m.shellLayout(234)).toEqual({ width: 260, scale: 0.9 })
+    expect(m.cssScale(234, 260)).toBeCloseTo(0.9)
+    expect(m.cssScale(0, 260)).toBe(1)
+  })
+  it('40015：未启用无障碍题型，不自动重试', () => {
+    expect(m.classifyCaptchaError(new HttpError('未启用', 40015))).toMatchObject({
+      kind: 'noAccessible',
+      code: 40015
+    })
+  })
+})

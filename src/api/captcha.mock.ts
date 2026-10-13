@@ -1,11 +1,13 @@
 /**
  * 行为验证码开发期 mock（仅 DEV + VITE_CAPTCHA_MOCK=true 时由 api/captcha.ts 动态加载，生产产物不含）。
- * 五种题型：SLIDER / ROTATE / WORD_CLICK / ICON_CLICK / JIGSAW，canvas 生成占位图。
+ * 五种题型：SLIDER / ROTATE / WORD_CLICK / ICON_CLICK / JIGSAW，canvas 生成占位图；响应形状对齐契约 v0.6.1。
  *
  * 指定题型（仅 mock）：URL `?captchaType=ROTATE` 或 sessionStorage `captchaMockType`；缺省随机。
  * keyboard 题只出 SLIDER / ROTATE（与后端约定一致）。
  * 规则模拟服务端：一次一机会、过期 120s、连续失败 5 次限流 10 秒。
- * 难度低（目标 1–2 秒）：滑块 ±8px、旋转 ±25°（键盘 15°/步）、点选 3 个无干扰项且半径 32px、拼图 2×2 只交换一对（一步还原）。
+ * 难度：滑块 ±8px、旋转 ±25°（真实服务端 ±10°，键盘 5°/步，施加角为步长整数倍）、
+ * 点选 3 目标 + 2 干扰、半径 max(itemSize×0.75, 22)（与服务端同式）、拼图 2×2 只交换一对（一步还原）。
+ * 模拟 40015：sessionStorage `captchaMockNoKeyboard=1` 时 keyboard 取题返回 40015。
  */
 import { HttpError } from '@/utils/http/error'
 import {
@@ -15,6 +17,8 @@ import {
   CLICK_COUNT,
   DEFAULT_KEYBOARD_STEP_PX,
   KEYBOARD_TYPES,
+  clickHitRadius,
+  correctionAngle,
   isBehaviorType,
   type BehaviorCaptchaType,
   type InputMode,
@@ -26,17 +30,20 @@ const BG_W = 320
 const BG_H = 180
 const PIECE = 46
 const PIECE_W = 68
-const ROT_SIZE = 200
+const ROT_SIZE = 160
 const EXPIRE = 120
 const TOLERANCE = 8
 const ROT_TOLERANCE = 25
-const CLICK_RADIUS = 32
-const ROTATE_KEY_STEP = 15
+const ITEM_SIZE = 32
+const CLICK_DECOYS = 2
+const ROTATE_KEY_STEP = 5
+const TILE_W = BG_W / 2
+const TILE_H = BG_H / 2
 
 type Answer =
   | { type: 'SLIDER'; x: number }
   | { type: 'ROTATE'; angle: number }
-  | { type: 'CLICK'; points: { x: number; y: number }[] }
+  | { type: 'CLICK'; points: { x: number; y: number }[]; radius: number }
   | { type: 'JIGSAW'; order: number[] }
 
 const store = new Map<string, { answer: Answer; expireAt: number; inputMode: InputMode }>()
@@ -146,26 +153,43 @@ function genSlider() {
 }
 
 function genRotate() {
-  // 图片被逆时针转了 r°，用户顺时针转 r° 即正
-  const r = rand(60, 300)
+  // 服务端施加角 applied（keyboardStep 整数倍，∈[30,330]）；正确纠正量 = (360 − applied) mod 360
+  const applied = rand(30 / ROTATE_KEY_STEP, 330 / ROTATE_KEY_STEP) * ROTATE_KEY_STEP
+  const [src, sc] = canvas(ROT_SIZE, ROT_SIZE)
+  paintScene(sc, ROT_SIZE, ROT_SIZE)
   const [c, ctx] = canvas(ROT_SIZE, ROT_SIZE)
-  ctx.save()
   ctx.beginPath()
   ctx.arc(ROT_SIZE / 2, ROT_SIZE / 2, ROT_SIZE / 2, 0, Math.PI * 2)
   ctx.clip()
   ctx.translate(ROT_SIZE / 2, ROT_SIZE / 2)
-  ctx.rotate((-r * Math.PI) / 180)
+  ctx.rotate((applied * Math.PI) / 180)
   ctx.translate(-ROT_SIZE / 2, -ROT_SIZE / 2)
-  paintScene(ctx, ROT_SIZE, ROT_SIZE)
-  ctx.restore()
+  ctx.drawImage(src, 0, 0)
+  const [bg, b] = canvas(BG_W, BG_H)
+  paintScene(b, BG_W, BG_H)
+  b.fillStyle = 'rgba(255,255,255,0.5)'
+  b.fillRect(0, 0, BG_W, BG_H)
+  b.fillStyle = 'rgba(20,30,50,0.25)'
+  b.beginPath()
+  b.arc(BG_W / 2, BG_H / 2, ROT_SIZE / 2 + 3, 0, Math.PI * 2)
+  b.fill()
+  const angle = correctionAngle(applied)
   return {
-    answer: { type: 'ROTATE', angle: r } as Answer,
-    data: { type: 'ROTATE' as const, image: c.toDataURL('image/png'), imageSize: ROT_SIZE },
-    hint: r
+    answer: { type: 'ROTATE', angle } as Answer,
+    data: {
+      type: 'ROTATE' as const,
+      background: bg.toDataURL('image/jpeg', 0.9),
+      piece: c.toDataURL('image/png'),
+      bgWidth: BG_W,
+      bgHeight: BG_H,
+      pieceSize: ROT_SIZE
+    },
+    hint: angle
   }
 }
 
 const WORDS = '春夏秋冬山水云风花月星雨'.split('')
+const ICON_NAMES = ['圆', '方块', '三角', '星', '十字']
 const ICONS: { draw: (c: CanvasRenderingContext2D, s: number) => void }[] = [
   { draw: (c, s) => (c.beginPath(), c.arc(0, 0, s, 0, Math.PI * 2), c.fill()) },
   { draw: (c, s) => c.fillRect(-s, -s, s * 2, s * 2) },
@@ -199,20 +223,12 @@ const ICONS: { draw: (c: CanvasRenderingContext2D, s: number) => void }[] = [
   }
 ]
 
-function iconImage(i: number) {
-  const [c, ctx] = canvas(48, 48)
-  ctx.translate(24, 24)
-  ctx.fillStyle = '#2B4FCC'
-  ICONS[i].draw(ctx, 16)
-  return c.toDataURL('image/png')
-}
-
 /** 不重叠的点位（原图坐标） */
 function spots(n: number) {
   const pts: { x: number; y: number }[] = []
   while (pts.length < n) {
     const p = { x: rand(36, BG_W - 36), y: rand(36, BG_H - 36) }
-    if (pts.every((q) => Math.hypot(q.x - p.x, q.y - p.y) > 96)) pts.push(p)
+    if (pts.every((q) => Math.hypot(q.x - p.x, q.y - p.y) > 70)) pts.push(p)
   }
   return pts
 }
@@ -227,43 +243,60 @@ function shuffle<T>(arr: T[]) {
 }
 
 function genClick(kind: 'WORD_CLICK' | 'ICON_CLICK') {
-  const total = CLICK_COUNT // 难度低：不放干扰项
+  const total = CLICK_COUNT + CLICK_DECOYS
   const pool =
     kind === 'WORD_CLICK' ? shuffle(WORDS.map((_, i) => i)) : shuffle(ICONS.map((_, i) => i))
   const chosen = pool.slice(0, total)
   const pts = spots(total)
   const [bg, b] = canvas(BG_W, BG_H)
   paintScene(b, BG_W, BG_H)
+  const drawItem = (ctx: CanvasRenderingContext2D, id: number, i: number) => {
+    ctx.fillStyle = '#2B4FCC'
+    if (kind === 'WORD_CLICK') {
+      ctx.rotate(((i % 2 ? 1 : -1) * rand(0, 12) * Math.PI) / 180)
+      ctx.font = `bold ${ITEM_SIZE}px "PingFang SC","Microsoft YaHei",sans-serif`
+      ctx.textAlign = 'center'
+      ctx.textBaseline = 'middle'
+      ctx.fillText(WORDS[id], 0, 1)
+    } else {
+      ICONS[id].draw(ctx, ITEM_SIZE / 2)
+    }
+  }
   chosen.forEach((id, i) => {
     const p = pts[i]
     b.save()
     b.translate(p.x, p.y)
-    b.fillStyle = 'rgba(255,255,255,0.85)'
+    b.fillStyle = 'rgba(255,255,255,0.7)'
     b.beginPath()
-    b.arc(0, 0, 26, 0, Math.PI * 2)
+    b.arc(0, 0, ITEM_SIZE * 0.75, 0, Math.PI * 2)
     b.fill()
-    b.fillStyle = '#2B4FCC'
-    if (kind === 'WORD_CLICK') {
-      b.rotate(((i % 2 ? 1 : -1) * rand(0, 6) * Math.PI) / 180)
-      b.font = 'bold 32px "PingFang SC","Microsoft YaHei",sans-serif'
-      b.textAlign = 'center'
-      b.textBaseline = 'middle'
-      b.fillText(WORDS[id], 0, 1)
-    } else {
-      ICONS[id].draw(b, 16)
-    }
+    drawItem(b, id, i)
     b.restore()
   })
   const targets = pts.slice(0, CLICK_COUNT)
   const ids = chosen.slice(0, CLICK_COUNT)
+  const [pc, p] = canvas(34 * CLICK_COUNT + 8, 36)
+  p.fillStyle = '#ffffff'
+  p.fillRect(0, 0, pc.width, pc.height)
+  ids.forEach((id, i) => {
+    p.save()
+    p.translate(4 + 17 + i * 34, 18)
+    p.scale(0.8, 0.8)
+    drawItem(p, id, 0)
+    p.restore()
+  })
+  const names = kind === 'WORD_CLICK' ? ids.map((i) => WORDS[i]) : ids.map((i) => ICON_NAMES[i])
   return {
-    answer: { type: 'CLICK', points: targets } as Answer,
+    answer: { type: 'CLICK', points: targets, radius: clickHitRadius(ITEM_SIZE) } as Answer,
     data: {
       type: kind,
       background: bg.toDataURL('image/jpeg', 0.9),
       bgWidth: BG_W,
       bgHeight: BG_H,
-      hints: kind === 'WORD_CLICK' ? ids.map((i) => WORDS[i]) : ids.map(iconImage)
+      promptImage: pc.toDataURL('image/png'),
+      ...(kind === 'WORD_CLICK' ? { prompt: names } : { promptNames: names }),
+      count: CLICK_COUNT,
+      itemSize: ITEM_SIZE
     },
     hint: targets
   }
@@ -285,33 +318,33 @@ function genJigsaw() {
   s.font = 'bold 30px sans-serif'
   s.textAlign = 'center'
   s.fillText('MUGSUN', BG_W / 2, BG_H * 0.62)
-  // 打乱图：打乱格 k 放原图第 perm[k] 块
-  const [out, o] = canvas(BG_W, BG_H)
-  const cw = BG_W / grid
-  const ch = BG_H / grid
-  perm.forEach((orig, k) => {
-    o.drawImage(
+  // tiles[k] = 原图第 perm[k] 块（JPEG，每块 160×90）；正确排列：格 c 放 perm[k] === c 的那块 k
+  const tiles = perm.map((orig) => {
+    const [t, tc] = canvas(TILE_W, TILE_H)
+    tc.drawImage(
       src,
-      (orig % grid) * cw,
-      Math.floor(orig / grid) * ch,
-      cw,
-      ch,
-      (k % grid) * cw,
-      Math.floor(k / grid) * ch,
-      cw,
-      ch
+      (orig % grid) * TILE_W,
+      Math.floor(orig / grid) * TILE_H,
+      TILE_W,
+      TILE_H,
+      0,
+      0,
+      TILE_W,
+      TILE_H
     )
+    return t.toDataURL('image/jpeg', 0.9)
   })
-  // 还原：位置 p 应放“装着原图 p 块”的打乱格 k，即 perm[k] === p
-  const order = Array.from({ length: n }, (_, p) => perm.indexOf(p))
+  const order = Array.from({ length: n }, (_, c) => perm.indexOf(c))
   return {
     answer: { type: 'JIGSAW', order } as Answer,
     data: {
       type: 'JIGSAW' as const,
-      image: out.toDataURL('image/jpeg', 0.9),
       bgWidth: BG_W,
       bgHeight: BG_H,
-      grid
+      grid: { rows: grid, cols: grid },
+      tiles,
+      tileWidth: TILE_W,
+      tileHeight: TILE_H
     },
     hint: order
   }
@@ -334,6 +367,15 @@ export async function mockChallenge(inputMode: InputMode = 'pointer'): Promise<C
   await delay()
   checkLock()
   const mode: InputMode = inputMode === 'keyboard' ? 'keyboard' : 'pointer'
+  let noKeyboard = false
+  try {
+    noKeyboard = sessionStorage.getItem('captchaMockNoKeyboard') === '1'
+  } catch {
+    noKeyboard = false
+  }
+  if (mode === 'keyboard' && noKeyboard) {
+    fail(CaptchaCode.NO_ACCESSIBLE, '未启用无障碍验证方式')
+  }
   const type = pickType(mode)
   const gen =
     type === 'SLIDER'
@@ -393,12 +435,12 @@ function judge(answer: Answer, data: VerifyPayload): boolean {
       return pts.every(
         (p, i) =>
           Math.hypot(p.x * scale - answer.points[i].x, p.y * scale - answer.points[i].y) <=
-          CLICK_RADIUS
+          answer.radius
       )
     }
     case 'JIGSAW': {
       const order = a.order as number[] | undefined
-      return !kb && Array.isArray(order) && order.join(',') === answer.order.join(',')
+      return !kb && dur >= 400 && Array.isArray(order) && order.join(',') === answer.order.join(',')
     }
   }
 }

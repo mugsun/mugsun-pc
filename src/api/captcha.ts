@@ -5,12 +5,12 @@ import type { VerifyPayload } from '@/utils/captcha'
 export type CaptchaScene = 'login' | 'register' | 'sms' | 'forget'
 
 /**
- * 行为验证码类型（多类型假设，待契约 v0.5 定稿；字段集中在此处便于对齐）。
- * 实际出什么题只看 challenge 响应的 type；客户端不能指定类型（生产请求不带 type）。
+ * 行为验证码类型（契约 v0.6.1，mugsun-boot#35）。
+ * 实际出什么题只看 challenge 响应的 type；客户端不能指定类型（请求不带 type，带了服务端也忽略）。
  */
 export type CaptchaType = 'SLIDER' | 'ROTATE' | 'WORD_CLICK' | 'ICON_CLICK' | 'JIGSAW'
 
-/** config.type：RANDOM 或某一具体类型；IMAGE / 其他未知值走旧数字码（过渡一个版本） */
+/** config.type：RANDOM 或某一具体类型（仅提示，以 challenge 为准）；IMAGE / 其他未知值走旧数字码 */
 export type CaptchaConfigType = CaptchaType | 'RANDOM' | 'IMAGE' | (string & {})
 
 /** 验证码开关与类型 */
@@ -25,9 +25,12 @@ interface ChallengeBase {
   /** 出题时声明的输入模式；verify 必须一致。keyboard 题服务端只出 SLIDER / ROTATE */
   inputMode: 'pointer' | 'keyboard'
   expireSeconds: number
+  /** 底图原始像素（默认 320×180）；JIGSAW 为整张 2×2 网格的原始尺寸 */
+  bgWidth: number
+  bgHeight: number
   /**
    * 仅 keyboard 题返回：每次 ←/→ 的移动量。
-   * SLIDER 为原图像素（默认 4，前端换算显示像素）；ROTATE 为角度（度）。
+   * SLIDER 为原图像素（默认 4，前端换算显示像素）；ROTATE 为角度（度，默认 5）。
    */
   keyboardStep?: number
 }
@@ -35,41 +38,51 @@ interface ChallengeBase {
 /** 滑块拼图（不含答案 x，拼图块与底图同高，前端只横向平移） */
 export interface SliderChallenge extends ChallengeBase {
   type: 'SLIDER'
+  /** 服务端渲染的真实底图（JPEG data URL） */
   background: string
   piece: string
-  bgWidth: number
-  bgHeight: number
   pieceWidth: number
   pieceHeight: number
 }
 
-/** 旋转：圆图已被服务端旋转随机角度；answer.angle 为用户顺时针旋转量 0–360 */
+/**
+ * 旋转：background 为浅化底图 + 圆位阴影；piece 为已被服务端随机旋转的圆图（PNG），居中叠放。
+ * answer.angle = 用户施加的顺时针纠正量 = (360 − 服务端施加角) mod 360。
+ */
 export interface RotateChallenge extends ChallengeBase {
   type: 'ROTATE'
-  /** 圆形图片（PNG，透明角） */
-  image: string
-  /** 原图边长（像素） */
-  imageSize: number
+  background: string
+  piece: string
+  /** 圆图直径（原始像素，默认 160） */
+  pieceSize: number
 }
 
-/** 文字 / 图标点选：按 hints 顺序点击；answer.points 为显示像素 */
+/** 文字 / 图标点选：按提示顺序点击；answer.points 为显示像素，原点底图左上角 */
 export interface ClickChallenge extends ChallengeBase {
   type: 'WORD_CLICK' | 'ICON_CLICK'
   background: string
-  bgWidth: number
-  bgHeight: number
-  /** WORD_CLICK：单字；ICON_CLICK：图标图片（data URL） */
-  hints: string[]
+  /** 提示图（data:image/png），前端优先显示 */
+  promptImage?: string
+  /** WORD_CLICK：目标字（读屏 / 无图兜底） */
+  prompt?: string[]
+  /** ICON_CLICK：图标名（读屏） */
+  promptNames?: string[]
+  /** 需点击个数（3） */
+  count?: number
+  /** v0.6.1 可选：字号 / 图标边长名义值（原始像素） */
+  itemSize?: number
 }
 
-/** 拼图还原：image 为已打乱的整图，切成 grid×grid；answer.order[pos] = 该位置当前放的打乱格序号 */
+/**
+ * 拼图还原：无 background 字段；tiles 为 JPEG data URL，按当前打乱后的位置顺序（行优先）。
+ * answer.order[cell] = 该格最终放的 tiles 下标；bgDisplayWidth = 整个网格的显示宽度。
+ */
 export interface JigsawChallenge extends ChallengeBase {
   type: 'JIGSAW'
-  image: string
-  bgWidth: number
-  bgHeight: number
-  /** 先只做 2 */
-  grid: number
+  grid: { rows: number; cols: number }
+  tiles: string[]
+  tileWidth: number
+  tileHeight: number
 }
 
 export type CaptchaChallenge = SliderChallenge | RotateChallenge | ClickChallenge | JigsawChallenge

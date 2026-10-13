@@ -732,7 +732,8 @@
         "jigsawTile": "第 {n} 块",
         "jigsawSelected": "已选中第 {n} 块，再点另一块交换",
         "jigsawSubmit": "完成",
-        "jigsawKeyboardNote": "拼图题不支持键盘，可点「改用键盘」换一种题"
+        "jigsawKeyboardNote": "拼图题不支持键盘，可点「改用键盘」换一种题",
+        "noAccessible": "当前未启用键盘可操作的验证方式，请改用鼠标或触屏完成验证"
       }
     },
     "dashboard": {

@@ -1,4 +1,7 @@
-<!-- 文字 / 图标点选面板：按提示顺序点 3 次，已点处显示序号，可点序号或「撤销」回退；点满自动提交 -->
+<!--
+  文字 / 图标点选（契约 v0.6.1）：提示优先显示服务端 promptImage，prompt / promptNames 供读屏；
+  点击坐标为显示像素、原点底图左上角（外壳被 CSS 缩放时先换回布局像素）；集满 count 个自动提交。
+-->
 <template>
   <div class="cp-panel">
     <div class="cp-click-hint">
@@ -7,22 +10,28 @@
           ? t('pages.auth.slider.wordHint')
           : t('pages.auth.slider.iconHint')
       }}</span>
-      <template v-for="(h, i) in challenge.hints" :key="i">
-        <img
-          v-if="challenge.type === 'ICON_CLICK'"
-          class="cp-chip cp-chip--icon"
+      <img
+        v-if="challenge.promptImage"
+        class="cp-prompt-img"
+        :src="challenge.promptImage"
+        :alt="promptLabel"
+        draggable="false"
+      />
+      <template v-else>
+        <b
+          v-for="(h, i) in promptTexts"
+          :key="i"
+          class="cp-chip"
           :class="{ 'is-done': i < points.length }"
-          :src="h"
-          :alt="`${i + 1}`"
-        />
-        <b v-else class="cp-chip" :class="{ 'is-done': i < points.length }">{{ h }}</b>
+          >{{ h }}</b
+        >
       </template>
     </div>
     <div
       ref="stageRef"
       class="cp-stage cp-click-stage"
       role="group"
-      :aria-label="t('pages.auth.slider.clickAria')"
+      :aria-label="`${t('pages.auth.slider.clickAria')}：${promptLabel}`"
       :aria-describedby="'cp-click-note'"
       :style="{ width: `${width}px`, height: `${bgHeight}px` }"
       @click="onStageClick"
@@ -60,6 +69,7 @@
     CLICK_COUNT,
     addClickPoint,
     buildClickAnswer,
+    cssScale,
     toDisplay,
     undoClickPoint,
     type ClickPoint,
@@ -81,7 +91,9 @@
 
   const stageRef = ref<HTMLElement>()
   const points = ref<ClickPoint[]>([])
-  const total = computed(() => props.challenge.hints.length || CLICK_COUNT)
+  const promptTexts = computed(() => props.challenge.prompt ?? props.challenge.promptNames ?? [])
+  const promptLabel = computed(() => promptTexts.value.join(' '))
+  const total = computed(() => props.challenge.count || promptTexts.value.length || CLICK_COUNT)
   const bgHeight = computed(() =>
     Math.round(toDisplay(props.challenge.bgHeight, props.challenge.bgWidth, props.width))
   )
@@ -98,25 +110,25 @@
 
   function onStageClick(e: MouseEvent) {
     if (props.disabled || !stageRef.value || points.value.length >= total.value) return
-    const rect = stageRef.value.getBoundingClientRect()
-    const x = Math.min(props.width, Math.max(0, e.clientX - rect.left))
-    const y = Math.min(bgHeight.value, Math.max(0, e.clientY - rect.top))
+    const el = stageRef.value
+    const rect = el.getBoundingClientRect()
+    const k = cssScale(rect.width, el.offsetWidth)
+    const x = Math.min(props.width, Math.max(0, (e.clientX - rect.left) / k))
+    const y = Math.min(bgHeight.value, Math.max(0, (e.clientY - rect.top) / k))
+    const now = Date.now()
     if (!points.value.length) {
-      startTime = Date.now()
+      startTime = now
       track = []
     }
     points.value = addClickPoint(points.value, { x, y }, total.value)
-    track.push({
-      x: Math.round(x * 10) / 10,
-      y: Math.round(y * 10) / 10,
-      t: Date.now() - startTime
-    })
+    // track[].t 为相对 startTime 的毫秒数（v0.6.1 #8）
+    track.push({ x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10, t: now - startTime })
     if (points.value.length >= total.value) {
       emit('submit', {
         answer: buildClickAnswer(points.value),
         track: track.slice(),
         startTime,
-        endTime: Date.now(),
+        endTime: now,
         keyPresses: null
       })
     }
@@ -125,6 +137,7 @@
   function undo(index?: number) {
     if (props.disabled) return
     points.value = undoClickPoint(points.value, index)
+    track = track.slice(0, points.value.length)
   }
 
   defineExpose({ focus: () => stageRef.value?.querySelector<HTMLElement>('.cp-btn')?.focus() })

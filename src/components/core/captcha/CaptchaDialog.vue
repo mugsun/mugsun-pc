@@ -16,75 +16,87 @@
     @update:model-value="(v: boolean) => !v && handleClose()"
     @opened="onOpened"
   >
-    <div
-      ref="wrapRef"
-      class="captcha-box"
-      :class="{ 'is-shaking': shaking }"
-      :data-status="status"
-      :data-type="challenge?.type || ''"
-    >
-      <component
-        :is="panel"
-        v-if="panel && challenge && status !== 'loading'"
-        ref="panelRef"
-        :key="challenge.captchaId + ':' + displayWidth"
-        :challenge="challenge"
-        :width="displayWidth"
-        :disabled="!interactive"
-        :input-mode="declaredMode"
-        @submit="submit"
-        @want-mode="switchMode"
+    <div ref="outerRef" class="captcha-outer" :style="outerStyle">
+      <div
+        ref="wrapRef"
+        class="captcha-box"
+        :class="{ 'is-shaking': shaking }"
+        :data-status="status"
+        :data-type="challenge?.type || ''"
+        :style="boxStyle"
       >
-        <template #overlay>
-          <div v-if="status === 'success'" class="cp-mask cp-mask--ok" aria-hidden="true">✓</div>
-          <div v-else-if="status === 'limited' || status === 'error'" class="cp-mask">
-            <span>{{ statusText }}</span>
-            <button v-if="status === 'error'" type="button" class="cp-btn" @click="load()">
-              {{ t('pages.auth.slider.retry') }}
-            </button>
-          </div>
-          <div v-else-if="status === 'verifying'" class="cp-mask cp-mask--soft">{{
-            statusText
-          }}</div>
-        </template>
-      </component>
-      <div v-else class="cp-skeleton" :style="{ width: `${displayWidth}px` }">
-        <span>{{ statusText }}</span>
-        <button
-          v-if="status === 'error' || status === 'limited'"
-          type="button"
-          class="cp-btn"
-          :disabled="status === 'limited'"
-          @click="load()"
+        <component
+          :is="panel"
+          v-if="panel && challenge && status !== 'loading'"
+          ref="panelRef"
+          :key="challenge.captchaId + ':' + displayWidth"
+          :challenge="challenge"
+          :width="displayWidth"
+          :disabled="!interactive"
+          :input-mode="declaredMode"
+          @submit="submit"
+          @want-mode="switchMode"
         >
-          {{ t('pages.auth.slider.retry') }}
-        </button>
-      </div>
+          <template #overlay>
+            <div v-if="status === 'success'" class="cp-mask cp-mask--ok" aria-hidden="true">✓</div>
+            <div v-else-if="status === 'limited' || status === 'error'" class="cp-mask">
+              <span>{{ statusText }}</span>
+              <button v-if="status === 'error'" type="button" class="cp-btn" @click="load()">
+                {{ t('pages.auth.slider.retry') }}
+              </button>
+            </div>
+            <div v-else-if="status === 'verifying'" class="cp-mask cp-mask--soft">{{
+              statusText
+            }}</div>
+          </template>
+        </component>
+        <div v-else class="cp-skeleton" :style="{ width: `${displayWidth}px` }">
+          <span>{{ statusText }}</span>
+          <button
+            v-if="status === 'noAccessible'"
+            type="button"
+            class="cp-btn cp-btn--primary"
+            @click="switchMode('pointer', true)"
+          >
+            {{ t('pages.auth.slider.usePointer') }}
+          </button>
+          <button
+            v-else-if="status === 'error' || status === 'limited'"
+            type="button"
+            class="cp-btn"
+            :disabled="status === 'limited'"
+            @click="load()"
+          >
+            {{ t('pages.auth.slider.retry') }}
+          </button>
+        </div>
 
-      <div class="cp-toolbar" :style="{ width: `${displayWidth}px` }">
-        <button
-          type="button"
-          class="cp-link"
-          :disabled="status === 'loading' || status === 'verifying' || status === 'limited'"
-          @click="switchMode(declaredMode === 'keyboard' ? 'pointer' : 'keyboard', true)"
-        >
-          {{
-            declaredMode === 'keyboard'
-              ? t('pages.auth.slider.usePointer')
-              : t('pages.auth.slider.useKeyboard')
-          }}
-        </button>
-        <button
-          type="button"
-          class="cp-link"
-          :aria-label="t('pages.auth.slider.refresh')"
-          :disabled="status === 'verifying' || status === 'limited' || status === 'loading'"
-          @click="load()"
-        >
-          ↻ {{ t('pages.auth.slider.refresh') }}
-        </button>
+        <div class="cp-toolbar" :style="{ width: `${displayWidth}px` }">
+          <button
+            type="button"
+            class="cp-link"
+            :disabled="status === 'loading' || status === 'verifying' || status === 'limited'"
+            v-show="status !== 'noAccessible'"
+            @click="switchMode(declaredMode === 'keyboard' ? 'pointer' : 'keyboard', true)"
+          >
+            {{
+              declaredMode === 'keyboard'
+                ? t('pages.auth.slider.usePointer')
+                : t('pages.auth.slider.useKeyboard')
+            }}
+          </button>
+          <button
+            type="button"
+            class="cp-link"
+            :aria-label="t('pages.auth.slider.refresh')"
+            :disabled="status === 'verifying' || status === 'limited' || status === 'loading'"
+            @click="load()"
+          >
+            ↻ {{ t('pages.auth.slider.refresh') }}
+          </button>
+        </div>
+        <div class="cp-sr-only" aria-live="polite" role="status">{{ announce }}</div>
       </div>
-      <div class="cp-sr-only" aria-live="polite" role="status">{{ announce }}</div>
     </div>
   </ElDialog>
 </template>
@@ -100,10 +112,10 @@
   } from '@/api/captcha'
   import {
     buildPayload,
-    clampDisplayWidth,
     classifyCaptchaError,
     classifyVerifyError,
     resolvePanel,
+    shellLayout,
     type CaptchaPanelKind,
     type InputMode,
     type PanelSubmit
@@ -143,14 +155,41 @@
     jigsaw: JigsawPanel
   }
 
-  type Status = 'loading' | 'ready' | 'verifying' | 'success' | 'failed' | 'limited' | 'error'
+  type Status =
+    | 'loading'
+    | 'ready'
+    | 'verifying'
+    | 'success'
+    | 'failed'
+    | 'limited'
+    | 'error'
+    | 'noAccessible'
   const status = ref<Status>('loading')
   const challenge = ref<CaptchaChallenge | null>(null)
   const shaking = ref(false)
   const announce = ref('')
   const retryLeft = ref(0)
   const displayWidth = ref(320)
+  /** 容器 < 260px 时整体缩放（上报宽度仍 ≥ 260，v0.6.1 #7） */
+  const shellScale = ref(1)
+  const boxHeight = ref(0)
   const wrapRef = ref<HTMLElement>()
+  const outerRef = ref<HTMLElement>()
+  let boxObserver: ResizeObserver | null = null
+  const boxStyle = computed(() =>
+    shellScale.value < 1
+      ? {
+          width: `${displayWidth.value}px`,
+          transform: `scale(${shellScale.value})`,
+          transformOrigin: 'top left'
+        }
+      : undefined
+  )
+  const outerStyle = computed(() =>
+    shellScale.value < 1 && boxHeight.value
+      ? { height: `${Math.ceil(boxHeight.value * shellScale.value)}px` }
+      : undefined
+  )
   const panelRef = ref<{ focus?: () => void } | null>(null)
   const declaredMode = ref<InputMode>('pointer')
   let wantedMode: InputMode = 'pointer'
@@ -172,8 +211,17 @@
   }
 
   const measure = () => {
-    const w = wrapRef.value?.clientWidth
-    if (w) displayWidth.value = clampDisplayWidth(w)
+    const w = outerRef.value?.clientWidth
+    if (!w) return
+    const layout = shellLayout(w)
+    displayWidth.value = layout.width
+    shellScale.value = layout.scale
+    if (!boxObserver && wrapRef.value && typeof ResizeObserver !== 'undefined') {
+      boxObserver = new ResizeObserver(() => {
+        boxHeight.value = wrapRef.value?.offsetHeight || 0
+      })
+      boxObserver.observe(wrapRef.value)
+    }
   }
 
   async function load(mode: InputMode = wantedMode) {
@@ -263,6 +311,13 @@
         emit('skip')
         emit('update:visible', false)
         return
+      case 'noAccessible':
+        // 40015：租户未启用键盘可操作题型，不自动重试，提示改用鼠标 / 触屏
+        clearTimers()
+        challenge.value = null
+        status.value = 'noAccessible'
+        announce.value = t('pages.auth.slider.noAccessible')
+        return
     }
     status.value = 'error'
     announce.value = info.msg || t('pages.auth.slider.networkError')
@@ -309,6 +364,8 @@
         return t('pages.auth.slider.limited', { s: retryLeft.value })
       case 'error':
         return t('pages.auth.slider.networkError')
+      case 'noAccessible':
+        return t('pages.auth.slider.noAccessible')
       default:
         return ''
     }
@@ -331,6 +388,8 @@
     load('pointer')
   }
   function stop() {
+    boxObserver?.disconnect()
+    boxObserver = null
     alive = false
     seq++
     clearTimers()
@@ -353,6 +412,11 @@
     padding-right: 4px;
     padding-left: 4px;
     overflow-x: auto;
+  }
+
+  .captcha-outer {
+    width: 100%;
+    overflow: hidden;
   }
 
   .captcha-box,
@@ -387,6 +451,20 @@
     left: 0;
     pointer-events: none;
     filter: drop-shadow(0 0 4px rgb(0 0 0 / 35%));
+  }
+
+  .captcha-box .cp-rotate-piece {
+    position: absolute;
+    pointer-events: none;
+    border-radius: 50%;
+    box-shadow: 0 2px 10px rgb(0 0 0 / 18%);
+  }
+
+  .captcha-box .cp-prompt-img {
+    height: 36px;
+    pointer-events: none;
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: var(--el-border-radius-base);
   }
 
   .captcha-box .cp-rotate-stage {
