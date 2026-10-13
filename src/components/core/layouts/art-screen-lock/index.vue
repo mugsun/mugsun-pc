@@ -25,7 +25,7 @@
         <div class="flex-c flex-col">
           <img
             class="w-16 h-16 rounded-full"
-            src="@imgs/user/avatar.webp"
+            :src="avatarSrc"
             :alt="$t('components.screenLock.avatarAlt')"
           />
           <div class="mt-7.5 mb-3.5 text-base font-medium">{{ userInfo.userName }}</div>
@@ -67,7 +67,7 @@
       <div class="flex-c flex-col w-80">
         <img
           class="w-16 h-16 mt-5 rounded-full"
-          src="@imgs/user/avatar.webp"
+          :src="avatarSrc"
           :alt="$t('components.screenLock.avatarAlt')"
         />
         <div class="mt-3 mb-3.5 text-base font-medium">
@@ -117,6 +117,8 @@
 </template>
 
 <script setup lang="ts">
+  import defaultAvatar from '@imgs/user/avatar.webp'
+  import { resolveAvatarUrl } from '@/utils/avatar'
   import { Lock, Unlock } from '@element-plus/icons-vue'
   import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
   import { useI18n } from 'vue-i18n'
@@ -133,6 +135,7 @@
   // Store
   const userStore = useUserStore()
   const { info: userInfo, lockPassword, isLock } = storeToRefs(userStore)
+  const avatarSrc = computed(() => resolveAvatarUrl(userInfo.value?.avatar, defaultAvatar))
 
   // 响应式数据
   const visible = ref<boolean>(false)

@@ -2101,6 +2101,7 @@
         "unbind": "Unbind",
         "nicknameSaved": "Nickname updated",
         "imageOnly": "Only image files are supported",
+        "avatarTypeInvalid": "Only png / jpg / jpeg / gif / webp images are supported",
         "avatarTooLarge": "Avatar size cannot exceed 2MB",
         "avatarUploadFailed": "Avatar upload failed: no accessible URL returned",
         "avatarUpdated": "Avatar updated",
