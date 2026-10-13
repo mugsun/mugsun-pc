@@ -60,8 +60,10 @@ export function clampOffset(value: number, max: number): number {
 }
 
 /** 键盘步进：←/→ 微调，Shift 大步；非方向键返回 null */
-export function keyboardStep(key: string, shift: boolean): number | null {
-  const step = shift ? KEY_STEP_LARGE : KEY_STEP
+export function keyboardStep(key: string, shift: boolean, baseStep?: number): number | null {
+  // v0.3：challenge 返回 keyboardStep 时以其为准（Shift 为 10 倍），否则回退默认步长
+  const base = baseStep && baseStep > 0 ? baseStep : KEY_STEP
+  const step = shift ? (baseStep && baseStep > 0 ? base * 10 : KEY_STEP_LARGE) : base
   if (key === 'ArrowLeft' || key === 'Left') return -step
   if (key === 'ArrowRight' || key === 'Right') return step
   return null
@@ -76,6 +78,7 @@ export class TrackRecorder {
   private readonly originY: number
   private readonly points: TrackPoint[] = []
   private lastT = -Infinity
+  private keys = 0
 
   constructor(startTime: number, originX = 0, originY = 0) {
     this.startTime = startTime
@@ -106,7 +109,13 @@ export class TrackRecorder {
 
   /** 键盘模式：每次按键记一个点（x 为当前偏移），不节流 */
   key(offset: number, now: number): void {
+    this.keys++
     this.sample(this.originX + offset, this.originY, now, true)
+  }
+
+  /** 键盘模式累计按键次数 */
+  get keyPresses(): number {
+    return this.keys
   }
 
   get length(): number {
@@ -126,6 +135,8 @@ export interface VerifyPayload {
   inputMode: InputMode
   track: TrackPoint[]
   answer: { x: number }
+  /** keyboard 模式必填：按键次数；pointer 模式为 null */
+  keyPresses: number | null
 }
 
 /** 组装 verify 请求体 */
@@ -144,7 +155,8 @@ export function buildVerifyPayload(input: {
     endTime: input.endTime,
     inputMode: input.inputMode,
     track: input.recorder.toJSON(),
-    answer: { x: Math.round(input.offset * 10) / 10 }
+    answer: { x: Math.round(input.offset * 10) / 10 },
+    keyPresses: input.inputMode === 'keyboard' ? input.recorder.keyPresses : null
   }
 }
 

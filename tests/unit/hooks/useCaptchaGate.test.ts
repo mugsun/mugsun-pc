@@ -35,6 +35,28 @@ describe('useCaptchaGate', () => {
     expect(g.legacyEnabled.value).toBe(true)
   })
 
+  it('按场景单独查询 config', async () => {
+    fetchCaptchaConfig.mockResolvedValue({ enabled: true, type: 'SLIDER', scene: 'sms' })
+    const g = useCaptchaGate('sms', { tenantId: () => '000000' })
+    await g.loadConfig()
+    expect(fetchCaptchaConfig).toHaveBeenCalledWith({
+      scene: 'sms',
+      clientId: 'web',
+      tenantId: '000000'
+    })
+  })
+
+  it('challenge 返回 40014（skip）：不带 token 直接提交', async () => {
+    fetchCaptchaConfig.mockResolvedValue({ enabled: true, type: 'SLIDER' })
+    const g = useCaptchaGate('login')
+    await g.loadConfig()
+    const fn = vi.fn().mockResolvedValue('ok')
+    const p = g.run(fn)
+    g.onSkip()
+    await expect(p).resolves.toBe('ok')
+    expect(fn).toHaveBeenCalledWith(undefined)
+  })
+
   it('SLIDER：先弹滑块拿 token 再提交', async () => {
     fetchCaptchaConfig.mockResolvedValue({ enabled: true, type: 'SLIDER' })
     const g = useCaptchaGate('login')

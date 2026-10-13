@@ -56,6 +56,8 @@
   )
   const emit = defineEmits<{
     success: [captchaToken: string]
+    /** challenge 返回 40014：当前无需验证，调用方直接提交 */
+    skip: []
     close: []
     'update:visible': [value: boolean]
   }>()
@@ -171,6 +173,11 @@
       case 'rateLimited':
         startLimit(info.retryAfter ?? 60)
         return
+      case 'disabled':
+        clearTimers()
+        emit('skip')
+        if (props.mode === 'dialog') emit('update:visible', false)
+        return
       default:
         status.value = 'error'
         announce.value = info.msg || t('pages.auth.slider.networkError')
@@ -242,7 +249,7 @@
       if (recorder && offset.value > 0) submit()
       return
     }
-    const step = keyboardStep(e.key, e.shiftKey)
+    const step = keyboardStep(e.key, e.shiftKey, challenge.value?.keyboardStep)
     if (step === null) return
     e.preventDefault()
     if (!recorder || inputMode !== 'keyboard') {

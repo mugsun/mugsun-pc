@@ -31,11 +31,8 @@ export function useCaptchaGate(
 
   let pending: { resolve: (t: string) => void; reject: (e: Error) => void } | null = null
 
-  const sceneOn = (c: CaptchaConfig) => !c.scenes || c.scenes.includes(scene)
   /** 走滑块 */
-  const sliderEnabled = computed(
-    () => !!config.value?.enabled && config.value.type === 'SLIDER' && sceneOn(config.value)
-  )
+  const sliderEnabled = computed(() => !!config.value?.enabled && config.value.type === 'SLIDER')
   /** 走旧数字码：config 不可用（旧后端）或 type 非 SLIDER */
   const legacyEnabled = computed(
     () => !config.value || (config.value.enabled && config.value.type !== 'SLIDER')
@@ -43,7 +40,8 @@ export function useCaptchaGate(
 
   async function loadConfig() {
     try {
-      config.value = await fetchCaptchaConfig({ clientId, tenantId: tenantId.value })
+      // 每次只查一个场景（v0.2：scene=login|register|sms|forget）
+      config.value = await fetchCaptchaConfig({ scene, clientId, tenantId: tenantId.value })
     } catch {
       config.value = null
     } finally {
@@ -68,6 +66,13 @@ export function useCaptchaGate(
     pending = null
   }
 
+  /** challenge 返回 40014（当前无需验证）：不带 token 直接提交 */
+  function onSkip() {
+    visible.value = false
+    pending?.resolve('')
+    pending = null
+  }
+
   function onClose() {
     visible.value = false
     pending?.reject(new CaptchaCancelledError())
@@ -76,14 +81,14 @@ export function useCaptchaGate(
 
   /** 包裹业务提交：自动取 token；CAPTCHA_REQUIRED 仅自动重弹一次 */
   async function run<T>(fn: (captchaToken?: string) => Promise<T>): Promise<T> {
-    const token = await requestToken()
+    const token = (await requestToken()) || undefined
     try {
       return await fn(token)
     } catch (err) {
       if (!isCaptchaRequired(err)) throw err
       await loadConfig()
       if (!sliderEnabled.value) throw err
-      const retry = await requestToken()
+      const retry = (await requestToken()) || undefined
       return fn(retry)
     }
   }
@@ -100,6 +105,7 @@ export function useCaptchaGate(
     requestToken,
     run,
     onSuccess,
+    onSkip,
     onClose
   }
 }

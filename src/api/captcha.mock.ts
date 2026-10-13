@@ -1,7 +1,7 @@
 /**
  * 滑块验证码开发期 mock（仅 DEV + VITE_CAPTCHA_MOCK=true 时由 api/captcha.ts 动态加载）
  * canvas 生成纯色底图 + 缺口，输出 data URL；校验规则模拟服务端：一次一机会、±5px（原图）、
- * 时长 / 点数下限、连续失败 5 次限流 10 秒。
+ * 时长 / 点数下限（容差 ±6px 原图，与 v0.2 一致）、连续失败 5 次限流 10 秒。
  */
 import { HttpError } from '@/utils/http/error'
 import { CaptchaCode, CAPTCHA_MIN_WIDTH, type VerifyPayload } from '@/utils/captcha'
@@ -9,10 +9,10 @@ import type { CaptchaChallenge, CaptchaConfig, CaptchaVerifyResult } from './cap
 
 const BG_W = 320
 const BG_H = 180
-const PIECE = 44
-const PIECE_W = 60
+const PIECE = 46
+const PIECE_W = 68
 const EXPIRE = 120
-const TOLERANCE = 5
+const TOLERANCE = 6
 
 const store = new Map<string, { x: number; expireAt: number }>()
 let fails = 0
@@ -40,9 +40,9 @@ function pieceShape(ctx: CanvasRenderingContext2D, x: number, y: number) {
   ctx.closePath()
 }
 
-export async function mockConfig(): Promise<CaptchaConfig> {
+export async function mockConfig(scene: string): Promise<CaptchaConfig> {
   await delay(60)
-  return { enabled: true, type: 'SLIDER', scenes: ['login', 'register', 'sms-login', 'forget'] }
+  return { enabled: true, type: 'SLIDER', scene }
 }
 
 export async function mockChallenge(): Promise<CaptchaChallenge> {
@@ -88,7 +88,7 @@ export async function mockChallenge(): Promise<CaptchaChallenge> {
   return {
     captchaId,
     type: 'SLIDER',
-    background: bg.toDataURL('image/png'),
+    background: bg.toDataURL('image/jpeg', 0.9),
     piece: pc.toDataURL('image/png'),
     bgWidth: BG_W,
     bgHeight: BG_H,
@@ -115,7 +115,9 @@ export async function mockVerify(data: VerifyPayload): Promise<CaptchaVerifyResu
     Math.abs(real - entry!.x) <= TOLERANCE &&
     dur >= 300 &&
     dur <= 15000 &&
-    data.track.length >= (data.inputMode === 'keyboard' ? 2 : 10) &&
+    (data.inputMode === 'keyboard'
+      ? (data.keyPresses ?? 0) >= 3 && dur >= 600
+      : data.track.length >= 8) &&
     data.track.length <= 400
   if (!ok) {
     fails++

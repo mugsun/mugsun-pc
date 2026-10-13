@@ -37,6 +37,10 @@ describe('坐标缩放', () => {
     expect(keyboardStep('ArrowLeft', false)).toBe(-2)
     expect(keyboardStep('ArrowRight', true)).toBe(20)
     expect(keyboardStep('a', false)).toBeNull()
+    // v0.3：challenge 下发 keyboardStep 时以其为准，Shift 为 10 倍
+    expect(keyboardStep('ArrowRight', false, 3)).toBe(3)
+    expect(keyboardStep('ArrowLeft', true, 3)).toBe(-30)
+    expect(keyboardStep('ArrowRight', false, 0)).toBe(2)
   })
 })
 
@@ -69,6 +73,7 @@ describe('TrackRecorder', () => {
     r.key(2, 1)
     r.key(4, 2)
     expect(r.toJSON().map((p) => p.x)).toEqual([0, 2, 4])
+    expect(r.keyPresses).toBe(2)
   })
   it('时间单调不减', () => {
     const r = new TrackRecorder(100)
@@ -99,6 +104,18 @@ describe('buildVerifyPayload', () => {
       answer: { x: 123.5 }
     })
     expect(p.track[0]).toEqual({ x: 0, y: 0, t: 0 })
+    expect(p.keyPresses).toBe(0)
+  })
+  it('pointer 模式 keyPresses 为 null', () => {
+    const p = buildVerifyPayload({
+      captchaId: 'id',
+      displayWidth: 320,
+      offset: 10,
+      inputMode: 'pointer',
+      recorder: new TrackRecorder(0),
+      endTime: 500
+    })
+    expect(p.keyPresses).toBeNull()
   })
 })
 

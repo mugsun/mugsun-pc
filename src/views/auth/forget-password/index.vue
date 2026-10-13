@@ -134,6 +134,7 @@
       :client-id="captchaGate.clientId"
       :tenant-id="captchaGate.tenantId.value"
       @success="captchaGate.onSuccess"
+      @skip="captchaGate.onSkip"
       @close="captchaGate.onClose"
     />
   </div>

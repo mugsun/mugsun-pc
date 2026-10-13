@@ -209,14 +209,25 @@
       </div>
     </div>
 
-    <!-- 滑块验证码弹层（账号登录 / 短信发码共用，scene 随登录方式切换） -->
+    <!-- 滑块验证码弹层：账号登录（scene=login） -->
     <SliderCaptcha
       v-model:visible="captchaGate.visible.value"
-      :scene="loginType === 'sms' ? 'sms-login' : 'login'"
+      scene="login"
       :client-id="captchaGate.clientId"
       :tenant-id="captchaGate.tenantId.value"
       @success="captchaGate.onSuccess"
+      @skip="captchaGate.onSkip"
       @close="captchaGate.onClose"
+    />
+    <!-- 滑块验证码弹层：发送短信验证码（scene=sms，sms-login 不再需要 token） -->
+    <SliderCaptcha
+      v-model:visible="smsGate.visible.value"
+      scene="sms"
+      :client-id="smsGate.clientId"
+      :tenant-id="smsGate.tenantId.value"
+      @success="smsGate.onSuccess"
+      @skip="smsGate.onSkip"
+      @close="smsGate.onClose"
     />
   </div>
 </template>
@@ -303,6 +314,7 @@
 
   // 验证码闸门：滑块（SLIDER）/ 旧数字码（IMAGE 或旧后端）/ 关闭
   const captchaGate = useCaptchaGate('login', { tenantId: () => formData.tenantId })
+  const smsGate = useCaptchaGate('sms', { tenantId: () => formData.tenantId })
 
   const rules = computed<FormRules>(() => ({
     username: [{ required: true, message: t('login.placeholder.username'), trigger: 'blur' }],
@@ -373,9 +385,8 @@
     }
     try {
       // 滑块拦在发短信这一步（短信登录提交本身不再弹滑块）
-      const resp = await captchaGate.run((captchaToken) =>
-        fetchSmsCode(smsForm.phone, captchaToken)
-      )
+      await smsGate.loadConfig()
+      const resp = await smsGate.run((captchaToken) => fetchSmsCode(smsForm.phone, captchaToken))
       smsCountdown.value = 60
       smsTimer = setInterval(() => {
         smsCountdown.value--
@@ -456,6 +467,7 @@
       formData.password = '123456'
     }
     captchaGate.loadConfig().then(() => loadCaptcha())
+    smsGate.loadConfig()
     loadSocialSources()
   })
 
