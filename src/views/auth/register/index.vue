@@ -57,7 +57,7 @@
               />
             </ElFormItem>
 
-            <ElFormItem prop="captchaCode">
+            <ElFormItem v-if="captchaGate.legacyEnabled.value" prop="captchaCode">
               <div class="flex w-full gap-2">
                 <ElInput
                   class="custom-height"
@@ -118,6 +118,14 @@
         </div>
       </div>
     </div>
+    <SliderCaptcha
+      v-model:visible="captchaGate.visible.value"
+      scene="register"
+      :client-id="captchaGate.clientId"
+      :tenant-id="captchaGate.tenantId.value"
+      @success="captchaGate.onSuccess"
+      @close="captchaGate.onClose"
+    />
   </div>
 </template>
 
@@ -126,6 +134,8 @@
   import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
   import { fetchRegister, fetchCaptcha } from '@/api/auth'
   import { encryptPassword, isGmEncryptError } from '@/utils/gm'
+  import SliderCaptcha from '@/components/core/captcha/SliderCaptcha.vue'
+  import { useCaptchaGate, isCaptchaCancelled } from '@/hooks/core/useCaptchaGate'
 
   defineOptions({ name: 'Register' })
 
@@ -166,7 +176,10 @@
   // 图形验证码（防批量注册，与登录同机制）
   const captchaImage = ref('')
   const captchaUuid = ref('')
+  // 验证码闸门：滑块（SLIDER）/ 旧数字码（IMAGE 或旧后端）/ 关闭
+  const captchaGate = useCaptchaGate('register')
   const loadCaptcha = async () => {
+    if (!captchaGate.legacyEnabled.value) return
     try {
       const data = await fetchCaptcha()
       captchaImage.value = data.captchaImage
@@ -176,7 +189,7 @@
       console.error('[Register] load captcha failed:', error)
     }
   }
-  onMounted(loadCaptcha)
+  onMounted(() => captchaGate.loadConfig().then(() => loadCaptcha()))
 
   /**
    * 验证密码
@@ -247,7 +260,9 @@
     phone: [
       { pattern: /^1\d{10}$/, message: t('pages.auth.register.phoneInvalid'), trigger: 'blur' }
     ],
-    captchaCode: [{ required: true, message: t('pages.auth.captchaPlaceholder'), trigger: 'blur' }],
+    captchaCode: captchaGate.legacyEnabled.value
+      ? [{ required: true, message: t('pages.auth.captchaPlaceholder'), trigger: 'blur' }]
+      : [],
     agreement: [{ validator: validateAgreement, trigger: 'change' }]
   }))
 
@@ -261,18 +276,25 @@
     try {
       await formRef.value.validate()
       loading.value = true
-      await fetchRegister({
-        username: formData.username,
-        password: await encryptPassword(formData.password),
-        nickname: formData.username,
-        phone: formData.phone || undefined,
-        captchaUuid: captchaUuid.value,
-        captchaCode: formData.captchaCode
-      })
+      const legacy = captchaGate.legacyEnabled.value
+      await captchaGate.run(async (captchaToken) =>
+        fetchRegister({
+          username: formData.username,
+          password: await encryptPassword(formData.password),
+          nickname: formData.username,
+          phone: formData.phone || undefined,
+          ...(legacy ? { captchaUuid: captchaUuid.value, captchaCode: formData.captchaCode } : {}),
+          ...(captchaToken ? { captchaToken } : {})
+        })
+      )
       ElMessage.success(t('pages.auth.register.successMessage'))
       loading.value = false
       router.push({ name: 'Login' })
     } catch (error) {
+      if (isCaptchaCancelled(error)) {
+        loading.value = false
+        return
+      }
       console.error('注册失败:', error)
       if (isGmEncryptError(error)) {
         ElMessage.error(t('pages.auth.login.gmEncryptFailed'))

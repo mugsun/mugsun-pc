@@ -42,4 +42,6 @@ interface ImportMetaEnv {
   readonly VITE_TRACK_ENDPOINT?: string
   readonly VITE_TRACK_APP_KEY?: string
   readonly VITE_VERSION?: string
+  /** 开发期滑块验证码 mock（仅 dev 生效，默认关闭） */
+  readonly VITE_CAPTCHA_MOCK?: string
 }

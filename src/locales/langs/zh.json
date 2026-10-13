@@ -698,6 +698,22 @@
         "changeTitle": "六、政策变更",
         "changeContent": "本政策如有更新，将通过平台公告方式告知，变更后继续使用即视为接受更新后的政策。",
         "backToRegister": "返回注册"
+      },
+      "slider": {
+        "title": "安全验证",
+        "hint": "向右拖动滑块完成拼图",
+        "loading": "加载中…",
+        "verifying": "校验中…",
+        "success": "验证成功",
+        "failed": "请再试一次",
+        "expired": "验证码已过期，已自动换一张",
+        "limited": "尝试过于频繁，请 {s} 秒后再试",
+        "networkError": "加载失败，请检查网络",
+        "retry": "重试",
+        "refresh": "换一张",
+        "close": "关闭",
+        "ariaLabel": "拼图滑块，拖动或使用方向键移动拼图块",
+        "keyboardHint": "使用左右方向键移动拼图块，按住 Shift 大步移动，按 Enter 提交"
       }
     },
     "dashboard": {

@@ -138,10 +138,11 @@ axiosInstance.interceptors.response.use(
     if (response.config.responseType === 'blob') return response
     // 信封旁路：裸 JSON 端点（actuator/metrics 等无 R 信封）原样放行
     if ((response.config as ExtendedAxiosRequestConfig).skipEnvelope) return response
-    const { code, msg } = response.data
+    const { code, msg, data } = response.data
     if (code === ApiStatus.success) return response
     if (code === ApiStatus.unauthorized) handleUnauthorizedError(msg)
-    throw createHttpError(msg || $t('httpMsg.requestFailed'), code)
+    // 业务错误携带 R.data（如验证码限流 data.retryAfter），供调用方按 code 分支
+    throw createHttpError(msg || $t('httpMsg.requestFailed'), code, data)
   },
   (error) => {
     if (error.response?.status === ApiStatus.unauthorized) handleUnauthorizedError()
@@ -150,8 +151,8 @@ axiosInstance.interceptors.response.use(
 )
 
 /** 统一创建HttpError */
-function createHttpError(message: string, code: number) {
-  return new HttpError(message, code)
+function createHttpError(message: string, code: number, data?: unknown) {
+  return new HttpError(message, code, data === undefined ? undefined : { data })
 }
 
 /** 处理401错误（带防抖） */

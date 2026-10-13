@@ -53,8 +53,8 @@
               />
             </ElFormItem>
 
-            <!-- 图形验证码 -->
-            <ElFormItem prop="captchaCode">
+            <!-- 图形验证码（旧数字码，config.type 非 SLIDER 时保留） -->
+            <ElFormItem v-if="captchaGate.legacyEnabled.value" prop="captchaCode">
               <div class="flex w-full gap-2">
                 <ElInput
                   class="custom-height"
@@ -137,7 +137,7 @@
                 </ElButton>
               </div>
             </ElFormItem>
-            <ElFormItem prop="captchaCode">
+            <ElFormItem v-if="captchaGate.legacyEnabled.value" prop="captchaCode">
               <div class="flex w-full gap-2">
                 <ElInput
                   class="custom-height"
@@ -208,6 +208,16 @@
         </div>
       </div>
     </div>
+
+    <!-- 滑块验证码弹层（账号登录 / 短信发码共用，scene 随登录方式切换） -->
+    <SliderCaptcha
+      v-model:visible="captchaGate.visible.value"
+      :scene="loginType === 'sms' ? 'sms-login' : 'login'"
+      :client-id="captchaGate.clientId"
+      :tenant-id="captchaGate.tenantId.value"
+      @success="captchaGate.onSuccess"
+      @close="captchaGate.onClose"
+    />
   </div>
 </template>
 
@@ -219,6 +229,8 @@
   import { fetchLogin, fetchCaptcha, fetchTwoFactor, fetchSmsCode, fetchSmsLogin } from '@/api/auth'
   import { encryptPassword, isGmEncryptError } from '@/utils/gm'
   import { fetchSocialRender, fetchSocialSources } from '@/api/auth'
+  import SliderCaptcha from '@/components/core/captcha/SliderCaptcha.vue'
+  import { useCaptchaGate, isCaptchaCancelled } from '@/hooks/core/useCaptchaGate'
   import { connectMessageSocket } from '@/utils/socket'
   import { trackIdentify } from '@/plugins/track'
   import { resetRouterStateImmediate } from '@/router/guards/beforeEach'
@@ -289,12 +301,15 @@
     rememberPassword: false
   })
 
+  // 验证码闸门：滑块（SLIDER）/ 旧数字码（IMAGE 或旧后端）/ 关闭
+  const captchaGate = useCaptchaGate('login', { tenantId: () => formData.tenantId })
+
   const rules = computed<FormRules>(() => ({
     username: [{ required: true, message: t('login.placeholder.username'), trigger: 'blur' }],
     password: [{ required: true, message: t('login.placeholder.password'), trigger: 'blur' }],
-    captchaCode: [
-      { required: true, message: t('pages.auth.login.captchaRequired'), trigger: 'blur' }
-    ]
+    captchaCode: captchaGate.legacyEnabled.value
+      ? [{ required: true, message: t('pages.auth.login.captchaRequired'), trigger: 'blur' }]
+      : []
   }))
 
   const loading = ref(false)
@@ -309,7 +324,9 @@
       { pattern: /^1\d{10}$/, message: t('pages.auth.phoneInvalid'), trigger: 'blur' }
     ],
     code: [{ required: true, message: t('pages.auth.login.smsCodePlaceholder'), trigger: 'blur' }],
-    captchaCode: [{ required: true, message: t('pages.auth.captchaPlaceholder'), trigger: 'blur' }]
+    captchaCode: captchaGate.legacyEnabled.value
+      ? [{ required: true, message: t('pages.auth.captchaPlaceholder'), trigger: 'blur' }]
+      : []
   }))
   const smsCountdown = ref(0)
   let smsTimer: ReturnType<typeof setInterval> | null = null
@@ -355,7 +372,10 @@
       return
     }
     try {
-      const resp = await fetchSmsCode(smsForm.phone)
+      // 滑块拦在发短信这一步（短信登录提交本身不再弹滑块）
+      const resp = await captchaGate.run((captchaToken) =>
+        fetchSmsCode(smsForm.phone, captchaToken)
+      )
       smsCountdown.value = 60
       smsTimer = setInterval(() => {
         smsCountdown.value--
@@ -371,6 +391,7 @@
         ElMessage.success(t('pages.auth.login.smsCodeSent'))
       }
     } catch (error) {
+      if (isCaptchaCancelled(error)) return
       console.error('[Login] send sms code failed:', error)
     }
   }
@@ -385,8 +406,9 @@
       const resp = await fetchSmsLogin({
         phone: smsForm.phone,
         code: smsForm.code,
-        captchaUuid: formData.captchaUuid,
-        captchaCode: smsForm.captchaCode
+        ...(captchaGate.legacyEnabled.value
+          ? { captchaUuid: formData.captchaUuid, captchaCode: smsForm.captchaCode }
+          : {})
       })
       applyToken(resp.token, resp.refreshToken)
     } catch (error) {
@@ -407,8 +429,9 @@
     if (smsTimer) clearInterval(smsTimer)
   })
 
-  // 加载图形验证码
+  // 加载图形验证码（仅旧数字码模式）
   const loadCaptcha = async () => {
+    if (!captchaGate.legacyEnabled.value) return
     try {
       const data = await fetchCaptcha()
       captchaImage.value = data.captchaImage
@@ -432,7 +455,7 @@
       formData.username = 'admin'
       formData.password = '123456'
     }
-    loadCaptcha()
+    captchaGate.loadConfig().then(() => loadCaptcha())
     loadSocialSources()
   })
 
@@ -450,13 +473,16 @@
       // 登录请求
       const { username, password, tenantId, captchaUuid, captchaCode } = formData
 
-      const resp = await fetchLogin({
-        username,
-        password: await encryptPassword(password),
-        tenantId: tenantId || undefined,
-        captchaUuid,
-        captchaCode
-      })
+      const legacy = captchaGate.legacyEnabled.value
+      const resp = await captchaGate.run(async (captchaToken) =>
+        fetchLogin({
+          username,
+          password: await encryptPassword(password),
+          tenantId: tenantId || undefined,
+          ...(legacy ? { captchaUuid, captchaCode } : {}),
+          ...(captchaToken ? { captchaToken } : {})
+        })
+      )
 
       // 记住账号：勾选则持久化用户名，未勾选清除
       if (formData.rememberPassword) {
@@ -487,6 +513,8 @@
       // 验证并存储 token，跳转
       applyToken(token, refreshToken)
     } catch (error) {
+      // 用户关闭滑块：静默
+      if (isCaptchaCancelled(error)) return
       // 登录失败刷新验证码（答案已在后端消费）
       loadCaptcha()
       if (error instanceof HttpError) {

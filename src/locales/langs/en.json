@@ -698,6 +698,22 @@
         "changeTitle": "6. Changes to This Policy",
         "changeContent": "If this policy is updated, we will notify you via platform announcements. Continuing to use the platform after changes constitutes acceptance of the updated policy.",
         "backToRegister": "Back to Register"
+      },
+      "slider": {
+        "title": "Security Check",
+        "hint": "Drag the slider to complete the puzzle",
+        "loading": "Loading…",
+        "verifying": "Verifying…",
+        "success": "Verified",
+        "failed": "Please try again",
+        "expired": "The puzzle expired and was refreshed",
+        "limited": "Too many attempts. Try again in {s}s",
+        "networkError": "Failed to load. Check your network",
+        "retry": "Retry",
+        "refresh": "New puzzle",
+        "close": "Close",
+        "ariaLabel": "Puzzle slider. Drag or use arrow keys to move the piece",
+        "keyboardHint": "Use the Left/Right arrow keys to move the piece, hold Shift for larger steps, press Enter to submit"
       }
     },
     "dashboard": {
