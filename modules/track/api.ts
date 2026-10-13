@@ -227,3 +227,13 @@ export function fetchTrackGeo(params: Record<string, any>) {
     geoCount: number
   }>({ url: '/api/system/track/geo', params, showErrorMessage: false })
 }
+
+// ===== 接入健康（自检） =====
+/** 本租户全部应用摘要：[{appKey,appName,enabled,lastReceivedAt,lastReceivedSource,staleAfterMs,fail7d,warn7d,topCodes}] */
+export function fetchTrackAppHealthSummary() {
+  return request.get<any[]>({ url: '/api/system/track/app/health/summary' })
+}
+/** 单应用详情：摘要字段 + reasons[{code,severity,description,suggestion,today,last7d,lastAt,lastMessage}] */
+export function fetchTrackAppHealth(params: { appKey: string }) {
+  return request.get<any>({ url: '/api/system/track/app/health', params })
+}
