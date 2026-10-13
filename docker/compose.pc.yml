@@ -1,0 +1,90 @@
+# mugsun 一条命令起全套（pc + boot + PostgreSQL/PostGIS + Redis）
+#
+# 目录布局（与各仓 CI 一致，平级克隆）：
+#   mugsun/
+#   ├── mugsun-core/  mugsun-boot/  mugsun-track/
+#   └── mugsun-pc/    ← 本文件在 mugsun-pc/docker/
+#
+# 用法（在 mugsun-pc 目录）：
+#   docker compose -f docker/compose.pc.yml up -d --build
+#   打开 http://localhost:8088
+#
+# 后端镜像沿用 mugsun-boot/Dockerfile（上下文为父目录）。后端的生产配置、
+# 环境变量名以 mugsun-boot 为准，这里只做最小对接，改动请在 mugsun-boot 侧维护。
+name: mugsun
+
+services:
+  pc:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      additional_contexts:
+        track: ../../mugsun-track
+    image: mugsun/pc:local
+    environment:
+      MUGSUN_API_UPSTREAM: http://boot:8080
+    ports:
+      - '${MUGSUN_PC_PORT:-8088}:80'
+    depends_on:
+      - boot
+    restart: unless-stopped
+
+  boot:
+    build:
+      context: ../..
+      dockerfile: mugsun-boot/Dockerfile
+    image: mugsun/boot:local
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      # 变量名取自 mugsun-boot application-prod.yml（以后端为准）
+      JDBC_URL: jdbc:postgresql://postgres:5432/mugsun
+      JDBC_USERNAME: mugsun
+      JDBC_PASSWORD: ${MUGSUN_DB_PASSWORD:-mugsun}
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ''
+      MUGSUN_FRONT_URL: ${MUGSUN_FRONT_URL:-http://localhost:8088}
+      FILE_DOMAIN: ${MUGSUN_FRONT_URL:-http://localhost:8088}/api/
+      # 邮件 / 短信无默认值，演示环境给占位，正式部署改成真实值
+      SMTP_HOST: ${SMTP_HOST:-localhost}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMS_AK: ${SMS_AK:-}
+      SMS_SK: ${SMS_SK:-}
+      SMS_SIGNATURE: ${SMS_SIGNATURE:-}
+      SMS_TEMPLATE_ID: ${SMS_TEMPLATE_ID:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  postgres:
+    build:
+      context: ../../mugsun-boot/docker/postgres
+    image: mugsun-postgis-pgvector:16-3.4
+    platform: linux/amd64
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${MUGSUN_POSTGRES_SUPER_PASSWORD:-postgres}
+      MUGSUN_DB_PASSWORD: ${MUGSUN_DB_PASSWORD:-mugsun}
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      - ../../mugsun-boot/scripts/init-db.sql:/initdb/init-db.sql:ro
+      - ../../mugsun-boot/docker/postgres/00-init-db.sh:/docker-entrypoint-initdb.d/00-init-db.sh:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+
+  redis:
+    image: redis:7-alpine
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+volumes:
+  pg-data:
