@@ -130,7 +130,9 @@ export function handleError(error: AxiosError<ErrorResponse>): never {
   }
 
   const statusCode = error.response?.status
-  const errorMessage = error.response?.data?.msg || error.message
+  const rawMsg = error.response?.data?.msg
+  // 服务端业务文案（非空字符串）优先，含 401/403
+  const businessMsg = typeof rawMsg === 'string' && rawMsg.trim() ? rawMsg : ''
   const requestConfig = error.config
 
   // 处理网络错误
@@ -142,9 +144,10 @@ export function handleError(error: AxiosError<ErrorResponse>): never {
   }
 
   // 处理 HTTP 状态码错误
-  const message = statusCode
-    ? getErrorMessage(statusCode)
-    : errorMessage || $t('httpMsg.requestFailed')
+  // 优先业务文案，其次按状态码的多语言文案，最后通用文案
+  const message =
+    businessMsg ||
+    (statusCode ? getErrorMessage(statusCode) : error.message || $t('httpMsg.requestFailed'))
   throw new HttpError(message, statusCode || ApiStatus.error, {
     data: error.response.data,
     url: requestConfig?.url,
