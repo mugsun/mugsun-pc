@@ -713,7 +713,8 @@
         "refresh": "New puzzle",
         "close": "Close",
         "ariaLabel": "Puzzle slider. Drag or use arrow keys to move the piece",
-        "keyboardHint": "Use the Left/Right arrow keys to move the piece, hold Shift for larger steps, press Enter to submit"
+        "keyboardHint": "Use the Left/Right arrow keys to move the piece, hold Shift for larger steps, press Enter to submit",
+        "modeSwitched": "Input mode changed — please complete the puzzle again"
       }
     },
     "dashboard": {
@@ -1780,7 +1781,8 @@
         "deleteTitle": "Delete",
         "deleteConfirm": "Delete client \"{name}\"? Sign-in with this code will use the default policy",
         "deleteSelectedConfirm": "Delete the {count} selected clients? The built-in console and mobile clients cannot be deleted",
-        "deleteSuccess": "Deleted. These clients no longer appear in the list"
+        "deleteSuccess": "Deleted. These clients no longer appear in the list",
+        "captchaHint": "Only applies in legacy IMAGE captcha mode. In slider mode this switch cannot disable captcha; use the tenant switch (platform admin)."
       },
       "online": {
         "pageTitle": "Online Sessions",

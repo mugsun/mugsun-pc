@@ -33,14 +33,19 @@ describe('坐标缩放', () => {
     expect(clampOffset(150, 100)).toBe(100)
     expect(clampOffset(33.333, 100)).toBe(33.3)
   })
-  it('键盘步长', () => {
-    expect(keyboardStep('ArrowLeft', false)).toBe(-2)
-    expect(keyboardStep('ArrowRight', true)).toBe(20)
-    expect(keyboardStep('a', false)).toBeNull()
-    // v0.3：challenge 下发 keyboardStep 时以其为准，Shift 为 10 倍
-    expect(keyboardStep('ArrowRight', false, 3)).toBe(3)
-    expect(keyboardStep('ArrowLeft', true, 3)).toBe(-30)
-    expect(keyboardStep('ArrowRight', false, 0)).toBe(2)
+  it('键盘步长（原图像素 → 显示像素；按键次数）', async () => {
+    const { displayKeyboardStep, keyboardPressCount, DEFAULT_KEYBOARD_STEP_PX } = await import(
+      '@/utils/captcha'
+    )
+    expect(keyboardPressCount('ArrowLeft', false)).toBe(-1)
+    expect(keyboardPressCount('ArrowRight', true)).toBe(10)
+    expect(keyboardPressCount('a', false)).toBeNull()
+    expect(displayKeyboardStep(4, 320, 320)).toBe(4)
+    expect(displayKeyboardStep(4, 320, 260)).toBeCloseTo(3.25)
+    expect(displayKeyboardStep(undefined, 320, 320)).toBe(DEFAULT_KEYBOARD_STEP_PX)
+    // 兼容旧 keyboardStep：base 为原图步长数值
+    expect(keyboardStep('ArrowRight', false, 4)).toBe(4)
+    expect(keyboardStep('ArrowLeft', true, 4)).toBe(-40)
   })
 })
 
@@ -68,12 +73,14 @@ describe('TrackRecorder', () => {
     expect(r.length).toBe(TRACK_MAX_POINTS)
     expect(r.toJSON().at(-1)).toEqual({ x: 999, y: 3, t: 20000 })
   })
-  it('键盘模式每次按键记一点', () => {
+  it('键盘模式每次按键记一点，并可 setKeyPresses 对齐落点', () => {
     const r = new TrackRecorder(0)
     r.key(2, 1)
-    r.key(4, 2)
+    r.key(4, 2, 10)
     expect(r.toJSON().map((p) => p.x)).toEqual([0, 2, 4])
-    expect(r.keyPresses).toBe(2)
+    expect(r.keyPresses).toBe(11)
+    r.setKeyPresses(3)
+    expect(r.keyPresses).toBe(3)
   })
   it('时间单调不减', () => {
     const r = new TrackRecorder(100)

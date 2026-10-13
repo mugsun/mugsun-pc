@@ -242,6 +242,7 @@
   import { fetchSocialRender, fetchSocialSources } from '@/api/auth'
   import SliderCaptcha from '@/components/core/captcha/SliderCaptcha.vue'
   import { useCaptchaGate, isCaptchaCancelled } from '@/hooks/core/useCaptchaGate'
+  import { classifyCaptchaError } from '@/utils/captcha'
   import { connectMessageSocket } from '@/utils/socket'
   import { trackIdentify } from '@/plugins/track'
   import { resetRouterStateImmediate } from '@/router/guards/beforeEach'
@@ -342,6 +343,18 @@
   }))
   const smsCountdown = ref(0)
   let smsTimer: ReturnType<typeof setInterval> | null = null
+  const startSmsCountdown = (seconds: number) => {
+    if (smsTimer) clearInterval(smsTimer)
+    smsCountdown.value = Math.max(0, Math.ceil(seconds))
+    if (smsCountdown.value <= 0) return
+    smsTimer = setInterval(() => {
+      smsCountdown.value--
+      if (smsCountdown.value <= 0 && smsTimer) {
+        clearInterval(smsTimer)
+        smsTimer = null
+      }
+    }, 1000)
+  }
 
   // 切换登录方式刷新图形验证码（一次性即焚，两 Tab 共用同一 captcha 状态）
   watch(loginType, () => {
@@ -403,6 +416,13 @@
       }
     } catch (error) {
       if (isCaptchaCancelled(error)) return
+      // sms-code 频控 40012：按 retryAfter 禁用发送按钮并倒计时
+      const info = classifyCaptchaError(error)
+      if (info.kind === 'rateLimited') {
+        startSmsCountdown(info.retryAfter ?? 60)
+        ElMessage.warning(info.msg || t('pages.auth.slider.limited', { s: info.retryAfter ?? 60 }))
+        return
+      }
       console.error('[Login] send sms code failed:', error)
     }
   }

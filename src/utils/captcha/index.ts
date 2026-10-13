@@ -1,8 +1,9 @@
 /**
  * 滑块拼图验证码纯函数（轨迹采集 / 坐标缩放 / 错误码分类）
  *
- * 契约 v0.2：answer.x 为拼图块左边缘在显示底图中的 x（显示像素），服务端自行换算原图；
- * 前端不做误差判断。track.x/y 为相对按下点位移，t 为相对 startTime 毫秒。
+ * 契约 v0.3：answer.x 为拼图块左边缘在显示底图中的 x（显示像素），服务端自行换算原图；
+ * challenge 时声明 inputMode；keyboardStep 为原图像素；keyPresses 须与落点按步长一致（±1）。
+ * track.x/y 为相对按下点位移，t 为相对 startTime 毫秒。
  *
  * @module utils/captcha
  */
@@ -16,9 +17,10 @@ export const CAPTCHA_MAX_WIDTH = 320
 export const TRACK_SAMPLE_MS = 16
 /** 轨迹点上限（服务端超出 400 拒绝） */
 export const TRACK_MAX_POINTS = 400
-/** 键盘微调步长 / Shift 大步步长（显示像素） */
-export const KEY_STEP = 2
-export const KEY_STEP_LARGE = 20
+/** 缺省键盘原图步长（challenge 未返回 keyboardStep 时回退） */
+export const DEFAULT_KEYBOARD_STEP_PX = 4
+/** Shift 大步倍率（相对 keyboardStep） */
+export const KEY_SHIFT_MULTIPLIER = 10
 
 /** 错误码（R.code） */
 export const CaptchaCode = {
@@ -59,14 +61,36 @@ export function clampOffset(value: number, max: number): number {
   return Math.round(Math.min(max, Math.max(0, value)) * 10) / 10
 }
 
-/** 键盘步进：←/→ 微调，Shift 大步；非方向键返回 null */
-export function keyboardStep(key: string, shift: boolean, baseStep?: number): number | null {
-  // v0.3：challenge 返回 keyboardStep 时以其为准（Shift 为 10 倍），否则回退默认步长
-  const base = baseStep && baseStep > 0 ? baseStep : KEY_STEP
-  const step = shift ? (baseStep && baseStep > 0 ? base * 10 : KEY_STEP_LARGE) : base
-  if (key === 'ArrowLeft' || key === 'Left') return -step
-  if (key === 'ArrowRight' || key === 'Right') return step
+/**
+ * 将服务端 keyboardStep（原图像素）换算为显示像素步长。
+ * 缺省 / 非法时回退 DEFAULT_KEYBOARD_STEP_PX。
+ */
+export function displayKeyboardStep(
+  keyboardStepPx: number | undefined,
+  bgWidth: number,
+  displayWidth: number
+): number {
+  const raw = keyboardStepPx && keyboardStepPx > 0 ? keyboardStepPx : DEFAULT_KEYBOARD_STEP_PX
+  return toDisplay(raw, bgWidth || 320, displayWidth)
+}
+
+/**
+ * 键盘方向键 → 步数（+正向 / −反向；Shift 为大步倍率）。
+ * 非方向键返回 null。显示位移 = count × displayKeyboardStep(...)。
+ */
+export function keyboardPressCount(key: string, shift: boolean): number | null {
+  const n = shift ? KEY_SHIFT_MULTIPLIER : 1
+  if (key === 'ArrowLeft' || key === 'Left') return -n
+  if (key === 'ArrowRight' || key === 'Right') return n
   return null
+}
+
+/** @deprecated 用 keyboardPressCount + displayKeyboardStep；保留给旧测试过渡 */
+export function keyboardStep(key: string, shift: boolean, baseStep?: number): number | null {
+  const count = keyboardPressCount(key, shift)
+  if (count === null) return null
+  const base = baseStep && baseStep > 0 ? baseStep : DEFAULT_KEYBOARD_STEP_PX
+  return count * base
 }
 
 /**
@@ -107,15 +131,23 @@ export class TrackRecorder {
     return true
   }
 
-  /** 键盘模式：每次按键记一个点（x 为当前偏移），不节流 */
-  key(offset: number, now: number): void {
-    this.keys++
+  /**
+   * 键盘模式：记一个点（x 为当前偏移），并累计按键次数。
+   * @param presses 本次按键计入的次数（Shift 大步传 10）
+   */
+  key(offset: number, now: number, presses = 1): void {
+    this.keys += Math.max(1, Math.abs(Math.round(presses)))
     this.sample(this.originX + offset, this.originY, now, true)
   }
 
-  /** 键盘模式累计按键次数 */
+  /** 键盘模式累计按键次数（与落点步数对齐，可 setKeyPresses 覆盖） */
   get keyPresses(): number {
     return this.keys
+  }
+
+  /** 将按键次数设为与最终落点一致的步数（允许用户左右修正后仍通过校验） */
+  setKeyPresses(n: number): void {
+    this.keys = Math.max(0, Math.round(n))
   }
 
   get length(): number {

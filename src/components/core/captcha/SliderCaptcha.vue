@@ -35,7 +35,8 @@
     clampDisplayWidth,
     clampOffset,
     classifyCaptchaError,
-    keyboardStep,
+    displayKeyboardStep,
+    keyboardPressCount,
     maxOffset,
     toDisplay,
     type InputMode
@@ -77,12 +78,18 @@
   const handleRef = ref<HTMLElement>()
 
   let recorder: TrackRecorder | null = null
-  let inputMode: InputMode = 'pointer'
+  /** 当前挑战声明的 inputMode；切换 pointer↔keyboard 必须重新取题 */
+  const declaredMode = ref<InputMode>('pointer')
+  /** 用户意图模式（取题参数）；默认 pointer */
+  let wantedMode: InputMode = 'pointer'
+  /** 键盘累计步数（可负，但提交前偏移 ≥0）；与 answer.x / keyboardStep 对齐 */
+  let keySteps = 0
   let pointerStartX = 0
   let expireTimer: ReturnType<typeof setTimeout> | null = null
   let limitTimer: ReturnType<typeof setInterval> | null = null
   let resizeObs: ResizeObserver | null = null
   let alive = true
+  let loadingPromise: Promise<void> | null = null
 
   const bgHeight = computed(() => {
     const c = challenge.value
@@ -109,31 +116,50 @@
     if (w) displayWidth.value = clampDisplayWidth(w)
   }
 
-  async function load() {
-    clearTimers()
-    status.value = 'loading'
-    offset.value = 0
-    recorder = null
-    try {
-      const data = await fetchCaptchaChallenge({
-        scene: props.scene,
-        clientId: props.clientId,
-        tenantId: props.tenantId || undefined
-      })
-      if (!alive) return
-      challenge.value = data
-      status.value = 'ready'
-      // 只用 expireSeconds 倒计时，到期自动换图
-      expireTimer = setTimeout(
-        () => {
-          announce.value = t('pages.auth.slider.expired')
-          load()
-        },
-        Math.max(5, data.expireSeconds || 120) * 1000
-      )
-    } catch (err) {
-      handleError(err)
-    }
+  async function load(mode: InputMode = wantedMode) {
+    wantedMode = mode
+    const run = (async () => {
+      clearTimers()
+      status.value = 'loading'
+      offset.value = 0
+      keySteps = 0
+      recorder = null
+      dragging.value = false
+      try {
+        // sms 场景不传 tenantId（契约 v0.3）
+        const tenantId = props.scene === 'sms' ? undefined : props.tenantId || undefined
+        const data = await fetchCaptchaChallenge({
+          scene: props.scene,
+          clientId: props.clientId,
+          tenantId,
+          inputMode: mode
+        })
+        if (!alive) return
+        challenge.value = data
+        declaredMode.value = data.inputMode || mode
+        wantedMode = declaredMode.value
+        status.value = 'ready'
+        // 只用 expireSeconds 倒计时，到期自动换图（保持当前模式）
+        expireTimer = setTimeout(
+          () => {
+            announce.value = t('pages.auth.slider.expired')
+            load(wantedMode)
+          },
+          Math.max(5, data.expireSeconds || 120) * 1000
+        )
+      } catch (err) {
+        handleError(err)
+      }
+    })()
+    loadingPromise = run
+    await run
+    if (loadingPromise === run) loadingPromise = null
+  }
+
+  /** 切换 pointer↔keyboard：作废当前题并重新取题 */
+  async function switchMode(mode: InputMode) {
+    if (declaredMode.value === mode && challenge.value && status.value === 'ready') return
+    await load(mode)
   }
 
   function startLimit(seconds: number) {
@@ -148,7 +174,7 @@
       }
       if (retryLeft.value <= 0) {
         clearTimers()
-        load()
+        load(wantedMode)
       }
     }, 1000)
   }
@@ -163,12 +189,12 @@
         shaking.value = true
         setTimeout(() => {
           shaking.value = false
-          if (alive && status.value === 'failed') load()
+          if (alive && status.value === 'failed') load(wantedMode)
         }, 700)
         return
       case 'expired':
         announce.value = t('pages.auth.slider.expired')
-        load()
+        load(wantedMode)
         return
       case 'rateLimited':
         startLimit(info.retryAfter ?? 60)
@@ -192,7 +218,7 @@
       captchaId: c.captchaId,
       displayWidth: displayWidth.value,
       offset: offset.value,
-      inputMode,
+      inputMode: declaredMode.value,
       recorder,
       endTime: Date.now()
     })
@@ -213,12 +239,18 @@
   }
 
   // ===== pointer =====
-  function onPointerDown(e: PointerEvent) {
+  async function onPointerDown(e: PointerEvent) {
     if (!interactive.value || (e.pointerType === 'mouse' && e.button !== 0)) return
     e.preventDefault()
+    // 当前是 keyboard 题：先重新取 pointer 题，再等用户再次拖动
+    if (declaredMode.value !== 'pointer') {
+      await switchMode('pointer')
+      announce.value = t('pages.auth.slider.modeSwitched')
+      return
+    }
     ;(e.currentTarget as HTMLElement).setPointerCapture(e.pointerId)
-    inputMode = 'pointer'
     dragging.value = true
+    keySteps = 0
     pointerStartX = e.clientX - offset.value
     recorder = new TrackRecorder(Date.now(), e.clientX, e.clientY)
   }
@@ -242,22 +274,35 @@
   }
 
   // ===== keyboard =====
-  function onKeydown(e: KeyboardEvent) {
+  async function onKeydown(e: KeyboardEvent) {
     if (!interactive.value) return
     if (e.key === 'Enter') {
       e.preventDefault()
-      if (recorder && offset.value > 0) submit()
+      if (recorder && offset.value > 0 && declaredMode.value === 'keyboard') submit()
       return
     }
-    const step = keyboardStep(e.key, e.shiftKey, challenge.value?.keyboardStep)
-    if (step === null) return
+    const presses = keyboardPressCount(e.key, e.shiftKey)
+    if (presses === null) return
     e.preventDefault()
-    if (!recorder || inputMode !== 'keyboard') {
-      inputMode = 'keyboard'
-      recorder = new TrackRecorder(Date.now())
+    // 当前是 pointer 题：重新取 keyboard 题后再等用户继续按键（本下不计入）
+    if (declaredMode.value !== 'keyboard') {
+      await switchMode('keyboard')
+      announce.value = t('pages.auth.slider.modeSwitched')
+      handleRef.value?.focus()
+      return
     }
-    offset.value = clampOffset(offset.value + step, max.value)
-    recorder.key(offset.value, Date.now())
+    const c = challenge.value
+    if (!c) return
+    if (!recorder) recorder = new TrackRecorder(Date.now())
+    const stepPx = displayKeyboardStep(c.keyboardStep, c.bgWidth, displayWidth.value)
+    keySteps = Math.max(0, keySteps + presses)
+    // 若步长导致超出 max，回退到能放下的最大整步
+    const maxSteps = stepPx > 0 ? Math.floor(max.value / stepPx + 1e-6) : 0
+    if (keySteps > maxSteps) keySteps = maxSteps
+    offset.value = clampOffset(keySteps * stepPx, max.value)
+    recorder.key(offset.value, Date.now(), Math.abs(presses))
+    // keyPresses 必须等于最终落点对应步数（契约：|presses − round(x/step)| ≤ 1）
+    recorder.setKeyPresses(keySteps)
   }
 
   function handleClose() {
@@ -378,7 +423,7 @@
                   status.value === 'error'
                     ? h(
                         'button',
-                        { type: 'button', class: 'sc-retry', onClick: load },
+                        { type: 'button', class: 'sc-retry', onClick: () => load(wantedMode) },
                         t('pages.auth.slider.retry')
                       )
                     : null
@@ -392,7 +437,7 @@
                 'aria-label': t('pages.auth.slider.refresh'),
                 title: t('pages.auth.slider.refresh'),
                 disabled: status.value === 'verifying' || status.value === 'limited',
-                onClick: load
+                onClick: () => load(wantedMode)
               },
               '↻'
             )

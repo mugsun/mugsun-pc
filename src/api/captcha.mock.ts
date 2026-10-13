@@ -4,7 +4,13 @@
  * 时长 / 点数下限（容差 ±6px 原图，与 v0.2 一致）、连续失败 5 次限流 10 秒。
  */
 import { HttpError } from '@/utils/http/error'
-import { CaptchaCode, CAPTCHA_MIN_WIDTH, type VerifyPayload } from '@/utils/captcha'
+import {
+  CaptchaCode,
+  CAPTCHA_MIN_WIDTH,
+  DEFAULT_KEYBOARD_STEP_PX,
+  type InputMode,
+  type VerifyPayload
+} from '@/utils/captcha'
 import type { CaptchaChallenge, CaptchaConfig, CaptchaVerifyResult } from './captcha'
 
 const BG_W = 320
@@ -13,8 +19,9 @@ const PIECE = 46
 const PIECE_W = 68
 const EXPIRE = 120
 const TOLERANCE = 6
+const KEYBOARD_STEP = DEFAULT_KEYBOARD_STEP_PX
 
-const store = new Map<string, { x: number; expireAt: number }>()
+const store = new Map<string, { x: number; expireAt: number; inputMode: InputMode }>()
 let fails = 0
 let lockedUntil = 0
 
@@ -45,13 +52,14 @@ export async function mockConfig(scene: string): Promise<CaptchaConfig> {
   return { enabled: true, type: 'SLIDER', scene }
 }
 
-export async function mockChallenge(): Promise<CaptchaChallenge> {
+export async function mockChallenge(inputMode: InputMode = 'pointer'): Promise<CaptchaChallenge> {
   await delay()
   if (Date.now() < lockedUntil) {
     fail(CaptchaCode.RATE_LIMITED, '操作过于频繁，请稍后再试', {
       retryAfter: Math.ceil((lockedUntil - Date.now()) / 1000)
     })
   }
+  const mode: InputMode = inputMode === 'keyboard' ? 'keyboard' : 'pointer'
   const x = 90 + Math.floor(Math.random() * (BG_W - PIECE_W - 100))
   const y = 30 + Math.floor(Math.random() * (BG_H - PIECE - 50))
   const bg = document.createElement('canvas')
@@ -80,21 +88,23 @@ export async function mockChallenge(): Promise<CaptchaChallenge> {
   p.stroke()
 
   const captchaId = rid()
-  // 块左边缘 = 缺口 x - 透明边距
-  store.set(captchaId, { x: x - (PIECE_W - PIECE) / 2, expireAt: Date.now() + EXPIRE * 1000 })
+  const answerX = x - (PIECE_W - PIECE) / 2
+  store.set(captchaId, { x: answerX, expireAt: Date.now() + EXPIRE * 1000, inputMode: mode })
   if (import.meta.env.DEV) {
-    ;(window as unknown as Record<string, unknown>).__captchaMockAnswer = x - (PIECE_W - PIECE) / 2
+    ;(window as unknown as Record<string, unknown>).__captchaMockAnswer = answerX
   }
   return {
     captchaId,
     type: 'SLIDER',
+    inputMode: mode,
     background: bg.toDataURL('image/jpeg', 0.9),
     piece: pc.toDataURL('image/png'),
     bgWidth: BG_W,
     bgHeight: BG_H,
     pieceWidth: PIECE_W,
     pieceHeight: BG_H,
-    expireSeconds: EXPIRE
+    expireSeconds: EXPIRE,
+    ...(mode === 'keyboard' ? { keyboardStep: KEYBOARD_STEP } : {})
   }
 }
 
@@ -108,17 +118,25 @@ export async function mockVerify(data: VerifyPayload): Promise<CaptchaVerifyResu
   const entry = store.get(data.captchaId)
   store.delete(data.captchaId)
   if (!entry || entry.expireAt < Date.now()) fail(CaptchaCode.EXPIRED, '验证码已过期')
+  if ((data.inputMode || 'pointer') !== entry.inputMode)
+    fail(CaptchaCode.FAILED, '验证失败，请再试一次')
   const real = (data.answer.x * BG_W) / data.bgDisplayWidth
   const dur = data.endTime - data.startTime
+  let modeOk = false
+  if (data.inputMode === 'keyboard') {
+    const presses = data.keyPresses ?? 0
+    const expected = Math.round(real / KEYBOARD_STEP)
+    modeOk =
+      presses >= 3 &&
+      presses <= 300 &&
+      dur >= 600 &&
+      dur <= 15000 &&
+      Math.abs(presses - expected) <= 1
+  } else {
+    modeOk = dur >= 300 && dur <= 15000 && data.track.length >= 8 && data.track.length <= 400
+  }
   const ok =
-    data.bgDisplayWidth >= CAPTCHA_MIN_WIDTH &&
-    Math.abs(real - entry!.x) <= TOLERANCE &&
-    dur >= 300 &&
-    dur <= 15000 &&
-    (data.inputMode === 'keyboard'
-      ? (data.keyPresses ?? 0) >= 3 && dur >= 600
-      : data.track.length >= 8) &&
-    data.track.length <= 400
+    data.bgDisplayWidth >= CAPTCHA_MIN_WIDTH && Math.abs(real - entry.x) <= TOLERANCE && modeOk
   if (!ok) {
     fails++
     if (fails >= 5) {

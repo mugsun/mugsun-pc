@@ -35,7 +35,7 @@ describe('useCaptchaGate', () => {
     expect(g.legacyEnabled.value).toBe(true)
   })
 
-  it('按场景单独查询 config', async () => {
+  it('按场景单独查询 config（sms 仍由 gate 传入 tenantId，api 层剥离）', async () => {
     fetchCaptchaConfig.mockResolvedValue({ enabled: true, type: 'SLIDER', scene: 'sms' })
     const g = useCaptchaGate('sms', { tenantId: () => '000000' })
     await g.loadConfig()

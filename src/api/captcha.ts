@@ -15,6 +15,8 @@ export interface CaptchaConfig {
 export interface CaptchaChallenge {
   captchaId: string
   type: string
+  /** 出题时声明的输入模式；verify 必须一致 */
+  inputMode: 'pointer' | 'keyboard'
   background: string
   piece: string
   bgWidth: number
@@ -22,7 +24,7 @@ export interface CaptchaChallenge {
   pieceWidth: number
   pieceHeight: number
   expireSeconds: number
-  /** v0.3 预留：每次 ←/→ 的移动步长（显示像素）；缺省时前端用默认步长 */
+  /** 仅 keyboard 题返回：每次 ←/→ 移动的原图像素，默认 4；前端换算为显示像素 */
   keyboardStep?: number
 }
 
@@ -34,7 +36,13 @@ export interface CaptchaVerifyResult {
 interface SceneParams {
   scene: CaptchaScene
   clientId: string
+  /** scene=sms 时不要传（服务端忽略）；其他场景可选 */
   tenantId?: string
+}
+
+interface ChallengeParams extends SceneParams {
+  /** v0.3：出题时声明，verify 须一致；切换 pointer/keyboard 须重新取题 */
+  inputMode: 'pointer' | 'keyboard'
 }
 
 /**
@@ -45,21 +53,31 @@ const useMock = import.meta.env.DEV && import.meta.env.VITE_CAPTCHA_MOCK === 'tr
 const loadMock = () => import('./captcha.mock')
 
 /** 获取验证码开关与类型（匿名） */
+/** 组装请求参数：sms 场景去掉 tenantId（契约 v0.3） */
+function withScene(params: SceneParams): SceneParams {
+  if (params.scene === 'sms') {
+    return { scene: params.scene, clientId: params.clientId }
+  }
+  return params
+}
+
 export async function fetchCaptchaConfig(params: SceneParams) {
-  if (useMock) return (await loadMock()).mockConfig(params.scene)
+  const q = withScene(params)
+  if (useMock) return (await loadMock()).mockConfig(q.scene)
   return request.get<CaptchaConfig>({
     url: '/api/auth/captcha/config',
-    params,
+    params: q,
     showErrorMessage: false
   })
 }
 
-/** 获取滑块挑战 */
-export async function fetchCaptchaChallenge(params: SceneParams) {
-  if (useMock) return (await loadMock()).mockChallenge()
+/** 获取滑块挑战（须声明 inputMode） */
+export async function fetchCaptchaChallenge(params: ChallengeParams) {
+  const body = withScene(params) as ChallengeParams
+  if (useMock) return (await loadMock()).mockChallenge(body.inputMode)
   return request.post<CaptchaChallenge>({
     url: '/api/auth/captcha/challenge',
-    data: params,
+    data: { ...body, inputMode: body.inputMode || 'pointer' },
     showErrorMessage: false
   })
 }
