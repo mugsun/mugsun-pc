@@ -714,6 +714,8 @@
         "changelog": "Changelog",
         "changelogSubtitle": "Recent version changes",
         "noChangelog": "No changelog entries",
+        "currentVersion": "Current version",
+        "viewChangelog": "View changelog",
         "shortcuts": "Shortcuts",
         "edit": "Edit",
         "shortcutsEmpty": "No shortcuts yet. Click Edit at the top right and pick the pages you use",

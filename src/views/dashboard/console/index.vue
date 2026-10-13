@@ -103,23 +103,18 @@
       </ElCol>
 
       <ElCol :xs="24" :lg="8" class="mt-4 mt-lg-0">
-        <ArtTimelineListCard
-          v-if="changelogList.length"
-          :title="$t('pages.dashboard.console.changelog')"
-          :subtitle="$t('pages.dashboard.console.changelogSubtitle')"
-          :list="changelogList"
-          :max-count="6"
-        />
-        <!-- ArtTimelineListCard 无内置空态，空列表时以同款标题卡兜底 -->
-        <div v-else class="art-card list-card" v-loading="changelogLoading">
+        <!-- 只展示 package.json 当前版本，历史变更以仓库 CHANGELOG 为准，不在此编造 -->
+        <div class="art-card list-card">
           <div class="card-head">
             <span class="card-title">{{ $t('pages.dashboard.console.changelog') }}</span>
           </div>
-          <ElEmpty
-            v-if="!changelogLoading"
-            :description="$t('pages.dashboard.console.noChangelog')"
-            :image-size="60"
-          />
+          <div class="p-5">
+            <div class="text-sm text-g-500">{{ $t('pages.dashboard.console.currentVersion') }}</div>
+            <div class="mt-1 text-2xl font-medium">v{{ appVersion }}</div>
+            <ElLink class="mt-4" type="primary" :href="CHANGELOG_URL" target="_blank">
+              {{ $t('pages.dashboard.console.viewChangelog') }}
+            </ElLink>
+          </div>
         </div>
       </ElCol>
     </ElRow>
@@ -169,7 +164,6 @@
 
 <script setup lang="ts">
   import { echarts } from '@/plugins/echarts'
-  import { fetchChangelogRecent } from '@/api/feedback'
   import { fetchFlowMyTodo, fetchMyNoticePage } from '@/api/system-manage'
   import {
     fetchWorkbenchOverview,
@@ -328,12 +322,9 @@
   const todoLoading = ref(false)
   const noticeList = ref<any[]>([])
   const noticeLoading = ref(false)
-  const changelogList = ref<any[]>([])
-  const changelogLoading = ref(false)
+  const appVersion = __PKG_VERSION__
+  const CHANGELOG_URL = 'https://github.com/mugsun/mugsun-pc/blob/main/CHANGELOG.md'
   const overviewLoading = ref(false)
-
-  const typeColor = (type: string) =>
-    type === 'fix' ? '#f56c6c' : type === 'optimize' ? '#e6a23c' : '#409eff'
 
   const loadOverview = async () => {
     overviewLoading.value = true
@@ -382,21 +373,6 @@
       noticeList.value = resp?.records ?? []
     } finally {
       noticeLoading.value = false
-    }
-  }
-
-  const loadChangelog = async () => {
-    changelogLoading.value = true
-    try {
-      const rows = (await fetchChangelogRecent(6)) || []
-      changelogList.value = rows.map((r: any) => ({
-        time: (r.publishTime || r.createTime || '').slice(0, 10),
-        content: r.title,
-        status: typeColor(r.type),
-        code: r.version
-      }))
-    } finally {
-      changelogLoading.value = false
     }
   }
 
@@ -452,7 +428,6 @@
     loadOverview()
     loadTodo()
     loadNotice()
-    loadChangelog()
     loadShortcuts()
     window.addEventListener('resize', resize)
   })

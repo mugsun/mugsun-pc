@@ -6,7 +6,7 @@
 
 ### 说明
 
-- `package.json` 版本为 `0.0.1`，尚未发布正式 npm / GitHub Release
+- `package.json` 版本为 `0.1.0`，尚未发布正式 npm / GitHub Release
 - 以下条目概括当前 `main` 能力，便于对照；首个正式版本发布时将收束到对应 tag 章节
 
 ### 已有能力（开发中）
