@@ -2,6 +2,7 @@
 <template>
   <div class="gis-shell art-full-height">
     <div class="gis-map-shell">
+      <GisBasemapEmpty />
       <div ref="mapHost" class="gis-map"></div>
       <aside class="gis-hud gis-hud-panel">
         <div class="gis-hud-head">
@@ -145,6 +146,7 @@
 </template>
 
 <script setup lang="ts">
+  import GisBasemapEmpty from '../../components/GisBasemapEmpty.vue'
   import {
     computed,
     nextTick,

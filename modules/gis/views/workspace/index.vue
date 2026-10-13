@@ -1,16 +1,14 @@
 <!-- 地图工作台：底图 + 二维标绘/量算（落场景 JSON）+ 三维只读回显。 -->
 <template>
   <div class="gis-workspace art-full-height">
-    <div v-if="!status.enabled" class="gis-empty">
-      <ElEmpty :description="$t('pages.gis.disabledTitle')" />
-    </div>
-    <div v-else-if="!hasReadyProvider" class="gis-empty">
-      <ElEmpty :description="$t('pages.gis.emptyTitle')">
-        <template #default>
-          <p class="gis-empty-desc">{{ $t('pages.gis.emptyDesc') }}</p>
-          <ElButton type="primary" @click="goProvider">{{ $t('pages.gis.goProvider') }}</ElButton>
-        </template>
-      </ElEmpty>
+    <div v-if="basemapState !== 'ready'" class="gis-map-shell">
+      <GisBasemapEmpty
+        controlled
+        :status="statusLoaded ? status : null"
+        :error="statusError"
+        :loading="statusLoading"
+        @retry="init"
+      />
     </div>
     <template v-else>
       <div class="gis-map-shell">
@@ -478,6 +476,8 @@
 </template>
 
 <script setup lang="ts">
+  import GisBasemapEmpty from '../../components/GisBasemapEmpty.vue'
+  import { basemapStateOf, isCanceled } from '@/gis/basemapState'
   import {
     computed,
     nextTick,
@@ -670,6 +670,15 @@
     status.value.providers.filter((p) => p.configured && p.enabled)
   )
   const hasReadyProvider = computed(() => readyProviders.value.length > 0)
+  const statusLoaded = ref(false)
+  const statusLoading = ref(false)
+  const statusError = ref<unknown>(null)
+  /** 底图可用性以后端 status 为准；取不到状态时是 error，不当成未配置 */
+  const basemapState = computed(() => {
+    if (statusError.value) return 'error'
+    if (!statusLoaded.value) return 'loading'
+    return basemapStateOf(status.value)
+  })
 
   const drawHint = computed(() => t(`pages.gis.hint${capTool(tool.value)}`))
 
@@ -696,10 +705,6 @@
   }
 
   const capKind = (kind: GisFeatureKind): string => capTool(kind)
-
-  const goProvider = (): void => {
-    router.push('/gis/provider')
-  }
 
   const captureSpec = (): GisSceneSpec => {
     const spec: GisSceneSpec = {
@@ -1881,8 +1886,19 @@
     }
   })
 
-  onMounted(async () => {
-    const next = await fetchGisStatus()
+  async function init(): Promise<void> {
+    statusLoading.value = true
+    statusError.value = null
+    let next: Awaited<ReturnType<typeof fetchGisStatus>>
+    try {
+      next = await fetchGisStatus({ silent: true })
+    } catch (e) {
+      if (!isCanceled(e)) statusError.value = e
+      return
+    } finally {
+      statusLoading.value = false
+    }
+    statusLoaded.value = true
     status.value = {
       enabled: next.enabled,
       providers: next.providers,
@@ -1890,13 +1906,17 @@
       tilesets: next.tilesets ?? []
     }
     if (!status.value.enabled || !hasReadyProvider.value) return
+    // 地图容器在状态就绪后才渲染
+    await nextTick()
     // 引擎标签与大图层是否走瓦片都依赖这条探测，不能等打开图层面板才拉
     void loadCatalog()
     await loadScenes()
     await bootMap()
     await applyRouteQuery()
     document.addEventListener('keydown', onSketchKey)
-  })
+  }
+
+  onMounted(init)
 
   onBeforeUnmount(() => {
     closeOverlays()

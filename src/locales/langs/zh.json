@@ -3252,7 +3252,22 @@
       "xyzKeyOptional": "访问密钥（可选，地址中用 {'{'}key{'}'} 引用）",
       "xyzTest": "测试",
       "xyzTestOk": "瓦片可正常获取（{ms} ms）",
-      "xyzTestFail": "测试失败"
+      "xyzTestFail": "测试失败",
+      "basemapEmpty": {
+        "title": "还没有可用的底图",
+        "desc": "地图需要先配置底图才能显示。请在「地理信息 → 底图」里启用一个底图。",
+        "tipTianditu": "使用天地图：到天地图控制台申请 Key（tk），填入底图配置并启用。高德、百度、Google 同理，各需自己的 Key。",
+        "tipXyz": "不想申请 Key：可以改用免密钥的自定义 XYZ 瓦片，例如内置的 OpenStreetMap 预设（域名须在部署白名单内）。",
+        "configure": "去配置底图",
+        "docs": "查看配置文档",
+        "askAdmin": "你没有底图配置权限，请联系管理员配置。",
+        "errorTitle": "底图状态加载失败",
+        "errorNetwork": "网络连接异常，没能获取底图配置状态。这不代表底图未配置，请检查网络后重试。",
+        "errorServer": "服务端返回错误，没能获取底图配置状态。请稍后重试，或联系管理员查看服务日志。",
+        "retry": "重试",
+        "moduleOffTitle": "地理信息模块未启用",
+        "moduleOffDesc": "当前部署关闭了地理信息模块，请联系管理员开启。"
+      }
     },
     "track": {
       "shared": {

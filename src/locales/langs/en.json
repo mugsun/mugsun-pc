@@ -3252,7 +3252,22 @@
       "xyzKeyOptional": "Access key (optional, reference as {'{'}key{'}'} in the URL)",
       "xyzTest": "Test",
       "xyzTestOk": "Tile fetched OK ({ms} ms)",
-      "xyzTestFail": "Test failed"
+      "xyzTestFail": "Test failed",
+      "basemapEmpty": {
+        "title": "No basemap available",
+        "desc": "Maps need a basemap before they can display anything. Enable one under GIS → Basemap.",
+        "tipTianditu": "To use Tianditu, apply for a key (tk) in the Tianditu console, enter it in the basemap settings and enable it. AMap, Baidu and Google work the same way, each with its own key.",
+        "tipXyz": "No key? Use a keyless custom XYZ basemap instead, such as the built-in OpenStreetMap preset (its host must be on the deployment allow-list).",
+        "configure": "Configure basemap",
+        "docs": "Read the docs",
+        "askAdmin": "You don't have permission to configure basemaps. Please ask an administrator.",
+        "errorTitle": "Couldn't load basemap status",
+        "errorNetwork": "The network request failed, so the basemap status is unknown. This does not mean no basemap is configured. Check your connection and retry.",
+        "errorServer": "The server returned an error, so the basemap status is unknown. Retry later or ask an administrator to check the server logs.",
+        "retry": "Retry",
+        "moduleOffTitle": "GIS module is disabled",
+        "moduleOffDesc": "The GIS module is turned off in this deployment. Please ask an administrator to enable it."
+      }
     },
     "track": {
       "shared": {
