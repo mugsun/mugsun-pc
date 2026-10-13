@@ -3267,6 +3267,15 @@
         "retry": "Retry",
         "moduleOffTitle": "GIS module is disabled",
         "moduleOffDesc": "The GIS module is turned off in this deployment. Please ask an administrator to enable it."
+      },
+      "tileError": {
+        "title": "The basemap didn't load",
+        "desc": "Several tiles in a row failed to load. The network may be down, or a proxy (such as fake-ip mode) may be blocking tile requests.",
+        "retry": "Retry",
+        "switch": "Switch basemap",
+        "docs": "Troubleshooting",
+        "askAdmin": "To switch basemaps, please contact an administrator.",
+        "reason": "Reason code: {code}"
       }
     },
     "track": {

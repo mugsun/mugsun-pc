@@ -3267,6 +3267,15 @@
         "retry": "重试",
         "moduleOffTitle": "地理信息模块未启用",
         "moduleOffDesc": "当前部署关闭了地理信息模块，请联系管理员开启。"
+      },
+      "tileError": {
+        "title": "底图没有加载出来",
+        "desc": "连续多张瓦片加载失败，可能是网络不通，或代理（如 fake-ip 模式）拦截了瓦片请求。",
+        "retry": "重试",
+        "switch": "切换底图",
+        "docs": "排障说明",
+        "askAdmin": "如需切换底图，请联系管理员。",
+        "reason": "原因代码：{code}"
       }
     },
     "track": {

@@ -2,6 +2,7 @@
 <template>
   <div class="gis-shell art-full-height">
     <div class="gis-map-shell">
+      <GisTileErrorHint :host="mapHost" />
       <div ref="mapHost" class="gis-map"></div>
       <aside class="gis-hud gis-hud-panel gis-hud-panel-wide">
         <p class="gis-panel-lead">{{ $t('pages.gis.secretHint') }}</p>
@@ -131,6 +132,7 @@
 </template>
 
 <script setup lang="ts">
+  import GisTileErrorHint from '../../components/GisTileErrorHint.vue'
   import {
     nextTick,
     onActivated,

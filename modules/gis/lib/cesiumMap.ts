@@ -3,6 +3,7 @@ import { layersForStyle, tileUrl } from './types'
 import { fromDisplayLonLat, mapLonLatCoords, toDisplayLonLat } from './coord'
 import { useUserStore } from '@/store/modules/user'
 import { attributionOf } from './attribution'
+import { tileHealthFor, watchCesiumImagery } from './tileHealth'
 
 type CesiumMod = typeof import('cesium')
 type CesiumViewer = InstanceType<CesiumMod['Viewer']>
@@ -55,6 +56,9 @@ export function applyCesiumBasemap(
   style: GisStyleCode
 ): void {
   viewer.imageryLayers.removeAll()
+  const health = tileHealthFor(viewer.container)
+  health.reset()
+  health.setRetry(() => applyCesiumBasemap(Cesium, viewer, provider, style))
   const token = useUserStore().accessToken
   const text = attributionOf(provider)
   for (const layer of layersForStyle(style, provider)) {
@@ -62,13 +66,13 @@ export function applyCesiumBasemap(
       url: tileUrl(provider, layer, '{z}', '{x}', '{y}'),
       headers: token ? { Authorization: token } : {}
     })
-    viewer.imageryLayers.addImageryProvider(
-      new Cesium.UrlTemplateImageryProvider({
-        url,
-        tilingScheme: new Cesium.WebMercatorTilingScheme(),
-        maximumLevel: 18
-      })
-    )
+    const imagery = new Cesium.UrlTemplateImageryProvider({
+      url,
+      tilingScheme: new Cesium.WebMercatorTilingScheme(),
+      maximumLevel: 18
+    })
+    watchCesiumImagery(imagery, health)
+    viewer.imageryLayers.addImageryProvider(imagery)
   }
   const corner = viewer.container.querySelector<HTMLElement>('.gis-cesium-credit')
   if (corner) {
