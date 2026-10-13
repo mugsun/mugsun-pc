@@ -332,6 +332,9 @@
    */
   const withTenantNames = async (rows: any[]) => {
     if (!rows.length) return rows
+    // 平台租户 000000 没有 sys_tenant 行，单独给名字
+    const platform = (r: any) =>
+      String(r.name) === '000000' ? { ...r, name: t('pages.dashboard.console.platformTenant') } : r
     try {
       const tenants = (await fetchTenantList()) || []
       const names = new Map<string, string>()
@@ -340,9 +343,9 @@
         for (const k of [t.tenantId, t.tenantCode])
           if (k != null) names.set(String(k), t.tenantName)
       }
-      return rows.map((r) => ({ ...r, name: names.get(String(r.name)) ?? r.name }))
+      return rows.map((r) => platform({ ...r, name: names.get(String(r.name)) ?? r.name }))
     } catch {
-      return rows
+      return rows.map(platform)
     }
   }
 
