@@ -39,8 +39,10 @@
     keyboardPressCount,
     maxOffset,
     toDisplay,
-    type InputMode
+    type InputMode,
+    CaptchaCode
   } from '@/utils/captcha'
+  import { HttpError } from '@/utils/http/error'
 
   defineOptions({ name: 'SliderCaptcha' })
 
@@ -234,6 +236,11 @@
         if (props.mode === 'dialog') emit('update:visible', false)
       }, 600)
     } catch (err) {
+      // v0.4：verify 被截断 / 连接错误按 40011 处理（提示重试并换图）
+      if (classifyCaptchaError(err).kind === 'network') {
+        handleError(new HttpError('', CaptchaCode.FAILED))
+        return
+      }
       handleError(err)
     }
   }

@@ -143,6 +143,10 @@ describe('classifyCaptchaError', () => {
   it('限流缺 retryAfter 时默认 60', () => {
     expect(classifyCaptchaError(new HttpError('x', 40012)).retryAfter).toBe(60)
   })
+  it('v0.4：触发锁定的 verify 直接 40012 + retryAfter=600', () => {
+    const e = new HttpError('尝试次数过多', 40012, { data: { retryAfter: 600 } })
+    expect(classifyCaptchaError(e)).toMatchObject({ kind: 'rateLimited', retryAfter: 600 })
+  })
   it('网络错误与其他', () => {
     expect(classifyCaptchaError(new HttpError('net', 400)).kind).toBe('network')
     expect(classifyCaptchaError(new HttpError('biz', 1001, { data: null })).kind).toBe('other')

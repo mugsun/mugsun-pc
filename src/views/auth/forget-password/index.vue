@@ -238,7 +238,8 @@
         })
       )
       startCountdown()
-      ElMessage.success(t('pages.auth.forgetPassword.codeSent'))
+      // v0.4：forget-code 永远成功，给中性提示（不暴露账号是否存在）
+      ElMessage.info(t('pages.auth.forgetPassword.codeSent'))
     } catch (error) {
       if (isCaptchaCancelled(error)) return
       // 失败刷新图形验证码（答案已在后端消费）
