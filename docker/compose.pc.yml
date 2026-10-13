@@ -6,7 +6,18 @@
 #   └── mugsun-pc/    ← 本文件在 mugsun-pc/docker/
 #
 # 用法（在 mugsun-pc 目录）：
-#   docker compose -f docker/compose.pc.yml up -d --build
+#   1) 准备口令（没有默认值，缺少时 compose 拒绝启动；只用字母数字，Redis 口令会拼进连接 URI）：
+#        cat > docker/.env <<EOF2
+#        MUGSUN_DB_PASSWORD=$(openssl rand -hex 16)
+#        MUGSUN_POSTGRES_SUPER_PASSWORD=$(openssl rand -hex 16)
+#        MUGSUN_REDIS_PASSWORD=$(openssl rand -hex 16)
+#        MUGSUN_INIT_PASSWORD=<初始管理员口令，满足后端口令复杂度>
+#        MUGSUN_SM4_KEY=$(openssl rand -hex 8)
+#        MUGSUN_API_KEY=$(openssl rand -hex 8)
+#        # 另需 MUGSUN_SM2_PRIVATE_KEY/PUBLIC_KEY、MUGSUN_SIGN_PRIVATE_KEY/PUBLIC_KEY（两对 SM2 hex 密钥）
+#        EOF2
+#      （docker/.env 已在 .gitignore / .dockerignore 中排除，切勿提交）
+#   2) docker compose -f docker/compose.pc.yml --env-file docker/.env up -d --build
 #   打开 http://localhost:8088
 #
 # 后端镜像沿用 mugsun-boot/Dockerfile（上下文为父目录）。后端的生产配置、
@@ -23,8 +34,16 @@ services:
     image: mugsun/pc:local
     environment:
       MUGSUN_API_UPSTREAM: http://boot:8080
+      # 前置网关（TLS 终端/负载均衡）网段，逗号分隔；只有它们传来的 X-Forwarded-For/Proto 才被采信
+      MUGSUN_GATEWAY_CIDRS: ${MUGSUN_GATEWAY_CIDRS:-}
+      # CSP（Report-Only）额外放行的瓦片域 / 埋点上报域，空格分隔，如 'https://tile.example.com'
+      MUGSUN_CSP_TILE_HOSTS: ${MUGSUN_CSP_TILE_HOSTS:-}
+      MUGSUN_CSP_TRACK_HOSTS: ${MUGSUN_CSP_TRACK_HOSTS:-}
     ports:
-      - '${MUGSUN_PC_PORT:-8088}:80'
+      # 容器内 nginx 以非 root 监听 8080，宿主机默认映射 8088
+      - '${MUGSUN_PC_PORT:-8088}:8080'
+    networks:
+      - mugsun
     depends_on:
       - boot
     restart: unless-stopped
@@ -39,9 +58,25 @@ services:
       # 变量名取自 mugsun-boot application-prod.yml（以后端为准）
       JDBC_URL: jdbc:postgresql://postgres:5432/mugsun
       JDBC_USERNAME: mugsun
-      JDBC_PASSWORD: ${MUGSUN_DB_PASSWORD:-mugsun}
+      JDBC_PASSWORD: ${MUGSUN_DB_PASSWORD:?请设置 MUGSUN_DB_PASSWORD（见文件头）}
+      # 埋点库（mugsun-boot-track 独立数据源，默认指向 localhost，容器内必须显式指定）
+      TRACK_JDBC_URL: jdbc:postgresql://postgres:5432/mugsun_track
+      TRACK_JDBC_USERNAME: mugsun
+      TRACK_JDBC_PASSWORD: ${MUGSUN_DB_PASSWORD:?请设置 MUGSUN_DB_PASSWORD（见文件头）}
       REDIS_HOST: redis
-      REDIS_PASSWORD: ''
+      REDIS_PASSWORD: ${MUGSUN_REDIS_PASSWORD:?请设置 MUGSUN_REDIS_PASSWORD（见文件头）}
+      # 初始管理员口令：prod 缺失即拒绝启动（不再使用内置默认口令）
+      MUGSUN_INIT_PASSWORD: ${MUGSUN_INIT_PASSWORD:?请设置 MUGSUN_INIT_PASSWORD（初始管理员口令）}
+      # 国密密钥：prod 为 strict-keys，缺失即拒绝启动；必须固定注入（重启后换密钥会导致历史密文/签名失效）
+      MUGSUN_SM2_PRIVATE_KEY: ${MUGSUN_SM2_PRIVATE_KEY:?请设置 MUGSUN_SM2_PRIVATE_KEY（见 mugsun-boot 部署文档）}
+      MUGSUN_SM2_PUBLIC_KEY: ${MUGSUN_SM2_PUBLIC_KEY:?请设置 MUGSUN_SM2_PUBLIC_KEY（见 mugsun-boot 部署文档）}
+      MUGSUN_SIGN_PRIVATE_KEY: ${MUGSUN_SIGN_PRIVATE_KEY:?请设置 MUGSUN_SIGN_PRIVATE_KEY（见 mugsun-boot 部署文档）}
+      MUGSUN_SIGN_PUBLIC_KEY: ${MUGSUN_SIGN_PUBLIC_KEY:?请设置 MUGSUN_SIGN_PUBLIC_KEY（见 mugsun-boot 部署文档）}
+      MUGSUN_SM4_KEY: ${MUGSUN_SM4_KEY:?请设置 MUGSUN_SM4_KEY（见 mugsun-boot 部署文档）}
+      MUGSUN_API_KEY: ${MUGSUN_API_KEY:?请设置 MUGSUN_API_KEY（见 mugsun-boot 部署文档）}
+      # 可信代理：compose 网段（nginx 所在）+ 部署方追加的前置网关网段。
+      # nginx 已用 $remote_addr 覆盖 X-Forwarded-For，后端据此按真实客户端 IP 限流/审计
+      MUGSUN_OPENAPI_TRUSTED_PROXIES: ${MUGSUN_COMPOSE_SUBNET:-172.30.88.0/24},${MUGSUN_GATEWAY_CIDRS:-}
       MUGSUN_FRONT_URL: ${MUGSUN_FRONT_URL:-http://localhost:8088}
       FILE_DOMAIN: ${MUGSUN_FRONT_URL:-http://localhost:8088}/api/
       # 邮件 / 短信无默认值，演示环境给占位，正式部署改成真实值
@@ -58,6 +93,8 @@ services:
       redis:
         condition: service_healthy
     restart: unless-stopped
+    networks:
+      - mugsun
 
   postgres:
     build:
@@ -66,8 +103,8 @@ services:
     platform: linux/amd64
     environment:
       POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: ${MUGSUN_POSTGRES_SUPER_PASSWORD:-postgres}
-      MUGSUN_DB_PASSWORD: ${MUGSUN_DB_PASSWORD:-mugsun}
+      POSTGRES_PASSWORD: ${MUGSUN_POSTGRES_SUPER_PASSWORD:?请设置 MUGSUN_POSTGRES_SUPER_PASSWORD（见文件头）}
+      MUGSUN_DB_PASSWORD: ${MUGSUN_DB_PASSWORD:?请设置 MUGSUN_DB_PASSWORD（见文件头）}
     volumes:
       - pg-data:/var/lib/postgresql/data
       - ../../mugsun-boot/scripts/init-db.sql:/initdb/init-db.sql:ro
@@ -77,14 +114,28 @@ services:
       interval: 5s
       timeout: 5s
       retries: 20
+    networks:
+      - mugsun
 
   redis:
-    image: redis:7-alpine
+    image: redis:7-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
+    environment:
+      REDISCLI_AUTH: ${MUGSUN_REDIS_PASSWORD:?请设置 MUGSUN_REDIS_PASSWORD（见文件头）}
+    command: ['sh', '-c', 'exec redis-server --requirepass "$$REDISCLI_AUTH"']
     healthcheck:
       test: ['CMD', 'redis-cli', 'ping']
       interval: 5s
       timeout: 3s
       retries: 10
+    networks:
+      - mugsun
+
+networks:
+  mugsun:
+    ipam:
+      config:
+        # 固定子网，供后端 MUGSUN_OPENAPI_TRUSTED_PROXIES 使用；与宿主机网段冲突时改 MUGSUN_COMPOSE_SUBNET
+        - subnet: ${MUGSUN_COMPOSE_SUBNET:-172.30.88.0/24}
 
 volumes:
   pg-data:

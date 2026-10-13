@@ -9,3 +9,9 @@ coverage
 *.log
 .env.local
 .env.*.local
+.env
+.env.*
+!.env.production
+!.env.development
+.git*
+.DS_Store
