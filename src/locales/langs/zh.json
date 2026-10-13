@@ -835,7 +835,7 @@
         "rules": {
           "usernameFormat": "账号请用字母开头，只能包含字母、数字和下划线",
           "nicknameLen": "昵称请控制在 64 个字以内",
-          "emailFormat": "邮箱格式不正确。请填写类似 name@example.com 的地址，不需要可以留空",
+          "emailFormat": "邮箱格式不正确。请填写类似 name{'@'}example.com 的地址，不需要可以留空",
           "phoneFormat": "手机号请填写 11 位，以 1 开头。不需要可以留空",
           "idCardFormat": "身份证号格式不正确"
         },
@@ -1470,7 +1470,7 @@
         "statusOn": "启用",
         "statusOff": "停用",
         "configLabel": "配置",
-        "configPlaceholder": "邮件可写 {\"host\":\"smtp.example.com\",\"port\":465}，站内信和短信留空",
+        "configPlaceholder": "邮件可写 {'{'}\"host\":\"smtp.example.com\",\"port\":465{'}'}，站内信和短信留空",
         "secretLabel": "凭据",
         "secretPlaceholder": "留空表示不修改。邮件填 SMTP 密码",
         "remarkLabel": "备注",
@@ -2598,7 +2598,7 @@
         "errRuleIncomplete": "条件规则缺少字段或运算符。请补上字段和运算符后再发布",
         "errOpUnsupported": "不支持的条件运算符。请改成等于、不等于、大于、大于等于、小于、小于等于、包含或不包含后再发布",
         "errFieldInvalid": "条件变量名非法。请改成以字母或下划线开头，并且只含字母、数字和下划线后再发布",
-        "errValueInvalid": "条件值含非法字符（不能包含 | 或 @@ 或换行）。请去掉这些字符后再发布",
+        "errValueInvalid": "条件值含非法字符（不能包含 {'|'} 或 {'@@'} 或换行）。请去掉这些字符后再发布",
         "errNodeType": "未知节点类型。请改成审批、条件或并行后再发布",
         "errRatio": "会签比例须为 0 到 100 的整数。请改成这个范围里的整数后再发布"
       },
