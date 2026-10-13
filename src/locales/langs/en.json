@@ -3239,7 +3239,20 @@
       "enginePostgis": "PostGIS",
       "engineJava": "Java fallback",
       "enginePostgisTip": "Spatial queries and vector tiles run in the database",
-      "engineJavaTip": "PostGIS is missing: spatial queries run in memory and vector tiles are unavailable. Rebuild the database with the repo docker-compose (postgis/postgis image)"
+      "engineJavaTip": "PostGIS is missing: spatial queries run in memory and vector tiles are unavailable. Rebuild the database with the repo docker-compose (postgis/postgis image)",
+      "providerXyz": "Custom tiles",
+      "helpXyz": "Custom tiles: an XYZ URL (https, with {'{'}z{'}'}/{'{'}x{'}'}/{'{'}y{'}'}, optional {'{'}s{'}'} subdomains). The OpenStreetMap preset works without a key. The host must be in the deployment allow-list mugsun.gis.xyz.allowed-hosts; public OSM tiles are not meant for heavy production traffic.",
+      "xyzPreset": "Preset",
+      "xyzPresetCustom": "Custom URL",
+      "xyzPreset_osm": "OpenStreetMap Standard",
+      "xyzUrl": "Tile URL",
+      "xyzSubdomains": "Subdomains ({'{'}s{'}'}, comma-separated)",
+      "xyzAttribution": "Attribution (shown bottom-right on the map)",
+      "xyzAllowedHosts": "Allowed hosts (set by ops): {hosts}",
+      "xyzKeyOptional": "Access key (optional, reference as {'{'}key{'}'} in the URL)",
+      "xyzTest": "Test",
+      "xyzTestOk": "Tile fetched OK ({ms} ms)",
+      "xyzTestFail": "Test failed"
     },
     "track": {
       "shared": {

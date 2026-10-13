@@ -677,6 +677,7 @@
     if (code === 'tianditu') return 'Tianditu'
     if (code === 'amap') return 'Amap'
     if (code === 'baidu') return 'Baidu'
+    if (code === 'xyz') return 'Xyz'
     return 'Google'
   }
 

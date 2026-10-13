@@ -3239,7 +3239,20 @@
       "enginePostgis": "PostGIS",
       "engineJava": "Java 回落",
       "enginePostgisTip": "空间查询与矢量瓦片已下沉数据库",
-      "engineJavaTip": "当前库无 PostGIS：空间查询走内存、矢量瓦片不可用。请用仓库 docker-compose（postgis/postgis 镜像）重建数据库"
+      "engineJavaTip": "当前库无 PostGIS：空间查询走内存、矢量瓦片不可用。请用仓库 docker-compose（postgis/postgis 镜像）重建数据库",
+      "providerXyz": "自定义瓦片",
+      "helpXyz": "自定义瓦片：填 XYZ 地址（https，含 {'{'}z{'}'}/{'{'}x{'}'}/{'{'}y{'}'}，可用 {'{'}s{'}'} 子域），默认使用 OpenStreetMap 预设，无需密钥。域名须在部署白名单 mugsun.gis.xyz.allowed-hosts 内；OSM 公共瓦片不适合大流量生产。",
+      "xyzPreset": "预设",
+      "xyzPresetCustom": "自定义地址",
+      "xyzPreset_osm": "OpenStreetMap 标准",
+      "xyzUrl": "瓦片地址",
+      "xyzSubdomains": "子域（{'{'}s{'}'}，逗号分隔）",
+      "xyzAttribution": "版权归属（显示在地图右下角）",
+      "xyzAllowedHosts": "允许的域名（运维配置）：{hosts}",
+      "xyzKeyOptional": "访问密钥（可选，地址中用 {'{'}key{'}'} 引用）",
+      "xyzTest": "测试",
+      "xyzTestOk": "瓦片可正常获取（{ms} ms）",
+      "xyzTestFail": "测试失败"
     },
     "track": {
       "shared": {

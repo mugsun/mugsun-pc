@@ -8,6 +8,7 @@ import type ImageTile from 'ol/ImageTile'
 import type { GisProviderCode, GisStyleCode, GisView2d } from './types'
 import { layersForStyle, tileUrl } from './types'
 import { loadAuthedTileBlob } from './authTile'
+import { attributionOf, escapeAttribution } from './attribution'
 
 import { fromDisplayLonLat, toDisplayLonLat } from './coord'
 
@@ -23,9 +24,13 @@ export function createOlMap(target: HTMLElement, view: GisView2d, provider: GisP
       zoom: view.zoom,
       rotation: view.rotation ?? 0
     }),
-    controls: defaultControls({ rotate: false, attribution: false, zoom: true }).extend([
-      new ScaleLine({ units: 'metric' })
-    ])
+    // 打开版权归属控件：OSM / CARTO 等条款要求在地图上署名
+    controls: defaultControls({
+      rotate: false,
+      attribution: true,
+      attributionOptions: { collapsible: false },
+      zoom: true
+    }).extend([new ScaleLine({ units: 'metric' })])
   })
   map.getViewport().setAttribute('tabindex', '0')
   if (import.meta.env.DEV) {
@@ -42,10 +47,13 @@ export function applyOlBasemap(map: Map, provider: GisProviderCode, style: GisSt
     .filter((layer) => layer.get('mugsunRole') === OL_ROLE_BASEMAP)
     .forEach((layer) => map.removeLayer(layer))
   let z = 0
+  const credit = attributionOf(provider)
   for (const layer of layersForStyle(style, provider)) {
     const tile = new TileLayer({
       zIndex: z++,
       source: new XYZ({
+        // 叠层只署名一次（注记层与底图同一家）
+        attributions: credit && z === 1 ? escapeAttribution(credit) : undefined,
         url: tileUrl(provider, layer, '{z}', '{x}', '{y}'),
         tileLoadFunction: (tileItem, src) => {
           const imageTile = tileItem as ImageTile
