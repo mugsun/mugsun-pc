@@ -1,4 +1,4 @@
-<!-- 留存分析（G103）：新客 cohort 留存网格（窗口内新客按首次活跃日分组，UTC 日切）
+<!-- 留存分析（G103）：新客 cohort 留存网格（窗口内新客按首次活跃日分组，按租户时区零点切天）
      行 = cohort 日 + 规模（首列固定），列 = D+0..D+N，cell = 保留率 color-mix 色阶，未来 offset 占位「·」 -->
 <template>
   <div class="track-retention-page art-full-height">
@@ -126,10 +126,14 @@
   const offsets = computed(() => Array.from({ length: queryDays.value }, (_, i) => i))
 
   // ===== 单元格计算 =====
-  /** 今天 0 点（UTC 墙钟，与日切口径一致） */
+  /**
+   * 今天 0 点（墙钟日期，按 UTC 毫秒编码便于与 cohortDate 做整天加减）。
+   * boot#36 起服务端按租户时区（默认 Asia/Shanghai）切天；前端拿不到租户时区，
+   * 用浏览器本地日期近似——管理员与租户同一时区时一致，避免 UTC+8 下 0–8 点把今天的 D+0 误判为未来格。
+   */
   const todayUtcMs = (): number => {
     const d = new Date()
-    return Date.UTC(d.getUTCFullYear(), d.getUTCMonth(), d.getUTCDate())
+    return Date.UTC(d.getFullYear(), d.getMonth(), d.getDate())
   }
 
   const cohortUtcMs = (cohortDate: string): number => {
@@ -137,7 +141,7 @@
     return Number.isNaN(t) ? 0 : t
   }
 
-  /** cohort 日 + offset 超出今天（UTC）即未来格，无数据 */
+  /** cohort 日 + offset 超出今天（当地日期）即未来格，无数据 */
   const isFutureCell = (row: RetentionRow, offset: number): boolean =>
     cohortUtcMs(row.cohortDate) + offset * DAY_MS > todayUtcMs()
 
