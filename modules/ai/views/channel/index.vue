@@ -72,7 +72,7 @@
   import type { FormInstance } from 'element-plus'
   import { requiredRule } from '../shared/formRules'
   import type { ColumnOption } from '@/types/component'
-  import { computed, h, onMounted, reactive, ref } from 'vue'
+  import { computed, h, onMounted, reactive, ref, nextTick } from 'vue'
   import { ElButton, ElMessageBox } from 'element-plus'
   import {
     fetchAiChannelPage,
@@ -169,6 +169,7 @@
     Object.keys(form).forEach((k) => delete form[k])
     Object.assign(form, row ? { ...row } : { channelType: 'webhook', status: 1 })
     visible.value = true
+    nextTick(() => formRef.value?.clearValidate())
   }
   async function save() {
     if (!(await formRef.value?.validate().catch(() => false))) return

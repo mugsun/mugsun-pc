@@ -141,7 +141,7 @@
 <script setup lang="ts">
   import type { FormInstance } from 'element-plus'
   import { requiredRule } from '../shared/formRules'
-  import { computed, onMounted, reactive, ref } from 'vue'
+  import { computed, nextTick, onMounted, reactive, ref } from 'vue'
   import { ElMessageBox } from 'element-plus'
   import {
     fetchAiModelPage,
@@ -220,6 +220,7 @@
           }
     )
     dialogVisible.value = true
+    nextTick(() => formRef.value?.clearValidate())
   }
 
   function onProvider(v: string) {

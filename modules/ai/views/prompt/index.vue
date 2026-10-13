@@ -109,7 +109,7 @@
 <script setup lang="ts">
   import type { FormInstance } from 'element-plus'
   import { requiredRule } from '../shared/formRules'
-  import { computed, onMounted, reactive, ref } from 'vue'
+  import { computed, onMounted, reactive, ref, nextTick } from 'vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import {
     fetchAiPromptPage,
@@ -170,6 +170,7 @@
     Object.keys(form).forEach((k) => delete form[k])
     Object.assign(form, row ? { ...row } : { category: category.value || 'chat', status: 1 })
     visible.value = true
+    nextTick(() => formRef.value?.clearValidate())
   }
   async function save() {
     if (!(await formRef.value?.validate().catch(() => false))) return

@@ -59,7 +59,7 @@
   import type { FormInstance } from 'element-plus'
   import { requiredRule } from '../shared/formRules'
   import type { ColumnOption } from '@/types/component'
-  import { computed, h, onMounted, reactive, ref } from 'vue'
+  import { computed, h, onMounted, reactive, ref, nextTick } from 'vue'
   import { ElButton, ElMessageBox, ElSwitch } from 'element-plus'
   import {
     fetchAiSecretPage,
@@ -151,6 +151,7 @@
     Object.keys(form).forEach((k) => delete form[k])
     Object.assign(form, row ? { ...row } : { scopeType: 'tenant', rateLimit: 60, status: 1 })
     visible.value = true
+    nextTick(() => formRef.value?.clearValidate())
   }
   async function save() {
     if (!(await formRef.value?.validate().catch(() => false))) return

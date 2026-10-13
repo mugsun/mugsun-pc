@@ -165,7 +165,7 @@
   import type { FormInstance } from 'element-plus'
   import { requiredRule } from '../shared/formRules'
   import type { ColumnOption } from '@/types/component'
-  import { h, onMounted, reactive, ref } from 'vue'
+  import { h, onMounted, reactive, ref, nextTick } from 'vue'
   import { ElButton, ElMessage, ElMessageBox, ElSwitch } from 'element-plus'
   import {
     fetchAiMcpPage,
@@ -266,6 +266,7 @@
     )
     parsedTools.value = []
     visible.value = true
+    nextTick(() => formRef.value?.clearValidate())
   }
   async function parseTools() {
     if (!form.id) {

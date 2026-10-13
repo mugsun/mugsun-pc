@@ -108,7 +108,7 @@
 <script setup lang="ts">
   import type { FormInstance } from 'element-plus'
   import { requiredRule } from '../shared/formRules'
-  import { computed, onMounted, reactive, ref } from 'vue'
+  import { computed, onMounted, reactive, ref, nextTick } from 'vue'
   import { useRouter } from 'vue-router'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import {
@@ -183,6 +183,7 @@
           }
     )
     visible.value = true
+    nextTick(() => formRef.value?.clearValidate())
   }
   async function save() {
     if (!(await formRef.value?.validate().catch(() => false))) return
