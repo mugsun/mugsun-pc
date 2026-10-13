@@ -144,6 +144,33 @@ export interface ClickPoint {
   y: number
 }
 
+/** 点选提示字：prompt 为数组或整词字符串均可，按字拆分（兼容 2–4 字词语 / 成语） */
+export function clickPromptChars(c: { prompt?: unknown; promptNames?: unknown }): string[] {
+  const p = c.prompt ?? c.promptNames
+  if (Array.isArray(p)) return p.map((v) => String(v))
+  if (typeof p === 'string') return Array.from(p.trim())
+  return []
+}
+
+/**
+ * 点选需点击数：响应决定。依次取 count / clickCount / targetCount（v0.6.2 字段未定），
+ * 再退到提示字数，最后退到 3；夹在 [1, 8]。
+ */
+export function clickTargetCount(c: Record<string, unknown>): number {
+  for (const k of ['count', 'clickCount', 'targetCount']) {
+    const n = Number(c[k])
+    if (Number.isInteger(n) && n > 0) return Math.min(8, n)
+  }
+  const chars = clickPromptChars(c)
+  return chars.length ? Math.min(8, chars.length) : CLICK_COUNT
+}
+
+/** 读屏用提示：WORD_CLICK 拼成整词（「一帆风顺」），ICON_CLICK 用空格分隔名称 */
+export function clickPromptLabel(c: { type?: string; prompt?: unknown; promptNames?: unknown }) {
+  const chars = clickPromptChars(c)
+  return c.type === 'WORD_CLICK' ? chars.join('') : chars.join(' ')
+}
+
 /** 点选：追加一个点（已满不追加），返回新数组 */
 export function addClickPoint(
   points: ClickPoint[],

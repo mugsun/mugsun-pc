@@ -461,8 +461,13 @@
   }
 
   .captcha-box .cp-prompt-img {
-    height: 36px;
+    flex-shrink: 1;
+    min-width: 0;
+    max-width: calc(100% - 100px);
+    height: auto;
+    max-height: 36px;
     pointer-events: none;
+    object-fit: contain;
     border: 1px solid var(--el-border-color-lighter);
     border-radius: var(--el-border-radius-base);
   }
@@ -495,8 +500,11 @@
     align-items: center;
     justify-content: center;
     height: 180px;
+    padding: 0 16px;
     font-size: 13px;
+    line-height: 1.6;
     color: var(--el-text-color-secondary);
+    text-align: center;
     background: var(--el-fill-color-light);
     border-radius: var(--el-border-radius-base);
   }
@@ -590,24 +598,33 @@
     cursor: not-allowed;
   }
 
+  /* 2–4 字（含 4 字成语）在 260px 下也不换行：标签与提示图 / 字块都可收缩 */
   .captcha-box .cp-click-hint {
     display: flex;
-    flex-wrap: wrap;
-    gap: 6px;
+    flex-wrap: nowrap;
+    gap: 4px;
     align-items: center;
     justify-content: center;
+    max-width: 100%;
     font-size: 14px;
     color: var(--el-text-color-regular);
+    white-space: nowrap;
+  }
+
+  .captcha-box .cp-click-label {
+    flex-shrink: 0;
+    font-size: 13px;
   }
 
   .captcha-box .cp-chip {
     display: inline-flex;
+    flex-shrink: 1;
     align-items: center;
     justify-content: center;
-    min-width: 38px;
-    height: 38px;
-    padding: 0 6px;
-    font-size: 22px;
+    min-width: 30px;
+    height: 34px;
+    padding: 0 4px;
+    font-size: 20px;
     font-weight: 600;
     color: var(--el-color-primary);
     background: var(--el-color-primary-light-9);
@@ -646,6 +663,20 @@
     border: 2px solid #fff;
     border-radius: 50%;
     box-shadow: 0 1px 4px rgb(0 0 0 / 30%);
+    transform: translate(-50%, -50%);
+  }
+
+  /* 服务端命中圈（itemSize 换算），提示点击精度 */
+  .captcha-box .cp-marker::after {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: var(--cp-hit, 44px);
+    height: var(--cp-hit, 44px);
+    pointer-events: none;
+    content: '';
+    border: 1px dashed rgb(255 255 255 / 85%);
+    border-radius: 50%;
     transform: translate(-50%, -50%);
   }
 

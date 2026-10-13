@@ -5,7 +5,7 @@
 <template>
   <div class="cp-panel">
     <div class="cp-click-hint">
-      <span>{{
+      <span class="cp-click-label">{{
         challenge.type === 'WORD_CLICK'
           ? t('pages.auth.slider.wordHint')
           : t('pages.auth.slider.iconHint')
@@ -42,7 +42,7 @@
         :key="i"
         type="button"
         class="cp-marker"
-        :style="{ left: `${p.x}px`, top: `${p.y}px` }"
+        :style="{ left: `${p.x}px`, top: `${p.y}px`, '--cp-hit': `${hitDiameter}px` }"
         :aria-label="t('pages.auth.slider.clickMarker', { n: i + 1 })"
         :disabled="disabled"
         @click.stop="undo(i)"
@@ -66,9 +66,12 @@
   import { useI18n } from 'vue-i18n'
   import type { ClickChallenge } from '@/api/captcha'
   import {
-    CLICK_COUNT,
+    clickPromptChars,
+    clickPromptLabel,
+    clickTargetCount,
     addClickPoint,
     buildClickAnswer,
+    clickHitRadius,
     cssScale,
     toDisplay,
     undoClickPoint,
@@ -91,11 +94,18 @@
 
   const stageRef = ref<HTMLElement>()
   const points = ref<ClickPoint[]>([])
-  const promptTexts = computed(() => props.challenge.prompt ?? props.challenge.promptNames ?? [])
-  const promptLabel = computed(() => promptTexts.value.join(' '))
-  const total = computed(() => props.challenge.count || promptTexts.value.length || CLICK_COUNT)
+  // 字数 / 点击数由响应决定（v0.6.2：2–4 字词语或成语，含干扰字，点击数不固定）
+  const promptTexts = computed(() => clickPromptChars(props.challenge))
+  const promptLabel = computed(() => clickPromptLabel(props.challenge))
+  const total = computed(() => clickTargetCount(props.challenge))
   const bgHeight = computed(() =>
     Math.round(toDisplay(props.challenge.bgHeight, props.challenge.bgWidth, props.width))
+  )
+  /** 服务端命中圈直径（显示像素）：max(itemSize × 0.75, 22) × 2，按显示比例换算；标记外圈按此绘制 */
+  const hitDiameter = computed(() =>
+    Math.round(
+      toDisplay(clickHitRadius(props.challenge.itemSize) * 2, props.challenge.bgWidth, props.width)
+    )
   )
   let startTime = 0
   let track: TrackPoint[] = []

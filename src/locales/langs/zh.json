@@ -721,7 +721,7 @@
         "rotateHint": "拖动滑块，把图片转正",
         "rotateAria": "旋转滑块，拖动或使用左右方向键旋转图片，当前 {deg} 度",
         "rotateKeyboardHint": "使用左右方向键旋转图片，按 Enter 提交",
-        "wordHint": "请依次点击：",
+        "wordHint": "请按顺序点击：",
         "iconHint": "请依次点击图标：",
         "clickAria": "点选区域，按提示顺序点击图中内容",
         "clickProgress": "已选 {n} / {total}",

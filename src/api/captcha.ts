@@ -63,12 +63,17 @@ export interface ClickChallenge extends ChallengeBase {
   background: string
   /** 提示图（data:image/png），前端优先显示 */
   promptImage?: string
-  /** WORD_CLICK：目标字（读屏 / 无图兜底） */
-  prompt?: string[]
+  /**
+   * WORD_CLICK：目标字（读屏 / 无图兜底）。v0.6.2 起为 2–4 字词语 / 成语且点击数不固定，
+   * 可能是逐字数组或整词字符串，前端两种都接受（见 clickPromptChars）。
+   */
+  prompt?: string[] | string
   /** ICON_CLICK：图标名（读屏） */
   promptNames?: string[]
-  /** 需点击个数（3） */
+  /** 需点击个数；缺省按提示字数 / 3（见 clickTargetCount），字段名未定，不写死 */
   count?: number
+  /** 预留：v0.6.2 字段未定，读 count 之外的候选键 */
+  [extra: string]: unknown
   /** v0.6.1 可选：字号 / 图标边长名义值（原始像素） */
   itemSize?: number
 }

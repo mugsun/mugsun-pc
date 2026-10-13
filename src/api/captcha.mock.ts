@@ -5,8 +5,8 @@
  * 指定题型（仅 mock）：URL `?captchaType=ROTATE` 或 sessionStorage `captchaMockType`；缺省随机。
  * keyboard 题只出 SLIDER / ROTATE（与后端约定一致）。
  * 规则模拟服务端：一次一机会、过期 120s、连续失败 5 次限流 10 秒。
- * 难度：滑块 ±8px、旋转 ±25°（真实服务端 ±10°，键盘 5°/步，施加角为步长整数倍）、
- * 点选 3 目标 + 2 干扰、半径 max(itemSize×0.75, 22)（与服务端同式）、拼图 2×2 只交换一对（一步还原）。
+ * 难度：滑块 ±8px、旋转 ±25°（可配，见 rotTolerance）（真实服务端 ±10°，键盘 5°/步，施加角为步长整数倍）、
+ * 点选：文字为 2–4 字词语 / 成语（字数 = 点击数）+ 2 干扰字，图标 3 目标 + 2 干扰、半径 max(itemSize×0.75, 22)（与服务端同式）、拼图 2×2 只交换一对（一步还原）。
  * 模拟 40015：sessionStorage `captchaMockNoKeyboard=1` 时 keyboard 取题返回 40015。
  */
 import { HttpError } from '@/utils/http/error'
@@ -33,7 +33,20 @@ const PIECE_W = 68
 const ROT_SIZE = 160
 const EXPIRE = 120
 const TOLERANCE = 8
-const ROT_TOLERANCE = 25
+/**
+ * mock 旋转容差（度），可配：sessionStorage `captchaMockRotateTol` > env `VITE_CAPTCHA_MOCK_ROTATE_TOL` > 25。
+ * 用于预演服务端收紧（v0.6.1 为 10°，v0.6.2 计划 7°）时的手感。
+ */
+function rotTolerance(): number {
+  let v: unknown
+  try {
+    v = sessionStorage.getItem('captchaMockRotateTol')
+  } catch {
+    v = null
+  }
+  const n = Number(v ?? import.meta.env.VITE_CAPTCHA_MOCK_ROTATE_TOL ?? 25)
+  return Number.isFinite(n) && n > 0 && n <= 180 ? n : 25
+}
 const ITEM_SIZE = 32
 const CLICK_DECOYS = 2
 const ROTATE_KEY_STEP = 5
@@ -188,7 +201,37 @@ function genRotate() {
   }
 }
 
-const WORDS = '春夏秋冬山水云风花月星雨'.split('')
+/** WORD_CLICK 小词表：2–4 字常用词语 / 成语（字须两两不同，便于判定） */
+const WORD_LIST = [
+  '春风',
+  '明月',
+  '山水',
+  '彩虹',
+  '向日葵',
+  '博物馆',
+  '天文台',
+  '一帆风顺',
+  '万事如意',
+  '风和日丽',
+  '山清水秀',
+  '鸟语花香'
+]
+/** 干扰字池 */
+const DECOY_CHARS = '春夏秋冬云星雨林海川石竹松梅兰菊'.split('')
+/** 指定词（仅 mock）：sessionStorage `captchaMockWord`，如「一帆风顺」 */
+function pickWord(): string[] {
+  let forced: string | null = null
+  try {
+    forced = sessionStorage.getItem('captchaMockWord')
+  } catch {
+    forced = null
+  }
+  const w =
+    forced && forced.length >= 2 && forced.length <= 4
+      ? forced
+      : WORD_LIST[rand(0, WORD_LIST.length - 1)]
+  return Array.from(w)
+}
 const ICON_NAMES = ['圆', '方块', '三角', '星', '十字']
 const ICONS: { draw: (c: CanvasRenderingContext2D, s: number) => void }[] = [
   { draw: (c, s) => (c.beginPath(), c.arc(0, 0, s, 0, Math.PI * 2), c.fill()) },
@@ -243,26 +286,31 @@ function shuffle<T>(arr: T[]) {
 }
 
 function genClick(kind: 'WORD_CLICK' | 'ICON_CLICK') {
-  const total = CLICK_COUNT + CLICK_DECOYS
-  const pool =
-    kind === 'WORD_CLICK' ? shuffle(WORDS.map((_, i) => i)) : shuffle(ICONS.map((_, i) => i))
-  const chosen = pool.slice(0, total)
-  const pts = spots(total)
-  const [bg, b] = canvas(BG_W, BG_H)
-  paintScene(b, BG_W, BG_H)
-  const drawItem = (ctx: CanvasRenderingContext2D, id: number, i: number) => {
-    ctx.fillStyle = '#2B4FCC'
-    if (kind === 'WORD_CLICK') {
-      ctx.rotate(((i % 2 ? 1 : -1) * rand(0, 12) * Math.PI) / 180)
+  // WORD_CLICK：按词的字数出题（2–4），另加 2 个干扰字；ICON_CLICK：3 个目标 + 2 个干扰
+  let labels: string[]
+  let draws: ((ctx: CanvasRenderingContext2D) => void)[]
+  let targetCount: number
+  if (kind === 'WORD_CLICK') {
+    const word = pickWord()
+    const decoys = shuffle(DECOY_CHARS.filter((c) => !word.includes(c))).slice(0, CLICK_DECOYS)
+    labels = [...word, ...decoys]
+    targetCount = word.length
+    draws = labels.map((ch) => (ctx: CanvasRenderingContext2D) => {
       ctx.font = `bold ${ITEM_SIZE}px "PingFang SC","Microsoft YaHei",sans-serif`
       ctx.textAlign = 'center'
       ctx.textBaseline = 'middle'
-      ctx.fillText(WORDS[id], 0, 1)
-    } else {
-      ICONS[id].draw(ctx, ITEM_SIZE / 2)
-    }
+      ctx.fillText(ch, 0, 1)
+    })
+  } else {
+    const ids = shuffle(ICONS.map((_, i) => i)).slice(0, CLICK_COUNT + CLICK_DECOYS)
+    labels = ids.map((i) => ICON_NAMES[i])
+    targetCount = CLICK_COUNT
+    draws = ids.map((i) => (ctx: CanvasRenderingContext2D) => ICONS[i].draw(ctx, ITEM_SIZE / 2))
   }
-  chosen.forEach((id, i) => {
+  const pts = spots(labels.length)
+  const [bg, b] = canvas(BG_W, BG_H)
+  paintScene(b, BG_W, BG_H)
+  draws.forEach((draw, i) => {
     const p = pts[i]
     b.save()
     b.translate(p.x, p.y)
@@ -270,22 +318,25 @@ function genClick(kind: 'WORD_CLICK' | 'ICON_CLICK') {
     b.beginPath()
     b.arc(0, 0, ITEM_SIZE * 0.75, 0, Math.PI * 2)
     b.fill()
-    drawItem(b, id, i)
+    b.rotate(((i % 2 ? 1 : -1) * rand(0, 12) * Math.PI) / 180)
+    b.fillStyle = '#2B4FCC'
+    draw(b)
     b.restore()
   })
-  const targets = pts.slice(0, CLICK_COUNT)
-  const ids = chosen.slice(0, CLICK_COUNT)
-  const [pc, p] = canvas(34 * CLICK_COUNT + 8, 36)
+  const targets = pts.slice(0, targetCount)
+  const names = labels.slice(0, targetCount)
+  // 提示图宽度随字数自适应：34px / 字 + 8
+  const [pc, p] = canvas(34 * targetCount + 8, 36)
   p.fillStyle = '#ffffff'
   p.fillRect(0, 0, pc.width, pc.height)
-  ids.forEach((id, i) => {
+  draws.slice(0, targetCount).forEach((draw, i) => {
     p.save()
     p.translate(4 + 17 + i * 34, 18)
     p.scale(0.8, 0.8)
-    drawItem(p, id, 0)
+    p.fillStyle = '#2B4FCC'
+    draw(p)
     p.restore()
   })
-  const names = kind === 'WORD_CLICK' ? ids.map((i) => WORDS[i]) : ids.map((i) => ICON_NAMES[i])
   return {
     answer: { type: 'CLICK', points: targets, radius: clickHitRadius(ITEM_SIZE) } as Answer,
     data: {
@@ -295,7 +346,7 @@ function genClick(kind: 'WORD_CLICK' | 'ICON_CLICK') {
       bgHeight: BG_H,
       promptImage: pc.toDataURL('image/png'),
       ...(kind === 'WORD_CLICK' ? { prompt: names } : { promptNames: names }),
-      count: CLICK_COUNT,
+      count: targetCount,
       itemSize: ITEM_SIZE
     },
     hint: targets
@@ -427,7 +478,7 @@ function judge(answer: Answer, data: VerifyPayload): boolean {
       const modeOk = kb
         ? presses >= 1 && Math.abs(presses - Math.round(angle / ROTATE_KEY_STEP)) <= 1
         : dur >= 150 && data.track.length >= 4
-      return modeOk && diff <= ROT_TOLERANCE
+      return modeOk && diff <= rotTolerance()
     }
     case 'CLICK': {
       const pts = a.points as { x: number; y: number }[] | undefined

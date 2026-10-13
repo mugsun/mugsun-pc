@@ -186,3 +186,31 @@ describe('契约 v0.6.1 对齐', () => {
     })
   })
 })
+
+describe('WORD_CLICK 词语 / 成语（点击数由响应决定）', () => {
+  it('prompt 数组或整词字符串都按字拆分', () => {
+    expect(m.clickPromptChars({ prompt: ['一', '帆', '风', '顺'] })).toEqual([
+      '一',
+      '帆',
+      '风',
+      '顺'
+    ])
+    expect(m.clickPromptChars({ prompt: '一帆风顺' })).toEqual(['一', '帆', '风', '顺'])
+    expect(m.clickPromptChars({ promptNames: ['太阳', '钥匙'] })).toEqual(['太阳', '钥匙'])
+    expect(m.clickPromptChars({})).toEqual([])
+  })
+  it('点击数：count > 候选字段 > 字数 > 3', () => {
+    expect(m.clickTargetCount({ count: 4, prompt: '春风' })).toBe(4)
+    expect(m.clickTargetCount({ clickCount: 2 })).toBe(2)
+    expect(m.clickTargetCount({ prompt: '一帆风顺' })).toBe(4)
+    expect(m.clickTargetCount({ prompt: ['春', '风'] })).toBe(2)
+    expect(m.clickTargetCount({})).toBe(3)
+    expect(m.clickTargetCount({ count: 99 })).toBe(8)
+  })
+  it('读屏标签：文字拼成整词，图标空格分隔', () => {
+    expect(m.clickPromptLabel({ type: 'WORD_CLICK', prompt: ['一', '帆', '风', '顺'] })).toBe(
+      '一帆风顺'
+    )
+    expect(m.clickPromptLabel({ type: 'ICON_CLICK', promptNames: ['太阳', '鱼'] })).toBe('太阳 鱼')
+  })
+})
