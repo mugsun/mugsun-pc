@@ -4,7 +4,9 @@ import type { PluginContext, TrackPlugin } from '@mugsun/track-web'
 import { HttpError } from '@/utils/http/error'
 import {
   bypassHandledErrorsInVueHandler,
-  filterHandledErrors
+  filterHandledErrors,
+  hasTrackApiError,
+  isHandledError
 } from '../../../modules/track/error-filter'
 
 // HttpError 所在模块依赖语言包与 store，单测只需 $t 占位
@@ -56,5 +58,23 @@ describe('bypassHandledErrorsInVueHandler', () => {
 
     app.config.errorHandler!(new Error('real'), null, 'setup')
     expect(sdk).toHaveBeenCalledTimes(1)
+  })
+})
+
+describe('isHandledError', () => {
+  it('认 HttpError、handled / expected 标记', () => {
+    expect(isHandledError(new HttpError('x', 400))).toBe(true)
+    expect(isHandledError(Object.assign(new Error('a'), { handled: true }))).toBe(true)
+    expect(isHandledError(Object.assign(new Error('b'), { expected: true }))).toBe(true)
+    expect(isHandledError(new Error('c'))).toBe(false)
+    expect(isHandledError('str')).toBe(false)
+  })
+})
+
+describe('hasTrackApiError', () => {
+  it('旧版 SDK 没有该方法时返回 false', () => {
+    expect(hasTrackApiError({ track: () => {} })).toBe(false)
+    expect(hasTrackApiError(null)).toBe(false)
+    expect(hasTrackApiError({ trackApiError: () => {} })).toBe(true)
   })
 })

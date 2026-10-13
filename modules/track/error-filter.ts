@@ -12,9 +12,16 @@ import type { App } from 'vue'
 import type { PluginContext, TrackClient, TrackPlugin } from '@mugsun/track-web'
 import { HttpError } from '@/utils/http/error'
 
-/** 已由请求层处理过的错误（HttpError 一律已提示或是取消），不进错误监控 */
+/**
+ * 已处理的错误不进错误监控：HttpError（请求层已提示或是取消），
+ * 以及带 handled===true / expected===true 标记的错误（与 SDK ignoreErrors 默认规则一致）。
+ * SDK 新版自带 ignoreErrors 后，这里作为旧版 SDK 的兜底保留。
+ */
 export function isHandledError(err: unknown): boolean {
-  return err instanceof HttpError
+  if (err instanceof HttpError) return true
+  if (!err || typeof err !== 'object') return false
+  const e = err as { handled?: unknown; expected?: unknown; name?: unknown }
+  return e.handled === true || e.expected === true || e.name === 'HttpError'
 }
 
 /**
@@ -74,4 +81,19 @@ export function bypassHandledErrorsInVueHandler(
     }
     sdkHandler(err, instance, info)
   }
+}
+
+/** 新版 SDK 提供 trackApiError；旧版没有，调用前用类型守卫判断 */
+export interface ApiErrorCapable {
+  trackApiError(payload: {
+    url?: string
+    method?: string
+    status: number
+    bizCode?: number
+    message: string
+  }): void
+}
+
+export function hasTrackApiError(client: unknown): client is ApiErrorCapable {
+  return !!client && typeof (client as { trackApiError?: unknown }).trackApiError === 'function'
 }

@@ -11,6 +11,8 @@ export default defineConfig({
   resolve: {
     alias: {
       '@/gis': resolvePath('modules/gis/lib'),
+      '@/api/track': resolvePath('modules/track/api.ts'),
+      '@/views/track': resolvePath('modules/track/views'),
       '@': resolvePath('src'),
       '@views': resolvePath('src/views'),
       '@imgs': resolvePath('src/assets/images'),
