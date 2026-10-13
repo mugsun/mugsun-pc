@@ -8,19 +8,15 @@ This repository is the mugsun admin console. Menus and button permissions are de
 
 [Documentation](https://docs.mugsun.com/en/pc/) · [Getting started](https://docs.mugsun.com/en/guide/getting-started) · [Demo](https://docs.mugsun.com/en/demo)
 
-![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vuedotjs&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)
-![Element%20Plus](https://img.shields.io/badge/Element%20Plus-2.11-409EFF)
-![pnpm](https://img.shields.io/badge/pnpm-11.9-F69220?logo=pnpm&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green.svg)
+![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vuedotjs&logoColor=white) ![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white) ![Element%20Plus](https://img.shields.io/badge/Element%20Plus-2.11-409EFF) ![pnpm](https://img.shields.io/badge/pnpm-11.28-F69220?logo=pnpm&logoColor=white) ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
 ## Overview
 
 | Item | Detail |
 | --- | --- |
 | Package | `mugsun-pc` |
-| Version | `0.0.1` (see `package.json`) |
-| Runtime | Node.js ≥ 20.19; pnpm ≥ 8.8 (`packageManager` locks `pnpm@11.9.0`) |
+| Version | `0.1.0` (see `package.json`) |
+| Runtime | Node.js ≥ 22.13; pnpm ≥ 11.11 (`packageManager` locks `pnpm@11.28.2`) |
 | Stack | Vue 3.5 · Vite 7 · Element Plus 2.11 · Pinia · Vue Router |
 | Backend | [mugsun-boot](https://github.com/mugsun/mugsun-boot) (development default `http://localhost:8080`) |
 | License | [MIT](./LICENSE); UI-base credit in [NOTICE](./NOTICE) |
@@ -30,10 +26,10 @@ The console does not maintain a separate permission model: sidebar menus, button
 
 ## Deployment
 
-Prerequisites: Node.js ≥ 20.19, pnpm ≥ 8.8; [mugsun-boot](https://github.com/mugsun/mugsun-boot) running on `:8080`. When the track module is enabled (the default), clone [mugsun-track](https://github.com/mugsun/mugsun-track) as a **sibling** (`@mugsun/track-web` is referenced as `file:../mugsun-track`; the SDK repository does not commit `dist/`).
+Prerequisites: Node.js ≥ 22.13, pnpm ≥ 11.11; [mugsun-boot](https://github.com/mugsun/mugsun-boot) running on `:8080`. Whether or not the track module is enabled, clone [mugsun-track](https://github.com/mugsun/mugsun-track) as a **sibling**; otherwise `pnpm install` fails because `../mugsun-track` is missing (`@mugsun/track-web` is referenced as `file:../mugsun-track`; the SDK repository does not commit `dist/`).
 
 ```bash
-pnpm setup:sdk   # install + build ../mugsun-track; skip when VITE_ENABLE_TRACK=false
+pnpm setup:sdk   # install + build ../mugsun-track; the build can be skipped when VITE_ENABLE_TRACK=false, but the sibling directory must still exist
 pnpm install
 pnpm dev
 ```
@@ -47,7 +43,7 @@ mugsun/
   mugsun-core/
   mugsun-boot/     # :8080
   mugsun-pc/       # this repository :3006
-  mugsun-track/    # file: dependency when track is enabled
+  mugsun-track/    # file: dependency (always needed by pnpm install)
 ```
 
 Walkthrough: [Documentation · Getting started](https://docs.mugsun.com/en/guide/getting-started).
@@ -75,7 +71,7 @@ Build-time flags (all enabled by default; set to `false` to disable):
 | Variable | Effect |
 | --- | --- |
 | `VITE_ENABLE_GIS` | Registers GIS routes and aliases; `modules/gis` may be removed when off |
-| `VITE_ENABLE_TRACK` | Registers track routes and SDK plugin; skip `setup:sdk` and remove `modules/track` when off |
+| `VITE_ENABLE_TRACK` | Registers track routes and SDK plugin; skip `setup:sdk` and remove `modules/track` when off (the sibling `../mugsun-track` must still exist for `pnpm install`) |
 | `VITE_ENABLE_AI` | Registers AI routes and plugin; `modules/ai` may be removed when off |
 
 Request path: views and hooks call `/api` via axios; Vite proxies to boot in development. The analytics SDK posts to same-origin `/api/track/collect`, which is likewise proxied into boot’s track module.
