@@ -1,7 +1,7 @@
 <!-- 空间分析：全幅地图 + 左侧 HUD 运算表单。 -->
 <template>
   <div class="gis-shell art-full-height">
-    <div class="gis-map-shell">
+    <div class="gis-map-shell gis-map-shell--panel">
       <div ref="mapHost" class="gis-map"></div>
       <aside class="gis-hud gis-hud-panel gis-hud-panel-wide">
         <p class="gis-panel-lead">{{ $t('pages.gis.analyzeHint') }}</p>
