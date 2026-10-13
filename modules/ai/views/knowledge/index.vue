@@ -43,8 +43,8 @@
     </ElCard>
 
     <ElDialog v-model="visible" :title="form.id ? '编辑知识库' : '新建知识库'" width="560px">
-      <ElForm :model="form" label-width="110px">
-        <ElFormItem label="名称" required
+      <ElForm ref="formRef" :model="form" label-width="110px">
+        <ElFormItem label="名称" prop="name" :rules="requiredRule('名称')"
           ><ElInput v-model="form.name" placeholder="如：客户支持知识库"
         /></ElFormItem>
         <ElFormItem label="描述"
@@ -106,6 +106,8 @@
   </div>
 </template>
 <script setup lang="ts">
+  import type { FormInstance } from 'element-plus'
+  import { requiredRule } from '../shared/formRules'
   import { computed, onMounted, reactive, ref } from 'vue'
   import { useRouter } from 'vue-router'
   import { ElMessage, ElMessageBox } from 'element-plus'
@@ -118,6 +120,7 @@
     fetchTestAiKnowledge
   } from '../../api'
   defineOptions({ name: 'AiKnowledge' })
+  const formRef = ref<FormInstance>()
   const router = useRouter()
   const keyword = ref('')
   const loading = ref(false)
@@ -182,6 +185,7 @@
     visible.value = true
   }
   async function save() {
+    if (!(await formRef.value?.validate().catch(() => false))) return
     saving.value = true
     try {
       await fetchSaveAiKnowledge({ ...form })

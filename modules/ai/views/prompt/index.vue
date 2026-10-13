@@ -56,9 +56,11 @@
       width="720px"
       destroy-on-close
     >
-      <ElForm :model="form" label-width="88px">
-        <ElFormItem label="名称" required><ElInput v-model="form.name" /></ElFormItem>
-        <ElFormItem label="分类" required>
+      <ElForm ref="formRef" :model="form" label-width="88px">
+        <ElFormItem label="名称" prop="name" :rules="requiredRule('名称')"
+          ><ElInput v-model="form.name"
+        /></ElFormItem>
+        <ElFormItem label="分类" prop="category" :rules="requiredRule('分类', true)">
           <ElSelect v-model="form.category" style="width: 100%">
             <ElOption label="对话类" value="chat" />
             <ElOption label="内容生成类" value="content" />
@@ -67,7 +69,7 @@
           </ElSelect>
         </ElFormItem>
         <ElFormItem label="场景"><ElInput v-model="form.scene" /></ElFormItem>
-        <ElFormItem label="内容" required>
+        <ElFormItem label="内容" prop="content" :rules="requiredRule('内容')">
           <ElInput
             v-model="form.content"
             type="textarea"
@@ -105,6 +107,8 @@
   </div>
 </template>
 <script setup lang="ts">
+  import type { FormInstance } from 'element-plus'
+  import { requiredRule } from '../shared/formRules'
   import { computed, onMounted, reactive, ref } from 'vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import {
@@ -114,6 +118,7 @@
     fetchSaveAiPrompt
   } from '../../api'
   defineOptions({ name: 'AiPrompt' })
+  const formRef = ref<FormInstance>()
   const category = ref('')
   const keyword = ref('')
   const searching = ref(false)
@@ -167,11 +172,14 @@
     visible.value = true
   }
   async function save() {
+    if (!(await formRef.value?.validate().catch(() => false))) return
     saving.value = true
     try {
       await fetchSaveAiPrompt({ ...form })
       visible.value = false
       await reload()
+    } catch {
+      /* 失败提示由请求层展示，弹窗留着方便改完再存 */
     } finally {
       saving.value = false
     }

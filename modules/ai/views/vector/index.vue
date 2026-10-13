@@ -48,18 +48,18 @@
       :title="form.id ? '编辑向量库' : '创建向量库'"
       width="560px"
     >
-      <ElForm :model="form" label-width="100px">
-        <ElFormItem label="名称" required>
+      <ElForm ref="formRef" :model="form" label-width="100px">
+        <ElFormItem label="名称" prop="name" :rules="requiredRule('名称')">
           <ElInput v-model="form.name" maxlength="64" placeholder="用来在列表里区分" />
         </ElFormItem>
-        <ElFormItem label="类型" required>
+        <ElFormItem label="类型" prop="storeType" :rules="requiredRule('类型', true)">
           <ElSelect v-model="form.storeType" style="width: 100%">
             <ElOption label="PgVector" value="pgvector" />
             <ElOption label="Milvus" value="milvus" />
             <ElOption label="自定义" value="custom" />
           </ElSelect>
         </ElFormItem>
-        <ElFormItem label="连接地址" required>
+        <ElFormItem label="连接地址" prop="url" :rules="requiredRule('连接地址')">
           <ElInput v-model="form.url" placeholder="jdbc:postgresql://主机:端口/库名" />
         </ElFormItem>
         <ElFormItem label="维度"><ElInputNumber v-model="form.dimensions" :min="1" /></ElFormItem>
@@ -73,6 +73,8 @@
   </div>
 </template>
 <script setup lang="ts">
+  import type { FormInstance } from 'element-plus'
+  import { requiredRule } from '../shared/formRules'
   import { computed, onMounted, reactive, ref } from 'vue'
   import { ElMessageBox } from 'element-plus'
   import {
@@ -82,6 +84,7 @@
     fetchTestAiVector
   } from '../../api'
   defineOptions({ name: 'AiVector' })
+  const formRef = ref<FormInstance>()
   const TYPE_LABEL: Record<string, string> = {
     pgvector: 'PgVector',
     milvus: 'Milvus',
@@ -125,6 +128,7 @@
     visible.value = true
   }
   async function save() {
+    if (!(await formRef.value?.validate().catch(() => false))) return
     saving.value = true
     try {
       await fetchSaveAiVector({

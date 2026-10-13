@@ -38,9 +38,11 @@
       </div>
     </ElCard>
     <ElDialog v-model="visible" :title="form.id ? '编辑应用' : '新建应用'" width="560px">
-      <ElForm :model="form" label-width="88px">
-        <ElFormItem label="名称" required><ElInput v-model="form.name" /></ElFormItem>
-        <ElFormItem label="类型" required>
+      <ElForm ref="formRef" :model="form" label-width="88px">
+        <ElFormItem label="名称" prop="name" :rules="requiredRule('名称')"
+          ><ElInput v-model="form.name"
+        /></ElFormItem>
+        <ElFormItem label="类型" prop="appType" :rules="requiredRule('类型', true)">
           <ElSelect v-model="form.appType" style="width: 100%">
             <ElOption label="工作流" value="workflow" /><ElOption label="文本生成" value="text" />
             <ElOption label="对话助手" value="chat" /><ElOption label="对话流程" value="chatflow" />
@@ -63,6 +65,8 @@
   </div>
 </template>
 <script setup lang="ts">
+  import type { FormInstance } from 'element-plus'
+  import { requiredRule } from '../shared/formRules'
   import { computed, onMounted, reactive, ref } from 'vue'
   import { useRouter } from 'vue-router'
   import { ElMessageBox } from 'element-plus'
@@ -74,6 +78,7 @@
     fetchSaveAiApp
   } from '../../api'
   defineOptions({ name: 'AiApp' })
+  const formRef = ref<FormInstance>()
   const router = useRouter()
   const appType = ref('')
   const keyword = ref('')
@@ -117,11 +122,14 @@
     visible.value = true
   }
   async function save() {
+    if (!(await formRef.value?.validate().catch(() => false))) return
     saving.value = true
     try {
       await fetchSaveAiApp({ ...form })
       visible.value = false
       await reload()
+    } catch {
+      /* 失败提示由请求层展示，弹窗留着方便改完再存 */
     } finally {
       saving.value = false
     }

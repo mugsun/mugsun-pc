@@ -23,8 +23,10 @@
       />
     </ElCard>
     <ElDialog v-model="visible" :title="form.id ? '编辑密钥' : '新增密钥'" width="560px">
-      <ElForm :model="form" label-width="100px">
-        <ElFormItem label="说明" required><ElInput v-model="form.description" /></ElFormItem>
+      <ElForm ref="formRef" :model="form" label-width="100px">
+        <ElFormItem label="说明" prop="description" :rules="requiredRule('说明')"
+          ><ElInput v-model="form.description"
+        /></ElFormItem>
         <ElFormItem label="作用域">
           <ElSelect v-model="form.scopeType" style="width: 100%">
             <ElOption label="租户" value="tenant" /><ElOption label="用户" value="user" /><ElOption
@@ -54,6 +56,8 @@
   </div>
 </template>
 <script setup lang="ts">
+  import type { FormInstance } from 'element-plus'
+  import { requiredRule } from '../shared/formRules'
   import type { ColumnOption } from '@/types/component'
   import { computed, h, onMounted, reactive, ref } from 'vue'
   import { ElButton, ElMessageBox, ElSwitch } from 'element-plus'
@@ -64,6 +68,7 @@
     fetchStatusAiSecret
   } from '../../api'
   defineOptions({ name: 'AiSecret' })
+  const formRef = ref<FormInstance>()
   const loading = ref(false)
   const records = ref<any[]>([])
   const pageNum = ref(1)
@@ -148,6 +153,7 @@
     visible.value = true
   }
   async function save() {
+    if (!(await formRef.value?.validate().catch(() => false))) return
     saving.value = true
     try {
       const r = await fetchSaveAiSecret({ ...form })
