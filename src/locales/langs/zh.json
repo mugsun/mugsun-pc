@@ -2101,6 +2101,7 @@
         "unbind": "解绑",
         "nicknameSaved": "昵称已修改",
         "imageOnly": "仅支持图片文件",
+        "avatarTypeInvalid": "仅支持 png / jpg / jpeg / gif / webp 格式的图片",
         "avatarTooLarge": "头像大小不能超过 2MB",
         "avatarUploadFailed": "头像上传失败：未返回可访问地址",
         "avatarUpdated": "头像已更新",

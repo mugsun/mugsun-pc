@@ -902,16 +902,18 @@ export function fetchUpdateInfo(data: Record<string, any>) {
 export function fetchUpdatePassword(data: Record<string, any>) {
   return request.post<void>({ url: '/api/auth/update-password', data })
 }
-/** 更新头像（/system/file/upload 公开区产物 URL，落 sys_user.avatar） */
+/** 更新头像（/auth/avatar/upload 产物 URL，落 sys_user.avatar） */
 export function fetchUpdateAvatar(data: { avatar: string }) {
   return request.post<void>({ url: '/api/auth/update-avatar', data })
 }
-/** 头像上传：公开区登记（img 直显免授权下载），返回 SysAttach 取 url */
+/** 头像上传：multipart 字段 file，返回 R<SysAttach>，取 data.url（依赖 mugsun-boot#11） */
 export function uploadAvatarFile(file: File) {
   const form = new FormData()
   form.append('file', file)
-  form.append('access', 'public')
-  return request.post<any>({ url: '/api/system/file/upload', data: form })
+  return request.post<{ id?: number | string; name?: string; url?: string }>({
+    url: '/api/auth/avatar/upload',
+    data: form
+  })
 }
 
 // 获取菜单列表

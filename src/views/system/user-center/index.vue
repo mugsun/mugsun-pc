@@ -18,7 +18,7 @@
             <ElUpload
               :auto-upload="false"
               :show-file-list="false"
-              accept="image/*"
+              accept=".png,.jpg,.jpeg,.gif,.webp,image/png,image/jpeg,image/gif,image/webp"
               :on-change="handleAvatarChange"
             >
               <ElButton size="small" :loading="avatarUploading">{{
@@ -191,15 +191,22 @@
     })
   }
 
-  // ===== 头像上传：附件体系公开区 → URL 落 sys_user.avatar =====
+  // ===== 头像上传：/auth/avatar/upload → URL 落 sys_user.avatar =====
   const avatarUploading = ref(false)
   const AVATAR_MAX_SIZE = 2 * 1024 * 1024
+  const AVATAR_MIME = ['image/png', 'image/jpeg', 'image/gif', 'image/webp']
+  const AVATAR_EXT = ['png', 'jpg', 'jpeg', 'gif', 'webp']
+  /** MIME 与扩展名须同时命中白名单 */
+  const isAllowedAvatar = (file: File): boolean => {
+    const ext = file.name.split('.').pop()?.toLowerCase() || ''
+    return AVATAR_MIME.includes(file.type) && AVATAR_EXT.includes(ext)
+  }
 
   const handleAvatarChange = async (uploadFile: UploadFile): Promise<void> => {
     const raw = uploadFile.raw
     if (!raw) return
-    if (!raw.type.startsWith('image/')) {
-      ElMessage.warning(t('pages.system.userCenter.imageOnly'))
+    if (!isAllowedAvatar(raw)) {
+      ElMessage.warning(t('pages.system.userCenter.avatarTypeInvalid'))
       return
     }
     if (raw.size > AVATAR_MAX_SIZE) {
@@ -217,6 +224,7 @@
       userStore.setUserInfo({ ...(userStore.getUserInfo as any), avatar: attach.url })
       ElMessage.success(t('pages.system.userCenter.avatarUpdated'))
     } catch (error) {
+      // 错误提示（后端 msg）已由 http 层 HttpError + showError 统一弹出，此处仅记录
       console.error('[UserCenter] upload avatar failed:', error)
     } finally {
       avatarUploading.value = false
