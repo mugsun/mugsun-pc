@@ -30,9 +30,15 @@ export default ({ mode }: { mode: string }) => {
   console.log(`🚀 VERSION = ${VITE_VERSION}`)
   console.log(`🚀 MODULES = gis=${enableGis} track=${enableTrack} cesium=${hasCesium}`)
 
+  // 产品版本取 package.json（__APP_VERSION__ 来自 VITE_VERSION，仅用作存储键版本，勿混用）
+  const pkgVersion: string = JSON.parse(
+    fs.readFileSync(fileURLToPath(new URL('./package.json', import.meta.url)), 'utf-8')
+  ).version
+
   return defineConfig({
     define: {
       __APP_VERSION__: JSON.stringify(VITE_VERSION),
+      __PKG_VERSION__: JSON.stringify(pkgVersion),
       CESIUM_BASE_URL: JSON.stringify(
         hasCesium ? `${publicBase}${cesiumBaseUrl}/` : `${publicBase}`
       )

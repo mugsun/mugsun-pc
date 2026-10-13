@@ -31,7 +31,8 @@ declare module 'qrcode.vue' {
 }
 
 // 全局变量声明
-declare const __APP_VERSION__: string // 版本号
+declare const __APP_VERSION__: string // 存储键版本（VITE_VERSION）
+declare const __PKG_VERSION__: string // 产品版本（package.json version）
 declare const CESIUM_BASE_URL: string
 
 interface ImportMetaEnv {
