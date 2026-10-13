@@ -902,11 +902,7 @@ export function fetchUpdateInfo(data: Record<string, any>) {
 export function fetchUpdatePassword(data: Record<string, any>) {
   return request.post<void>({ url: '/api/auth/update-password', data })
 }
-/** 更新头像（/auth/avatar/upload 产物 URL，落 sys_user.avatar） */
-export function fetchUpdateAvatar(data: { avatar: string }) {
-  return request.post<void>({ url: '/api/auth/update-avatar', data })
-}
-/** 头像上传：multipart 字段 file，返回 R<SysAttach>，取 data.url（依赖 mugsun-boot#11） */
+/** 头像上传：multipart 字段 file，返回 R<SysAttach>，data.url 形如 /auth/avatar/raw/{id}；成功即后端已更新本人头像（依赖 mugsun-boot#11） */
 export function uploadAvatarFile(file: File) {
   const form = new FormData()
   form.append('file', file)
