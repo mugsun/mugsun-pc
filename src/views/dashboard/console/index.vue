@@ -164,7 +164,7 @@
 
 <script setup lang="ts">
   import { echarts } from '@/plugins/echarts'
-  import { fetchFlowMyTodo, fetchMyNoticePage } from '@/api/system-manage'
+  import { fetchFlowMyTodo, fetchMyNoticePage, fetchTenantList } from '@/api/system-manage'
   import {
     fetchWorkbenchOverview,
     fetchWorkbenchShortcuts,
@@ -326,6 +326,26 @@
   const CHANGELOG_URL = 'https://github.com/mugsun/mugsun-pc/blob/main/CHANGELOG.md'
   const overviewLoading = ref(false)
 
+  /**
+   * 后端按 tenant_id 分组，name 是租户编号（如 000000）。横轴换成租户名（UX-013）；
+   * 取租户列表失败或没对上时保留编号，不影响图表。
+   */
+  const withTenantNames = async (rows: any[]) => {
+    if (!rows.length) return rows
+    try {
+      const tenants = (await fetchTenantList()) || []
+      const names = new Map<string, string>()
+      for (const t of tenants) {
+        if (!t?.tenantName) continue
+        for (const k of [t.tenantId, t.tenantCode])
+          if (k != null) names.set(String(k), t.tenantName)
+      }
+      return rows.map((r) => ({ ...r, name: names.get(String(r.name)) ?? r.name }))
+    } catch {
+      return rows
+    }
+  }
+
   const loadOverview = async () => {
     overviewLoading.value = true
     try {
@@ -340,7 +360,7 @@
       pieData = d.charts?.userStatus || []
       // 键缺失=无权限看平台分布；键存在但空数组才走空态
       showTenantChart.value = Object.prototype.hasOwnProperty.call(d.charts || {}, 'tenantUser')
-      barData = showTenantChart.value ? d.charts.tenantUser || [] : []
+      barData = showTenantChart.value ? await withTenantNames(d.charts.tenantUser || []) : []
       pieEmpty.value = pieData.length === 0
       barEmpty.value = showTenantChart.value && barData.length === 0
       await nextTick()

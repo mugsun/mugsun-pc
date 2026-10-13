@@ -45,4 +45,16 @@
   .ai-fab:hover {
     filter: brightness(1.05);
   }
+
+  /* 窄屏（UX-017）：缩小并贴边、半透明，少挡卡片内容 */
+  @media screen and (width <= 640px) {
+    .ai-fab {
+      right: 12px;
+      bottom: 16px;
+      width: 40px;
+      height: 40px;
+      font-size: 13px;
+      opacity: 0.75;
+    }
+  }
 </style>
