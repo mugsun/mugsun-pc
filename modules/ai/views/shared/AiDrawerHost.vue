@@ -24,37 +24,43 @@
 </script>
 
 <style scoped>
+  /*
+   * 右缘贴边小标签，叠在「帮助」标签上方（UX-110）：
+   * 原来的 52px 圆钮在右下角，1440 宽下压住列表分页器和地图坐标读数。
+   */
   .ai-fab {
     position: fixed;
-    right: 28px;
-    bottom: 28px;
-    z-index: 3000;
+    right: 0;
+    bottom: 180px;
+    z-index: 999;
     display: flex;
     align-items: center;
     justify-content: center;
-    width: 52px;
-    height: 52px;
+    width: 30px;
+    padding: 10px 0;
+    font-size: 12px;
+    font-weight: 600;
     color: #fff;
     cursor: pointer;
     background: var(--el-color-primary);
     border: none;
-    border-radius: 50%;
-    box-shadow: 0 4px 14px rgb(0 0 0 / 18%);
+    border-radius: 8px 0 0 8px;
+    box-shadow: 0 2px 12px rgb(0 0 0 / 15%);
+    transition: opacity 0.2s;
   }
 
   .ai-fab:hover {
-    filter: brightness(1.05);
+    opacity: 0.88;
   }
 
-  /* 窄屏（UX-017）：缩小并贴边、半透明，少挡卡片内容 */
+  /* 窄屏（UX-017）：与缩小后的帮助细条对齐、半透明 */
   @media screen and (width <= 640px) {
     .ai-fab {
-      right: 12px;
-      bottom: 16px;
-      width: 40px;
-      height: 40px;
-      font-size: 13px;
-      opacity: 0.75;
+      bottom: 120px;
+      width: 24px;
+      padding: 8px 0;
+      font-size: 11px;
+      opacity: 0.6;
     }
   }
 </style>
