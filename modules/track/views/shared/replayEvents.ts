@@ -36,7 +36,7 @@ const tsOf = (e: ReplayEventLike): number => (typeof e.timestamp === 'number' ? 
  */
 export function assembleReplayBlocks<T extends ReplayEventLike>(
   blocks: Array<T[] | null>
-): AssembledReplay<T> & { droppedAfterGap: number } {
+): AssembledReplay<T> & { droppedAfterGap: number; incompleteTail: boolean } {
   const kept: T[] = []
   let broken = false
   let droppedAfterGap = 0
@@ -60,7 +60,21 @@ export function assembleReplayBlocks<T extends ReplayEventLike>(
     kept.push(...block.slice(start))
     broken = false
   }
-  return { ...assembleReplayEvents(kept), droppedAfterGap }
+  // 最后一次缺块之后再没有全量快照：后续录制无法播放，须明确提示而不是静默提前结束
+  return { ...assembleReplayEvents(kept), droppedAfterGap, incompleteTail: broken }
+}
+
+/**
+ * 服务端块清单按 seq 补齐空洞：返回 [minSeq..maxSeq]（seq 0 起），清单里没有的 seq 为 null。
+ * 清单里缺的 seq（从未上传或已清理）也算缺失块，和拉取失败的块一起计数。
+ */
+export function fillSeqGaps(seqs: number[]): Array<number | null> {
+  if (seqs.length === 0) return []
+  const have = new Set(seqs)
+  const max = Math.max(...seqs)
+  const out: Array<number | null> = []
+  for (let s = 0; s <= max; s++) out.push(have.has(s) ? s : null)
+  return out
 }
 
 export function assembleReplayEvents<T extends ReplayEventLike>(raw: T[]): AssembledReplay<T> {

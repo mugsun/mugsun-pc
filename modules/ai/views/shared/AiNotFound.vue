@@ -1,7 +1,11 @@
 <!-- 详情 / 编辑页 id 不存在时的统一占位（UX-105）：不渲染可编辑的假页面，只给返回入口 -->
 <template>
   <ElCard class="art-table-card ai-not-found" shadow="never">
-    <ElResult icon="warning" :title="`${what}不存在或已删除`" :sub-title="`编号 ${id}`">
+    <ElResult
+      icon="warning"
+      :title="$t('aiShared.notFound', { what })"
+      :sub-title="$t('aiShared.notFoundId', { id })"
+    >
       <template #extra>
         <ElButton type="primary" @click="$router.push(backPath)">{{ backText }}</ElButton>
       </template>

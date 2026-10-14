@@ -2,10 +2,10 @@
   <div class="art-full-height kb-detail">
     <AiNotFound
       v-if="notFound"
-      what="知识库"
+      :what="$t('aiShared.whatKnowledge')"
       :id="kbId"
       back-path="/ai/knowledge"
-      back-text="返回知识库列表"
+      :back-text="$t('aiShared.backToKnowledge')"
     />
     <ElCard v-else class="art-table-card" shadow="never">
       <div class="hd">
