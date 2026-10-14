@@ -153,7 +153,7 @@
               :closable="false"
               show-icon
             >
-              <ElButton size="small" :disabled="streaming" @click="retry(item.raw)">
+              <ElButton size="small" tabindex="-1" :disabled="streaming" @click="retry(item.raw)">
                 {{ $t('aiDrawer.retry') }}
               </ElButton>
             </ElAlert>
@@ -186,6 +186,7 @@
                 text
                 size="small"
                 class="ai-dmsg-actions__btn"
+                tabindex="-1"
                 :aria-label="$t('aiDrawer.copy')"
                 @click="copyMessage(item)"
               >
@@ -214,7 +215,7 @@
     </div>
 
     <!-- 输入卡片 -->
-    <div class="ai-dchat__composer">
+    <div ref="composerRef" class="ai-dchat__composer" @keydown.capture="onComposerTab">
       <XSender
         ref="senderRef"
         class="ai-dchat__sender"
@@ -776,6 +777,41 @@
   watch(activeId, () => {
     requestId.value = ''
   })
+
+  /**
+   * XSender 的编辑区会吞掉 Tab（焦点出不去）。在捕获阶段接管：
+   * Tab 去模型 chip（窄宽时是「设置」），Shift+Tab 回到消息区。
+   */
+  const composerRef = ref<HTMLElement | null>(null)
+  function onComposerTab(e: KeyboardEvent) {
+    if (e.key !== 'Tab') return
+    const target = e.target as HTMLElement | null
+    if (!target?.isContentEditable) return
+    e.preventDefault()
+    e.stopPropagation()
+    if (e.shiftKey) {
+      rootRef.value?.querySelector<HTMLElement>('.ai-dchat__main')?.focus()
+    } else {
+      composerRef.value
+        ?.querySelector<HTMLElement>('.ai-dchat__chips button, .ai-dchat__send:not(:disabled)')
+        ?.focus()
+    }
+  }
+
+  /**
+   * Tab 顺序：消息区（main）之后直接到输入框。
+   * Chrome 会把可滚动的列表容器当成 Tab 停靠点，这里把它移出 Tab 序列。
+   */
+  const bubbleListRef = ref<any>(null)
+  watch(
+    bubbleListRef,
+    async (v) => {
+      await nextTick()
+      const el = (v?.$el as HTMLElement | undefined)?.querySelector?.('.elx-bubble-list__list')
+      el?.setAttribute('tabindex', '-1')
+    },
+    { flush: 'post' }
+  )
 
   onMounted(async () => {
     // 抽屉打开时焦点落到输入框
