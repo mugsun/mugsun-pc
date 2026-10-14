@@ -1,5 +1,5 @@
 <template>
-  <div class="ai-chat-panel" :class="{ compact }">
+  <div class="ai-chat-panel" :class="{ compact, narrow }">
     <aside v-show="!collapsed" class="ai-chat-sessions">
       <div class="ai-chat-sessions__hd">
         <ElButton type="primary" size="small" @click="createSession">新对话</ElButton>
@@ -134,7 +134,8 @@
 </template>
 
 <script setup lang="ts">
-  import { nextTick, onMounted, ref, watch } from 'vue'
+  import { computed, nextTick, onMounted, ref, watch } from 'vue'
+  import { useWindowSize } from '@vueuse/core'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import DOMPurify from 'dompurify'
   import hljs from 'highlight.js'
@@ -167,6 +168,10 @@
   }
 
   const collapsed = ref(false)
+  /** 窄屏（UX-113）：单栏，会话列表收成覆盖层，默认收起，选中会话后自动收起 */
+  const { width: viewportWidth } = useWindowSize()
+  const narrow = computed(() => viewportWidth.value <= 640)
+  watch(narrow, (v) => (collapsed.value = v), { immediate: true })
   const sessionLoading = ref(false)
   const sessions = ref<any[]>([])
   const activeId = ref<string | number | null>(null)
@@ -255,6 +260,7 @@
   }
 
   async function selectSession(s: any) {
+    if (narrow.value) collapsed.value = true
     activeId.value = s.id
     activeSession.value = s
     modelId.value = s.modelId || modelId.value
@@ -559,6 +565,28 @@
     flex-wrap: wrap;
     gap: 8px;
     align-items: center;
+  }
+
+  /* 窄屏单栏（UX-113）：会话列表覆盖在聊天区上，工具栏下拉各占半行 */
+  .ai-chat-panel.narrow {
+    position: relative;
+  }
+
+  .ai-chat-panel.narrow .ai-chat-sessions {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    width: 100%;
+    background: var(--el-bg-color);
+    border-right: none;
+  }
+
+  .ai-chat-panel.narrow .ai-chat-main__tools {
+    width: 100%;
+  }
+
+  .ai-chat-panel.narrow .ai-chat-main__tools .el-select {
+    width: calc(50% - 4px) !important;
   }
 
   .ai-chat-msgs {
