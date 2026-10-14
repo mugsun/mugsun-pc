@@ -56,6 +56,10 @@ jobs:
       - name: Lint
         run: pnpm run lint
 
+      # 单测（vitest，jsdom）：tests/unit/**/*.test.ts
+      - name: Unit tests (vitest)
+        run: pnpm test
+
   ui-check:
     name: UI self-check
     runs-on: ubuntu-latest
