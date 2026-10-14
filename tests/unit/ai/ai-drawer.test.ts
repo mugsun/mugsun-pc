@@ -84,7 +84,11 @@ describe('AI 助手抽屉', () => {
     const host = src('modules/ai/views/shared/AiDrawerHost.vue')
     expect(host).toMatch(/loadingComponent:\s*ChatLoading/)
     expect(host).toMatch(/errorComponent:\s*ChatError/)
-    expect(host).toMatch(/timeout:\s*CHAT_LOAD_TIMEOUT/)
+    // 超时由 withTimeout 拒绝 loader，才能计入连续失败；不用 defineAsyncComponent 的 timeout
+    expect(host).toMatch(/withTimeout\(p, CHAT_LOAD_TIMEOUT\)/)
+    expect(host).not.toMatch(/timeout:\s*CHAT_LOAD_TIMEOUT/)
+    // 加载成功：清零计数并清掉自动刷新标记
+    expect(host).toMatch(/consecutiveFailures = 0\s*clearReloadFlag\(sessionStore\(\)\)/)
     // 重试必须换新的异步组件并加查询参数（浏览器会缓存失败的动态 import），兜底整页刷新
     expect(host).toMatch(/buildRetryUrl\(failedUrl, attempt\)/)
     expect(host).toMatch(/decideOnFailure\(.*\) === 'reload'/)
@@ -116,6 +120,11 @@ describe('AI 助手抽屉', () => {
     expect(chat).not.toMatch(/aiDrawer\.close'/)
     // 加载中：120px 骨架 + 新对话/全屏禁用；加载失败：标题 + 不显示这两个按钮
     expect(shell).toMatch(/width: 120px/)
+    // 浅色占位条用 --el-border-color 提高对比度，暗色仍是 --el-fill-color
+    expect(shell).toMatch(/width: 120px;\s*height: 16px;\s*background: var\(--el-border-color\)/)
+    expect(host).toMatch(
+      /html\.dark \.ai-drawer \.ai-dshell__skeleton \{\s*background: var\(--el-fill-color\)/
+    )
     expect(shell.match(/text\s+disabled/g)?.length).toBe(2)
     expect(shell).toMatch(/v-if="state === 'loading'"[\s\S]*aiDrawer\.newChat/)
     expect(shell).toMatch(/v-else class="ai-dshell__title">\{\{ \$t\('aiDrawer\.title'\) \}\}/)

@@ -1,13 +1,17 @@
-import { describe, expect, it } from 'vitest'
+import { afterEach, describe, expect, it, vi } from 'vitest'
 import {
+  CHAT_LOAD_TIMEOUT,
   CHAT_RELOAD_FLAG_KEY,
+  ChatLoadTimeoutError,
   MAX_CHAT_LOAD_FAILURES,
   buildRetryUrl,
+  clearReloadFlag,
   decideOnFailure,
   isEntryChunk,
   needsReload,
   parseFailedUrl,
-  stripRetryParam
+  stripRetryParam,
+  withTimeout
 } from '../../../modules/ai/views/assistant/drawer/chatChunkRetry'
 
 const ENTRY = 'https://app.example.com/assets/AiDrawerChat-Ab12Cd.js'
@@ -19,6 +23,7 @@ function memStorage() {
   return {
     getItem: (k: string) => m.get(k) ?? null,
     setItem: (k: string, v: string) => void m.set(k, v),
+    removeItem: (k: string) => void m.delete(k),
     map: m
   }
 }
@@ -96,8 +101,51 @@ describe('decideOnFailure', () => {
       getItem: () => {
         throw new Error('denied')
       },
-      setItem: () => {}
+      setItem: () => {},
+      removeItem: () => {}
     }
     expect(decideOnFailure(NESTED, 1, broken)).toBe('error')
+  })
+})
+
+describe('加载超时', () => {
+  afterEach(() => vi.useRealTimers())
+  it(`超过 ${CHAT_LOAD_TIMEOUT}ms 以 ChatLoadTimeoutError 拒绝`, async () => {
+    vi.useFakeTimers()
+    const p = withTimeout(new Promise(() => {}), CHAT_LOAD_TIMEOUT)
+    const done = expect(p).rejects.toBeInstanceOf(ChatLoadTimeoutError)
+    await vi.advanceTimersByTimeAsync(CHAT_LOAD_TIMEOUT)
+    await done
+  })
+  it('按时完成或先失败时透传结果，不再触发超时', async () => {
+    await expect(withTimeout(Promise.resolve(1), 10)).resolves.toBe(1)
+    const e = new Error('boom')
+    await expect(withTimeout(Promise.reject(e), 10)).rejects.toBe(e)
+  })
+  it('超时计入连续失败：第一次给重试，连续第二次整页刷新', () => {
+    const url = parseFailedUrl(new ChatLoadTimeoutError(CHAT_LOAD_TIMEOUT))
+    expect(url).toBeNull()
+    const s = memStorage()
+    expect(decideOnFailure(url, 1, s)).toBe('retry')
+    expect(decideOnFailure(url, MAX_CHAT_LOAD_FAILURES, s)).toBe('reload')
+  })
+})
+
+describe('clearReloadFlag', () => {
+  it('加载成功后清掉标记，之后再出问题仍可自动刷新一次', () => {
+    const s = memStorage()
+    expect(decideOnFailure(NESTED, 1, s)).toBe('reload')
+    clearReloadFlag(s)
+    expect(s.getItem(CHAT_RELOAD_FLAG_KEY)).toBeNull()
+    expect(decideOnFailure(NESTED, 1, s)).toBe('reload')
+  })
+  it('sessionStorage 不可用时不抛错', () => {
+    expect(() => clearReloadFlag(null)).not.toThrow()
+    const broken = {
+      removeItem: () => {
+        throw new Error('denied')
+      }
+    }
+    expect(() => clearReloadFlag(broken)).not.toThrow()
   })
 })

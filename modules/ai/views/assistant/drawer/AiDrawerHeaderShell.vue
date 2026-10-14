@@ -58,7 +58,7 @@
   .ai-dshell__skeleton {
     width: 120px;
     height: 16px;
-    background: var(--el-fill-color);
+    background: var(--el-border-color);
     border-radius: 4px;
     animation: ai-dshell-pulse 1.4s ease-in-out infinite;
   }

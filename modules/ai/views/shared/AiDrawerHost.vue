@@ -71,15 +71,16 @@
     clampDrawerWidth
   } from '../assistant/drawer/drawerLayout'
   import {
+    CHAT_LOAD_TIMEOUT,
     buildRetryUrl,
+    clearReloadFlag,
     decideOnFailure,
     parseFailedUrl,
-    stripRetryParam
+    stripRetryParam,
+    withTimeout
   } from '../assistant/drawer/chatChunkRetry'
   import AiDrawerHeaderShell from '../assistant/drawer/AiDrawerHeaderShell.vue'
 
-  /** chunk 加载超过这个时间按失败处理，显示「重试」 */
-  const CHAT_LOAD_TIMEOUT = 15_000
   /** 内容区加载提示的延迟（顶栏不延迟） */
   const SPINNER_DELAY = 200
 
@@ -159,9 +160,11 @@
     const p = retryUrl
       ? import(/* @vite-ignore */ retryUrl)
       : import('../assistant/drawer/AiDrawerChat.vue')
-    return p.then(
+    // 超时也走失败分支，计入连续失败次数（不用 defineAsyncComponent 的 timeout，它不会拒绝 loader）
+    return withTimeout(p, CHAT_LOAD_TIMEOUT).then(
       (mod) => {
         consecutiveFailures = 0
+        clearReloadFlag(sessionStore())
         return mod
       },
       (e: unknown) => {
@@ -182,8 +185,7 @@
       loadingComponent: ChatLoading,
       errorComponent: ChatError,
       // 不延迟：一打开就显示顶栏（含关闭按钮）；内容区提示另有 SPINNER_DELAY
-      delay: 0,
-      timeout: CHAT_LOAD_TIMEOUT
+      delay: 0
     })
   }
   const AiDrawerChat = shallowRef(createChat())
@@ -325,6 +327,11 @@
 
   .ai-drawer .ai-drawer__state.is-error .el-icon {
     color: var(--el-color-danger);
+  }
+
+  /* 加载中标题占位条：浅色提高对比度，暗色沿用 fill-color */
+  html.dark .ai-drawer .ai-dshell__skeleton {
+    background: var(--el-fill-color);
   }
 
   .ai-drawer.is-resizing {
