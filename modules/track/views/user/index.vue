@@ -43,6 +43,7 @@
         :range-separator="$t('pages.track.user.rangeSeparator')"
         :start-placeholder="$t('pages.track.user.startPlaceholder')"
         :end-placeholder="$t('pages.track.user.endPlaceholder')"
+        :format="narrow ? 'YYYY-MM-DD HH:mm' : 'YYYY-MM-DD HH:mm:ss'"
         class="track-time-range"
       />
       <ElButton type="primary" :loading="loading" @click="search">{{
@@ -220,6 +221,7 @@
     fmtTrackTime,
     useTrackApp
   } from '@/views/track/shared/useTrackApp'
+  import { useWindowSize } from '@vueuse/core'
   import ReplayPlayerDrawer from '@/views/track/shared/ReplayPlayerDrawer.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import {
@@ -237,6 +239,9 @@
   } from 'element-plus'
 
   defineOptions({ name: 'TrackUser' })
+  const { width: viewportWidth } = useWindowSize()
+  /** 窄屏日期框不显示秒（UX-116） */
+  const narrow = computed(() => viewportWidth.value <= 640)
 
   const { t } = useI18n()
 
@@ -578,6 +583,13 @@
 
       .track-time-range {
         width: 360px;
+      }
+
+      // 窄屏（UX-116）：日期框占满整行、去掉秒，避免「18:04:2(」被截断
+      @media screen and (width <= 640px) {
+        .track-time-range {
+          width: 100%;
+        }
       }
     }
 
