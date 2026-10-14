@@ -99,7 +99,7 @@
   import GisTileErrorHint from '../../components/GisTileErrorHint.vue'
   import GisCoach from '../../components/GisCoach.vue'
   import GisSkippedHint from '../../components/GisSkippedHint.vue'
-  import { skippedCount } from '@/gis/skippedHint'
+  import { metricsSkippedCount, skippedCount } from '@/gis/skippedHint'
   import { computed, nextTick, onActivated, onBeforeUnmount, onMounted, ref } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { useRouter } from 'vue-router'
@@ -188,6 +188,10 @@
     }
     if (typeof m.distanceMeters === 'number') {
       out.push(t('pages.gis.metricsDistance', { n: Math.round(m.distanceMeters) }))
+    }
+    const notCounted = metricsSkippedCount(result.value)
+    if (notCounted > 0) {
+      out.push(t('pages.gis.metricsSkipped', { n: notCounted }))
     }
     if (m.intersects != null) {
       out.push(`${t('pages.gis.opIntersects')}: ${m.intersects}`)

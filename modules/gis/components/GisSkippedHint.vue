@@ -1,5 +1,5 @@
 <!--
-  结果提示：后端跳过了极区或跨 180° 的要素（响应 skipped > 0）时显示数量，并链到文档的限制说明。
+  结果提示：后端跳过了缓冲包住极点或跨 180° 的要素（响应 skipped > 0）时显示数量，并链到文档的限制说明。
 -->
 <template>
   <p v-if="count > 0" class="gis-skipped-hint" role="status" data-test="gis-skipped-hint">
