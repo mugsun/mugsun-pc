@@ -184,6 +184,12 @@ export default ({ mode }: { mode: string }) => {
         'element-plus/es',
         'element-plus/es/components/*/style/css',
         'element-plus/es/components/*/style/index',
+        // 运行时才被发现的依赖会触发 Vite 二次预构建并整页重载，重载前后两份 deps 混用会让
+        // vue-draggable-plus / vuedraggable 拿到另一份 Vue：回放页列设置报
+        // 「Sortable: `el` must be an HTMLElement」，表单设计器组件面板错位、拖不进（UX-008，仅开发环境）
+        'vue-draggable-plus',
+        '@form-create/element-ui',
+        '@form-create/designer',
         ...(hasCesium ? (['cesium'] as const) : []),
         'mersenne-twister'
       ]
