@@ -38,7 +38,12 @@
             </ElFormItem>
             <ElFormItem v-if="type === 'product'" :label="$t('aiGen.category')">
               <ElSelect v-model="form.category" style="width: 100%">
-                <ElOption v-for="c in productCategories" :key="c" :label="c" :value="c" />
+                <ElOption
+                  v-for="c in productCategories"
+                  :key="c.key"
+                  :label="$t(c.i18n)"
+                  :value="c.key"
+                />
               </ElSelect>
             </ElFormItem>
             <ElFormItem :label="$t('aiGen.style')">
@@ -48,7 +53,12 @@
                 filterable
                 style="width: 100%"
               >
-                <ElOption v-for="s in posterStyles" :key="s" :label="s" :value="s" />
+                <ElOption
+                  v-for="s in posterStyles"
+                  :key="s.key"
+                  :label="$t(s.i18n)"
+                  :value="s.key"
+                />
               </ElSelect>
               <ElInput v-else v-model="form.style" :placeholder="$t('aiGen.stylePlaceholder')" />
             </ElFormItem>
@@ -97,44 +107,19 @@
   import { ElMessage } from 'element-plus'
   import DOMPurify from 'dompurify'
   import { fetchAiGenExport, fetchAiGenStream, fetchAiModelPage } from '../../api'
+  import {
+    buildGenPrompt,
+    categoryForModel,
+    POSTER_STYLES,
+    PRODUCT_CATEGORIES,
+    styleForModel
+  } from './genPrompt'
 
   const props = defineProps<{ type: string; title: string }>()
-  const { t } = useI18n()
+  const { t, locale } = useI18n()
 
-  const posterStyles = computed(() => [
-    t('aiGen.styleRedParty'),
-    t('aiGen.styleGovElegant'),
-    t('aiGen.styleNeoExpressionism'),
-    t('aiGen.stylePop'),
-    t('aiGen.styleSurrealCollage'),
-    t('aiGen.styleMinimalism'),
-    t('aiGen.styleBoldModern'),
-    t('aiGen.styleSwissDecon'),
-    t('aiGen.styleJapaneseMinimal'),
-    t('aiGen.styleScandinavian'),
-    t('aiGen.styleElegantRetro'),
-    t('aiGen.styleCyberpunk'),
-    t('aiGen.styleNeoFuturism'),
-    t('aiGen.styleFutureTech'),
-    t('aiGen.styleGuochao')
-  ])
-  const productCategories = computed(() => [
-    t('aiGen.catElectronics'),
-    t('aiGen.catHome'),
-    t('aiGen.catApparel'),
-    t('aiGen.catBeauty'),
-    t('aiGen.catFood'),
-    t('aiGen.catBaby'),
-    t('aiGen.catSports'),
-    t('aiGen.catDigital'),
-    t('aiGen.catOffice'),
-    t('aiGen.catHealth'),
-    t('aiGen.catAuto'),
-    t('aiGen.catBooks'),
-    t('aiGen.catPet'),
-    t('aiGen.catToys'),
-    t('aiGen.catSoftware')
-  ])
+  const posterStyles = POSTER_STYLES
+  const productCategories = PRODUCT_CATEGORIES
 
   const modelId = ref<string | number | null>(null)
   const models = ref<any[]>([])
@@ -190,8 +175,8 @@
     form.topic = t('aiGen.demoTopic', { title: props.title })
     form.title = t('aiGen.demoTitle')
     form.subtitle = t('aiGen.demoSubtitle')
-    form.style = props.type === 'poster' ? posterStyles.value[0] : t('aiGen.demoStyle')
-    form.category = productCategories.value[0]
+    form.style = props.type === 'poster' ? posterStyles[0].key : t('aiGen.demoStyle')
+    form.category = productCategories[0].key
     form.extra = t('aiGen.demoExtra')
   }
 
@@ -215,27 +200,18 @@
     }
     output.value = ''
     streaming.value = true
-    const promptParts = [
-      props.type === 'poster'
-        ? t('aiGen.pTitle', { v: form.title })
-        : t('aiGen.pTopic', { v: form.topic }),
-      form.subtitle ? t('aiGen.pSubtitle', { v: form.subtitle }) : '',
-      form.style ? t('aiGen.pStyle', { v: form.style }) : '',
-      form.category ? t('aiGen.pCategory', { v: form.category }) : '',
-      form.extra ? t('aiGen.pExtra', { v: form.extra }) : '',
-      form.width || form.height ? t('aiGen.pSize', { w: form.width, h: form.height }) : '',
-      t('aiGen.pAsk', { type: props.type })
-    ].filter(Boolean)
+    // 发给模型的内容固定中文，只有「输出语言」随界面语言
+    const prompt = buildGenPrompt(props.type, form, locale.value)
     abort = await fetchAiGenStream(
       props.type,
       {
         modelId: modelId.value,
-        prompt: promptParts.join('\n'),
+        prompt,
         topic,
         title: form.title,
         subtitle: form.subtitle,
-        style: form.style,
-        category: form.category,
+        style: styleForModel(props.type, form.style),
+        category: categoryForModel(form.category),
         extra: form.extra,
         width: form.width,
         height: form.height
@@ -260,7 +236,12 @@
   }
 
   async function doExport() {
-    await fetchAiGenExport(props.type, { content: output.value, ...form })
+    await fetchAiGenExport(props.type, {
+      content: output.value,
+      ...form,
+      style: styleForModel(props.type, form.style),
+      category: categoryForModel(form.category)
+    })
     ElMessage.success(t('aiGen.exported'))
   }
 

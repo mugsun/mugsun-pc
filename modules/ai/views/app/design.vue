@@ -77,7 +77,7 @@
             <div class="flow-node" :class="{ active: selected?.id === id }">
               <Handle type="target" :position="Position.Left" />
               <div class="n-type">{{ data.type }}</div>
-              <div class="n-label">{{ data.label }}</div>
+              <div class="n-label">{{ displayLabel(data.type, data.label, t) }}</div>
               <Handle type="source" :position="Position.Right" />
             </div>
           </template>
@@ -91,7 +91,9 @@
               ><ElInput :model-value="selected.data.type" disabled
             /></ElFormItem>
             <ElFormItem :label="$t('aiAppDesign.name')"
-              ><ElInput v-model="selected.data.label"
+              ><ElInput
+                v-model="selected.data.label"
+                :placeholder="displayLabel(selected.data.type, '', t)"
             /></ElFormItem>
             <ElFormItem v-if="hasField('prompt')" :label="$t('aiAppDesign.prompt')">
               <ElInput v-model="selected.data.prompt" type="textarea" :rows="4" />
@@ -158,6 +160,7 @@
   import '@vue-flow/core/dist/style.css'
   import '@vue-flow/core/dist/theme-default.css'
   import { fetchAiAppDetail, fetchRunAiApp, fetchSaveAiAppDsl, fetchShareAiApp } from '../../api'
+  import { displayLabel, RUN_SAMPLE_INPUT, storedLabel } from './flowNodes'
 
   defineOptions({ name: 'AiAppDesign' })
   const { t } = useI18n()
@@ -262,7 +265,8 @@
       position: { x: e.clientX - bounds.left - 60, y: e.clientY - bounds.top - 20 },
       data: {
         type: n.type,
-        label: n.label,
+        // 默认名不存，显示时按 type 实时翻译
+        label: '',
         prompt: '',
         text: '',
         url: '',
@@ -297,7 +301,7 @@
 
   /** 保存前校验（UX-106）：恰好一个开始、一个结束，且没有孤立节点 */
   function validateFlow(): string | null {
-    const label = (n: Node) => n.data?.label || n.data?.type || n.id
+    const label = (n: Node) => displayLabel(n.data?.type, n.data?.label, t) || n.id
     const starts = nodes.value.filter((n) => n.data?.type === 'start')
     const ends = nodes.value.filter((n) => n.data?.type === 'end')
     if (starts.length !== 1) return t('aiAppDesign.needOneStart', { n: starts.length })
@@ -334,7 +338,7 @@
         id: n.id,
         type: n.data?.type || n.type,
         position: n.position,
-        data: { ...n.data }
+        data: { ...n.data, label: storedLabel(n.data?.type || n.type, n.data?.label) }
       })),
       edges: edges.value.map((e) => ({
         id: e.id,
@@ -361,7 +365,11 @@
         id: n.id,
         type: 'custom',
         position: n.position || { x: 0, y: 0 },
-        data: { ...(n.data || {}), type: n.data?.type || n.type, label: n.data?.label || n.type }
+        data: {
+          ...(n.data || {}),
+          type: n.data?.type || n.type,
+          label: storedLabel(n.data?.type || n.type, n.data?.label)
+        }
       }))
       const eds = dsl.edges || dsl.connections || []
       edges.value = eds.map((e: any, i: number) => ({
@@ -403,7 +411,7 @@
   async function run() {
     running.value = true
     try {
-      const r = await fetchRunAiApp({ id: appId.value, input: t('aiAppDesign.runInput') })
+      const r = await fetchRunAiApp({ id: appId.value, input: RUN_SAMPLE_INPUT })
       runResult.value = typeof r === 'string' ? r : JSON.stringify(r, null, 2)
     } finally {
       running.value = false
