@@ -8,7 +8,18 @@
         <ElButton @click="reload">刷新</ElButton>
         <ElButton @click="doExport">导出</ElButton>
       </div>
-      <div ref="chartRef" class="chart" />
+      <div class="chart-wrap">
+        <div ref="chartRef" class="chart" :class="{ 'is-hidden': trendEmpty }" />
+        <!-- 无数据时图表只剩坐标轴（暗色下尤其像坏了），改显示空状态（UX-117） -->
+        <ArtEmptyState
+          v-if="trendEmpty"
+          class="chart-empty"
+          size="compact"
+          icon="ri:line-chart-line"
+          :title="`近 ${days} 天还没有调用记录`"
+          description="AI 应用、助手被调用后，这里按天显示 Token 用量"
+        />
+      </div>
       <ArtTable
         :loading="loading"
         :data="records"
@@ -31,6 +42,7 @@
   </div>
 </template>
 <script setup lang="ts">
+  import ArtEmptyState from '@/components/core/others/art-empty-state/index.vue'
   import type { ColumnOption } from '@/types/component'
   import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
   import * as echarts from 'echarts'
@@ -44,6 +56,7 @@
   const total = ref(0)
   const chartRef = ref<HTMLElement | null>(null)
   let chart: echarts.ECharts | null = null
+  const trendEmpty = ref(false)
   const pager = computed(() => ({
     current: pageNum.value,
     size: pageSize.value,
@@ -71,6 +84,7 @@
   }
   async function loadTrend() {
     const list = (await fetchAiBillingTrend({ days: days.value })) || []
+    trendEmpty.value = !list.some((x: any) => Number(x.tokens ?? 0) > 0)
     await nextTick()
     if (!chartRef.value) return
     if (!chart) chart = echarts.init(chartRef.value)
@@ -99,8 +113,22 @@
     margin-bottom: 12px;
   }
 
-  .chart {
+  .chart-wrap {
+    position: relative;
     height: 220px;
     margin-bottom: 12px;
+  }
+
+  .chart {
+    height: 100%;
+  }
+
+  .chart.is-hidden {
+    visibility: hidden;
+  }
+
+  .chart-empty {
+    position: absolute;
+    inset: 0;
   }
 </style>
