@@ -36,34 +36,38 @@
     <ElDialog
       v-model="visible"
       class="ai-channel-dialog"
-      :title="form.id ? '编辑渠道' : '新增渠道'"
+      :title="form.id ? $t('aiForm.editChannel') : $t('aiForm.newChannel')"
       width="560px"
     >
-      <ElForm ref="formRef" :model="form" label-width="100px">
-        <ElFormItem label="名称" prop="name" :rules="requiredRule('名称')">
-          <ElInput v-model="form.name" maxlength="64" placeholder="用来在列表里区分" />
+      <ElForm ref="formRef" :model="form" label-width="auto">
+        <ElFormItem :label="$t('aiForm.name')" prop="name" :rules="requiredRule($t('aiForm.name'))">
+          <ElInput v-model="form.name" maxlength="64" :placeholder="$t('aiForm.phListName')" />
         </ElFormItem>
-        <ElFormItem label="渠道类型" prop="channelType" :rules="requiredRule('渠道类型', true)">
+        <ElFormItem
+          :label="$t('aiForm.channelType')"
+          prop="channelType"
+          :rules="requiredRule($t('aiForm.channelType'), true)"
+        >
           <ElSelect v-model="form.channelType" style="width: 100%">
-            <ElOption label="企微" value="wecom" />
-            <ElOption label="钉钉" value="dingtalk" />
-            <ElOption label="飞书" value="feishu" />
+            <ElOption :label="$t('aiForm.optWecom')" value="wecom" />
+            <ElOption :label="$t('aiForm.optDingtalk')" value="dingtalk" />
+            <ElOption :label="$t('aiForm.optFeishu')" value="feishu" />
             <ElOption label="Webhook" value="webhook" />
           </ElSelect>
         </ElFormItem>
         <ElFormItem label="Webhook">
-          <ElInput v-model="form.webhookUrl" placeholder="留空可以先保存，调试前再填地址" />
+          <ElInput v-model="form.webhookUrl" :placeholder="$t('aiForm.phWebhook')" />
         </ElFormItem>
-        <ElFormItem label="绑定应用">
-          <ElInput v-model="form.appId" maxlength="64" placeholder="选填，用来标明发给哪个应用" />
+        <ElFormItem :label="$t('aiForm.boundApp')">
+          <ElInput v-model="form.appId" maxlength="64" :placeholder="$t('aiForm.phBoundApp')" />
         </ElFormItem>
-        <ElFormItem label="状态">
+        <ElFormItem :label="$t('aiForm.status')">
           <ElSwitch v-model="form.status" :active-value="1" :inactive-value="0" />
         </ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="visible = false">取消</ElButton>
-        <ElButton type="primary" :loading="saving" @click="save">保存</ElButton>
+        <ElButton @click="visible = false">{{ $t('aiForm.cancel') }}</ElButton>
+        <ElButton type="primary" :loading="saving" @click="save">{{ $t('aiForm.save') }}</ElButton>
       </template>
     </ElDialog>
   </div>

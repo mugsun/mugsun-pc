@@ -37,18 +37,32 @@
         <ElEmpty v-if="!loading && !records.length" :description="emptyText" />
       </div>
     </ElCard>
-    <ElDialog v-model="visible" :title="form.id ? '编辑应用' : '新建应用'" width="560px">
-      <ElForm ref="formRef" :model="form" label-width="88px">
-        <ElFormItem label="名称" prop="name" :rules="requiredRule('名称')"
+    <ElDialog
+      v-model="visible"
+      :title="form.id ? $t('aiForm.editApp') : $t('aiForm.newApp')"
+      width="560px"
+    >
+      <ElForm ref="formRef" :model="form" label-width="auto">
+        <ElFormItem :label="$t('aiForm.name')" prop="name" :rules="requiredRule($t('aiForm.name'))"
           ><ElInput v-model="form.name"
         /></ElFormItem>
-        <ElFormItem label="类型" prop="appType" :rules="requiredRule('类型', true)">
+        <ElFormItem
+          :label="$t('aiForm.type')"
+          prop="appType"
+          :rules="requiredRule($t('aiForm.type'), true)"
+        >
           <ElSelect v-model="form.appType" style="width: 100%">
-            <ElOption label="工作流" value="workflow" /><ElOption label="文本生成" value="text" />
-            <ElOption label="对话助手" value="chat" /><ElOption label="对话流程" value="chatflow" />
+            <ElOption :label="$t('aiForm.optWorkflow')" value="workflow" /><ElOption
+              :label="$t('aiForm.optTextGen')"
+              value="text"
+            />
+            <ElOption :label="$t('aiForm.optChatAssistant')" value="chat" /><ElOption
+              :label="$t('aiForm.optChatflow')"
+              value="chatflow"
+            />
           </ElSelect>
         </ElFormItem>
-        <ElFormItem label="描述"
+        <ElFormItem :label="$t('aiForm.description')"
           ><ElInput
             v-model="form.description"
             type="textarea"
@@ -58,8 +72,8 @@
         /></ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="visible = false">取消</ElButton>
-        <ElButton type="primary" :loading="saving" @click="save">保存</ElButton>
+        <ElButton @click="visible = false">{{ $t('aiForm.cancel') }}</ElButton>
+        <ElButton type="primary" :loading="saving" @click="save">{{ $t('aiForm.save') }}</ElButton>
       </template>
     </ElDialog>
   </div>

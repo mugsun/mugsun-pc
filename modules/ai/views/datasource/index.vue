@@ -26,39 +26,47 @@
     <ElDialog
       v-model="visible"
       class="ai-datasource-dialog"
-      :title="form.id ? '编辑数据源' : '新增数据源'"
+      :title="form.id ? $t('aiForm.editDatasource') : $t('aiForm.newDatasource')"
       width="600px"
     >
-      <ElForm ref="formRef" :model="form" label-width="100px">
-        <ElFormItem label="名称" prop="name" :rules="requiredRule('名称')">
-          <ElInput v-model="form.name" maxlength="64" placeholder="用来在列表里区分" />
+      <ElForm ref="formRef" :model="form" label-width="auto">
+        <ElFormItem :label="$t('aiForm.name')" prop="name" :rules="requiredRule($t('aiForm.name'))">
+          <ElInput v-model="form.name" maxlength="64" :placeholder="$t('aiForm.phListName')" />
         </ElFormItem>
-        <ElFormItem label="类型" prop="dbType" :rules="requiredRule('类型', true)">
+        <ElFormItem
+          :label="$t('aiForm.type')"
+          prop="dbType"
+          :rules="requiredRule($t('aiForm.type'), true)"
+        >
           <ElSelect v-model="form.dbType" style="width: 100%">
             <ElOption label="PostgreSQL" value="postgresql" />
             <ElOption label="MySQL" value="mysql" />
-            <ElOption label="金仓" value="kingbase" />
-            <ElOption label="达梦" value="dm" />
+            <ElOption :label="$t('aiForm.optKingbase')" value="kingbase" />
+            <ElOption :label="$t('aiForm.optDm')" value="dm" />
             <ElOption label="MariaDB" value="mariadb" />
             <ElOption label="StarRocks" value="starrocks" />
           </ElSelect>
         </ElFormItem>
-        <ElFormItem label="JDBC 地址" prop="jdbcUrl" :rules="requiredRule('JDBC 地址')">
-          <ElInput v-model="form.jdbcUrl" placeholder="例如 jdbc:postgresql://主机:端口/库名" />
+        <ElFormItem
+          :label="$t('aiForm.jdbcUrl')"
+          prop="jdbcUrl"
+          :rules="requiredRule($t('aiForm.jdbcUrl'))"
+        >
+          <ElInput v-model="form.jdbcUrl" :placeholder="$t('aiForm.phJdbcExample')" />
         </ElFormItem>
-        <ElFormItem label="用户名"><ElInput v-model="form.username" /></ElFormItem>
-        <ElFormItem label="密码"
+        <ElFormItem :label="$t('aiForm.username')"><ElInput v-model="form.username" /></ElFormItem>
+        <ElFormItem :label="$t('aiForm.password')"
           ><ElInput
             v-model="form.password"
             type="password"
             show-password
-            placeholder="编辑留空不修改"
+            :placeholder="$t('aiForm.phKeepUnchanged')"
         /></ElFormItem>
-        <ElFormItem label="备注"><ElInput v-model="form.remark" /></ElFormItem>
+        <ElFormItem :label="$t('aiForm.remark')"><ElInput v-model="form.remark" /></ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="visible = false">取消</ElButton>
-        <ElButton type="primary" :loading="saving" @click="save">保存</ElButton>
+        <ElButton @click="visible = false">{{ $t('aiForm.cancel') }}</ElButton>
+        <ElButton type="primary" :loading="saving" @click="save">{{ $t('aiForm.save') }}</ElButton>
       </template>
     </ElDialog>
   </div>

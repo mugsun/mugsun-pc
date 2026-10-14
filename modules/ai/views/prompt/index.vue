@@ -52,24 +52,32 @@
 
     <ElDialog
       v-model="visible"
-      :title="form.id ? '编辑提示词' : '添加提示词'"
+      :title="form.id ? $t('aiForm.editPrompt') : $t('aiForm.addPrompt')"
       width="720px"
       destroy-on-close
     >
-      <ElForm ref="formRef" :model="form" label-width="88px">
-        <ElFormItem label="名称" prop="name" :rules="requiredRule('名称')"
+      <ElForm ref="formRef" :model="form" label-width="auto">
+        <ElFormItem :label="$t('aiForm.name')" prop="name" :rules="requiredRule($t('aiForm.name'))"
           ><ElInput v-model="form.name"
         /></ElFormItem>
-        <ElFormItem label="分类" prop="category" :rules="requiredRule('分类', true)">
+        <ElFormItem
+          :label="$t('aiForm.category')"
+          prop="category"
+          :rules="requiredRule($t('aiForm.category'), true)"
+        >
           <ElSelect v-model="form.category" style="width: 100%">
-            <ElOption label="对话类" value="chat" />
-            <ElOption label="内容生成类" value="content" />
-            <ElOption label="分析处理类" value="analyze" />
-            <ElOption label="创意设计类" value="creative" />
+            <ElOption :label="$t('aiForm.optCatChat')" value="chat" />
+            <ElOption :label="$t('aiForm.optCatContent')" value="content" />
+            <ElOption :label="$t('aiForm.optCatAnalyze')" value="analyze" />
+            <ElOption :label="$t('aiForm.optCatCreative')" value="creative" />
           </ElSelect>
         </ElFormItem>
-        <ElFormItem label="场景"><ElInput v-model="form.scene" /></ElFormItem>
-        <ElFormItem label="内容" prop="content" :rules="requiredRule('内容')">
+        <ElFormItem :label="$t('aiForm.scene')"><ElInput v-model="form.scene" /></ElFormItem>
+        <ElFormItem
+          :label="$t('aiForm.content')"
+          prop="content"
+          :rules="requiredRule($t('aiForm.content'))"
+        >
           <ElInput
             v-model="form.content"
             type="textarea"
@@ -78,30 +86,33 @@
             show-word-limit
           />
         </ElFormItem>
-        <ElFormItem label="状态"
+        <ElFormItem :label="$t('aiForm.status')"
           ><ElSwitch v-model="form.status" :active-value="1" :inactive-value="0"
         /></ElFormItem>
-        <ElFormItem label="备注"><ElInput v-model="form.remark" /></ElFormItem>
+        <ElFormItem :label="$t('aiForm.remark')"><ElInput v-model="form.remark" /></ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="visible = false">取消</ElButton>
-        <ElButton type="primary" :loading="saving" @click="save">保存</ElButton>
+        <ElButton @click="visible = false">{{ $t('aiForm.cancel') }}</ElButton>
+        <ElButton type="primary" :loading="saving" @click="save">{{ $t('aiForm.save') }}</ElButton>
       </template>
     </ElDialog>
 
-    <ElDialog v-model="optVisible" title="优化提示词" width="800px">
+    <ElDialog v-model="optVisible" :title="$t('aiForm.optimizePrompt')" width="800px">
       <div class="opt-grid">
         <div
-          ><div class="lab">原文</div
+          ><div class="lab">{{ $t('aiForm.original') }}</div
           ><ElInput :model-value="optOrigin" type="textarea" :rows="12" readonly
         /></div>
         <div
-          ><div class="lab">优化结果</div><ElInput v-model="optResult" type="textarea" :rows="12"
+          ><div class="lab">{{ $t('aiForm.optimized') }}</div
+          ><ElInput v-model="optResult" type="textarea" :rows="12"
         /></div>
       </div>
       <template #footer>
-        <ElButton @click="optVisible = false">关闭</ElButton>
-        <ElButton type="primary" :disabled="!optResult" @click="adoptOptimize">采纳并保存</ElButton>
+        <ElButton @click="optVisible = false">{{ $t('aiForm.close') }}</ElButton>
+        <ElButton type="primary" :disabled="!optResult" @click="adoptOptimize">{{
+          $t('aiForm.adoptAndSave')
+        }}</ElButton>
       </template>
     </ElDialog>
   </div>
