@@ -3,7 +3,7 @@
   点击坐标为显示像素、原点底图左上角（外壳被 CSS 缩放时先换回布局像素）；集满 count 个自动提交。
 -->
 <template>
-  <div class="cp-panel">
+  <div ref="panelRef" class="cp-panel">
     <div class="cp-click-hint">
       <span class="cp-click-label">{{
         challenge.type === 'WORD_CLICK'
@@ -29,6 +29,7 @@
     </div>
     <div
       ref="stageRef"
+      tabindex="-1"
       class="cp-stage cp-click-stage"
       role="group"
       :aria-label="`${t('pages.auth.slider.clickAria')}：${promptLabel}`"
@@ -93,6 +94,7 @@
   const { t } = useI18n()
 
   const stageRef = ref<HTMLElement>()
+  const panelRef = ref<HTMLElement>()
   const points = ref<ClickPoint[]>([])
   // 字数 / 点击数由响应决定（v0.6.2：2–4 字词语或成语，含干扰字，点击数不固定）
   const promptTexts = computed(() => clickPromptChars(props.challenge))
@@ -150,5 +152,12 @@
     track = track.slice(0, points.value.length)
   }
 
-  defineExpose({ focus: () => stageRef.value?.querySelector<HTMLElement>('.cp-btn')?.focus() })
+  // 「撤销」按钮在点击区外：在整个面板内找；不可用（禁用）时退回聚焦点击区
+  defineExpose({
+    focus: () => {
+      const btn = panelRef.value?.querySelector<HTMLButtonElement>('.cp-btn:not(:disabled)')
+      if (btn) btn.focus()
+      else stageRef.value?.focus()
+    }
+  })
 </script>

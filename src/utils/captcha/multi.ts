@@ -118,6 +118,11 @@ export function cssScale(rectWidth: number, layoutWidth: number): number {
   return Number.isFinite(r) && r > 0 ? r : 1
 }
 
+/** 屏幕坐标按 cssScale 换回布局像素 */
+export function toLayoutPx(screen: number, scale: number): number {
+  return scale > 0 && Number.isFinite(scale) ? screen / scale : screen
+}
+
 /** 外壳宽度：上报宽度 ≥ 260，容器更窄时整体 scale(container/260) */
 export function shellLayout(containerWidth: number): { width: number; scale: number } {
   const width = clampDisplayWidth(containerWidth)

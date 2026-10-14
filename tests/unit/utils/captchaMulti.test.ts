@@ -311,3 +311,26 @@ describe('v0.6.2 旋转低速精调 / 40016', () => {
     })
   })
 })
+
+describe('SLIDER 外壳缩放（容器 < 260px）', () => {
+  it('指针位移与轨迹按 cssScale 换回布局像素，answer.x 与轨迹末点一致', () => {
+    const scale = m.cssScale(234, 260) // 0.9
+    const answer = 120 // 布局像素
+    const downX = 50
+    const upX = downX + answer * scale // 屏幕上实际移动 108px
+    const startX = m.toLayoutPx(downX, scale) - 0
+    const rec = new m.TrackRecorder(0, m.toLayoutPx(downX, scale), m.toLayoutPx(80, scale))
+    const offset = m.clampOffset(m.toLayoutPx(upX, scale) - startX, 200)
+    rec.sample(m.toLayoutPx(upX, scale), m.toLayoutPx(80, scale), 500, true)
+    expect(offset).toBeCloseTo(answer, 5)
+    const pts = rec.toJSON()
+    expect(pts[pts.length - 1].x).toBeCloseTo(answer, 1)
+    expect(pts[pts.length - 1].y).toBe(0)
+    // 未换算时会少算 10%（即 40011 的原因）
+    expect(upX - downX).toBeCloseTo(108, 5)
+  })
+  it('toLayoutPx：非法比例原样返回', () => {
+    expect(m.toLayoutPx(90, 0.9)).toBeCloseTo(100)
+    expect(m.toLayoutPx(90, 0)).toBe(90)
+  })
+})

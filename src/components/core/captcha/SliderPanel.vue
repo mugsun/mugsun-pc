@@ -55,6 +55,8 @@
   import {
     TrackRecorder,
     clampOffset,
+    cssScale,
+    toLayoutPx,
     displayKeyboardStep,
     keyboardPressCount,
     maxOffset,
@@ -79,6 +81,8 @@
   const handleRef = ref<HTMLElement>()
   let recorder: TrackRecorder | null = null
   let startX = 0
+  /** 外壳被 CSS 缩放时（容器 < 260px）屏幕像素 / 布局像素，按下时计算 */
+  let scale = 1
   let keySteps = 0
 
   const bgHeight = computed(() =>
@@ -117,22 +121,30 @@
       return
     }
     ;(e.currentTarget as HTMLElement).setPointerCapture?.(e.pointerId)
+    const el = e.currentTarget as HTMLElement
+    const track = el.parentElement
+    scale = track ? cssScale(track.getBoundingClientRect().width, track.offsetWidth) : 1
     dragging.value = true
-    startX = e.clientX - offset.value
-    recorder = new TrackRecorder(Date.now(), e.clientX, e.clientY)
+    // 指针位移与轨迹统一换算回布局像素，缩放外壳下 answer.x 与 track 首末位移才与原图一致
+    startX = toLayoutPx(e.clientX, scale) - offset.value
+    recorder = new TrackRecorder(
+      Date.now(),
+      toLayoutPx(e.clientX, scale),
+      toLayoutPx(e.clientY, scale)
+    )
   }
   function onPointerMove(e: PointerEvent) {
     if (!dragging.value || !recorder) return
     e.preventDefault()
-    offset.value = clampOffset(e.clientX - startX, max.value)
-    recorder.sample(e.clientX, e.clientY, Date.now())
+    offset.value = clampOffset(toLayoutPx(e.clientX, scale) - startX, max.value)
+    recorder.sample(toLayoutPx(e.clientX, scale), toLayoutPx(e.clientY, scale), Date.now())
   }
   function onPointerUp(e: PointerEvent) {
     if (!dragging.value || !recorder) return
     dragging.value = false
     const el = e.currentTarget as HTMLElement
     if (el.hasPointerCapture?.(e.pointerId)) el.releasePointerCapture(e.pointerId)
-    recorder.sample(e.clientX, e.clientY, Date.now(), true)
+    recorder.sample(toLayoutPx(e.clientX, scale), toLayoutPx(e.clientY, scale), Date.now(), true)
     if (offset.value <= 0) {
       recorder = null
       return

@@ -798,8 +798,7 @@
 
   .captcha-box .cp-jigsaw {
     display: grid;
-    gap: 2px;
-    background: var(--el-border-color-lighter);
+    gap: 0;
   }
 
   .captcha-box .cp-tile {
@@ -810,7 +809,14 @@
     cursor: pointer;
     background-repeat: no-repeat;
     border: 0;
+
+    /* 无 gap：用内描边分隔，块尺寸与背景切片一致，不拉伸、接缝不露底 */
+    box-shadow: inset 0 0 0 1px rgb(255 255 255 / 55%);
     transition: transform 0.15s;
+  }
+
+  html.dark .captcha-box .cp-tile {
+    box-shadow: inset 0 0 0 1px rgb(0 0 0 / 45%);
   }
 
   .captcha-box .cp-tile.is-selected,
