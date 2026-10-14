@@ -5,12 +5,12 @@
         <ElInput
           v-model="keyword"
           clearable
-          placeholder="标题/用户"
+          :placeholder="$t('aiConversation.searchPlaceholder')"
           style="width: 200px"
           @keyup.enter="reload"
         />
-        <ElButton @click="reload">搜索</ElButton>
-        <ElButton @click="doExport">导出</ElButton>
+        <ElButton @click="reload">{{ $t('aiConversation.search') }}</ElButton>
+        <ElButton @click="doExport">{{ $t('aiConversation.export') }}</ElButton>
       </div>
       <ArtTable
         :loading="loading"
@@ -31,7 +31,7 @@
         "
       />
     </ElCard>
-    <ElDrawer v-model="detailVisible" title="对话详情" size="480px">
+    <ElDrawer v-model="detailVisible" :title="$t('aiConversation.detailTitle')" size="480px">
       <div v-for="(m, i) in detailMsgs" :key="i" class="msg" :class="m.role">
         <strong>{{ m.role }}</strong>
         <pre>{{ m.content }}</pre>
@@ -40,6 +40,7 @@
   </div>
 </template>
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import type { ColumnOption } from '@/types/component'
   import { computed, h, onMounted, ref } from 'vue'
   import { ElButton } from 'element-plus'
@@ -49,6 +50,7 @@
     fetchExportAiConversation
   } from '../../api'
   defineOptions({ name: 'AiConversation' })
+  const { t } = useI18n()
   const keyword = ref('')
   const loading = ref(false)
   const records = ref<any[]>([])
@@ -62,27 +64,27 @@
     size: pageSize.value,
     total: total.value
   }))
-  const columns: ColumnOption[] = [
+  const columns = computed<ColumnOption[]>(() => [
     { type: 'index', width: 60, label: '#' },
-    { prop: 'title', label: '标题', minWidth: 160 },
-    { prop: 'source', label: '来源', width: 100 },
-    { prop: 'userName', label: '用户', width: 120 },
-    { prop: 'modelName', label: '模型', width: 140 },
+    { prop: 'title', label: t('aiConversation.colTitle'), minWidth: 160 },
+    { prop: 'source', label: t('aiConversation.colSource'), width: 100 },
+    { prop: 'userName', label: t('aiConversation.colUser'), width: 120 },
+    { prop: 'modelName', label: t('aiConversation.colModel'), width: 140 },
     { prop: 'totalTokens', label: 'Tokens', width: 100 },
-    { prop: 'lastTime', label: '时间', width: 170 },
+    { prop: 'lastTime', label: t('aiConversation.colTime'), width: 170 },
     {
       prop: 'operation',
-      label: '操作',
+      label: t('aiConversation.colActions'),
       width: 100,
       fixed: 'right',
       formatter: (row: any) =>
         h(
           ElButton,
           { link: true, type: 'primary', size: 'small', onClick: () => openDetail(row) },
-          () => '详情'
+          () => t('aiConversation.detail')
         )
     }
-  ]
+  ])
   async function reload() {
     loading.value = true
     try {

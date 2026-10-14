@@ -2,28 +2,37 @@
   <div class="art-full-height">
     <AiNotFound
       v-if="notFound"
-      what="仪表盘"
+      :what="$t('aiDashDesign.what')"
       :id="dashId"
       back-path="/ai/dataset"
-      back-text="返回数据集列表"
+      :back-text="$t('aiDashDesign.backToList')"
     />
     <ElCard v-else class="art-table-card" shadow="never">
       <div class="hd">
-        <ElButton @click="router.push('/ai/dataset')">返回</ElButton>
-        <h3>仪表盘设计 #{{ dashId }}</h3>
-        <ElButton type="primary" :loading="saving" @click="save">保存</ElButton>
-        <ElButton @click="share">分享</ElButton>
-        <ElButton type="danger" plain :disabled="!entityId" @click="remove">删除</ElButton>
+        <ElButton @click="router.push('/ai/dataset')">{{ $t('aiDashDesign.back') }}</ElButton>
+        <h3>{{ $t('aiDashDesign.title', { id: dashId }) }}</h3>
+        <ElButton type="primary" :loading="saving" @click="save">{{
+          $t('aiDashDesign.save')
+        }}</ElButton>
+        <ElButton @click="share">{{ $t('aiDashDesign.share') }}</ElButton>
+        <ElButton type="danger" plain :disabled="!entityId" @click="remove">{{
+          $t('aiDashDesign.delete')
+        }}</ElButton>
       </div>
       <ElForm label-width="88px" style="max-width: 640px; margin-bottom: 12px">
-        <ElFormItem label="名称" required>
-          <ElInput v-model="name" maxlength="64" show-word-limit placeholder="用来在列表里区分" />
+        <ElFormItem :label="$t('aiDashDesign.name')" required>
+          <ElInput
+            v-model="name"
+            maxlength="64"
+            show-word-limit
+            :placeholder="$t('aiDashDesign.namePlaceholder')"
+          />
         </ElFormItem>
       </ElForm>
       <ElAlert
         type="info"
         :closable="false"
-        title="在下面编辑 JSON。保存后可以分享站内地址，对方登录并有权限才能打开。"
+        :title="$t('aiDashDesign.tip')"
         style="margin-bottom: 12px"
       />
       <ElInput v-model="dslText" type="textarea" :rows="8" />
@@ -31,6 +40,7 @@
   </div>
 </template>
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import { computed, onMounted, ref } from 'vue'
   import AiNotFound from '../shared/AiNotFound.vue'
   import { useRoute, useRouter } from 'vue-router'
@@ -44,13 +54,14 @@
     aiDatasetExists
   } from '../../api'
   defineOptions({ name: 'AiDashboardDesign' })
+  const { t } = useI18n()
   /** id 不存在或已删除时只显示占位与返回入口（UX-105） */
   const notFound = ref(false)
   const route = useRoute()
   const router = useRouter()
   // 路由参数既可能是 dashboard id，也可能从问数入口带 datasetId
   const dashId = computed(() => route.params.id as string)
-  const name = ref('未命名仪表盘')
+  const name = ref(t('aiDashDesign.untitled'))
   const dslText = ref(JSON.stringify({ charts: [] }, null, 2))
   const saving = ref(false)
   const entityId = ref<string | number | null>(null)
@@ -93,7 +104,7 @@
       JSON.parse(dslText.value)
     } catch {
       saving.value = false
-      ElMessage.error('DSL 不是合法 JSON。可以先写成 {"charts":[]} 再改')
+      ElMessage.error(t('aiDashDesign.dslInvalid', { example: '{"charts":[]}' }))
       return
     }
     try {
@@ -122,21 +133,21 @@
   }
   async function share() {
     if (!entityId.value) {
-      ElMessage.warning('请先保存仪表盘，再分享')
+      ElMessage.warning(t('aiDashDesign.saveFirst'))
       return
     }
     const r = await fetchShareAiDashboard({ id: entityId.value })
-    await ElMessageBox.alert(
-      String(r?.url || ''),
-      '这是站内地址。对方需要登录，并且有仪表盘权限才能打开'
-    )
+    await ElMessageBox.alert(String(r?.url || ''), t('aiDashDesign.shareTip'))
   }
   async function remove() {
     if (!entityId.value) return
-    await ElMessageBox.confirm(`删除「${name.value}」后，问数里再进会是一份新的`, '确认')
+    await ElMessageBox.confirm(
+      t('aiDashDesign.removeConfirm', { name: name.value }),
+      t('aiDashDesign.confirmTitle')
+    )
     await fetchRemoveAiDashboard(entityId.value)
     entityId.value = null
-    name.value = '未命名仪表盘'
+    name.value = t('aiDashDesign.untitled')
     dslText.value = JSON.stringify({ charts: [] }, null, 2)
     router.push('/ai/dataset')
   }
