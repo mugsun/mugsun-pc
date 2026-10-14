@@ -150,7 +150,8 @@ export default ({ mode }: { mode: string }) => {
         threshold: 10240, // 只有大小大于该值的资源会被处理 10240B = 10KB
         deleteOriginFile: false // 压缩后是否删除原文件
       }),
-      vueDevTools(),
+      // UI 自检（pnpm test:ui-check）关掉 devtools：它注入的脚本偶发报错，会污染控制台断言
+      process.env.UI_CHECK ? null : vueDevTools(),
       ...(hasCesium
         ? [
             serveCesiumStatic(cesiumSource, cesiumBaseUrl),
