@@ -65,6 +65,7 @@
     <!-- 解锁界面 -->
     <div v-else class="unlock-content">
       <div class="flex-c flex-col w-80">
+        <ArtLogo class="mb-6" :size="64" on-dark />
         <img
           class="w-16 h-16 mt-5 rounded-full"
           :src="avatarSrc"

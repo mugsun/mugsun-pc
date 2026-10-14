@@ -17,8 +17,14 @@
       <div class="flex-c flex-1 min-w-0 leading-15" style="display: flex">
         <!-- 系统信息  -->
         <div class="flex-c c-p" @click="toHome" v-if="isTopMenu">
-          <ArtLogo class="pl-4.5" />
-          <p v-if="width >= 1400" class="my-0 mx-2 ml-2 text-lg">{{ AppConfig.systemInfo.name }}</p>
+          <ArtLogo
+            class="pl-4.5"
+            :size="28"
+            wordmark
+            :word-size="16"
+            :word-color="isDark ? '#DDDDDD' : 'var(--art-gray-800)'"
+            :on-dark="isDark"
+          />
         </div>
 
         <ArtLogo
@@ -197,7 +203,6 @@
   import { useMenuStore } from '@/store/modules/menu'
   import { useTopMenuStore } from '@/store/modules/topMenu'
   import { filterMenusByScheme } from '@/utils/topMenuFilter'
-  import AppConfig from '@/config'
   import { languageOptions } from '@/locales'
   import { mittBus } from '@/utils/sys'
   import { themeAnimation } from '@/utils/ui/animation'
