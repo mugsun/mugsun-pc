@@ -29,6 +29,40 @@ export interface AssembledReplay<T> {
 
 const tsOf = (e: ReplayEventLike): number => (typeof e.timestamp === 'number' ? e.timestamp : 0)
 
+/**
+ * 按块拼接（seq 升序，null = 该块缺失）：缺块之后的增量依赖缺失的 DOM 变更，回放会错位，
+ * 所以从缺块后的**下一个全量快照**（连同紧挨在它前面的 Meta）接着播，中间的事件丢弃。
+ * SDK 默认每 3 分钟做一次全量快照（rrweb checkoutEveryNms），丢一块最多跳过约 3 分钟。
+ */
+export function assembleReplayBlocks<T extends ReplayEventLike>(
+  blocks: Array<T[] | null>
+): AssembledReplay<T> & { droppedAfterGap: number } {
+  const kept: T[] = []
+  let broken = false
+  let droppedAfterGap = 0
+  for (const block of blocks) {
+    if (block === null) {
+      // 首块缺失由 assembleReplayEvents 的「从第一个全量快照开始」处理
+      if (kept.length > 0) broken = true
+      continue
+    }
+    if (!broken) {
+      kept.push(...block)
+      continue
+    }
+    const snap = block.findIndex((e) => e.type === RRWEB_FULL_SNAPSHOT)
+    if (snap < 0) {
+      droppedAfterGap += block.length
+      continue
+    }
+    const start = snap > 0 && block[snap - 1].type === RRWEB_META ? snap - 1 : snap
+    droppedAfterGap += start
+    kept.push(...block.slice(start))
+    broken = false
+  }
+  return { ...assembleReplayEvents(kept), droppedAfterGap }
+}
+
 export function assembleReplayEvents<T extends ReplayEventLike>(raw: T[]): AssembledReplay<T> {
   const sorted = raw
     .map((e, i) => ({ e, i }))

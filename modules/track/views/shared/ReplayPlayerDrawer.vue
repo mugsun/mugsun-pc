@@ -75,7 +75,7 @@
   import { ElAlert, ElDrawer, ElEmpty, ElResult, ElTag, ElTooltip } from 'element-plus'
   import { useI18n } from 'vue-i18n'
   import 'rrweb-player/dist/style.css'
-  import { assembleReplayEvents, type ReplayEventLike } from './replayEvents'
+  import { assembleReplayBlocks, type ReplayEventLike } from './replayEvents'
 
   interface Props {
     visible: boolean
@@ -212,18 +212,24 @@
 
       // 逐块拉取（服务端已解压明文数组；缺失/过期块跳过不阻断整体播放）
       const events: unknown[] = []
+      // 按 seq 记录每块内容（null = 缺失），用于缺块后从下一个全量快照接着播
+      const perBlock: Array<ReplayEventLike[] | null> = []
       let skipped = 0
       let blockMsg = ''
       for (const block of blocks) {
         try {
           const chunk: any = await fetchTrackReplayData({ sessionId, seq: block.seq })
           // skipEnvelope 下后端错误信封也会原样返回，须按数组形态甄别
-          if (Array.isArray(chunk)) events.push(...chunk)
-          else {
+          if (Array.isArray(chunk)) {
+            events.push(...chunk)
+            perBlock.push(chunk as ReplayEventLike[])
+          } else {
+            perBlock.push(null)
             skipped++
             if (!blockMsg && typeof chunk?.msg === 'string') blockMsg = chunk.msg
           }
         } catch (err: unknown) {
+          perBlock.push(null)
           skipped++
           const msg = (err as { data?: { msg?: unknown } })?.data?.msg
           if (!blockMsg && typeof msg === 'string') blockMsg = msg
@@ -235,8 +241,8 @@
         errorMsg.value = blockMsg || t('pages.track.shared.allBlocksMissing')
         return
       }
-      // seq 空洞容错：按时间排序，从第一个全量快照开始（缺了前序块时快照前的增量无法回放）
-      const assembled = assembleReplayEvents(events as ReplayEventLike[])
+      // seq 空洞容错：缺块后从下一个全量快照接着播；按时间排序，从第一个全量快照开始
+      const assembled = assembleReplayBlocks(perBlock)
       if (assembled.noSnapshot) {
         errorMsg.value = t('pages.track.shared.noSnapshot')
         return

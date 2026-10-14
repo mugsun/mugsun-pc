@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest'
-import { assembleReplayEvents } from '../../../modules/track/views/shared/replayEvents'
+import {
+  assembleReplayBlocks,
+  assembleReplayEvents
+} from '../../../modules/track/views/shared/replayEvents'
 
 const ev = (type: number, timestamp: number, id = 0) => ({ type, timestamp, data: { id } })
 
@@ -37,5 +40,37 @@ describe('assembleReplayEvents（seq 空洞容错）', () => {
   it('中间块缺失：快照之后的空洞不丢事件（rrweb 跳过找不到的节点）', () => {
     const r = assembleReplayEvents([ev(4, 1), ev(2, 2), ev(3, 3), ev(3, 30)])
     expect(r.events).toHaveLength(4)
+  })
+})
+
+describe('assembleReplayBlocks（缺块后从下一个全量快照接着播）', () => {
+  it('中间块缺失：丢掉缺块后、下一个全量快照前的增量，从 Meta + 快照接着播', () => {
+    const r = assembleReplayBlocks([
+      [ev(4, 1), ev(2, 2), ev(3, 3)],
+      null,
+      [ev(3, 20), ev(3, 21)],
+      [ev(3, 30), ev(4, 31), ev(2, 32), ev(3, 33)]
+    ])
+    expect(r.droppedAfterGap).toBe(3)
+    expect(r.events.map((e) => e.timestamp)).toEqual([1, 2, 3, 31, 32, 33])
+  })
+
+  it('缺块后没有全量快照：只播缺块前的部分', () => {
+    const r = assembleReplayBlocks([[ev(4, 1), ev(2, 2), ev(3, 3)], null, [ev(3, 20)]])
+    expect(r.events.map((e) => e.timestamp)).toEqual([1, 2, 3])
+    expect(r.droppedAfterGap).toBe(1)
+  })
+
+  it('首块缺失：从第一个全量快照开始（不计入 droppedAfterGap）', () => {
+    const r = assembleReplayBlocks([null, [ev(3, 5), ev(4, 6), ev(2, 7), ev(3, 8)]])
+    expect(r.events.map((e) => e.timestamp)).toEqual([6, 7, 8])
+    expect(r.droppedAfterGap).toBe(0)
+    expect(r.droppedBeforeSnapshot).toBe(1)
+  })
+
+  it('没有缺块：原样', () => {
+    const r = assembleReplayBlocks([[ev(4, 1), ev(2, 2)], [ev(3, 3)]])
+    expect(r.events).toHaveLength(3)
+    expect(r.droppedAfterGap).toBe(0)
   })
 })
