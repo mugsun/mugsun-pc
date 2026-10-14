@@ -69,6 +69,7 @@
     keyboardPressCount,
     normalizeAngle,
     rotateAngleToTravel,
+    rotateFineDelta,
     rotateKeyboardStep,
     rotateTravelToAngle,
     toDisplay,
@@ -95,9 +96,10 @@
   const handleRef = ref<HTMLElement>()
   const trackRef = ref<HTMLElement>()
   let recorder: TrackRecorder | null = null
-  let startX = 0
   let startY = 0
   let scale = 1
+  let lastX = 0
+  let lastT = 0
   let keySteps = 0
 
   const bgW = computed(() => props.challenge.bgWidth || 320)
@@ -135,15 +137,21 @@
     scale = el ? cssScale(el.getBoundingClientRect().width, el.offsetWidth) : 1
     dragging.value = true
     offset.value = 0
-    startX = e.clientX
     startY = e.clientY
+    lastX = e.clientX
+    lastT = performance.now()
     // 轨迹 x = 逻辑行程（布局像素），首末位移 = answer 换算行程
     recorder = new TrackRecorder(Date.now())
   }
   function onPointerMove(e: PointerEvent) {
     if (!dragging.value || !recorder) return
     e.preventDefault()
-    offset.value = clampOffset((e.clientX - startX) / scale, props.width)
+    // 低速精调：慢速移动时逻辑位移按 0.5 倍累加；track.x 记逻辑位置（v0.6.2 §3）
+    const now = performance.now()
+    const dx = (e.clientX - lastX) / scale
+    offset.value = clampOffset(offset.value + rotateFineDelta(dx, now - lastT), props.width)
+    lastX = e.clientX
+    lastT = now
     angle.value = rotateTravelToAngle(offset.value, props.width)
     recorder.sample(offset.value, (e.clientY - startY) / scale, Date.now())
   }

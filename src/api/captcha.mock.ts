@@ -5,8 +5,8 @@
  * 指定题型（仅 mock）：URL `?captchaType=ROTATE` 或 sessionStorage `captchaMockType`；缺省随机。
  * keyboard 题只出 SLIDER / ROTATE（与后端约定一致）。
  * 规则模拟服务端：一次一机会、过期 120s、连续失败 5 次限流 10 秒。
- * 难度：滑块 ±8px、旋转 ±25°（可配，见 rotTolerance）（真实服务端 ±10°，键盘 5°/步，施加角为步长整数倍）、
- * 点选：文字为 2–4 字词语 / 成语（字数 = 点击数）+ 2 干扰字，图标 3 目标 + 2 干扰、半径 max(itemSize×0.75, 22)（与服务端同式）、拼图 2×2 只交换一对（一步还原）。
+ * 难度：滑块 ±8px、旋转 ±10°（同服务端，可配，见 rotTolerance）（真实服务端 ±10°，键盘 5°/步，施加角为步长整数倍）、
+ * 点选：文字为 3–4 字词语 / 成语（字数 = count）+ 1–2 干扰字（prompt 整词字符串），图标 3 目标 + 2 干扰、半径 max(itemSize×0.75, 22)（与服务端同式）、拼图 2×2 只交换一对（一步还原）。
  * 模拟 40015：sessionStorage `captchaMockNoKeyboard=1` 时 keyboard 取题返回 40015。
  */
 import { HttpError } from '@/utils/http/error'
@@ -34,7 +34,7 @@ const ROT_SIZE = 160
 const EXPIRE = 120
 const TOLERANCE = 8
 /**
- * mock 旋转容差（度），可配：sessionStorage `captchaMockRotateTol` > env `VITE_CAPTCHA_MOCK_ROTATE_TOL` > 25。
+ * mock 旋转容差（度），可配：sessionStorage `captchaMockRotateTol` > env `VITE_CAPTCHA_MOCK_ROTATE_TOL` > 10（同服务端 v0.6.2）。
  * 用于预演服务端收紧（v0.6.1 为 10°，v0.6.2 计划 7°）时的手感。
  */
 function rotTolerance(): number {
@@ -44,8 +44,8 @@ function rotTolerance(): number {
   } catch {
     v = null
   }
-  const n = Number(v ?? import.meta.env.VITE_CAPTCHA_MOCK_ROTATE_TOL ?? 25)
-  return Number.isFinite(n) && n > 0 && n <= 180 ? n : 25
+  const n = Number(v ?? import.meta.env.VITE_CAPTCHA_MOCK_ROTATE_TOL ?? 10)
+  return Number.isFinite(n) && n > 0 && n <= 180 ? n : 10
 }
 const ITEM_SIZE = 32
 const CLICK_DECOYS = 2
@@ -201,12 +201,8 @@ function genRotate() {
   }
 }
 
-/** WORD_CLICK 小词表：2–4 字常用词语 / 成语（字须两两不同，便于判定） */
+/** WORD_CLICK 小词表：3–4 字常用词语 / 成语（同服务端 v0.6.2，词内无重复字） */
 const WORD_LIST = [
-  '春风',
-  '明月',
-  '山水',
-  '彩虹',
   '向日葵',
   '博物馆',
   '天文台',
@@ -227,7 +223,7 @@ function pickWord(): string[] {
     forced = null
   }
   const w =
-    forced && forced.length >= 2 && forced.length <= 4
+    forced && forced.length >= 3 && forced.length <= 4
       ? forced
       : WORD_LIST[rand(0, WORD_LIST.length - 1)]
   return Array.from(w)
@@ -292,7 +288,7 @@ function genClick(kind: 'WORD_CLICK' | 'ICON_CLICK') {
   let targetCount: number
   if (kind === 'WORD_CLICK') {
     const word = pickWord()
-    const decoys = shuffle(DECOY_CHARS.filter((c) => !word.includes(c))).slice(0, CLICK_DECOYS)
+    const decoys = shuffle(DECOY_CHARS.filter((c) => !word.includes(c))).slice(0, rand(1, 2))
     labels = [...word, ...decoys]
     targetCount = word.length
     draws = labels.map((ch) => (ctx: CanvasRenderingContext2D) => {
@@ -345,7 +341,9 @@ function genClick(kind: 'WORD_CLICK' | 'ICON_CLICK') {
       bgWidth: BG_W,
       bgHeight: BG_H,
       promptImage: pc.toDataURL('image/png'),
-      ...(kind === 'WORD_CLICK' ? { prompt: names } : { promptNames: names }),
+      ...(kind === 'WORD_CLICK'
+        ? { prompt: names.join(''), hasDecoy: true }
+        : { promptNames: names }),
       count: targetCount,
       itemSize: ITEM_SIZE
     },

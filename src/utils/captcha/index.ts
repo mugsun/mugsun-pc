@@ -30,7 +30,9 @@ export const CaptchaCode = {
   REQUIRED: 40013,
   DISABLED: 40014,
   /** v0.6.1：keyboard 取题时租户未启用 SLIDER/ROTATE（不自动重试，提示改用鼠标/触屏） */
-  NO_ACCESSIBLE: 40015
+  NO_ACCESSIBLE: 40015,
+  /** v0.6.3：租户启用题型因素材不可用全部被剔除（仅 pointer challenge），不自动重试 */
+  UNAVAILABLE: 40016
 } as const
 
 export interface TrackPoint {
@@ -208,6 +210,7 @@ export type CaptchaErrorKind =
   | 'required'
   | 'disabled'
   | 'noAccessible'
+  | 'unavailable'
   | 'network'
   | 'other'
 
@@ -241,7 +244,7 @@ export function classifyCaptchaError(err: unknown): CaptchaErrorInfo {
     payload &&
     typeof payload.code === 'number' &&
     payload.code >= 40010 &&
-    payload.code <= 40015
+    payload.code <= 40016
   ) {
     code = payload.code
     payload = (payload.data && typeof payload.data === 'object' ? payload.data : undefined) as
@@ -264,6 +267,8 @@ export function classifyCaptchaError(err: unknown): CaptchaErrorInfo {
       return { ...base, kind: 'disabled' }
     case CaptchaCode.NO_ACCESSIBLE:
       return { ...base, kind: 'noAccessible' }
+    case CaptchaCode.UNAVAILABLE:
+      return { ...base, kind: 'unavailable' }
   }
   const isNetwork =
     (err instanceof HttpError &&

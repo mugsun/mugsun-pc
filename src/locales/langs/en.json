@@ -733,7 +733,8 @@
         "jigsawSelected": "Tile {n} selected, tap another tile to swap",
         "jigsawSubmit": "Done",
         "jigsawKeyboardNote": "This puzzle can't be done by keyboard. Choose “Use keyboard” for another one",
-        "noAccessible": "No keyboard-accessible verification is enabled. Please use a mouse or touch screen."
+        "noAccessible": "No keyboard-accessible verification is enabled. Please use a mouse or touch screen.",
+        "unavailable": "Verification is temporarily unavailable. Please contact the administrator."
       }
     },
     "dashboard": {

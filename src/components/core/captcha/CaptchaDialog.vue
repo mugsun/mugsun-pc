@@ -164,6 +164,7 @@
     | 'limited'
     | 'error'
     | 'noAccessible'
+    | 'unavailable'
   const status = ref<Status>('loading')
   const challenge = ref<CaptchaChallenge | null>(null)
   const shaking = ref(false)
@@ -250,6 +251,8 @@
       status.value = 'ready'
       expireTimer = setTimeout(
         () => {
+          // 正在校验：交给校验结果处理（超过 TTL 时服务端回 40010 → 自动换题）
+          if (status.value === 'verifying') return
           announce.value = t('pages.auth.slider.expired')
           load(wantedMode)
         },
@@ -311,6 +314,13 @@
         emit('skip')
         emit('update:visible', false)
         return
+      case 'unavailable':
+        // 40016：验证方式暂不可用（素材缺失），不自动重试
+        clearTimers()
+        challenge.value = null
+        status.value = 'unavailable'
+        announce.value = t('pages.auth.slider.unavailable')
+        return
       case 'noAccessible':
         // 40015：租户未启用键盘可操作题型，不自动重试，提示改用鼠标 / 触屏
         clearTimers()
@@ -346,6 +356,8 @@
         emit('update:visible', false)
       }, 600)
     } catch (err) {
+      // 等待期间本地 TTL 计时器已换题：旧题的 40010 / 40011 不再触发第二次取题
+      if (challenge.value?.captchaId !== c.captchaId) return
       handleError(err, true)
     }
   }
@@ -366,6 +378,8 @@
         return t('pages.auth.slider.networkError')
       case 'noAccessible':
         return t('pages.auth.slider.noAccessible')
+      case 'unavailable':
+        return t('pages.auth.slider.unavailable')
       default:
         return ''
     }

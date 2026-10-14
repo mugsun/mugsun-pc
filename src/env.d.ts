@@ -44,6 +44,6 @@ interface ImportMetaEnv {
   readonly VITE_VERSION?: string
   /** 开发期滑块验证码 mock（仅 dev 生效，默认关闭） */
   readonly VITE_CAPTCHA_MOCK?: string
-  /** 仅 mock：旋转容差（度），缺省 25 */
+  /** 仅 mock：旋转容差（度），缺省 10 */
   readonly VITE_CAPTCHA_MOCK_ROTATE_TOL?: string
 }

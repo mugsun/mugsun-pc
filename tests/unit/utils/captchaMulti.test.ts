@@ -199,11 +199,9 @@ describe('WORD_CLICK 词语 / 成语（点击数由响应决定）', () => {
     expect(m.clickPromptChars({ promptNames: ['太阳', '钥匙'] })).toEqual(['太阳', '钥匙'])
     expect(m.clickPromptChars({})).toEqual([])
   })
-  it('点击数：count > 候选字段 > 字数 > 3', () => {
-    expect(m.clickTargetCount({ count: 4, prompt: '春风' })).toBe(4)
-    expect(m.clickTargetCount({ clickCount: 2 })).toBe(2)
-    expect(m.clickTargetCount({ prompt: '一帆风顺' })).toBe(4)
-    expect(m.clickTargetCount({ prompt: ['春', '风'] })).toBe(2)
+  it('点击数只认 count，缺失回退 3', () => {
+    expect(m.clickTargetCount({ count: 4 })).toBe(4)
+    expect(m.clickTargetCount({ count: 3 })).toBe(3)
     expect(m.clickTargetCount({})).toBe(3)
     expect(m.clickTargetCount({ count: 99 })).toBe(8)
   })
@@ -212,5 +210,19 @@ describe('WORD_CLICK 词语 / 成语（点击数由响应决定）', () => {
       '一帆风顺'
     )
     expect(m.clickPromptLabel({ type: 'ICON_CLICK', promptNames: ['太阳', '鱼'] })).toBe('太阳 鱼')
+  })
+})
+
+describe('v0.6.2 旋转低速精调 / 40016', () => {
+  it('慢速移动位移按 0.5 倍，快速不变', () => {
+    expect(m.rotateFineDelta(1, 16)).toBe(0.5)
+    expect(m.rotateFineDelta(10, 16)).toBe(10)
+    expect(m.rotateFineDelta(-1, 20)).toBe(-0.5)
+    expect(m.rotateFineDelta(5, 0)).toBe(5)
+  })
+  it('40016 归类为 unavailable，不自动重试', () => {
+    expect(m.classifyCaptchaError(new HttpError('暂不可用', 40016))).toMatchObject({
+      kind: 'unavailable'
+    })
   })
 })

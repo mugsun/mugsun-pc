@@ -152,17 +152,23 @@ export function clickPromptChars(c: { prompt?: unknown; promptNames?: unknown })
   return []
 }
 
+/** 点选需点击数：只认响应 count（v0.6.2 WORD_CLICK 为 3 或 4）；缺失时回退 3，夹在 [1, 8] */
+export function clickTargetCount(c: { count?: unknown }): number {
+  const n = Number(c.count)
+  return Number.isInteger(n) && n > 0 ? Math.min(8, n) : CLICK_COUNT
+}
+
 /**
- * 点选需点击数：响应决定。依次取 count / clickCount / targetCount（v0.6.2 字段未定），
- * 再退到提示字数，最后退到 3；夹在 [1, 8]。
+ * ROTATE 低速精调（契约 v0.6.2 §3）：指针速度低于阈值时逻辑位移按 0.5 倍累加。
+ * @param dx 本次指针位移（布局像素）
+ * @param dt 距上次采样的毫秒数
  */
-export function clickTargetCount(c: Record<string, unknown>): number {
-  for (const k of ['count', 'clickCount', 'targetCount']) {
-    const n = Number(c[k])
-    if (Number.isInteger(n) && n > 0) return Math.min(8, n)
-  }
-  const chars = clickPromptChars(c)
-  return chars.length ? Math.min(8, chars.length) : CLICK_COUNT
+export const ROTATE_SLOW_SPEED = 0.12
+export const ROTATE_SLOW_GAIN = 0.5
+export function rotateFineDelta(dx: number, dt: number): number {
+  if (!Number.isFinite(dx)) return 0
+  const speed = dt > 0 ? Math.abs(dx) / dt : Infinity
+  return speed < ROTATE_SLOW_SPEED ? dx * ROTATE_SLOW_GAIN : dx
 }
 
 /** 读屏用提示：WORD_CLICK 拼成整词（「一帆风顺」），ICON_CLICK 用空格分隔名称 */
