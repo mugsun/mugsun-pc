@@ -30,6 +30,25 @@
  * @author Mugsun
  */
 import type { App } from 'vue'
+import { HttpError } from '@/utils/http/error'
+
+/**
+ * 主动取消的请求（路由切换 cancelPendingRequests、重复提交去重、useTable 中断）不是异常：
+ * 调用方没 catch 时会冒成「请求已取消」的未捕获错误（如表单设计器切页时），这里静默吞掉。
+ */
+export function isCanceledError(err: unknown): boolean {
+  if (!err || typeof err !== 'object') return false
+  const e = err as {
+    canceled?: unknown
+    name?: unknown
+    code?: unknown
+    message?: unknown
+    __CANCEL__?: unknown
+  }
+  if (err instanceof HttpError && err.canceled) return true
+  if (e.__CANCEL__ === true || e.name === 'CanceledError' || e.code === 'ERR_CANCELED') return true
+  return err instanceof Error && err.message === '请求已取消'
+}
 
 const IGNORABLE_SCRIPT_ERRORS = [
   'ResizeObserver loop completed with undelivered notifications.',
@@ -72,6 +91,7 @@ function isIgnorableScriptError(message: Event | string, source?: string): boole
  * Vue 运行时错误处理
  */
 export function vueErrorHandler(err: unknown, instance: any, info: string) {
+  if (isCanceledError(err)) return
   console.error('[VueError]', err, info, instance)
   // 这里可以上报到服务端，比如：
   // reportError({ type: 'vue', err, info })
@@ -101,6 +121,10 @@ export function scriptErrorHandler(
  */
 export function registerPromiseErrorHandler() {
   window.addEventListener('unhandledrejection', (event) => {
+    if (isCanceledError(event.reason)) {
+      event.preventDefault()
+      return
+    }
     console.error('[PromiseError]', event.reason)
     // reportError({ type: 'promise', reason: event.reason })
   })

@@ -1,7 +1,7 @@
 <!-- 空间分析：全幅地图 + 左侧 HUD 运算表单。 -->
 <template>
   <div class="gis-shell art-full-height">
-    <div class="gis-map-shell">
+    <div class="gis-map-shell gis-map-shell--panel">
       <GisBasemapEmpty />
       <div ref="mapHost" class="gis-map"></div>
       <aside class="gis-hud gis-hud-panel gis-hud-panel-wide">
@@ -87,13 +87,14 @@
           <div v-for="item in metricsText" :key="item">{{ item }}</div>
         </dl>
       </aside>
-      <p class="gis-hud gis-hud-status">{{ $t('pages.gis.analyzeCoach') }}</p>
+      <GisCoach>{{ $t('pages.gis.analyzeCoach') }}</GisCoach>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
   import GisBasemapEmpty from '../../components/GisBasemapEmpty.vue'
+  import GisCoach from '../../components/GisCoach.vue'
   import { computed, nextTick, onActivated, onBeforeUnmount, onMounted, ref } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { useRouter } from 'vue-router'

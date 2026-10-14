@@ -1,7 +1,7 @@
 <!-- 场景列表：全幅地图预览 + 左侧 HUD 目录。 -->
 <template>
   <div class="gis-shell art-full-height">
-    <div class="gis-map-shell">
+    <div class="gis-map-shell gis-map-shell--panel">
       <GisBasemapEmpty />
       <div ref="mapHost" class="gis-map"></div>
       <aside class="gis-hud gis-hud-panel">
@@ -52,13 +52,14 @@
           />
         </div>
       </aside>
-      <p class="gis-hud gis-hud-status">{{ $t('pages.gis.sceneCoach') }}</p>
+      <GisCoach>{{ $t('pages.gis.sceneCoach') }}</GisCoach>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
   import GisBasemapEmpty from '../../components/GisBasemapEmpty.vue'
+  import GisCoach from '../../components/GisCoach.vue'
   import { nextTick, onActivated, onBeforeUnmount, onDeactivated, onMounted, ref } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { useRouter, onBeforeRouteLeave } from 'vue-router'

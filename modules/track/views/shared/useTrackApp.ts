@@ -6,6 +6,8 @@ const appOptions = ref<Array<{ label: string; value: string }>>([])
 const appKey = useLocalStorage('track:appKey', '')
 const days = useLocalStorage('track:days', 7)
 const appsLoading = ref(false)
+/** 应用列表加载失败（UX-009：页面据此显示错误态而不是引导空态） */
+const appsError = ref<unknown>(null)
 
 /**
  * 埋点看板共用：应用选择器（5 页联动 + localStorage 持久化）+ 统计天数。
@@ -14,6 +16,7 @@ const appsLoading = ref(false)
 export function useTrackApp() {
   const loadApps = async (): Promise<void> => {
     appsLoading.value = true
+    appsError.value = null
     try {
       const resp: any = await fetchTrackAppPage({ pageNum: 1, pageSize: 100 })
       const records = resp?.records ?? []
@@ -21,6 +24,9 @@ export function useTrackApp() {
       if (!appOptions.value.some((o) => o.value === appKey.value)) {
         appKey.value = appOptions.value[0]?.value ?? ''
       }
+    } catch (err) {
+      // 请求层已 toast；这里只记下错误供页面显示错误态，不再上抛成未处理的 Promise
+      appsError.value = err
     } finally {
       appsLoading.value = false
     }
@@ -28,7 +34,7 @@ export function useTrackApp() {
 
   onMounted(loadApps)
 
-  return { appOptions, appKey, days, appsLoading, loadApps }
+  return { appOptions, appKey, days, appsLoading, appsError, loadApps }
 }
 
 const pad = (n: number): string => String(n).padStart(2, '0')

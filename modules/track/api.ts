@@ -154,7 +154,7 @@ export function fetchTrackFunnel(params: Record<string, any>) {
 // ===== 留存分析（G103） =====
 /**
  * 新客留存网格：{rows: [{cohortDate, cohortSize, retained: {offset: n}}]}——
- * cohort=窗口内新客（首活跃日 > 回看窗首日，截断保守排除），活跃=当天任意事件，UTC 日切；days ≤30。
+ * cohort=窗口内新客（首活跃日 > 回看窗首日，截断保守排除），活跃=当天任意事件，按租户时区零点切天（boot#36，默认 Asia/Shanghai）；days ≤30。
  */
 export function fetchTrackRetention(params: Record<string, any>) {
   return request.get<any>({ url: '/api/system/track/retention', params })
@@ -226,4 +226,14 @@ export function fetchTrackGeo(params: Record<string, any>) {
     points: { lon: number; lat: number; eventName?: string; ts?: number; urlPath?: string }[]
     geoCount: number
   }>({ url: '/api/system/track/geo', params, showErrorMessage: false })
+}
+
+// ===== 接入健康（自检） =====
+/** 本租户全部应用摘要：[{appKey,appName,enabled,lastReceivedAt,lastReceivedSource,staleAfterMs,fail7d,warn7d,topCodes}] */
+export function fetchTrackAppHealthSummary() {
+  return request.get<any[]>({ url: '/api/system/track/app/health/summary' })
+}
+/** 单应用详情：摘要字段 + reasons[{code,severity,description,suggestion,today,last7d,lastAt,lastMessage}] */
+export function fetchTrackAppHealth(params: { appKey: string }) {
+  return request.get<any>({ url: '/api/system/track/app/health', params })
 }

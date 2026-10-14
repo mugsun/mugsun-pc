@@ -1,7 +1,7 @@
 <!-- 图层库：全幅地图预览 + 左侧 HUD 目录。 -->
 <template>
   <div class="gis-shell art-full-height">
-    <div class="gis-map-shell">
+    <div class="gis-map-shell gis-map-shell--panel">
       <GisBasemapEmpty />
       <div ref="mapHost" class="gis-map"></div>
       <aside class="gis-hud gis-hud-panel">
@@ -53,7 +53,7 @@
           />
         </div>
       </aside>
-      <p class="gis-hud gis-hud-status">{{ $t('pages.gis.layerCoach') }}</p>
+      <GisCoach>{{ $t('pages.gis.layerCoach') }}</GisCoach>
     </div>
 
     <ElDialog
@@ -147,6 +147,7 @@
 
 <script setup lang="ts">
   import GisBasemapEmpty from '../../components/GisBasemapEmpty.vue'
+  import GisCoach from '../../components/GisCoach.vue'
   import {
     computed,
     nextTick,

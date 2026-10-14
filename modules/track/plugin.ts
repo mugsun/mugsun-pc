@@ -44,6 +44,12 @@ import {
 } from '@mugsun/track-web'
 import { router } from '@/router'
 import { useUserStore } from '@/store/modules/user'
+import { setApiErrorReporter } from '@/utils/http/api-error-report'
+import {
+  bypassHandledErrorsInVueHandler,
+  filterHandledErrors,
+  hasTrackApiError
+} from './error-filter'
 
 /** 默认应用种子 app_key（与后端 track 库 T2 迁移种子一致；VITE_TRACK_APP_KEY 可覆盖） */
 const DEFAULT_TRACK_APP_KEY = 'ak_000000000000000000000001'
@@ -85,6 +91,7 @@ function replayBridgePlugin(): TrackPlugin {
  * 不传则适配层内部默认序列不含回放。
  */
 export function setupTrack(app: App): void {
+  const previousErrorHandler = app.config.errorHandler
   app.use(MugsunTrack, {
     endpoint: import.meta.env.VITE_TRACK_ENDPOINT || '/api',
     appKey: import.meta.env.VITE_TRACK_APP_KEY || DEFAULT_TRACK_APP_KEY,
@@ -96,7 +103,7 @@ export function setupTrack(app: App): void {
       autocapturePlugin(),
       exposurePlugin(),
       webVitalsPlugin(),
-      errorPlugin(),
+      filterHandledErrors(errorPlugin()),
       apiMonitorPlugin(),
       visualTrack(),
       geoPlugin(),
@@ -108,7 +115,14 @@ export function setupTrack(app: App): void {
       return token ? { Authorization: token } : {}
     }
   })
+  // 已处理的 HttpError（业务 400、网络失败等）不进错误监控（UX-007）
+  bypassHandledErrorsInVueHandler(app, previousErrorHandler)
   tracker = app.config.globalProperties.$track as TrackClient
+  // HTTP 200 业务失败上报：仅当 SDK 提供 trackApiError 时接入（旧版 SDK 跳过）
+  const client: unknown = tracker
+  if (hasTrackApiError(client)) {
+    setApiErrorReporter((payload) => client.trackApiError(payload))
+  }
 }
 
 /**

@@ -20,7 +20,7 @@ jobs:
       - name: Checkout analytics SDK (mugsun-track)
         # 固定到 mugsun-track 的具体提交，避免上游分支漂移带入未审代码
         env:
-          TRACK_REF: 41b638748511a0269c294b6c1f9d18ad229f680f
+          TRACK_REF: e5bb24db4ec904db8f8666ea326d29fc47c6402e
         run: |
           git init -q ../mugsun-track
           git -C ../mugsun-track fetch -q --depth 1 https://github.com/mugsun/mugsun-track.git "$TRACK_REF"
