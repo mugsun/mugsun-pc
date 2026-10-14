@@ -1,6 +1,7 @@
 <template>
   <div class="ai-drawer-host">
     <button
+      ref="fabRef"
       class="ai-fab"
       type="button"
       :title="$t('aiShared.assistant')"
@@ -18,6 +19,7 @@
       class="ai-drawer"
       :class="{ 'is-resizing': resizing }"
       @update:model-value="$emit('update:visible', $event)"
+      @closed="fabRef?.focus()"
     >
       <div class="ai-drawer__wrap">
         <div
@@ -69,6 +71,9 @@
   const isFullscreen = computed(() => forcedFullscreen.value || fullscreen.value)
   const resizable = computed(() => !isFullscreen.value)
   const drawerSize = computed(() => (isFullscreen.value ? '100%' : `${width.value}px`))
+
+  /** 关闭（含 Esc）后焦点回到触发按钮 */
+  const fabRef = ref<HTMLButtonElement | null>(null)
 
   const resizing = ref(false)
   function startResize() {

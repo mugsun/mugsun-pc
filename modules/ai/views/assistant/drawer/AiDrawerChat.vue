@@ -94,7 +94,12 @@
     </header>
 
     <!-- 消息区 -->
-    <main class="ai-dchat__main" @click="onMainClick">
+    <main
+      class="ai-dchat__main"
+      tabindex="0"
+      :aria-label="$t('aiDrawer.messages')"
+      @click="onMainClick"
+    >
       <div v-if="!messages.length" class="ai-dchat__welcome">
         <Welcome
           variant="borderless"
@@ -169,7 +174,7 @@
         </template>
         <template #footer="{ item }">
           <div
-            v-if="!item.raw.pending"
+            v-if="!item.raw.pending && !item.raw.error"
             class="ai-dmsg-actions"
             :class="{ 'is-user': item.role === 'user' }"
           >
@@ -187,22 +192,6 @@
                 <ElIcon :size="16">
                   <component :is="copiedKey === item.key ? Check : CopyDocument" />
                 </ElIcon>
-              </ElButton>
-            </ElTooltip>
-            <ElTooltip
-              v-if="item.role === 'assistant' && item.isLastAssistant"
-              :content="$t('aiDrawer.regenerate')"
-              placement="top"
-            >
-              <ElButton
-                text
-                size="small"
-                class="ai-dmsg-actions__btn"
-                :aria-label="$t('aiDrawer.regenerate')"
-                :disabled="streaming"
-                @click="retry(item.raw)"
-              >
-                <ElIcon :size="16"><Refresh /></ElIcon>
               </ElButton>
             </ElTooltip>
             <span v-if="item.role === 'assistant' && item.raw.modelName" class="ai-dmsg-meta">
@@ -369,7 +358,7 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, onMounted, ref, watch } from 'vue'
+  import { computed, nextTick, onMounted, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { useClipboard, useElementSize } from '@vueuse/core'
   import { ElMessage, ElMessageBox } from 'element-plus'
@@ -381,7 +370,6 @@
     CopyDocument,
     FullScreen,
     Plus,
-    Refresh,
     Search,
     Setting,
     Top,
@@ -389,7 +377,7 @@
   } from '@element-plus/icons-vue'
   import { BubbleList, Conversations, Prompts, Welcome, XSender } from 'vue-element-plus-x'
   import { hasPerm } from '@/utils/permission'
-  import { renderMarkdown } from '../renderMarkdown'
+  import { handleCodeCopy, renderMarkdown } from '../renderMarkdown'
   import { displaySessionTitle, newSessionTitle } from '../sessionTitle'
   import { SESSION_GROUP_ORDER, sessionGroupOf } from './drawerLayout'
   import {
@@ -422,6 +410,8 @@
     requestId?: string
     refs?: Array<{ content?: string; score?: number; source?: string }>
     pending?: boolean
+    /** 出错前后端是否已写入这次提问（收到过 SSE 事件） */
+    persisted?: boolean
     error?: string
     /** 这条回答对应的提问，用于重试/重新生成 */
     question?: string
@@ -504,7 +494,6 @@
   ])
 
   const bubbleItems = computed(() => {
-    const lastAi = [...messages.value].reverse().find((m) => m.role === 'assistant')
     return messages.value
       .filter((m) => m.role !== 'system')
       .map((m) => ({
@@ -513,7 +502,6 @@
         content: m.content,
         placement: m.role === 'user' ? ('end' as const) : ('start' as const),
         noStyle: true,
-        isLastAssistant: m === lastAi,
         raw: m
       }))
   })
@@ -684,7 +672,12 @@
     await stream(assistant)
   }
 
-  /** 重试 / 重新生成：同一问题，在原消息上重新生成 */
+  /**
+   * 重试：只在出错的那条回答上出现，原地替换这一条，界面上不再插入一遍问题。
+   * 后端没有「重新生成」接口：/chat/stream 每次都会先写入用户消息。
+   * 如果上次是流式过程中出错（问题已入库），重试会在后端历史里再写一次问题，
+   * 已在 mugsun-boot 提 issue 请加重新生成接口；校验阶段出错（未入库）不受影响。
+   */
   async function retry(msg: ChatMsg) {
     if (streaming.value || !msg.question) return
     const target = messages.value.find((m) => m.uid === msg.uid)
@@ -732,6 +725,7 @@
             u?.modelName || chatModels.value.find((m) => m.id === modelId.value)?.modelName
         },
         onEvent: (_ev, data) => {
+          msg.persisted = true
           try {
             const j = JSON.parse(data)
             if (j?.requestId) requestId.value = j.requestId
@@ -775,17 +769,8 @@
   }
 
   /** 代码块复制按钮（v-html 里，用事件委托） */
-  async function onMainClick(e: MouseEvent) {
-    const btn = (e.target as HTMLElement)?.closest?.('[data-ai-copy]') as HTMLElement | null
-    if (!btn) return
-    const code = btn.parentElement?.querySelector('pre')?.textContent || ''
-    await copy(code)
-    btn.textContent = t('aiDrawer.copied')
-    btn.classList.add('is-copied')
-    setTimeout(() => {
-      btn.textContent = t('aiDrawer.copy')
-      btn.classList.remove('is-copied')
-    }, 1500)
+  function onMainClick(e: MouseEvent) {
+    void handleCodeCopy(e, copy, t('aiDrawer.copy'), t('aiDrawer.copied'))
   }
 
   watch(activeId, () => {
@@ -793,6 +778,9 @@
   })
 
   onMounted(async () => {
+    // 抽屉打开时焦点落到输入框
+    await nextTick()
+    senderRef.value?.focus?.('end')
     await Promise.all([loadModels(), loadKnowledge(), loadSessions()])
   })
 </script>
@@ -869,6 +857,7 @@
     flex: 1;
     min-height: 0;
     overflow: hidden;
+    outline: none;
   }
 
   .ai-dchat__list {
@@ -880,9 +869,22 @@
     padding: 12px 16px;
   }
 
+  /* 消息间距统一 16px：只用列表自带的 gap，单条不再加外边距 */
   .ai-dchat__list :deep(.elx-bubble) {
     padding: 0;
-    margin: 0 0 16px;
+    margin: 0;
+  }
+
+  .ai-dchat__list :deep(.elx-bubble--end) {
+    position: relative;
+  }
+
+  .ai-dchat__list :deep(.elx-bubble--end .elx-bubble__footer) {
+    position: absolute;
+    top: 50%;
+    right: calc(100% + 4px);
+    margin: 0;
+    transform: translateY(-50%);
   }
 
   .ai-dchat__list :deep(.elx-bubble__content-wrapper .elx-bubble__content) {
@@ -891,6 +893,10 @@
 
   .ai-dchat__list :deep(.elx-bubble__content-wrapper .elx-bubble__footer) {
     margin-top: 4px;
+  }
+
+  .ai-dchat__list :deep(.elx-bubble--end .elx-bubble__content-wrapper .elx-bubble__footer) {
+    margin: 0;
   }
 
   .ai-dchat__list :deep(.elx-bubble--start .elx-bubble__content-wrapper),
@@ -922,38 +928,6 @@
     font-size: 14px;
     line-height: 22px;
     word-break: break-word;
-  }
-
-  .ai-dmsg-ai__md :deep(.ai-code) {
-    position: relative;
-    margin: 8px 0;
-  }
-
-  .ai-dmsg-ai__md :deep(pre) {
-    padding: 12px;
-    margin: 0;
-    overflow: auto;
-    white-space: pre;
-    background: var(--el-fill-color-light);
-    border-radius: 8px;
-  }
-
-  .ai-dmsg-ai__md :deep(.ai-code__copy) {
-    position: absolute;
-    top: 4px;
-    right: 4px;
-    height: 24px;
-    padding: 0 8px;
-    font-size: 12px;
-    color: var(--el-text-color-secondary);
-    cursor: pointer;
-    background: var(--el-bg-color);
-    border: 1px solid var(--el-border-color-lighter);
-    border-radius: 4px;
-  }
-
-  .ai-dmsg-ai__md :deep(.ai-code__copy.is-copied) {
-    color: var(--el-color-success);
   }
 
   .ai-dmsg-ai__think {
@@ -1039,8 +1013,9 @@
     visibility: hidden;
   }
 
-  .ai-dmsg-actions.is-user {
-    justify-content: flex-end;
+  /* AI 消息的操作行常显（带模型名），属于消息本身；用户消息的复制按钮悬停才出现 */
+  .ai-dmsg-actions:not(.is-user) {
+    visibility: visible;
   }
 
   .ai-dchat__list :deep(.elx-bubble:hover) .ai-dmsg-actions,
@@ -1244,7 +1219,7 @@
     display: inline-flex;
     gap: 4px;
     align-items: center;
-    max-width: 140px;
+    max-width: 180px;
     height: 24px;
     padding: 0 8px;
     font-size: 12px;
@@ -1258,6 +1233,10 @@
   .ai-dchat__chip:hover,
   .ai-dchat__chip:focus-visible {
     background: var(--el-fill-color);
+  }
+
+  .ai-dchat__main:focus-visible {
+    box-shadow: inset 0 0 0 2px var(--el-color-primary);
   }
 
   .ai-dchat__chip.is-placeholder {

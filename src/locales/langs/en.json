@@ -4352,7 +4352,7 @@
     "delete": "Delete",
     "copy": "Copy",
     "copied": "Copied",
-    "regenerate": "Regenerate",
+    "messages": "Messages",
     "retry": "Retry",
     "generating": "Generating",
     "stop": "Stop",

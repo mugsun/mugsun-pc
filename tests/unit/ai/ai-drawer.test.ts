@@ -42,6 +42,8 @@ describe('AI 助手抽屉', () => {
   it('代码块带复制按钮，且不双重转义', () => {
     const html = renderMarkdown('看：\n```js\nif (a < b) {}\n```', 'Copy')
     expect(html).toContain('data-ai-copy')
+    expect(html).toContain('ai-code__hd')
+    expect(html).toContain('>js<')
     expect(html).toContain('Copy')
     expect(html).not.toContain('&amp;lt;')
     expect(renderMarkdown('<img src=x onerror=alert(1)>')).not.toContain('<img')

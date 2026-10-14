@@ -4352,7 +4352,7 @@
     "delete": "删除",
     "copy": "复制",
     "copied": "已复制",
-    "regenerate": "重新生成",
+    "messages": "消息列表",
     "retry": "重试",
     "generating": "正在生成",
     "stop": "停止",
