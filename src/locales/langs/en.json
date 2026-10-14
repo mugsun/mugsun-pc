@@ -4340,6 +4340,7 @@
     "fullscreen": "Full screen",
     "restore": "Restore",
     "close": "Close",
+    "closeAssistant": "Close AI assistant",
     "history": "Chat history",
     "searchHistory": "Search chats",
     "groupToday": "Today",

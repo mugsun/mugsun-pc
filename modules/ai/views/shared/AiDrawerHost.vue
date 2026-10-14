@@ -67,18 +67,34 @@
     parseFailedUrl,
     stripRetryParam
   } from '../assistant/drawer/chatChunkRetry'
+  import AiDrawerHeaderShell from '../assistant/drawer/AiDrawerHeaderShell.vue'
 
   /** chunk 加载超过这个时间按失败处理，显示「重试」 */
   const CHAT_LOAD_TIMEOUT = 15_000
 
+  defineProps<{ visible: boolean }>()
+  const emit = defineEmits<{ 'update:visible': [boolean]; open: [] }>()
+  const closeDrawer = () => emit('update:visible', false)
+
+  /**
+   * 加载中 / 加载失败也保留 48px 顶栏（体验设计官 pc#71 规格）：
+   * 状态只替换顶栏下面的内容区，关闭按钮始终在同一位置可用。
+   */
   const ChatLoading = defineComponent({
     name: 'AiDrawerChatLoading',
     setup() {
       const { t } = useI18n()
       return () =>
-        h('div', { class: 'ai-drawer__state', role: 'status', 'aria-live': 'polite' }, [
-          h(ElIcon, { class: 'is-loading', size: 20 }, () => h(Loading)),
-          h('span', t('aiDrawer.loading'))
+        h('div', { class: 'ai-drawer__shell' }, [
+          h(AiDrawerHeaderShell, {
+            state: 'loading',
+            canFullscreen: !forcedFullscreen.value,
+            onClose: closeDrawer
+          }),
+          h('div', { class: 'ai-drawer__state', role: 'status', 'aria-live': 'polite' }, [
+            h(ElIcon, { class: 'is-loading', size: 20 }, () => h(Loading)),
+            h('span', t('aiDrawer.loading'))
+          ])
         ])
     }
   })
@@ -88,12 +104,15 @@
     setup() {
       const { t } = useI18n()
       return () =>
-        h('div', { class: 'ai-drawer__state is-error', role: 'alert' }, [
-          h(ElIcon, { size: 20 }, () => h(WarningFilled)),
-          h('span', t('aiDrawer.loadFailed')),
-          h(ElButton, { type: 'primary', size: 'small', onClick: reloadChat }, () =>
-            t('aiDrawer.retry')
-          )
+        h('div', { class: 'ai-drawer__shell' }, [
+          h(AiDrawerHeaderShell, { state: 'error', onClose: closeDrawer }),
+          h('div', { class: 'ai-drawer__state is-error', role: 'alert' }, [
+            h(ElIcon, { size: 20 }, () => h(WarningFilled)),
+            h('span', t('aiDrawer.loadFailed')),
+            h(ElButton, { type: 'primary', size: 'small', onClick: reloadChat }, () =>
+              t('aiDrawer.retry')
+            )
+          ])
         ])
     }
   })
@@ -142,7 +161,8 @@
       loader: loadChat,
       loadingComponent: ChatLoading,
       errorComponent: ChatError,
-      delay: 200,
+      // 不延迟：一打开就显示顶栏（含关闭按钮），避免出现无法关闭的空白抽屉
+      delay: 0,
       timeout: CHAT_LOAD_TIMEOUT
     })
   }
@@ -153,9 +173,6 @@
     AiDrawerChat.value = createChat()
     chatKey.value++
   }
-
-  defineProps<{ visible: boolean }>()
-  defineEmits<{ 'update:visible': [boolean]; open: [] }>()
 
   const { width: viewportWidth } = useWindowSize()
   const stored = useStorage(DRAWER_WIDTH_STORAGE_KEY, DRAWER_WIDTH_DEFAULT)
@@ -251,23 +268,6 @@
     opacity: 0;
   }
 
-  .ai-drawer__state {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    padding: 24px;
-    font-size: 14px;
-    color: var(--el-text-color-secondary);
-    text-align: center;
-  }
-
-  .ai-drawer__state.is-error :deep(.el-icon) {
-    color: var(--el-color-danger);
-  }
-
   .ai-drawer__resizer:hover::after,
   .is-resizing .ai-drawer__resizer::after {
     opacity: 1;
@@ -279,6 +279,32 @@
   .ai-drawer.el-drawer .el-drawer__body {
     padding: 0;
     overflow: hidden;
+  }
+
+  /* 加载中 / 失败状态由 h() 渲染，不带 scoped 属性，样式放这里 */
+  .ai-drawer .ai-drawer__shell {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--el-bg-color);
+  }
+
+  .ai-drawer .ai-drawer__state {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    padding: 24px;
+    font-size: 14px;
+    color: var(--el-text-color-secondary);
+    text-align: center;
+  }
+
+  .ai-drawer .ai-drawer__state.is-error .el-icon {
+    color: var(--el-color-danger);
   }
 
   .ai-drawer.is-resizing {

@@ -49,3 +49,38 @@ test('AI 抽屉：打开聚焦输入框，Tab 到 chip 有描边，Esc 回到触
   await expect(page.locator('.ai-dchat__sender')).toBeHidden()
   await expect(fab).toBeFocused()
 })
+
+/**
+ * 抽屉 chunk 加载中 / 加载失败时 48px 顶栏仍在，关闭按钮可用，关闭后焦点回到触发按钮。
+ * 拦截 AiDrawerChat 的 chunk：加载中 = 一直不响应，加载失败 = abort。
+ */
+for (const mode of ['loading', 'error'] as const) {
+  test(`AI 抽屉：${mode === 'loading' ? '加载中' : '加载失败'}也能关闭，焦点回到触发按钮`, async ({
+    page,
+    uiLang,
+    uiTheme
+  }) => {
+    await seedSession(page, uiLang, uiTheme)
+    await mockAll(page)
+    await page.route(/AiDrawerChat(\.vue|-[\w-]+\.js)/, (route) =>
+      mode === 'error' ? route.abort() : new Promise<void>(() => {})
+    )
+    await page.goto('/#/dashboard/console')
+    const fab = page.locator('.ai-fab')
+    await expect(fab).toBeVisible({ timeout: 30_000 })
+    await fab.click()
+    const close = page.getByTestId('ai-drawer-close')
+    await expect(close).toBeVisible({ timeout: 30_000 })
+    await expect(page.locator('.ai-dshell__hd')).toHaveAttribute('data-state', mode, {
+      timeout: 30_000
+    })
+    const hd = await page.locator('.ai-dshell__hd').boundingBox()
+    expect(hd?.height).toBe(48)
+    if (mode === 'error') {
+      await expect(page.locator('.ai-drawer__state.is-error .el-button')).toHaveCount(1)
+    }
+    await close.click()
+    await expect(page.locator('.ai-dshell__hd')).toBeHidden()
+    await expect(fab).toBeFocused()
+  })
+}
