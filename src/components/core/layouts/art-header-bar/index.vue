@@ -151,12 +151,15 @@
               </div>
             </template>
             <template #default>
-              <p
-                >{{ $t('topBar.guide.title')
-                }}<span :style="{ color: systemThemeColor }"> {{ $t('topBar.guide.theme') }} </span
-                >、 <span :style="{ color: systemThemeColor }"> {{ $t('topBar.guide.menu') }} </span
-                >{{ $t('topBar.guide.description') }}
-              </p>
+              <!-- 整句一个 key + 具名插槽，避免模板里拼接文案和写死中文顿号 -->
+              <i18n-t keypath="topBar.guide.text" tag="p" scope="global">
+                <template #theme>
+                  <span :style="{ color: systemThemeColor }">{{ $t('topBar.guide.theme') }}</span>
+                </template>
+                <template #menu>
+                  <span :style="{ color: systemThemeColor }">{{ $t('topBar.guide.menu') }}</span>
+                </template>
+              </i18n-t>
               <!-- 受控 visible 时点空白不关；提供显式关闭，避免气泡常驻挡视线 -->
               <div class="mt-2 flex justify-end">
                 <ElButton link type="primary" size="small" @click="dismissSettingGuide">
