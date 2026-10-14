@@ -84,6 +84,7 @@
             $t('pages.gis.overlay')
           }}</ElButton>
         </div>
+        <GisSkippedHint :count="skipped" />
         <dl v-if="metricsText.length" class="gis-metrics">
           <div v-for="item in metricsText" :key="item">{{ item }}</div>
         </dl>
@@ -97,6 +98,8 @@
   import GisBasemapEmpty from '../../components/GisBasemapEmpty.vue'
   import GisTileErrorHint from '../../components/GisTileErrorHint.vue'
   import GisCoach from '../../components/GisCoach.vue'
+  import GisSkippedHint from '../../components/GisSkippedHint.vue'
+  import { skippedCount } from '@/gis/skippedHint'
   import { computed, nextTick, onActivated, onBeforeUnmount, onMounted, ref } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { useRouter } from 'vue-router'
@@ -142,6 +145,7 @@
   const running = ref(false)
   const saving = ref(false)
   const result = ref<GisAnalyzeResult | null>(null)
+  const skipped = computed(() => skippedCount(result.value))
   const savedId = ref<string | number | undefined>()
   const mapHost = ref<HTMLElement>()
   const ops = OPS
