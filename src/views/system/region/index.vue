@@ -145,7 +145,7 @@
   const rules = computed<FormRules>(() => ({
     name: [{ required: true, message: t('pages.system.region.placeholder.name'), trigger: 'blur' }],
     code: [
-      { required: true, message: t('pages.system.region.placeholder.code'), trigger: 'blur' },
+      { required: true, message: t('pages.system.region.codeRequired'), trigger: 'blur' },
       { pattern: /^[0-9]{2,12}$/, message: t('pages.system.region.codeRule'), trigger: 'blur' }
     ]
   }))

@@ -164,7 +164,7 @@
 
 <script setup lang="ts">
   import { echarts } from '@/plugins/echarts'
-  import { fetchFlowMyTodo, fetchMyNoticePage } from '@/api/system-manage'
+  import { fetchFlowMyTodo, fetchMyNoticePage, fetchTenantList } from '@/api/system-manage'
   import {
     fetchWorkbenchOverview,
     fetchWorkbenchShortcuts,
@@ -326,6 +326,35 @@
   const CHANGELOG_URL = 'https://github.com/mugsun/mugsun-pc/blob/main/CHANGELOG.md'
   const overviewLoading = ref(false)
 
+  /**
+   * 租户图表横轴显示租户名（UX-013）。boot#42 起接口直接在 name 里返回租户名称（没有名称的租户仍是编号），
+   * 此时直接用；只有 name 仍是编号（纯数字，如 000000）的行才用租户列表反查，兼容 #42 合并前的接口。
+   * 取租户列表失败或没对上时保留编号，不影响图表。
+   */
+  const isTenantCode = (v: unknown) => /^\d+$/.test(String(v ?? ''))
+  const withTenantNames = async (rows: any[]) => {
+    if (!rows.length) return rows
+    // 平台租户 000000 在 #42 前没有 sys_tenant 行，单独给名字
+    const platform = (r: any) =>
+      String(r.name) === '000000' ? { ...r, name: t('pages.dashboard.console.platformTenant') } : r
+    // 接口已给名称：不再请求租户列表
+    if (!rows.some((r) => isTenantCode(r.name))) return rows
+    try {
+      const tenants = (await fetchTenantList()) || []
+      const names = new Map<string, string>()
+      for (const t of tenants) {
+        if (!t?.tenantName) continue
+        for (const k of [t.tenantId, t.tenantCode])
+          if (k != null) names.set(String(k), t.tenantName)
+      }
+      return rows.map((r) =>
+        isTenantCode(r.name) ? platform({ ...r, name: names.get(String(r.name)) ?? r.name }) : r
+      )
+    } catch {
+      return rows.map(platform)
+    }
+  }
+
   const loadOverview = async () => {
     overviewLoading.value = true
     try {
@@ -340,7 +369,7 @@
       pieData = d.charts?.userStatus || []
       // 键缺失=无权限看平台分布；键存在但空数组才走空态
       showTenantChart.value = Object.prototype.hasOwnProperty.call(d.charts || {}, 'tenantUser')
-      barData = showTenantChart.value ? d.charts.tenantUser || [] : []
+      barData = showTenantChart.value ? await withTenantNames(d.charts.tenantUser || []) : []
       pieEmpty.value = pieData.length === 0
       barEmpty.value = showTenantChart.value && barData.length === 0
       await nextTick()

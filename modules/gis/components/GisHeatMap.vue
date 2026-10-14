@@ -1,9 +1,13 @@
 <template>
-  <div ref="host" class="gis-heat" data-testid="gis-heat-map"></div>
+  <div class="gis-heat-wrap">
+    <div ref="host" class="gis-heat" data-testid="gis-heat-map"></div>
+    <GisTileErrorHint :host="host" />
+  </div>
 </template>
 
 <script setup lang="ts">
   import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+  import GisTileErrorHint from './GisTileErrorHint.vue'
   import type Map from 'ol/Map'
   import { fetchGisStatus, type GisProviderStatus } from '@/api/gis'
   import { rememberedOrFirst } from '@/gis/preferProvider'
@@ -71,6 +75,10 @@
 </script>
 
 <style scoped>
+  .gis-heat-wrap {
+    position: relative;
+  }
+
   .gis-heat {
     width: 100%;
     height: 280px;

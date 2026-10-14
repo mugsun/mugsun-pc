@@ -2,6 +2,8 @@ import type { GisProviderCode, GisSketchFeature, GisStyleCode, GisView3d } from 
 import { layersForStyle, tileUrl } from './types'
 import { fromDisplayLonLat, mapLonLatCoords, toDisplayLonLat } from './coord'
 import { useUserStore } from '@/store/modules/user'
+import { attributionOf } from './attribution'
+import { tileHealthFor, watchCesiumImagery } from './tileHealth'
 
 type CesiumMod = typeof import('cesium')
 type CesiumViewer = InstanceType<CesiumMod['Viewer']>
@@ -18,6 +20,13 @@ export async function loadCesium(): Promise<CesiumMod> {
 }
 
 export function createCesiumViewer(container: HTMLElement, Cesium: CesiumMod): CesiumViewer {
+  // 底图版权归属：Cesium 自带的 credit 显示依赖其 lightbox，这里用自己的角标，纯文本显示
+  const credit = document.createElement('div')
+  credit.className = 'gis-cesium-credit'
+  credit.style.cssText =
+    'position:absolute;right:4px;bottom:2px;z-index:2;font-size:11px;line-height:16px;' +
+    'padding:0 4px;background:rgba(255,255,255,0.75);color:#333;white-space:nowrap;'
+  container.appendChild(credit)
   const viewer = new Cesium.Viewer(container, {
     animation: false,
     timeline: false,
@@ -47,19 +56,28 @@ export function applyCesiumBasemap(
   style: GisStyleCode
 ): void {
   viewer.imageryLayers.removeAll()
+  const health = tileHealthFor(viewer.container)
+  health.reset()
+  health.setRetry(() => applyCesiumBasemap(Cesium, viewer, provider, style))
   const token = useUserStore().accessToken
+  const text = attributionOf(provider)
   for (const layer of layersForStyle(style, provider)) {
     const url = new Cesium.Resource({
       url: tileUrl(provider, layer, '{z}', '{x}', '{y}'),
       headers: token ? { Authorization: token } : {}
     })
-    viewer.imageryLayers.addImageryProvider(
-      new Cesium.UrlTemplateImageryProvider({
-        url,
-        tilingScheme: new Cesium.WebMercatorTilingScheme(),
-        maximumLevel: 18
-      })
-    )
+    const imagery = new Cesium.UrlTemplateImageryProvider({
+      url,
+      tilingScheme: new Cesium.WebMercatorTilingScheme(),
+      maximumLevel: 18
+    })
+    watchCesiumImagery(imagery, health)
+    viewer.imageryLayers.addImageryProvider(imagery)
+  }
+  const corner = viewer.container.querySelector<HTMLElement>('.gis-cesium-credit')
+  if (corner) {
+    corner.textContent = text
+    corner.style.display = text ? '' : 'none'
   }
 }
 

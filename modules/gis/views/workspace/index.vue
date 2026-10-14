@@ -1,19 +1,18 @@
 <!-- 地图工作台：底图 + 二维标绘/量算（落场景 JSON）+ 三维只读回显。 -->
 <template>
   <div class="gis-workspace art-full-height">
-    <div v-if="!status.enabled" class="gis-empty">
-      <ElEmpty :description="$t('pages.gis.disabledTitle')" />
-    </div>
-    <div v-else-if="!hasReadyProvider" class="gis-empty">
-      <ElEmpty :description="$t('pages.gis.emptyTitle')">
-        <template #default>
-          <p class="gis-empty-desc">{{ $t('pages.gis.emptyDesc') }}</p>
-          <ElButton type="primary" @click="goProvider">{{ $t('pages.gis.goProvider') }}</ElButton>
-        </template>
-      </ElEmpty>
+    <div v-if="basemapState !== 'ready'" class="gis-map-shell">
+      <GisBasemapEmpty
+        controlled
+        :status="statusLoaded ? status : null"
+        :error="statusError"
+        :loading="statusLoading"
+        @retry="init"
+      />
     </div>
     <template v-else>
       <div class="gis-map-shell">
+        <GisTileErrorHint :host="viewMode === '3d' ? cesiumHost : olHost" :top="64" />
         <div v-show="viewMode === '2d'" ref="olHost" class="gis-map"></div>
         <div v-show="viewMode === '3d'" ref="cesiumHost" class="gis-map">
           <div v-if="loading3d" class="gis-loading">{{ $t('pages.gis.load3d') }}</div>
@@ -341,6 +340,7 @@
               <p v-if="queryHint" class="gis-query-hint" data-test="gis-query-hint">
                 {{ queryHint }}
               </p>
+              <GisSkippedHint :count="querySkipped" />
             </div>
             <ElTabPane
               :label="`${$t('pages.gis.wsSide3d')} (${tilesetRows.length})`"
@@ -450,7 +450,7 @@
         </p>
 
         <div class="gis-hud gis-hud-status">
-          <span>{{ drawHint }}</span>
+          <span class="gis-hud-hint">{{ drawHint }}</span>
           <span v-if="cursorText">{{ cursorText }}</span>
           <span v-if="placeText">{{ placeText }}</span>
         </div>
@@ -478,6 +478,9 @@
 </template>
 
 <script setup lang="ts">
+  import GisBasemapEmpty from '../../components/GisBasemapEmpty.vue'
+  import GisTileErrorHint from '../../components/GisTileErrorHint.vue'
+  import { basemapStateOf, isCanceled } from '@/gis/basemapState'
   import {
     computed,
     nextTick,
@@ -489,6 +492,8 @@
     watch
   } from 'vue'
   import { useI18n } from 'vue-i18n'
+  import GisSkippedHint from '../../components/GisSkippedHint.vue'
+  import { skippedCount } from '@/gis/skippedHint'
   import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import type Map from 'ol/Map'
@@ -670,6 +675,15 @@
     status.value.providers.filter((p) => p.configured && p.enabled)
   )
   const hasReadyProvider = computed(() => readyProviders.value.length > 0)
+  const statusLoaded = ref(false)
+  const statusLoading = ref(false)
+  const statusError = ref<unknown>(null)
+  /** 底图可用性以后端 status 为准；取不到状态时是 error，不当成未配置 */
+  const basemapState = computed(() => {
+    if (statusError.value) return 'error'
+    if (!statusLoaded.value) return 'loading'
+    return basemapStateOf(status.value)
+  })
 
   const drawHint = computed(() => t(`pages.gis.hint${capTool(tool.value)}`))
 
@@ -677,6 +691,7 @@
     if (code === 'tianditu') return 'Tianditu'
     if (code === 'amap') return 'Amap'
     if (code === 'baidu') return 'Baidu'
+    if (code === 'xyz') return 'Xyz'
     return 'Google'
   }
 
@@ -695,10 +710,6 @@
   }
 
   const capKind = (kind: GisFeatureKind): string => capTool(kind)
-
-  const goProvider = (): void => {
-    router.push('/gis/provider')
-  }
 
   const captureSpec = (): GisSceneSpec => {
     const spec: GisSceneSpec = {
@@ -1004,6 +1015,7 @@
   const queryMeters = ref(2000)
   const queryBusy = ref(false)
   const queryHint = ref('')
+  const querySkipped = ref(0)
   const QUERY_OVERLAY_ID = 'ov-spatial-query'
 
   /** 只有矢量 / 热力图层有几何可查，栅格与三维切片没有 */
@@ -1030,6 +1042,7 @@
       color: '#f97316'
     })
     syncOverlayRows()
+    querySkipped.value = skippedCount(result)
     queryHint.value = feats.length
       ? `${t('pages.gis.wsQueryHitCount')} ${result.count} · ${t('pages.gis.wsQueryEngine')} ${result.engine}` +
         (result.truncated ? ` · ${t('pages.gis.wsQueryTruncated')}` : '')
@@ -1042,6 +1055,7 @@
   /** 三个查询共用的前置检查与异常收口，避免各自重复 try/catch */
   const runQuery = async (fn: (layerId: string) => Promise<GisSpatialResult>): Promise<void> => {
     if (!queryLayerId.value) {
+      querySkipped.value = 0
       queryHint.value = t('pages.gis.wsQueryNoLayer')
       return
     }
@@ -1049,6 +1063,7 @@
     try {
       showQueryResult(await fn(queryLayerId.value))
     } catch (e) {
+      querySkipped.value = 0
       queryHint.value = e instanceof Error ? e.message : String(e)
     } finally {
       queryBusy.value = false
@@ -1880,8 +1895,19 @@
     }
   })
 
-  onMounted(async () => {
-    const next = await fetchGisStatus()
+  async function init(): Promise<void> {
+    statusLoading.value = true
+    statusError.value = null
+    let next: Awaited<ReturnType<typeof fetchGisStatus>>
+    try {
+      next = await fetchGisStatus({ silent: true })
+    } catch (e) {
+      if (!isCanceled(e)) statusError.value = e
+      return
+    } finally {
+      statusLoading.value = false
+    }
+    statusLoaded.value = true
     status.value = {
       enabled: next.enabled,
       providers: next.providers,
@@ -1889,13 +1915,17 @@
       tilesets: next.tilesets ?? []
     }
     if (!status.value.enabled || !hasReadyProvider.value) return
+    // 地图容器在状态就绪后才渲染
+    await nextTick()
     // 引擎标签与大图层是否走瓦片都依赖这条探测，不能等打开图层面板才拉
     void loadCatalog()
     await loadScenes()
     await bootMap()
     await applyRouteQuery()
     document.addEventListener('keydown', onSketchKey)
-  })
+  }
+
+  onMounted(init)
 
   onBeforeUnmount(() => {
     closeOverlays()
@@ -2000,6 +2030,23 @@
     max-width: min(520px, calc(100% - 160px));
     font-size: 12px;
     color: var(--el-text-color-regular);
+  }
+
+  /* 窄屏（UX-017）：长操作提示收起，状态条让开左下缩放/比例尺和右下 AI 浮钮 */
+  @media screen and (width <= 640px) {
+    .gis-hud-status {
+      right: 60px;
+      left: 52px;
+      max-width: none;
+    }
+
+    .gis-hud-status:not(:has(span + span)) {
+      display: none;
+    }
+
+    .gis-hud-hint {
+      display: none;
+    }
   }
 
   .gis-tool {
@@ -2419,5 +2466,76 @@
     background: var(--el-bg-color-overlay);
     border-radius: 4px;
     box-shadow: var(--el-box-shadow-light);
+  }
+
+  /* 窄屏：顶部三组工具条改为整行堆叠，二维/三维始终在最左；底部提示改为横条（UX-115） */
+  @media (width <= 768px) {
+    .gis-hud-tr,
+    .gis-hud-tl,
+    .gis-hud-tc {
+      right: 12px;
+      left: 12px;
+      width: auto;
+      transform: none;
+    }
+
+    .gis-hud-tr {
+      top: 12px;
+      overflow-x: auto;
+    }
+
+    .gis-hud-tl {
+      top: 56px;
+    }
+
+    .gis-hud-tc {
+      top: 100px;
+    }
+
+    .gis-hud-rail {
+      top: 144px;
+    }
+
+    .gis-hud-panel {
+      top: 144px;
+      right: 12px;
+      width: auto;
+    }
+
+    .gis-hud-tr :deep(.el-radio-group) {
+      flex-shrink: 0;
+    }
+
+    .gis-provider-select,
+    .gis-style-select,
+    .gis-scene-select,
+    .gis-name-input {
+      flex: 1;
+      width: auto;
+      min-width: 0;
+    }
+
+    .gis-engine-tag {
+      display: none;
+    }
+
+    .gis-coach {
+      top: 144px;
+      right: 52px;
+      left: 64px;
+      max-width: none;
+      transform: none;
+    }
+
+    .gis-hud-status {
+      right: 72px;
+      bottom: 40px;
+      left: 12px;
+      max-width: none;
+    }
+
+    .gis-map :deep(.ol-zoom) {
+      inset: 144px 12px auto auto;
+    }
   }
 </style>

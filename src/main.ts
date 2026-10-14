@@ -6,15 +6,13 @@ import language from './locales'
 import { provideGlobalConfig } from 'element-plus'
 import zhCn from 'element-plus/es/locale/lang/zh-cn'
 import en from 'element-plus/es/locale/lang/en'
-import formCreate from '@form-create/element-ui'
-import FcDesigner from '@form-create/designer'
 import '@styles/core/tailwind.css'
 import '@styles/index.scss'
 import '@utils/sys/console.ts'
 import { setupGlobDirectives } from './directives'
 import { setupErrorHandle } from './utils/sys/error-handle'
 import { installTrackApi, setupTrack } from './plugins/track'
-import { enableAi, enableGis, enableTrack } from '@/modules/flags'
+import { enableAi, enableTrack } from '@/modules/flags'
 import { useUserStore } from './store/modules/user'
 
 /**
@@ -30,10 +28,6 @@ const trackPluginMods = import.meta.glob<{
   trackIdentify: (...args: unknown[]) => void
   trackReset: () => void
 }>('../modules/track/plugin.ts')
-
-const gisPickMods = import.meta.glob<{ registerGisPick: () => void }>(
-  '../modules/gis/components/registerGisPick.ts'
-)
 
 const aiPluginMods = import.meta.glob<{ setupAi: (app: ReturnType<typeof createApp>) => void }>(
   '../modules/ai/plugin.ts'
@@ -69,16 +63,6 @@ async function bootstrap() {
       provideGlobalConfig({ locale: elementLocale(lang) }, app, true)
     }
   )
-  app.use(formCreate)
-  app.use(FcDesigner)
-
-  if (enableGis) {
-    const loaders = Object.values(gisPickMods)
-    if (loaders[0]) {
-      const { registerGisPick } = await loaders[0]()
-      registerGisPick()
-    }
-  }
 
   if (enableAi) {
     const loaders = Object.values(aiPluginMods)

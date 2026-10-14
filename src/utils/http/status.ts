@@ -2,6 +2,7 @@
  * 接口状态码
  */
 export enum ApiStatus {
+  network = 0, // 网络异常（无响应：断网/跨域/连接被拒），不是 HTTP 状态
   success = 200, // 成功
   error = 400, // 错误
   unauthorized = 401, // 未授权

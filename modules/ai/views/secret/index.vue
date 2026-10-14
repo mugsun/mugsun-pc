@@ -1,13 +1,15 @@
 <template>
   <div class="art-full-height">
     <ElCard class="art-table-card" shadow="never">
-      <div class="toolbar"><ElButton type="primary" @click="openEdit()">新增密钥</ElButton></div>
+      <div class="toolbar"
+        ><ElButton type="primary" @click="openEdit()">{{ $t('aiSecret.add') }}</ElButton></div
+      >
       <ArtTable
         :loading="loading"
         :data="records"
         :columns="columns"
         :pagination="pager"
-        empty-text="还没有密钥。点新增密钥开始发放"
+        :empty-text="$t('aiSecret.empty')"
         @pagination:size-change="
           (s: number) => {
             pageSize = s
@@ -22,24 +24,33 @@
         "
       />
     </ElCard>
-    <ElDialog v-model="visible" :title="form.id ? '编辑密钥' : '新增密钥'" width="560px">
-      <ElForm :model="form" label-width="100px">
-        <ElFormItem label="说明" required><ElInput v-model="form.description" /></ElFormItem>
-        <ElFormItem label="作用域">
+    <ElDialog
+      v-model="visible"
+      :title="form.id ? $t('aiForm.editSecret') : $t('aiForm.newSecret')"
+      width="560px"
+    >
+      <ElForm ref="formRef" :model="form" label-width="auto">
+        <ElFormItem
+          :label="$t('aiForm.secretDesc')"
+          prop="description"
+          :rules="requiredRule($t('aiForm.secretDesc'))"
+          ><ElInput v-model="form.description"
+        /></ElFormItem>
+        <ElFormItem :label="$t('aiForm.scope')">
           <ElSelect v-model="form.scopeType" style="width: 100%">
-            <ElOption label="租户" value="tenant" /><ElOption label="用户" value="user" /><ElOption
-              label="应用"
-              value="app"
-            />
+            <ElOption :label="$t('aiForm.optTenant')" value="tenant" /><ElOption
+              :label="$t('aiForm.optUser')"
+              value="user"
+            /><ElOption :label="$t('aiForm.optApp')" value="app" />
           </ElSelect>
         </ElFormItem>
-        <ElFormItem label="限流/分钟"
+        <ElFormItem :label="$t('aiForm.rateLimit')"
           ><ElInputNumber v-model="form.rateLimit" :min="0"
         /></ElFormItem>
-        <ElFormItem label="允许 IP"
-          ><ElInput v-model="form.allowIps" placeholder="CIDR 逗号分隔"
+        <ElFormItem :label="$t('aiForm.allowIps')"
+          ><ElInput v-model="form.allowIps" :placeholder="$t('aiForm.phCidr')"
         /></ElFormItem>
-        <ElFormItem label="过期时间"
+        <ElFormItem :label="$t('aiForm.expireAt')"
           ><ElDatePicker
             v-model="form.expireTime"
             type="datetime"
@@ -47,15 +58,18 @@
         /></ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="visible = false">取消</ElButton>
-        <ElButton type="primary" :loading="saving" @click="save">保存</ElButton>
+        <ElButton @click="visible = false">{{ $t('aiForm.cancel') }}</ElButton>
+        <ElButton type="primary" :loading="saving" @click="save">{{ $t('aiForm.save') }}</ElButton>
       </template>
     </ElDialog>
   </div>
 </template>
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
+  import type { FormInstance } from 'element-plus'
+  import { requiredRule } from '../shared/formRules'
   import type { ColumnOption } from '@/types/component'
-  import { computed, h, onMounted, reactive, ref } from 'vue'
+  import { computed, h, onMounted, reactive, ref, nextTick } from 'vue'
   import { ElButton, ElMessageBox, ElSwitch } from 'element-plus'
   import {
     fetchAiSecretPage,
@@ -64,6 +78,8 @@
     fetchStatusAiSecret
   } from '../../api'
   defineOptions({ name: 'AiSecret' })
+  const { t } = useI18n()
+  const formRef = ref<FormInstance>()
   const loading = ref(false)
   const records = ref<any[]>([])
   const pageNum = ref(1)
@@ -77,27 +93,31 @@
     size: pageSize.value,
     total: total.value
   }))
-  const columns: ColumnOption[] = [
+  const columns = computed<ColumnOption[]>(() => [
     { type: 'index', width: 60, label: '#' },
-    { prop: 'description', label: '说明', minWidth: 160 },
+    { prop: 'description', label: t('aiSecret.colDescription'), minWidth: 160 },
     {
       prop: 'apiKeyMask',
-      label: '密钥',
+      label: t('aiSecret.colKey'),
       minWidth: 160,
       formatter: (r: any) => r.apiKeyMask || r.apiKey || '***'
     },
     {
       prop: 'scopeType',
-      label: '作用域',
+      label: t('aiSecret.colScope'),
       width: 100,
       formatter: (row: any) =>
-        row.scopeType === 'user' ? '用户' : row.scopeType === 'app' ? '应用' : '租户'
+        row.scopeType === 'user'
+          ? t('aiSecret.scopeUser')
+          : row.scopeType === 'app'
+            ? t('aiSecret.scopeApp')
+            : t('aiSecret.scopeTenant')
     },
-    { prop: 'rateLimit', label: '限流', width: 90 },
-    { prop: 'usedCount', label: '调用次数', width: 100 },
+    { prop: 'rateLimit', label: t('aiSecret.colRateLimit'), width: 90 },
+    { prop: 'usedCount', label: t('aiSecret.colUsedCount'), width: 100 },
     {
       prop: 'status',
-      label: '状态',
+      label: t('aiSecret.colStatus'),
       width: 100,
       formatter: (row: any) =>
         h(ElSwitch, {
@@ -114,7 +134,7 @@
     },
     {
       prop: 'operation',
-      label: '操作',
+      label: t('aiSecret.colActions'),
       width: 140,
       fixed: 'right',
       formatter: (row: any) =>
@@ -122,16 +142,16 @@
           h(
             ElButton,
             { link: true, type: 'primary', size: 'small', onClick: () => openEdit(row) },
-            () => '编辑'
+            () => t('aiSecret.edit')
           ),
           h(
             ElButton,
             { link: true, type: 'danger', size: 'small', onClick: () => remove(row) },
-            () => '删除'
+            () => t('aiSecret.delete')
           )
         ])
     }
-  ]
+  ])
   async function reload() {
     loading.value = true
     try {
@@ -146,13 +166,15 @@
     Object.keys(form).forEach((k) => delete form[k])
     Object.assign(form, row ? { ...row } : { scopeType: 'tenant', rateLimit: 60, status: 1 })
     visible.value = true
+    nextTick(() => formRef.value?.clearValidate())
   }
   async function save() {
+    if (!(await formRef.value?.validate().catch(() => false))) return
     saving.value = true
     try {
       const r = await fetchSaveAiSecret({ ...form })
       if (r?.apiKey) {
-        await ElMessageBox.alert(String(r.apiKey), '请立刻复制。关掉后无法再查看')
+        await ElMessageBox.alert(String(r.apiKey), t('aiSecret.copyNow'))
       }
       visible.value = false
       await reload()
@@ -164,8 +186,8 @@
   }
   async function remove(row: any) {
     await ElMessageBox.confirm(
-      `删除「${row.description || '这把密钥'}」后，列表里不会再出现，也不能再调用`,
-      '确认'
+      t('aiSecret.removeConfirm', { name: row.description || t('aiSecret.thisKey') }),
+      t('aiSecret.confirmTitle')
     )
     await fetchRemoveAiSecret(row.id)
     await reload()

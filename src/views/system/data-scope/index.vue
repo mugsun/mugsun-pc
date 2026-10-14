@@ -79,8 +79,19 @@
       destroy-on-close
     >
       <p class="hint">{{ $t('pages.system.dataScope.hint') }}</p>
-      <ElForm label-width="88px">
-        <ElFormItem :label="$t('pages.system.dataScope.name')">
+      <ElForm ref="formRef" :model="form" label-width="88px">
+        <ElFormItem
+          :label="$t('pages.system.dataScope.name')"
+          prop="scopeName"
+          :rules="[
+            {
+              required: true,
+              whitespace: true,
+              message: t('pages.system.dataScope.nameRequired'),
+              trigger: 'blur'
+            }
+          ]"
+        >
           <ElInput
             v-model="form.scopeName"
             maxlength="64"
@@ -88,7 +99,18 @@
             :placeholder="$t('pages.system.dataScope.namePlaceholder')"
           />
         </ElFormItem>
-        <ElFormItem :label="$t('pages.system.dataScope.code')">
+        <ElFormItem
+          :label="$t('pages.system.dataScope.code')"
+          prop="resourceCode"
+          :rules="[
+            {
+              required: true,
+              whitespace: true,
+              message: t('pages.system.dataScope.codeRequired'),
+              trigger: 'blur'
+            }
+          ]"
+        >
           <ElInput
             v-model="form.resourceCode"
             maxlength="64"
@@ -143,7 +165,8 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, onMounted, reactive, ref } from 'vue'
+  import type { FormInstance } from 'element-plus'
+  import { computed, onMounted, reactive, ref, nextTick } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import {
@@ -162,6 +185,7 @@
   >([])
   const editVisible = ref(false)
   const searchForm = reactive({ name: '' })
+  const formRef = ref<FormInstance>()
   const form = reactive({
     id: '' as string | number | '',
     scopeName: '',
@@ -222,17 +246,11 @@
     form.status = row?.status ?? 1
     form.remark = row?.remark ?? ''
     editVisible.value = true
+    nextTick(() => formRef.value?.clearValidate())
   }
 
   async function save() {
-    if (!form.scopeName.trim()) {
-      ElMessage.warning(t('pages.system.dataScope.nameRequired'))
-      return
-    }
-    if (!form.resourceCode.trim()) {
-      ElMessage.warning(t('pages.system.dataScope.codeRequired'))
-      return
-    }
+    if (!(await formRef.value?.validate().catch(() => false))) return
     if (!form.tableName.trim() || !form.deptColumn.trim() || !form.userColumn.trim()) {
       ElMessage.warning(t('pages.system.dataScope.tableRequired'))
       return

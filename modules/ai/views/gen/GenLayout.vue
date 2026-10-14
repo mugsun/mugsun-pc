@@ -204,7 +204,7 @@
   async function generate() {
     const topic = props.type === 'poster' ? form.title : form.topic
     if (!topic.trim()) {
-      ElMessage.warning(props.type === 'poster' ? '请填写标题' : '请填写主题')
+      ElMessage.warning(props.type === 'poster' ? '请输入标题' : '请输入主题')
       return
     }
     output.value = ''
