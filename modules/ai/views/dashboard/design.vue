@@ -1,6 +1,13 @@
 <template>
   <div class="art-full-height">
-    <ElCard class="art-table-card" shadow="never">
+    <AiNotFound
+      v-if="notFound"
+      what="仪表盘"
+      :id="dashId"
+      back-path="/ai/dataset"
+      back-text="返回数据集列表"
+    />
+    <ElCard v-else class="art-table-card" shadow="never">
       <div class="hd">
         <ElButton @click="router.push('/ai/dataset')">返回</ElButton>
         <h3>仪表盘设计 #{{ dashId }}</h3>
@@ -25,6 +32,7 @@
 </template>
 <script setup lang="ts">
   import { computed, onMounted, ref } from 'vue'
+  import AiNotFound from '../shared/AiNotFound.vue'
   import { useRoute, useRouter } from 'vue-router'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import {
@@ -32,9 +40,12 @@
     fetchRemoveAiDashboard,
     fetchSaveAiDashboard,
     fetchSaveAiDashboardDsl,
-    fetchShareAiDashboard
+    fetchShareAiDashboard,
+    aiDatasetExists
   } from '../../api'
   defineOptions({ name: 'AiDashboardDesign' })
+  /** id 不存在或已删除时只显示占位与返回入口（UX-105） */
+  const notFound = ref(false)
   const route = useRoute()
   const router = useRouter()
   // 路由参数既可能是 dashboard id，也可能从问数入口带 datasetId
@@ -46,11 +57,16 @@
 
   async function load() {
     const currentId = String(dashId.value || '')
-    if (!/^\d{1,19}$/.test(currentId)) return
+    if (!/^\d{1,19}$/.test(currentId)) {
+      notFound.value = true
+      return
+    }
     try {
-      const d = await fetchAiDashboardDetail(currentId)
+      const d = await fetchAiDashboardDetail(currentId, { showErrorMessage: false })
       if (!d?.id) {
         entityId.value = null
+        // 参数也可能是 datasetId（从问数入口新建）：数据集也不存在才算找不到
+        if (!(await aiDatasetExists(currentId))) notFound.value = true
         return
       }
       entityId.value = d.id
@@ -68,6 +84,7 @@
       }
     } catch {
       entityId.value = null
+      if (!(await aiDatasetExists(currentId))) notFound.value = true
     }
   }
   async function save() {

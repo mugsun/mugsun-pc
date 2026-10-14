@@ -75,11 +75,11 @@
       width="640px"
       destroy-on-close
     >
-      <ElForm :model="form" label-width="100px">
-        <ElFormItem label="模型名称" required>
+      <ElForm ref="formRef" :model="form" label-width="100px">
+        <ElFormItem label="模型名称" prop="modelName" :rules="requiredRule('模型名称')">
           <ElInput v-model="form.modelName" placeholder="如 DeepSeek-V3-Chat" />
         </ElFormItem>
-        <ElFormItem label="模型类型" required>
+        <ElFormItem label="模型类型" prop="modelType" :rules="requiredRule('模型类型', true)">
           <ElSelect v-model="form.modelType" style="width: 100%">
             <ElOption label="对话" value="chat" />
             <ElOption label="向量" value="embedding" />
@@ -87,18 +87,18 @@
             <ElOption label="音频" value="audio" />
           </ElSelect>
         </ElFormItem>
-        <ElFormItem label="提供商" required>
+        <ElFormItem label="提供商" prop="provider" :rules="requiredRule('提供商', true)">
           <ElSelect v-model="form.provider" style="width: 100%" @change="onProvider">
             <ElOption v-for="p in providers" :key="p.value" :label="p.label" :value="p.value" />
           </ElSelect>
         </ElFormItem>
-        <ElFormItem label="Base URL" required>
+        <ElFormItem label="Base URL" prop="baseUrl" :rules="requiredRule('Base URL')">
           <ElInput v-model="form.baseUrl" />
         </ElFormItem>
-        <ElFormItem label="模型标识" required>
+        <ElFormItem label="模型标识" prop="modelCode" :rules="requiredRule('模型标识')">
           <ElInput v-model="form.modelCode" placeholder="如 deepseek-chat" />
         </ElFormItem>
-        <ElFormItem label="API Key" :required="!form.id">
+        <ElFormItem label="API Key" prop="apiKey" :rules="form.id ? [] : requiredRule('API Key')">
           <ElInput
             v-model="form.apiKey"
             type="password"
@@ -109,7 +109,12 @@
         <ElFormItem label="Secret Key">
           <ElInput v-model="form.secretKey" type="password" show-password />
         </ElFormItem>
-        <ElFormItem v-if="form.modelType === 'embedding'" label="向量维度" required>
+        <ElFormItem
+          v-if="form.modelType === 'embedding'"
+          label="向量维度"
+          prop="dimensions"
+          :rules="requiredRule('向量维度')"
+        >
           <ElInputNumber v-model="form.dimensions" :min="1" :max="8192" />
         </ElFormItem>
         <ElFormItem v-if="form.modelType === 'chat'" label="支持视觉">
@@ -134,7 +139,9 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, onMounted, reactive, ref } from 'vue'
+  import type { FormInstance } from 'element-plus'
+  import { requiredRule } from '../shared/formRules'
+  import { computed, nextTick, onMounted, reactive, ref } from 'vue'
   import { ElMessageBox } from 'element-plus'
   import {
     fetchAiModelPage,
@@ -145,6 +152,7 @@
   } from '../../api'
 
   defineOptions({ name: 'AiModel' })
+  const formRef = ref<FormInstance>()
 
   const providers = [
     { label: 'OpenAI', value: 'openai', url: 'https://api.openai.com/v1' },
@@ -212,6 +220,7 @@
           }
     )
     dialogVisible.value = true
+    nextTick(() => formRef.value?.clearValidate())
   }
 
   function onProvider(v: string) {
@@ -220,6 +229,7 @@
   }
 
   async function save() {
+    if (!(await formRef.value?.validate().catch(() => false))) return
     saving.value = true
     try {
       const payload = { ...form }

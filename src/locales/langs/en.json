@@ -704,6 +704,7 @@
       "console": {
         "userStatusChart": "User Status Distribution",
         "tenantUserChart": "Users per Tenant",
+        "platformTenant": "Platform",
         "noData": "No data",
         "myTodo": "My Todos",
         "viewAll": "All",
@@ -835,7 +836,7 @@
         "rules": {
           "usernameFormat": "Start with a letter. Use letters, digits, and underscores only.",
           "nicknameLen": "Nickname must be 64 characters or fewer",
-          "emailFormat": "Use an address like name@example.com, or leave it empty.",
+          "emailFormat": "Use an address like name{'@'}example.com, or leave it empty.",
           "phoneFormat": "Use an 11-digit mobile number starting with 1, or leave it empty.",
           "idCardFormat": "Invalid ID number format"
         },
@@ -1218,6 +1219,7 @@
           "name": "Please enter name",
           "code": "2 to 12 digits, for example 11 or 1101"
         },
+        "codeRequired": "Enter the region code",
         "codeRule": "Use 2 to 12 digits for the region code",
         "levels": {
           "province": "Province",
@@ -1470,7 +1472,7 @@
         "statusOn": "Enabled",
         "statusOff": "Disabled",
         "configLabel": "Config",
-        "configPlaceholder": "Mail can use {\"host\":\"smtp.example.com\",\"port\":465}. Leave in-app and SMS empty.",
+        "configPlaceholder": "Mail can use {'{'}\"host\":\"smtp.example.com\",\"port\":465{'}'}. Leave in-app and SMS empty.",
         "secretLabel": "Secret",
         "secretPlaceholder": "Leave blank to keep the current secret. Mail uses the SMTP password.",
         "remarkLabel": "Remark",
@@ -2600,7 +2602,7 @@
         "errRuleIncomplete": "A condition rule is missing a field or operator. Fill in both, then publish again.",
         "errOpUnsupported": "This condition operator is not supported. Use equal, not equal, greater than, greater or equal, less than, less or equal, contains, or not contains, then publish again.",
         "errFieldInvalid": "This condition variable name is not valid. Start it with a letter or underscore, use only letters, digits, and underscores, then publish again.",
-        "errValueInvalid": "This condition value contains a character that is not allowed (a vertical bar, @@, or a line break). Remove those characters, then publish again.",
+        "errValueInvalid": "This condition value contains a character that is not allowed (a vertical bar, {'@@'}, or a line break). Remove those characters, then publish again.",
         "errNodeType": "This node type is not recognized. Use approval, condition, or parallel, then publish again.",
         "errRatio": "The countersign ratio must be an integer from 0 to 100. Change it to an integer in that range, then publish again."
       },
@@ -3004,6 +3006,7 @@
       "created": "Scene created",
       "load3d": "Loading 3D engine…",
       "mapHint": "Tiles are proxied by the server so keys never reach the browser.",
+      "coachClose": "Hide tip",
       "help": "Help",
       "helpTitle": "Where to get basemap keys",
       "helpTianditu": "Tianditu: request a tk from the national geospatial platform console.",
@@ -3389,7 +3392,7 @@
         "needApp": "Select an app first. Retention is kept per app.",
         "emptyPrompt": "Select an app and a period, then click Search",
         "gridTitle": "New-user retention grid",
-        "hint": "New-user retention: grouped by first active day, with UTC day boundaries",
+        "hint": "New-user retention: grouped by first active day, with days starting at midnight in the tenant timezone",
         "legendText": "Darker color means higher retention"
       },
       "user": {
@@ -3403,6 +3406,9 @@
         "elapsedLine": "Elapsed {value}",
         "emptyNoData": "No activity data within this time range",
         "emptyPrompt": "Select a user and a time range, then search",
+        "loadFailedNetwork": "Couldn't connect, so the data didn't load. Check your network or the backend, then retry",
+        "loadFailedOther": "Couldn't load the data: {msg}",
+        "loadFailedRetry": "Retry",
         "endPlaceholder": "End time",
         "eventApi": "API",
         "eventClick": "Click",

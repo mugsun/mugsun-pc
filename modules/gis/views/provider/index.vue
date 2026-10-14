@@ -1,7 +1,7 @@
 <!-- 底图配置：全幅地图预览 + 左侧供应商 HUD。 -->
 <template>
   <div class="gis-shell art-full-height">
-    <div class="gis-map-shell">
+    <div class="gis-map-shell gis-map-shell--panel">
       <div ref="mapHost" class="gis-map"></div>
       <aside class="gis-hud gis-hud-panel gis-hud-panel-wide">
         <p class="gis-panel-lead">{{ $t('pages.gis.secretHint') }}</p>
@@ -125,12 +125,13 @@
           <ElOption value="vec_label" :label="$t('pages.gis.styleVecLabel')" />
         </ElSelect>
       </div>
-      <p class="gis-hud gis-hud-status">{{ $t('pages.gis.providerCoach') }}</p>
+      <GisCoach>{{ $t('pages.gis.providerCoach') }}</GisCoach>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+  import GisCoach from '../../components/GisCoach.vue'
   import {
     nextTick,
     onActivated,

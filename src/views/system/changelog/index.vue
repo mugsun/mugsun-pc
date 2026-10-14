@@ -130,7 +130,7 @@
           />
         </ElFormItem>
         <ElFormItem :label="$t('pages.system.changelog.content')">
-          <ArtWangEditor v-model="form.content" height="120px" />
+          <ArtWangEditor v-model="form.content" height="320px" />
         </ElFormItem>
       </ElForm>
       <template #footer>

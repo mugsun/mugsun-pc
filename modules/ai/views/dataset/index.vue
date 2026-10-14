@@ -41,8 +41,8 @@
       :title="form.id ? '编辑问数' : '新建问数'"
       width="560px"
     >
-      <ElForm :model="form" label-width="72px">
-        <ElFormItem label="名称" required>
+      <ElForm ref="formRef" :model="form" label-width="72px">
+        <ElFormItem label="名称" prop="name" :rules="requiredRule('名称')">
           <ElInput
             v-model="form.name"
             maxlength="64"
@@ -69,7 +69,9 @@
   </div>
 </template>
 <script setup lang="ts">
-  import { onMounted, reactive, ref } from 'vue'
+  import type { FormInstance } from 'element-plus'
+  import { requiredRule } from '../shared/formRules'
+  import { onMounted, reactive, ref, nextTick } from 'vue'
   import { useRouter } from 'vue-router'
   import { ElMessageBox } from 'element-plus'
   import {
@@ -79,6 +81,7 @@
     fetchSaveAiDataset
   } from '../../api'
   defineOptions({ name: 'AiDataset' })
+  const formRef = ref<FormInstance>()
   const router = useRouter()
   const keyword = ref('')
   const searched = ref(false)
@@ -114,8 +117,10 @@
     Object.keys(form).forEach((k) => delete form[k])
     Object.assign(form, row ? { ...row } : {})
     visible.value = true
+    nextTick(() => formRef.value?.clearValidate())
   }
   async function save() {
+    if (!(await formRef.value?.validate().catch(() => false))) return
     saving.value = true
     try {
       await fetchSaveAiDataset({ id: form.id, name: form.name, description: form.description })

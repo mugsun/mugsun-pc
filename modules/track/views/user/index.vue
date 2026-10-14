@@ -43,6 +43,7 @@
         :range-separator="$t('pages.track.user.rangeSeparator')"
         :start-placeholder="$t('pages.track.user.startPlaceholder')"
         :end-placeholder="$t('pages.track.user.endPlaceholder')"
+        :format="narrow ? 'YYYY-MM-DD HH:mm' : 'YYYY-MM-DD HH:mm:ss'"
         class="track-time-range"
       />
       <ElButton type="primary" :loading="loading" @click="search">{{
@@ -61,7 +62,19 @@
         :title="$t('pages.track.user.devicesTruncated', { n: deviceCount })"
       />
       <div v-loading="loading && records.length === 0" class="track-timeline">
-        <ElEmpty v-if="!searched" :description="$t('pages.track.user.emptyPrompt')" />
+        <ElResult
+          v-if="loadError && records.length === 0 && !loading"
+          icon="error"
+          class="track-load-error"
+          :sub-title="loadErrorText"
+        >
+          <template #extra>
+            <ElButton type="primary" @click="retryLoad">{{
+              $t('pages.track.user.loadFailedRetry')
+            }}</ElButton>
+          </template>
+        </ElResult>
+        <ElEmpty v-else-if="!searched" :description="$t('pages.track.user.emptyPrompt')" />
         <ElEmpty
           v-else-if="records.length === 0 && !loading"
           :description="$t('pages.track.user.emptyNoData')"
@@ -201,12 +214,14 @@
   import { fetchTrackUserApiBody, fetchTrackUserTimeline } from '@/api/track'
   import { useI18n } from 'vue-i18n'
   import { fetchUserPage } from '@/api/user'
+  import { isNetworkError } from '@/utils/http/error'
   import {
     fmtTrackDuration,
     fmtTrackSize,
     fmtTrackTime,
     useTrackApp
   } from '@/views/track/shared/useTrackApp'
+  import { useWindowSize } from '@vueuse/core'
   import ReplayPlayerDrawer from '@/views/track/shared/ReplayPlayerDrawer.vue'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import {
@@ -224,6 +239,9 @@
   } from 'element-plus'
 
   defineOptions({ name: 'TrackUser' })
+  const { width: viewportWidth } = useWindowSize()
+  /** 窄屏日期框不显示秒（UX-116） */
+  const narrow = computed(() => viewportWidth.value <= 640)
 
   const { t } = useI18n()
 
@@ -232,7 +250,21 @@
   /** 单页事件数（游标分页） */
   const PAGE_SIZE = 50
 
-  const { appOptions, appKey, appsLoading } = useTrackApp()
+  const { appOptions, appKey, appsLoading, appsError, loadApps } = useTrackApp()
+  /** 时间线查询失败（网络/接口），与应用列表失败一起决定错误态 */
+  const searchError = ref<unknown>(null)
+  const loadError = computed(() => searchError.value ?? appsError.value)
+  const loadErrorText = computed(() => {
+    const err = loadError.value
+    if (isNetworkError(err)) return t('pages.track.user.loadFailedNetwork')
+    const msg = err instanceof Error ? err.message : String(err ?? '')
+    return t('pages.track.user.loadFailedOther', { msg })
+  })
+  const retryLoad = async (): Promise<void> => {
+    if (appsError.value) await loadApps()
+    if (searched.value && !appsError.value) await search()
+    else searchError.value = null
+  }
 
   // ===== 查询条件 =====
   /** 身份口径：user=系统用户（userId，身份归并）；guest=访客 distinctId 直查 */
@@ -436,8 +468,12 @@
     expandedId.value = ''
     searched.value = true
     loading.value = true
+    searchError.value = null
     try {
       await fetchTimeline()
+    } catch (err) {
+      // 请求层已 toast；页面显示错误态 + 重试（UX-009）
+      searchError.value = err
     } finally {
       loading.value = false
     }
@@ -547,6 +583,13 @@
 
       .track-time-range {
         width: 360px;
+      }
+
+      // 窄屏（UX-116）：日期框占满整行、去掉秒，避免「18:04:2(」被截断
+      @media screen and (width <= 640px) {
+        .track-time-range {
+          width: 100%;
+        }
       }
     }
 

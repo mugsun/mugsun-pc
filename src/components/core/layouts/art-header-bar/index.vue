@@ -139,10 +139,10 @@
         <!-- 设置按钮 -->
         <div v-if="shouldShowSettings">
           <ElPopover
-            :visible="showSettingGuide"
-            placement="bottom-start"
+            :visible="guideVisible"
+            placement="bottom-end"
             :width="200"
-            :offset="0"
+            :offset="10"
             popper-class="setting-guide-popper"
           >
             <template #reference>
@@ -260,6 +260,22 @@
 
   const { isFullscreen, toggle: toggleFullscreen } = useFullscreen()
 
+  /**
+   * 引导气泡（UX-018）：窄屏不弹（顶栏图标挤在一起，气泡必然压住）；
+   * 宽屏右对齐设置图标、与顶栏留 10px，不再压住通知/设置；无人理会 8 秒后自动收起并记住。
+   */
+  const GUIDE_AUTO_HIDE_MS = 8000
+  const guideVisible = computed(() => showSettingGuide.value && width.value > 640)
+  let guideTimer: ReturnType<typeof setTimeout> | undefined
+  watch(
+    guideVisible,
+    (v) => {
+      clearTimeout(guideTimer)
+      if (v) guideTimer = setTimeout(() => settingStore.hideSettingGuide(), GUIDE_AUTO_HIDE_MS)
+    },
+    { immediate: true }
+  )
+
   onMounted(() => {
     initLanguage()
     document.addEventListener('pointerdown', dismissGuideOnInteraction, true)
@@ -267,6 +283,7 @@
   })
 
   onBeforeUnmount(() => {
+    clearTimeout(guideTimer)
     document.removeEventListener('pointerdown', dismissGuideOnInteraction, true)
   })
 
