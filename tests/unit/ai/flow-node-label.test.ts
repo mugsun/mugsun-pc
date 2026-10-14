@@ -5,7 +5,8 @@ import {
   displayLabel,
   LEGACY_DEFAULT_LABELS,
   NODE_LABEL_KEYS,
-  storedLabel
+  storedLabel,
+  withStoredLabel
 } from '../../../modules/ai/views/app/flowNodes'
 
 const tOf = (pack: any) => (key: string) => key.split('.').reduce((o, k) => o?.[k], pack)
@@ -14,14 +15,36 @@ const tEn = tOf(en)
 
 describe('应用编排节点名的存储与显示', () => {
   it('没改过名的节点不存 label', () => {
-    expect(storedLabel('llm', '')).toBe('')
-    expect(storedLabel('llm', undefined)).toBe('')
-    expect(storedLabel('llm', '   ')).toBe('')
+    expect(storedLabel('llm', '')).toBeUndefined()
+    expect(storedLabel('llm', undefined)).toBeUndefined()
+    expect(storedLabel('llm', '   ')).toBeUndefined()
+  })
+
+  it('默认名节点的 data 里完全没有 label 这个 key（后端 asText(type) 才能回落）', () => {
+    for (const label of [undefined, '', '  ', '大模型']) {
+      const d = withStoredLabel('llm', { type: 'llm', label, prompt: 'x' })
+      expect('label' in d).toBe(false)
+      expect(d).toEqual({ type: 'llm', prompt: 'x' })
+      expect(JSON.stringify(d)).not.toContain('label')
+    }
+    expect(withStoredLabel('llm', undefined)).toEqual({})
+  })
+
+  it('改过名的节点保留 label', () => {
+    expect(withStoredLabel('llm', { type: 'llm', label: '客服回答' })).toEqual({
+      type: 'llm',
+      label: '客服回答'
+    })
+  })
+
+  it('局限：用户特意改回默认中文名也会被当成没改过名', () => {
+    expect('label' in withStoredLabel('start', { type: 'start', label: '开始' })).toBe(false)
+    expect(displayLabel('start', '开始', tEn)).toBe('Start')
   })
 
   it('旧流程里的默认中文名视为没改过名', () => {
     for (const [type, label] of Object.entries(LEGACY_DEFAULT_LABELS)) {
-      expect(storedLabel(type, label)).toBe('')
+      expect(storedLabel(type, label)).toBeUndefined()
     }
   })
 

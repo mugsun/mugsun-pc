@@ -3,7 +3,10 @@
  * - 下拉取值是固定 key，只在显示时走 $t；发送时映射成固定中文描述。
  * - 行格式与后端 AiGenController.buildPrompt 一致：「标签: 值」逐行，尺寸「尺寸: 宽x高」，
  *   末行「请按 {type} 类型输出可用结果。」；值先 trim，空值不发。
- * - 唯一随界面语言变化的是「输出语言：{locale}」一行。
+ * - 主题、标题与后端一致，有值就各发一行（不按类型二选一）。
+ * - 尺寸：宽高都有才发「尺寸: 宽x高」；只有一边时只发那一边（「宽: 800」/「高: 600」），
+ *   不拼出 undefined（后端模板在这种情况会拼出 null，前端不沿用）。
+ * - 唯一随界面语言变化的是「输出语言: 简体中文|English」一行。
  * - 用户自己填写的内容原样发送。
  */
 
@@ -81,16 +84,28 @@ function line(label: string, v: unknown): string {
   return s ? `${label}: ${s}` : ''
 }
 
+/** 界面 locale → 发给模型的输出语言描述 */
+export function outputLanguage(locale: string): string {
+  return /^zh/i.test(locale || '') ? '简体中文' : 'English'
+}
+
+function sizeLines(w?: number, h?: number): string[] {
+  const ok = (v?: number) => v != null && String(v).trim() !== '' && !Number.isNaN(Number(v))
+  if (ok(w) && ok(h)) return [`尺寸: ${w}x${h}`]
+  return [ok(w) ? `宽: ${w}` : '', ok(h) ? `高: ${h}` : '']
+}
+
 /** 拼提示词：标签与后端 buildPrompt 模板一致，固定中文 */
 export function buildGenPrompt(type: string, form: GenForm, locale: string): string {
   const parts = [
-    type === 'poster' ? line('标题', form.title) : line('主题', form.topic),
+    line('主题', form.topic),
+    line('标题', form.title),
     line('副标题', form.subtitle),
     line('风格', styleForModel(type, form.style)),
     line('类目', categoryForModel(form.category)),
     line('补充', form.extra),
-    form.width || form.height ? `尺寸: ${form.width}x${form.height}` : '',
-    `输出语言：${locale}`,
+    ...sizeLines(form.width, form.height),
+    `输出语言: ${outputLanguage(locale)}`,
     `请按 ${type} 类型输出可用结果。`
   ]
   return parts.filter(Boolean).join('\n')

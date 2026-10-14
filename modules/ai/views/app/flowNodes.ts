@@ -1,8 +1,10 @@
 /**
  * 应用编排画布的节点名规则（pc#47 复审）：
- * - 用户没改过名的节点不存 label（存空），显示时按 type 走 i18n 实时翻译；
+ * - 用户没改过名的节点不写 label 字段（整个 key 删掉，不存空串：后端 AiFlowExecutor 用
+ *   path("label").asText(type) 取节点名，只有字段缺失才回落到 type，空串会让运行记录节点名变空），
+ *   显示时按 type 走 i18n 实时翻译；
  * - 用户改过名的节点按原样保存与显示；
- * - 旧流程里存着默认中文名的节点视为没改过名（LEGACY_DEFAULT_LABELS），加载时清空。
+ * - 旧流程里存着默认中文名的节点视为没改过名（LEGACY_DEFAULT_LABELS），加载和保存时删掉 label。
  */
 
 /** type → 显示用 i18n key；没有 key 的类型用 FIXED_LABELS（专有名词不翻译） */
@@ -24,7 +26,11 @@ export const NODE_LABEL_KEYS: Record<string, string> = {
 
 export const FIXED_LABELS: Record<string, string> = { http: 'HTTP', mcp: 'MCP' }
 
-/** 历史版本拖入节点时写进 DSL 的默认中文名 */
+/**
+ * 历史版本拖入节点时写进 DSL 的默认中文名。
+ * 局限：无法区分「旧默认名」和「用户特意改回默认名」——比如用户把节点名手动改回「开始」，
+ * 也会被当成没改过名，label 被删掉、显示时按界面语言翻译（英文界面显示 Start）。
+ */
 export const LEGACY_DEFAULT_LABELS: Record<string, string> = {
   start: '开始',
   end: '结束',
@@ -46,12 +52,23 @@ export const LEGACY_DEFAULT_LABELS: Record<string, string> = {
 /** 「运行」按钮发给模型的固定测试输入，不跟界面语言变 */
 export const RUN_SAMPLE_INPUT = '你好'
 
-/** 存储用：默认名（空或历史默认中文名）一律存空，其余原样 */
-export function storedLabel(type: string | undefined, label: unknown): string {
-  const l = typeof label === 'string' ? label.trim() : ''
-  if (!l) return ''
-  if (type && LEGACY_DEFAULT_LABELS[type] === l) return ''
-  return typeof label === 'string' ? label : ''
+/** 存储用：默认名（空或历史默认中文名）返回 undefined 表示不写 label，其余原样 */
+export function storedLabel(type: string | undefined, label: unknown): string | undefined {
+  if (typeof label !== 'string') return undefined
+  const l = label.trim()
+  if (!l) return undefined
+  if (type && LEGACY_DEFAULT_LABELS[type] === l) return undefined
+  return label
+}
+
+/** 返回去掉默认 label 的 data 副本：默认名时连 label 这个 key 一起删掉 */
+export function withStoredLabel<T extends Record<string, any>>(
+  type: string | undefined,
+  data: T | undefined
+): Omit<T, 'label'> & { label?: string } {
+  const { label, ...rest } = (data || {}) as T
+  const l = storedLabel(type, label)
+  return l === undefined ? rest : { ...rest, label: l }
 }
 
 /** 显示用：用户改过名的显示原名，否则按 type 实时翻译 */

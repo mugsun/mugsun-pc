@@ -160,7 +160,7 @@
   import '@vue-flow/core/dist/style.css'
   import '@vue-flow/core/dist/theme-default.css'
   import { fetchAiAppDetail, fetchRunAiApp, fetchSaveAiAppDsl, fetchShareAiApp } from '../../api'
-  import { displayLabel, RUN_SAMPLE_INPUT, storedLabel } from './flowNodes'
+  import { displayLabel, RUN_SAMPLE_INPUT, withStoredLabel } from './flowNodes'
 
   defineOptions({ name: 'AiAppDesign' })
   const { t } = useI18n()
@@ -265,8 +265,7 @@
       position: { x: e.clientX - bounds.left - 60, y: e.clientY - bounds.top - 20 },
       data: {
         type: n.type,
-        // 默认名不存，显示时按 type 实时翻译
-        label: '',
+        // 默认名不写 label 字段，显示时按 type 实时翻译
         prompt: '',
         text: '',
         url: '',
@@ -338,7 +337,7 @@
         id: n.id,
         type: n.data?.type || n.type,
         position: n.position,
-        data: { ...n.data, label: storedLabel(n.data?.type || n.type, n.data?.label) }
+        data: withStoredLabel(n.data?.type || n.type, n.data)
       })),
       edges: edges.value.map((e) => ({
         id: e.id,
@@ -366,9 +365,8 @@
         type: 'custom',
         position: n.position || { x: 0, y: 0 },
         data: {
-          ...(n.data || {}),
-          type: n.data?.type || n.type,
-          label: storedLabel(n.data?.type || n.type, n.data?.label)
+          ...withStoredLabel(n.data?.type || n.type, n.data),
+          type: n.data?.type || n.type
         }
       }))
       const eds = dsl.edges || dsl.connections || []
