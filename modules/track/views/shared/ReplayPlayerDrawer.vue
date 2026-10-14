@@ -33,6 +33,14 @@
         class="replay-skip-tip"
         :title="$t('pages.track.shared.skippedBlocksTip', { count: skippedBlocks })"
       />
+      <ElAlert
+        v-if="incompleteTail && !errorMsg"
+        type="error"
+        :closable="false"
+        show-icon
+        class="replay-skip-tip"
+        :title="$t('pages.track.shared.incompleteTail')"
+      />
 
       <!-- 播放器挂载点（rrweb-player 自建 DOM，禁 v-html） -->
       <div v-show="playerReady" ref="playerRef" class="replay-player"></div>
@@ -75,7 +83,7 @@
   import { ElAlert, ElDrawer, ElEmpty, ElResult, ElTag, ElTooltip } from 'element-plus'
   import { useI18n } from 'vue-i18n'
   import 'rrweb-player/dist/style.css'
-  import { assembleReplayBlocks, type ReplayEventLike } from './replayEvents'
+  import { assembleReplayBlocks, fillSeqGaps, type ReplayEventLike } from './replayEvents'
 
   interface Props {
     visible: boolean
@@ -99,6 +107,8 @@
   const loading = ref(false)
   const playerReady = ref(false)
   const errorMsg = ref('')
+  /** 缺块之后再没有全量快照：后续录制不完整 */
+  const incompleteTail = ref(false)
   const meta = ref<Record<string, any> | null>(null)
   const skippedBlocks = ref(0)
   const loadedEvents = ref(0)
@@ -190,6 +200,7 @@
     if (!sessionId) return
     loading.value = true
     errorMsg.value = ''
+    incompleteTail.value = false
     try {
       const detail: any = await fetchTrackReplayDetail({ sessionId })
       if (gen !== loadGen) return
@@ -216,7 +227,14 @@
       const perBlock: Array<ReplayEventLike[] | null> = []
       let skipped = 0
       let blockMsg = ''
-      for (const block of blocks) {
+      for (const seq of fillSeqGaps(blocks.map((b) => b.seq))) {
+        if (seq === null) {
+          // 块清单里没有这个 seq：从未上传或已清理
+          perBlock.push(null)
+          skipped++
+          continue
+        }
+        const block = { seq }
         try {
           const chunk: any = await fetchTrackReplayData({ sessionId, seq: block.seq })
           // skipEnvelope 下后端错误信封也会原样返回，须按数组形态甄别
@@ -247,6 +265,7 @@
         errorMsg.value = t('pages.track.shared.noSnapshot')
         return
       }
+      incompleteTail.value = assembled.incompleteTail
       events.length = 0
       events.push(...assembled.events)
       loadedEvents.value = events.length
@@ -294,6 +313,7 @@
     errorMsg.value = ''
     meta.value = null
     skippedBlocks.value = 0
+    incompleteTail.value = false
     loadedEvents.value = 0
     replayEvents.value = []
     firstEventTs.value = null
