@@ -45,6 +45,14 @@ check_cidr() {
 for v in MUGSUN_CSP_TILE_HOSTS MUGSUN_CSP_TRACK_HOSTS; do
   eval "val=\${$v:-}"
   case "$val" in *[!A-Za-z0-9.*:/\ -]*) die "$v 含非法字符（只允许 A-Z a-z 0-9 . * : / - 和空格）：$val" ;; esac
+  # 语义校验：每项必须是 https:// 或 wss:// 加具体主机（允许 *. 子域通配、端口、路径）；
+  # 单独的 *、只有协议（https: / http:）、协议加 *（https://*）、http:// 一律拒绝
+  set -f
+  for h in $val; do
+    echo "$h" | grep -Eq '^(https|wss)://(\*\.)?[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)+(:[0-9]{1,5})?(/[A-Za-z0-9./-]*)?$' \
+      || die "$v 只允许 https:// 或 wss:// 加具体域名（可用 *. 子域通配），不允许 *、https:、http: 等通配或明文地址：$h"
+  done
+  set +f
 done
 
 csp_mode=${MUGSUN_CSP_MODE:-report-only}
@@ -56,6 +64,11 @@ csp_report_uri=${MUGSUN_CSP_REPORT_URI:-}
 case "$csp_report_uri" in
   *[!A-Za-z0-9._~:/?=\&%@+-]*) die "MUGSUN_CSP_REPORT_URI 含非法字符（禁止空格、引号、分号等）：$csp_report_uri" ;;
 esac
+# 只接受 https:// 绝对地址或以 / 开头的同源路径（报告含页面 URL，不能明文或发到 // 协议相对的外域）
+if [ -n "$csp_report_uri" ]; then
+  echo "$csp_report_uri" | grep -Eq '^(https://[A-Za-z0-9-]+(\.[A-Za-z0-9-]+)*(:[0-9]{1,5})?(/.*)?|/([^/].*)?)$' \
+    || die "MUGSUN_CSP_REPORT_URI 只允许 https:// 开头的地址或以 / 开头的同源路径：$csp_report_uri"
+fi
 
 cidrs=$(echo "${MUGSUN_GATEWAY_CIDRS:-}" | tr ',;' '  ')
 for c in $cidrs; do check_cidr "$c"; done

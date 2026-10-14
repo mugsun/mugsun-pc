@@ -6,8 +6,13 @@
  * 运行时不再请求 api.iconify.design（CSP connect-src 只放行 'self'）。
  *
  * 用法（图标数据包不进项目依赖，临时目录装一次即可）：
- *   npm i --prefix /tmp/iconify-json @iconify-json/{ri,fluent,solar,icon-park-outline,vaadin,ix,iconamoon}
+ *   npm i --prefix /tmp/iconify-json --save-exact @iconify-json/ri@1.2.10 @iconify-json/fluent@1.2.60 \
+ *     @iconify-json/solar@1.2.13 @iconify-json/icon-park-outline@1.2.4 @iconify-json/vaadin@1.2.1 \
+ *     @iconify-json/ix@1.2.13 @iconify-json/iconamoon@1.2.2
  *   ICONIFY_JSON_DIR=/tmp/iconify-json/node_modules/@iconify-json node scripts/gen-offline-icons.mjs
+ *
+ * 版本钉死在下面的 PINNED 里，装的版本不一致时直接退出；升级图标集要同时改 PINNED、上面的命令和 NOTICE。
+ * 输出里每个图标集都带 info（名称、作者、许可、来源包版本），CC BY 4.0 的署名见 NOTICE。
  *
  * 新增图标后重新运行并提交生成的 JSON；遗漏的图标会显示为空白（不会外联）。
  */
@@ -15,6 +20,16 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 const root = path.resolve(import.meta.dirname, '..')
+/** 图标数据来源包的精确版本（可复现产物）。新增图标集要先在这里登记 */
+const PINNED = {
+  ri: '1.2.10',
+  fluent: '1.2.60',
+  solar: '1.2.13',
+  'icon-park-outline': '1.2.4',
+  vaadin: '1.2.1',
+  ix: '1.2.13',
+  iconamoon: '1.2.2'
+}
 const jsonDir = process.env.ICONIFY_JSON_DIR || path.join(root, 'node_modules', '@iconify-json')
 // 引号包住的 prefix:name；prefix 是否为图标集由 ICONIFY_JSON_DIR 下是否有对应包决定（其余如 'update:modelValue' 自动忽略）
 const re = /['"`]([a-z][a-z0-9]*(?:-[a-z0-9]+)*):([a-z0-9]+(?:-[a-z0-9]+)*)['"`]/g
@@ -52,8 +67,26 @@ for (const prefix of PREFIXES) {
     .filter((n) => n.startsWith(prefix + ':'))
     .map((n) => n.slice(prefix.length + 1))
   if (!wanted.length) continue
+  const pkg = JSON.parse(fs.readFileSync(path.join(jsonDir, prefix, 'package.json'), 'utf8'))
+  if (PINNED[prefix] !== pkg.version) {
+    console.error(
+      `@iconify-json/${prefix} 版本 ${pkg.version} 与 PINNED ${PINNED[prefix] ?? '（未登记）'} 不一致`
+    )
+    process.exit(1)
+  }
   const set = JSON.parse(fs.readFileSync(path.join(jsonDir, prefix, 'icons.json'), 'utf8'))
-  const sub = { prefix, icons: {}, aliases: {} }
+  const info = JSON.parse(fs.readFileSync(path.join(jsonDir, prefix, 'info.json'), 'utf8'))
+  const sub = {
+    prefix,
+    info: {
+      name: info.name,
+      author: info.author,
+      license: info.license,
+      source: `@iconify-json/${prefix}@${pkg.version}`
+    },
+    icons: {},
+    aliases: {}
+  }
   for (const k of ['width', 'height', 'left', 'top']) if (set[k] !== undefined) sub[k] = set[k]
   const add = (name) => {
     if (set.icons[name]) sub.icons[name] = set.icons[name]
