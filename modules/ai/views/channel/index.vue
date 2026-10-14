@@ -5,13 +5,13 @@
         <ElInput
           v-model="keyword"
           clearable
-          placeholder="搜索渠道名称"
+          :placeholder="$t('aiChannelList.searchPh')"
           style="width: 200px"
           @keyup.enter="reload"
           @clear="reload"
         />
-        <ElButton @click="reload">搜索</ElButton>
-        <ElButton type="primary" @click="openEdit()">新增渠道绑定</ElButton>
+        <ElButton @click="reload">{{ $t('aiChannelList.search') }}</ElButton>
+        <ElButton type="primary" @click="openEdit()">{{ $t('aiChannelList.add') }}</ElButton>
       </div>
       <ArtTable
         :loading="loading"
@@ -74,6 +74,7 @@
 </template>
 <script setup lang="ts">
   import type { FormInstance } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
   import { requiredRule } from '../shared/formRules'
   import type { ColumnOption } from '@/types/component'
   import { computed, h, onMounted, reactive, ref, nextTick } from 'vue'
@@ -85,13 +86,16 @@
     fetchSaveAiChannel
   } from '../../api'
   defineOptions({ name: 'AiChannel' })
+  const { t } = useI18n()
   const formRef = ref<FormInstance>()
-  const TYPE_LABEL: Record<string, string> = {
-    wecom: '企微',
-    dingtalk: '钉钉',
-    feishu: '飞书',
-    webhook: 'Webhook'
+  /** 渠道类型 → 显示用 i18n key；存储/发送的仍是 type 值本身 */
+  const TYPE_LABEL_KEYS: Record<string, string> = {
+    wecom: 'aiForm.optWecom',
+    dingtalk: 'aiForm.optDingtalk',
+    feishu: 'aiForm.optFeishu'
   }
+  const typeLabel = (v: string) =>
+    TYPE_LABEL_KEYS[v] ? t(TYPE_LABEL_KEYS[v]) : v === 'webhook' ? 'Webhook' : v || ''
   const loading = ref(false)
   const searched = ref(false)
   const records = ref<any[]>([])
@@ -108,27 +112,28 @@
     total: total.value
   }))
   const emptyText = computed(() =>
-    searched.value ? '没有符合条件的渠道。换个名称再查' : '还没有渠道。点新增渠道绑定开始配置'
+    searched.value ? t('aiChannelList.emptySearched') : t('aiChannelList.empty')
   )
-  const columns: ColumnOption[] = [
+  const columns = computed<ColumnOption[]>(() => [
     { type: 'index', width: 60, label: '#' },
-    { prop: 'name', label: '名称', minWidth: 140 },
+    { prop: 'name', label: t('aiChannelList.colName'), minWidth: 140 },
     {
       prop: 'channelType',
-      label: '类型',
+      label: t('aiChannelList.colType'),
       width: 120,
-      formatter: (row: any) => TYPE_LABEL[row.channelType] || row.channelType || ''
+      formatter: (row: any) => typeLabel(row.channelType)
     },
     { prop: 'webhookUrl', label: 'Webhook', minWidth: 200, showOverflowTooltip: true },
     {
       prop: 'status',
-      label: '状态',
-      width: 80,
-      formatter: (r: any) => (r.status === 1 ? '启用' : '停用')
+      label: t('aiChannelList.colStatus'),
+      width: 100,
+      formatter: (r: any) =>
+        r.status === 1 ? t('aiChannelList.enabled') : t('aiChannelList.disabled')
     },
     {
       prop: 'operation',
-      label: '操作',
+      label: t('aiChannelList.colOps'),
       width: 200,
       fixed: 'right',
       formatter: (row: any) =>
@@ -136,17 +141,19 @@
           h(
             ElButton,
             { link: true, type: 'primary', size: 'small', onClick: () => openEdit(row) },
-            () => '编辑'
+            () => t('aiChannelList.edit')
           ),
-          h(ElButton, { link: true, size: 'small', onClick: () => debug(row) }, () => '调试'),
+          h(ElButton, { link: true, size: 'small', onClick: () => debug(row) }, () =>
+            t('aiChannelList.debug')
+          ),
           h(
             ElButton,
             { link: true, type: 'danger', size: 'small', onClick: () => remove(row) },
-            () => '删除'
+            () => t('aiChannelList.remove')
           )
         ])
     }
-  ]
+  ])
   async function reload() {
     loading.value = true
     const name = keyword.value.trim()
@@ -204,8 +211,8 @@
   }
   async function remove(row: any) {
     await ElMessageBox.confirm(
-      `删除「${row.name || '这个渠道'}」后，列表里不会再出现，消息也不会再发到这里`,
-      '确认'
+      t('aiChannelList.removeConfirm', { name: row.name || t('aiChannelList.thisOne') }),
+      t('aiChannelList.confirm')
     )
     await fetchRemoveAiChannel(row.id)
     await reload()
