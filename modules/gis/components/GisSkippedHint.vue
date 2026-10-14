@@ -3,7 +3,7 @@
 -->
 <template>
   <p v-if="count > 0" class="gis-skipped-hint" role="status" data-test="gis-skipped-hint">
-    <span>{{ $t('pages.gis.skippedHint', { n: count }) }}</span>
+    <span>{{ $t('pages.gis.skippedHint', { n: count }, count) }}</span>
     <a :href="docUrl" target="_blank" rel="noopener noreferrer" data-test="gis-skipped-doc">
       {{ $t('pages.gis.skippedHintDoc') }}
     </a>

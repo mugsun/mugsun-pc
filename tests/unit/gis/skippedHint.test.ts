@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 import zh from '@/locales/langs/zh.json'
 import en from '@/locales/langs/en.json'
+import { createI18n } from 'vue-i18n'
 import {
   GIS_LIMITS_DOC_EN,
   GIS_LIMITS_DOC_ZH,
@@ -28,6 +29,28 @@ describe('跳过要素提示（skipped）', () => {
     expect(metricsSkippedCount({ metrics: {} })).toBe(0)
     expect(metricsSkippedCount({ skipped: 3 })).toBe(0)
     expect(metricsSkippedCount(null)).toBe(0)
+  })
+
+  it('英文按单复数：n=1 用 feature，n>1 用 features；中文不变', () => {
+    const i18n = createI18n({ legacy: false, locale: 'en', messages: { en, zh } as never })
+    const t = i18n.global.t as (k: string, named: Record<string, unknown>, plural: number) => string
+    expect(t('pages.gis.skippedHint', { n: 1 }, 1)).toBe(
+      'Skipped 1 feature (buffer encloses a pole or crosses 180°)'
+    )
+    expect(t('pages.gis.skippedHint', { n: 3 }, 3)).toBe(
+      'Skipped 3 features (buffer encloses a pole or crosses 180°)'
+    )
+    expect(t('pages.gis.metricsSkipped', { n: 1 }, 1)).toBe(
+      '1 feature not counted in area and length'
+    )
+    expect(t('pages.gis.metricsSkipped', { n: 2 }, 2)).toBe(
+      '2 features not counted in area and length'
+    )
+    expect(t('pages.gis.metricsCount', { n: 1 }, 1)).toBe('1 feature')
+    expect(t('pages.gis.metricsCount', { n: 3 }, 3)).toBe('3 features')
+    i18n.global.locale.value = 'zh'
+    expect(t('pages.gis.skippedHint', { n: 1 }, 1)).toBe('已跳过 1 个要素（缓冲包住极点或跨 180°）')
+    expect(t('pages.gis.metricsSkipped', { n: 2 }, 2)).toBe('2 个要素未计入面积与长度')
   })
 
   it('文档链接按语言指向限制说明一节', () => {

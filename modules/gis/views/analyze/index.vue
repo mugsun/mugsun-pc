@@ -178,7 +178,7 @@
     }
     const out: string[] = []
     if (m.count != null) {
-      out.push(t('pages.gis.metricsCount', { n: m.count }))
+      out.push(t('pages.gis.metricsCount', { n: m.count }, Number(m.count)))
     }
     if (typeof m.areaSqMeters === 'number') {
       out.push(t('pages.gis.metricsArea', { n: Math.round(m.areaSqMeters) }))
@@ -191,7 +191,7 @@
     }
     const notCounted = metricsSkippedCount(result.value)
     if (notCounted > 0) {
-      out.push(t('pages.gis.metricsSkipped', { n: notCounted }))
+      out.push(t('pages.gis.metricsSkipped', { n: notCounted }, notCounted))
     }
     if (m.intersects != null) {
       out.push(`${t('pages.gis.opIntersects')}: ${m.intersects}`)
