@@ -466,8 +466,8 @@ export function fetchShareAiApp(data: Record<string, any>) {
 export function fetchAiKnowledgePage(params: Record<string, any>) {
   return request.get<any>({ url: '/api/system/ai/knowledge/page', params })
 }
-export function fetchAiKnowledgeDetail(id: AiId) {
-  return request.get<any>({ url: `/api/system/ai/knowledge/detail/${id}` })
+export function fetchAiKnowledgeDetail(id: AiId, opts?: { showErrorMessage?: boolean }) {
+  return request.get<any>({ url: `/api/system/ai/knowledge/detail/${id}`, ...opts })
 }
 export function fetchSaveAiKnowledge(data: Record<string, any>) {
   return request.post<any>({
@@ -555,8 +555,8 @@ export function fetchKbHitTest(data: Record<string, any>) {
 export function fetchAiDatasetPage(params: Record<string, any>) {
   return request.get<any>({ url: '/api/system/ai/dataset/page', params })
 }
-export function fetchAiDatasetDetail(id: AiId) {
-  return request.get<any>({ url: '/api/system/ai/dataset/detail', params: { id } })
+export function fetchAiDatasetDetail(id: AiId, opts?: { showErrorMessage?: boolean }) {
+  return request.get<any>({ url: '/api/system/ai/dataset/detail', params: { id }, ...opts })
 }
 export function fetchSaveAiDataset(data: Record<string, any>) {
   return request.post<any>({
@@ -673,8 +673,8 @@ export function fetchRemoveAiDashboard(id: AiId) {
     showSuccessMessage: true
   })
 }
-export function fetchAiDashboardDetail(id: AiId) {
-  return request.get<any>({ url: '/api/system/ai/dashboard/detail', params: { id } })
+export function fetchAiDashboardDetail(id: AiId, opts?: { showErrorMessage?: boolean }) {
+  return request.get<any>({ url: '/api/system/ai/dashboard/detail', params: { id }, ...opts })
 }
 export function fetchSaveAiDashboardDsl(data: Record<string, any>) {
   return request.post<any>({
@@ -785,4 +785,15 @@ export function fetchAiWeaveGisAsk(data: Record<string, any>) {
 }
 export function fetchAiWeaveTrackInsight(data: Record<string, any>) {
   return request.post<any>({ url: '/api/system/ai/weave/trackInsight', data })
+}
+
+/** 详情页存在性探测（UX-105）：静默请求，报错或返回空都视为不存在 */
+export async function aiDatasetExists(id: AiId): Promise<boolean> {
+  if (!/^\d{1,19}$/.test(String(id || ''))) return false
+  try {
+    const d = await fetchAiDatasetDetail(id, { showErrorMessage: false })
+    return !!d?.id
+  } catch {
+    return false
+  }
 }

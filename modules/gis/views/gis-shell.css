@@ -27,6 +27,16 @@
   left: 12px;
 }
 
+/* 带左侧面板的页面：缩放按钮挪到面板右侧，避免被面板盖住（UX-109） */
+.gis-map-shell--panel .ol-zoom {
+  left: 304px;
+}
+
+.gis-map-shell--panel:has(.gis-hud-panel-wide) .ol-zoom,
+.gis-map-shell--panel:has(.gis-hud-panel-wide) .gis-hud-status {
+  left: 324px;
+}
+
 .gis-hud {
   position: absolute;
   z-index: 5;

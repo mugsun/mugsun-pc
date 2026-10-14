@@ -1,6 +1,13 @@
 <template>
   <div class="art-full-height ai-dataset-run">
-    <ElCard class="art-table-card" shadow="never">
+    <AiNotFound
+      v-if="notFound"
+      what="数据集"
+      :id="datasetId"
+      back-path="/ai/dataset"
+      back-text="返回数据集列表"
+    />
+    <ElCard v-else class="art-table-card" shadow="never">
       <div class="hd">
         <ElButton @click="$router.back()">返回</ElButton>
         <h3>问数对话 #{{ datasetId }}</h3>
@@ -52,6 +59,7 @@
 </template>
 <script setup lang="ts">
   import { computed, nextTick, onMounted, ref } from 'vue'
+  import AiNotFound from '../shared/AiNotFound.vue'
   import { useRoute } from 'vue-router'
   import { ElMessageBox } from 'element-plus'
   import {
@@ -59,9 +67,12 @@
     fetchDatasetAsk,
     fetchDatasetPredict,
     fetchDatasetSqlRerun,
-    fetchDatasetSuggest
+    fetchDatasetSuggest,
+    aiDatasetExists
   } from '../../api'
   defineOptions({ name: 'AiDatasetRun' })
+  /** id 不存在或已删除时只显示占位与返回入口（UX-105） */
+  const notFound = ref(false)
   const route = useRoute()
   const datasetId = computed(() => route.params.id as string)
   const suggests = ref<string[]>([])
@@ -130,7 +141,13 @@
     m.rows = r?.rows || []
     m.content = r?.message || '已重跑'
   }
-  onMounted(loadSuggest)
+  onMounted(async () => {
+    if (!(await aiDatasetExists(datasetId.value))) {
+      notFound.value = true
+      return
+    }
+    await loadSuggest()
+  })
 </script>
 <style scoped>
   .ai-dataset-run :deep(.el-card__body) {
