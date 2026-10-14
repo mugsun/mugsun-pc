@@ -146,6 +146,15 @@ export function fetchUpdateTenant(data: Record<string, any>) {
   return request.post<void>({ url: '/api/system/tenant/update', data })
 }
 
+/** 租户验证码开关与启用题型（仅平台超管）；types 缺省不改，[] 恢复平台默认。响应 data.warning 为后端提示文案 */
+export function fetchTenantCaptcha(data: {
+  id: number | string
+  enabled: boolean
+  types?: string[] | null
+}) {
+  return request.post<{ warning?: string } | null>({ url: '/api/system/tenant/captcha', data })
+}
+
 // ===== 租户套餐 =====
 export function fetchTenantPackagePage(params: Record<string, any>) {
   return request.get<any>({ url: '/api/system/tenant-package/page', params })
