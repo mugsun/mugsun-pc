@@ -21,7 +21,7 @@
       </div>
       <div class="ai-gen-body" :class="{ stacked: type === 'layout' }">
         <div class="ai-gen-settings">
-          <ElForm label-width="96px">
+          <ElForm label-width="auto">
             <ElFormItem v-if="type === 'poster'" :label="$t('aiGen.title')" required>
               <ElInput
                 v-model="form.title"

@@ -253,7 +253,7 @@
   const assetCols = computed<ColumnOption[]>(() => [
     { prop: 'fileName', label: t('aiKbDetail.colFileName'), minWidth: 200 },
     { prop: 'fileType', label: t('aiKbDetail.colType'), width: 100 },
-    { prop: 'segmentCount', label: t('aiKbDetail.colSegments'), width: 90 },
+    { prop: 'segmentCount', label: t('aiKbDetail.colSegments'), width: 110 },
     {
       prop: 'vectorStatus',
       label: t('aiKbDetail.colVectorStatus'),
@@ -266,7 +266,7 @@
     {
       prop: 'progress',
       label: t('aiKbDetail.colProgress'),
-      width: 80,
+      width: 100,
       formatter: (row: any) => `${row.progress ?? 0}%`
     },
     {
@@ -315,7 +315,7 @@
     {
       prop: 'enabled',
       label: t('aiKbDetail.enabled'),
-      width: 80,
+      width: 100,
       formatter: (row: any) =>
         h(ElSwitch, {
           modelValue: row.enabled === 1,
