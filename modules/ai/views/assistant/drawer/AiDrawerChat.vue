@@ -860,8 +860,7 @@
     border-radius: 8px;
   }
 
-  .ai-dchat__title:hover,
-  .ai-dchat__title:focus-visible {
+  .ai-dchat__title:hover {
     background: var(--el-fill-color-light);
   }
 
@@ -1200,7 +1199,8 @@
     padding: 12px 12px 8px;
   }
 
-  .ai-dchat__sender :deep(.elx-x-sender) {
+  /* class 落在 XSender 根节点上（与 .elx-x-sender 同一元素），不能用后代选择器 */
+  .ai-dchat__sender {
     padding: 0;
     background: var(--el-bg-color);
     border: 1px solid var(--el-border-color);
@@ -1211,9 +1211,28 @@
       box-shadow 0.2s;
   }
 
-  .ai-dchat__sender :deep(.elx-x-sender:focus-within) {
+  /*
+   * XSender 自带 :focus-within（footer 里的 chip/发送也会触发）。
+   * 先关掉库默认高亮，再用 :has 只在输入区聚焦时加回。
+   */
+  .ai-dchat__sender:focus-within {
+    border-color: var(--el-border-color);
+    box-shadow: none;
+  }
+
+  .ai-dchat__sender:focus-within::after {
+    border-color: var(--el-border-color);
+    border-width: 1px;
+  }
+
+  .ai-dchat__sender:has(.elx-x-sender__content:focus-within) {
     border-color: var(--el-color-primary);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--el-color-primary) 15%, transparent);
+  }
+
+  .ai-dchat__sender:has(.elx-x-sender__content:focus-within)::after {
+    border-color: var(--el-color-primary);
+    border-width: 1px;
   }
 
   .ai-dchat__sender :deep(.elx-x-sender__content) {
@@ -1266,9 +1285,16 @@
     border-radius: 6px;
   }
 
-  .ai-dchat__chip:hover,
-  .ai-dchat__chip:focus-visible {
+  .ai-dchat__chip:hover {
     background: var(--el-fill-color);
+  }
+
+  .ai-dchat__chip:focus-visible,
+  .ai-dchat__send:focus-visible,
+  .ai-dchat__icon-btn.el-button:focus-visible,
+  .ai-dchat__title:focus-visible {
+    outline: 2px solid #5d87ff !important;
+    outline-offset: 2px;
   }
 
   .ai-dchat__main:focus-visible {
