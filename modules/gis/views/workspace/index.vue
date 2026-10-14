@@ -2438,4 +2438,75 @@
     border-radius: 4px;
     box-shadow: var(--el-box-shadow-light);
   }
+
+  /* 窄屏：顶部三组工具条改为整行堆叠，二维/三维始终在最左；底部提示改为横条（UX-115） */
+  @media (width <= 768px) {
+    .gis-hud-tr,
+    .gis-hud-tl,
+    .gis-hud-tc {
+      right: 12px;
+      left: 12px;
+      width: auto;
+      transform: none;
+    }
+
+    .gis-hud-tr {
+      top: 12px;
+      overflow-x: auto;
+    }
+
+    .gis-hud-tl {
+      top: 56px;
+    }
+
+    .gis-hud-tc {
+      top: 100px;
+    }
+
+    .gis-hud-rail {
+      top: 144px;
+    }
+
+    .gis-hud-panel {
+      top: 144px;
+      right: 12px;
+      width: auto;
+    }
+
+    .gis-hud-tr :deep(.el-radio-group) {
+      flex-shrink: 0;
+    }
+
+    .gis-provider-select,
+    .gis-style-select,
+    .gis-scene-select,
+    .gis-name-input {
+      flex: 1;
+      width: auto;
+      min-width: 0;
+    }
+
+    .gis-engine-tag {
+      display: none;
+    }
+
+    .gis-coach {
+      top: 144px;
+      right: 52px;
+      left: 64px;
+      max-width: none;
+      transform: none;
+    }
+
+    .gis-hud-status {
+      right: 72px;
+      bottom: 40px;
+      left: 12px;
+      max-width: none;
+    }
+
+    .gis-map :deep(.ol-zoom) {
+      inset: 144px 12px auto auto;
+    }
+  }
 </style>
