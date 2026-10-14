@@ -64,15 +64,37 @@
       destroy-on-close
       class="flow-designer-dialog"
     >
-      <ElForm :model="design" label-width="90px">
-        <ElFormItem :label="$t('pages.system.flowDef.flowCode')" required>
+      <ElForm ref="designFormRef" :model="design" label-width="90px">
+        <ElFormItem
+          :label="$t('pages.system.flowDef.flowCode')"
+          prop="flowCode"
+          :rules="[
+            {
+              required: true,
+              whitespace: true,
+              message: t('pages.system.flowDef.flowCodeRequired'),
+              trigger: 'blur'
+            }
+          ]"
+        >
           <ElInput
             v-model="design.flowCode"
             :placeholder="$t('pages.system.flowDef.flowCodePlaceholder')"
             style="width: 260px"
           />
         </ElFormItem>
-        <ElFormItem :label="$t('pages.system.flowDef.flowName')" required>
+        <ElFormItem
+          :label="$t('pages.system.flowDef.flowName')"
+          prop="flowName"
+          :rules="[
+            {
+              required: true,
+              whitespace: true,
+              message: t('pages.system.flowDef.flowNameRequired'),
+              trigger: 'blur'
+            }
+          ]"
+        >
           <ElInput
             v-model="design.flowName"
             :placeholder="$t('pages.system.flowDef.flowNamePlaceholder')"
@@ -293,6 +315,7 @@
 </template>
 
 <script setup lang="ts">
+  import type { FormInstance } from 'element-plus'
   import { ref, reactive, onMounted, onDeactivated } from 'vue'
   import { ElMessageBox } from 'element-plus'
   import { useI18n } from 'vue-i18n'
@@ -545,8 +568,10 @@
     return c.value ? `${c.type}:${c.value}` : ''
   }
 
+  const designFormRef = ref<FormInstance>()
   const submitDesign = async (): Promise<void> => {
-    if (!design.flowCode || !design.flowName) {
+    // 字段下方红字 + 顶部一句汇总（UX-108）
+    if (!(await designFormRef.value?.validate().catch(() => false))) {
       ElMessage.warning(t('pages.system.flowDef.msgCodeNameRequired'))
       return
     }
@@ -628,6 +653,13 @@
 
   .node-input {
     width: 150px;
+  }
+
+  /* 蓝底任务节点上的链接按钮垫浅底，保证红色「删除」等文字对比度（UX-108） */
+  .flow-node--task :deep(.el-button.is-link) {
+    padding: 2px 6px;
+    background: var(--el-bg-color);
+    border-radius: 4px;
   }
 
   .cand-row {
