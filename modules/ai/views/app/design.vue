@@ -1,38 +1,41 @@
 <template>
   <div class="art-full-height design">
     <div class="toolbar">
-      <ElButton @click="$router.back()">返回</ElButton>
+      <ElButton @click="$router.back()">{{ $t('aiAppDesign.back') }}</ElButton>
       <h3
-        >{{ app?.name || '应用编排' }} <ElTag size="small">{{ app?.appType }}</ElTag></h3
+        >{{ app?.name || $t('aiAppDesign.titleFallback') }}
+        <ElTag size="small">{{ app?.appType }}</ElTag></h3
       >
-      <ElButton @click="exportDsl">导出 DSL</ElButton>
-      <ElButton @click="share">分享</ElButton>
-      <ElButton :loading="running" @click="run">运行</ElButton>
-      <ElButton type="primary" :loading="saving" @click="save">保存</ElButton>
+      <ElButton @click="exportDsl">{{ $t('aiAppDesign.exportDsl') }}</ElButton>
+      <ElButton @click="share">{{ $t('aiAppDesign.share') }}</ElButton>
+      <ElButton :loading="running" @click="run">{{ $t('aiAppDesign.run') }}</ElButton>
+      <ElButton type="primary" :loading="saving" @click="save">{{
+        $t('aiAppDesign.save')
+      }}</ElButton>
     </div>
 
     <!-- 对话助手形态 -->
     <div v-if="app?.appType === 'chat'" class="chat-mode">
-      <ElForm :model="chat" label-width="120px" class="chat-form">
-        <ElFormItem label="温度"
+      <ElForm :model="chat" label-width="auto" class="chat-form">
+        <ElFormItem :label="$t('aiAppDesign.temperature')"
           ><ElSlider v-model="chat.temperature" :min="0" :max="2" :step="0.1" show-input
         /></ElFormItem>
-        <ElFormItem label="最大令牌"
+        <ElFormItem :label="$t('aiAppDesign.maxTokens')"
           ><ElInputNumber v-model="chat.maxTokens" :min="1" :max="128000"
         /></ElFormItem>
         <ElFormItem label="Top P"
           ><ElSlider v-model="chat.topP" :min="0" :max="1" :step="0.05" show-input
         /></ElFormItem>
-        <ElFormItem label="频率惩罚"
+        <ElFormItem :label="$t('aiAppDesign.frequencyPenalty')"
           ><ElSlider v-model="chat.frequencyPenalty" :min="-2" :max="2" :step="0.1" show-input
         /></ElFormItem>
-        <ElFormItem label="系统提示词"
+        <ElFormItem :label="$t('aiAppDesign.systemPrompt')"
           ><ElInput v-model="chat.systemPrompt" type="textarea" :rows="4"
         /></ElFormItem>
-        <ElFormItem label="开场白"
+        <ElFormItem :label="$t('aiAppDesign.greeting')"
           ><ElInput v-model="chat.greeting" type="textarea" :rows="2"
         /></ElFormItem>
-        <ElFormItem label="预设问题">
+        <ElFormItem :label="$t('aiAppDesign.presets')">
           <ElSelect
             v-model="chat.presets"
             multiple
@@ -82,16 +85,18 @@
       </div>
       <aside class="props">
         <template v-if="selected">
-          <h4>节点属性</h4>
-          <ElForm label-width="72px" size="small">
-            <ElFormItem label="类型"
+          <h4>{{ $t('aiAppDesign.nodeProps') }}</h4>
+          <ElForm label-width="auto" size="small">
+            <ElFormItem :label="$t('aiAppDesign.type')"
               ><ElInput :model-value="selected.data.type" disabled
             /></ElFormItem>
-            <ElFormItem label="名称"><ElInput v-model="selected.data.label" /></ElFormItem>
-            <ElFormItem v-if="hasField('prompt')" label="提示词">
+            <ElFormItem :label="$t('aiAppDesign.name')"
+              ><ElInput v-model="selected.data.label"
+            /></ElFormItem>
+            <ElFormItem v-if="hasField('prompt')" :label="$t('aiAppDesign.prompt')">
               <ElInput v-model="selected.data.prompt" type="textarea" :rows="4" />
             </ElFormItem>
-            <ElFormItem v-if="hasField('text')" label="模板">
+            <ElFormItem v-if="hasField('text')" :label="$t('aiAppDesign.template')">
               <ElInput v-model="selected.data.text" type="textarea" :rows="4" />
             </ElFormItem>
             <ElFormItem v-if="hasField('url')" label="URL">
@@ -102,25 +107,33 @@
                 v-model="selected.data.sql"
                 type="textarea"
                 :rows="4"
-                placeholder="仅 SELECT"
+                :placeholder="$t('aiAppDesign.sqlPlaceholder')"
               />
             </ElFormItem>
-            <ElFormItem v-if="hasField('knowledgeId')" label="知识库">
-              <ElInput v-model="selected.data.knowledgeId" placeholder="知识库 ID" />
+            <ElFormItem v-if="hasField('knowledgeId')" :label="$t('aiAppDesign.knowledge')">
+              <ElInput
+                v-model="selected.data.knowledgeId"
+                :placeholder="$t('aiAppDesign.knowledgeIdPlaceholder')"
+              />
             </ElFormItem>
-            <ElFormItem v-if="hasField('expression')" label="表达式">
+            <ElFormItem v-if="hasField('expression')" :label="$t('aiAppDesign.expression')">
               <ElInput v-model="selected.data.expression" />
             </ElFormItem>
-            <ElFormItem v-if="hasField('value')" label="期望值">
+            <ElFormItem v-if="hasField('value')" :label="$t('aiAppDesign.expected')">
               <ElInput v-model="selected.data.value" />
             </ElFormItem>
-            <ElFormItem label="输出变量">
-              <ElInput v-model="selected.data.outputVar" placeholder="可选" />
+            <ElFormItem :label="$t('aiAppDesign.outputVar')">
+              <ElInput
+                v-model="selected.data.outputVar"
+                :placeholder="$t('aiAppDesign.optional')"
+              />
             </ElFormItem>
-            <ElButton type="danger" link @click="removeSelected">删除节点</ElButton>
+            <ElButton type="danger" link @click="removeSelected">{{
+              $t('aiAppDesign.removeNode')
+            }}</ElButton>
           </ElForm>
         </template>
-        <ElEmpty v-else description="选中节点编辑属性" :image-size="64" />
+        <ElEmpty v-else :description="$t('aiAppDesign.selectNodeHint')" :image-size="64" />
       </aside>
     </div>
 
@@ -129,6 +142,7 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import { computed, onMounted, reactive, ref } from 'vue'
   import { useRoute } from 'vue-router'
   import { ElMessage } from 'element-plus'
@@ -146,6 +160,7 @@
   import { fetchAiAppDetail, fetchRunAiApp, fetchSaveAiAppDsl, fetchShareAiApp } from '../../api'
 
   defineOptions({ name: 'AiAppDesign' })
+  const { t } = useI18n()
 
   const route = useRoute()
   const appId = computed(() => route.params.id as string)
@@ -166,46 +181,46 @@
     presets: [] as string[]
   })
 
-  const groups = [
+  const groups = computed(() => [
     {
-      name: '流程控制',
+      name: t('aiAppDesign.groupFlow'),
       nodes: [
-        { type: 'start', label: '开始' },
-        { type: 'end', label: '结束' },
-        { type: 'switch', label: '分支' }
+        { type: 'start', label: t('aiAppDesign.nodeStart') },
+        { type: 'end', label: t('aiAppDesign.nodeEnd') },
+        { type: 'switch', label: t('aiAppDesign.nodeSwitch') }
       ]
     },
     {
-      name: 'AI 能力',
+      name: t('aiAppDesign.groupAi'),
       nodes: [
-        { type: 'llm', label: '大模型' },
-        { type: 'rag', label: '知识库' },
-        { type: 'question', label: '问题分类' },
-        { type: 'extract', label: '信息提取' },
-        { type: 'optimize', label: '内容优化' }
+        { type: 'llm', label: t('aiAppDesign.nodeLlm') },
+        { type: 'rag', label: t('aiAppDesign.knowledge') },
+        { type: 'question', label: t('aiAppDesign.nodeQuestion') },
+        { type: 'extract', label: t('aiAppDesign.nodeExtract') },
+        { type: 'optimize', label: t('aiAppDesign.nodeOptimize') }
       ]
     },
     {
-      name: '数据处理',
+      name: t('aiAppDesign.groupData'),
       nodes: [
-        { type: 'db', label: '数据库' },
-        { type: 'code', label: '代码' },
-        { type: 'text', label: '文本' },
-        { type: 'updateVar', label: '变量更新' }
+        { type: 'db', label: t('aiAppDesign.nodeDb') },
+        { type: 'code', label: t('aiAppDesign.nodeCode') },
+        { type: 'text', label: t('aiAppDesign.nodeText') },
+        { type: 'updateVar', label: t('aiAppDesign.nodeUpdateVar') }
       ]
     },
     {
-      name: '工具集成',
+      name: t('aiAppDesign.groupTools'),
       nodes: [
         { type: 'http', label: 'HTTP' },
         { type: 'mcp', label: 'MCP' }
       ]
     },
     {
-      name: '通知推送',
-      nodes: [{ type: 'notice', label: '通知' }]
+      name: t('aiAppDesign.groupNotice'),
+      nodes: [{ type: 'notice', label: t('aiAppDesign.nodeNotice') }]
     }
-  ]
+  ])
 
   const fieldMap: Record<string, string[]> = {
     llm: ['prompt'],
@@ -219,8 +234,8 @@
   }
 
   function hasField(f: string) {
-    const t = selected.value?.data?.type
-    return !!t && (fieldMap[t] || []).includes(f)
+    const type = selected.value?.data?.type
+    return !!type && (fieldMap[type] || []).includes(f)
   }
 
   function onDragStart(e: DragEvent, n: { type: string; label: string }) {
@@ -236,7 +251,7 @@
       (n.type === 'start' || n.type === 'end') &&
       nodes.value.some((x) => x.data?.type === n.type)
     ) {
-      ElMessage.warning(`画布上已经有「${n.label}」节点，一个流程只能有一个`)
+      ElMessage.warning(t('aiAppDesign.onlyOne', { label: n.label }))
       return
     }
     const bounds = (e.currentTarget as HTMLElement).getBoundingClientRect()
@@ -285,8 +300,8 @@
     const label = (n: Node) => n.data?.label || n.data?.type || n.id
     const starts = nodes.value.filter((n) => n.data?.type === 'start')
     const ends = nodes.value.filter((n) => n.data?.type === 'end')
-    if (starts.length !== 1) return `流程需要恰好 1 个「开始」节点，当前 ${starts.length} 个`
-    if (ends.length !== 1) return `流程需要恰好 1 个「结束」节点，当前 ${ends.length} 个`
+    if (starts.length !== 1) return t('aiAppDesign.needOneStart', { n: starts.length })
+    if (ends.length !== 1) return t('aiAppDesign.needOneEnd', { n: ends.length })
     const noIn = nodes.value.filter(
       (n) => n.data?.type !== 'start' && !edges.value.some((e) => e.target === n.id)
     )
@@ -294,8 +309,7 @@
       (n) => n.data?.type !== 'end' && !edges.value.some((e) => e.source === n.id)
     )
     const loose = [...new Set([...noIn, ...noOut])]
-    if (loose.length)
-      return `这些节点还没连好：${loose.map(label).join('、')}。请连线或删除后再保存`
+    if (loose.length) return t('aiAppDesign.looseNodes', { names: loose.map(label).join(', ') })
     return null
   }
 
@@ -357,7 +371,7 @@
         markerEnd: MarkerType.ArrowClosed
       }))
     } catch {
-      ElMessage.warning('DSL 解析失败，已忽略')
+      ElMessage.warning(t('aiAppDesign.dslParseFailed'))
     }
   }
 
@@ -378,9 +392,9 @@
     saving.value = true
     try {
       await fetchSaveAiAppDsl({ id: appId.value, dsl: buildDsl(), dslJson: buildDsl() })
-      ElMessage.success('已保存')
+      ElMessage.success(t('aiAppDesign.saved'))
     } catch (e: any) {
-      ElMessage.error(e?.message || '保存失败')
+      ElMessage.error(e?.message || t('aiAppDesign.saveFailed'))
     } finally {
       saving.value = false
     }
@@ -389,7 +403,7 @@
   async function run() {
     running.value = true
     try {
-      const r = await fetchRunAiApp({ id: appId.value, input: '你好' })
+      const r = await fetchRunAiApp({ id: appId.value, input: t('aiAppDesign.runInput') })
       runResult.value = typeof r === 'string' ? r : JSON.stringify(r, null, 2)
     } finally {
       running.value = false
@@ -398,7 +412,7 @@
 
   async function share() {
     const r = await fetchShareAiApp({ id: appId.value, enable: true })
-    ElMessage.success(`分享链接已生成：${r?.url || r?.shareToken || ''}`)
+    ElMessage.success(t('aiAppDesign.shareOk', { url: r?.url || r?.shareToken || '' }))
   }
 
   function exportDsl() {

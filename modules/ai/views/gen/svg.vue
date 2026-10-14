@@ -1,5 +1,5 @@
 <template>
-  <GenLayout type="svg" title="SVG 生成" />
+  <GenLayout type="svg" :title="$t('aiGen.pageSvg')" />
 </template>
 <script setup lang="ts">
   import GenLayout from './GenLayout.vue'
