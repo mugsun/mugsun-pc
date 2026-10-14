@@ -17,16 +17,28 @@ export default async function warmup(config: FullConfig) {
   })
   const started = Date.now()
   // 直接调用每个路由的懒加载函数：等 import() 完成，dev server 就把页面及其依赖都编译好了
-  const n: number = await page.evaluate(async () => {
+  const { n, failed } = await page.evaluate(async () => {
     const router = (document.querySelector('#app') as any).__vue_app__.config.globalProperties
       .$router
     const loaders = router
       .getRoutes()
       .map((r: any) => r.components?.default)
       .filter((c: any) => typeof c === 'function')
-    for (const load of loaders) await Promise.resolve(load()).catch(() => {})
-    return loaders.length
+    const failed: string[] = []
+    for (const r of router.getRoutes()) {
+      const load = r.components?.default
+      if (typeof load !== 'function') continue
+      await Promise.resolve(load()).catch((e: Error) =>
+        failed.push(`${r.path}: ${String(e?.message || e).split('\n')[0]}`)
+      )
+    }
+    return { n: loaders.length, failed }
   })
+  if (failed.length) {
+    await browser.close()
+    // 单个路由组件加载失败（编译错误/模块缺失）直接判失败，不吞掉
+    throw new Error(`[warmup] ${failed.length} 个路由组件加载失败：\n  ${failed.join('\n  ')}`)
+  }
   console.log(
     `[warmup] ${n} 个路由组件预热完成，用时 ${Math.round((Date.now() - started) / 1000)}s`
   )

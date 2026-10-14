@@ -18,17 +18,35 @@ import {
   SKIP_ROUTE
 } from './support/session'
 
-/** 覆盖下限：低于这个数说明有弹窗/提示没被打开或没被查到，直接判失败（基线 2026-10-14：77 / 140） */
-const MIN_DIALOGS = 77
-const MIN_ERRORS = 140
+/**
+ * 覆盖下限：低于这个数说明有弹窗/提示没被打开或没被查到，直接判失败。
+ * 基线见下方 BASELINE，下限比基线少留 2 的余量（吸收偶发抖动）；
+ * 删掉/新增弹窗时，必须在同一个 PR 里同步改 BASELINE。
+ */
+const BASELINE = { dialogs: 78, errors: 140 } // 2026-10-14，中英文一致
+const MIN_DIALOGS = BASELINE.dialogs - 2
+const MIN_ERRORS = BASELINE.errors - 2
 
 /** 等动画/过渡结束（自检注入了 transition:none，这里兜底等 Web Animations 与两帧渲染） */
 async function settle(page: Page) {
-  await page.waitForFunction(
-    () => document.getAnimations().every((a) => a.playState !== 'running'),
-    null,
-    { timeout: 5_000 }
-  )
+  // 只等有限动画：无限循环的（转圈 loading、骨架屏、呼吸徽标）永远不会停，排除；
+  // 超时也不判失败，直接继续（后面还有 DOM 稳定判断兜底）
+  await page
+    .waitForFunction(
+      () =>
+        document.getAnimations().every((a) => {
+          if (a.playState !== 'running') return true
+          const t = a.effect?.getComputedTiming()
+          if (t && t.iterations === Infinity) return true
+          const el = (a.effect as KeyframeEffect | null)?.target as Element | null
+          return !!el?.closest?.(
+            '.is-loading, .el-loading-mask, .el-skeleton, .el-badge, [class*="loading"], [class*="skeleton"], [class*="pulse"], [class*="breath"]'
+          )
+        }),
+      null,
+      { timeout: 5_000 }
+    )
+    .catch(() => {})
   // 再等 DOM 稳定：连续 10 帧里表单项、校验提示的文字和位置都不变
   // （同一个弹窗先新增后编辑时，上一次的红字会在打开后被清掉，不能在清的过程中量）
   await page.evaluate(
@@ -208,6 +226,7 @@ test('表单校验提示与标签完整可见', async ({ page, uiLang, uiTheme }
     dialogs: 0,
     errors: 0,
     broken: [] as string[],
+    opened: [] as string[],
     navigations: [] as string[]
   }
   page.on('pageerror', () => {})
@@ -290,6 +309,7 @@ test('表单校验提示与标签完整可见', async ({ page, uiLang, uiTheme }
           }
           await settle(page)
           stats.dialogs++
+          stats.opened.push(`${path} ${kind}「${label}」`)
           stats.errors += await checkForms(page, `${path} ${kind}弹窗`, problems)
           await closeDialogs(page)
         }
@@ -301,13 +321,23 @@ test('表单校验提示与标签完整可见', async ({ page, uiLang, uiTheme }
 
   const summary = `路由 ${targets.length}，访问 ${stats.pages}，页面表单 ${stats.pageForms}，弹窗 ${stats.dialogs}，校验提示 ${stats.errors}，问题 ${problems.length}`
   await info.attach('summary', {
-    body: [summary, ...problems, '', '无法检查：', ...stats.broken].join('\n'),
+    body: [
+      summary,
+      ...problems,
+      '',
+      '无法检查：',
+      ...stats.broken,
+      '',
+      '打开过的弹窗：',
+      ...stats.opened
+    ].join('\n'),
     contentType: 'text/plain'
   })
   console.log(`[${info.project.name}] ${summary}`)
   for (const p of problems) console.log(`  ✗ ${p}`)
   for (const b of stats.broken) console.log(`  ⚠ 无法检查 ${b}`)
   for (const n of stats.navigations) console.log(`  → 跳转页面 ${n}`)
+  for (const o of stats.opened) console.log(`  ◻ 弹窗 ${o}`)
   expect
     .soft(stats.broken, `${info.project.name}: ${stats.broken.length} 个页面/弹窗无法检查`)
     .toEqual([])

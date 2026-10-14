@@ -57,8 +57,10 @@ for (const app of apps) {
       .first()
       .waitFor({ timeout: 10_000 })
       .catch(() => {})
-    await page.waitForFunction(() =>
-      document.getAnimations().every((a) => a.playState !== 'running')
+    await page.waitForFunction(
+      () => document.getAnimations().every((a) => a.playState !== 'running'),
+      null,
+      { timeout: 10_000 }
     )
     await page.waitForLoadState('networkidle')
     // 先报控制台错误（根因），再检查抽屉/弹窗是否真的打开

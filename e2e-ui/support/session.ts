@@ -25,7 +25,8 @@ const ROW = {
   status: 1,
   createTime: '2026-01-01 00:00:00'
 }
-export const ADD_RE = /^\s*(\+\s*)?(新增|添加|新建|创建|Add|New|Create)/i
+/** 「入库图层」是 /gis/layer 的新增按钮（英文 Add layer），中文不以新增类动词开头，单独列出 */
+export const ADD_RE = /^\s*(\+\s*)?(新增|添加|新建|创建|入库图层|Add|New|Create)/i
 export const SUBMIT_RE = /^\s*(保存|提交|确定|确认|Save|Submit|OK|Confirm)\s*$/i
 /**
  * 文字像「新增」但不打开弹窗的按钮（页内加一行 / 新开会话 / 进入设计器）。
