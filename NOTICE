@@ -39,3 +39,11 @@ Mugsun-pc
 - ts-md5 2.0.1（https://github.com/cotag/ts-md5），Copyright (c) 2020 Place Technology。
 - deepmerge 4.3.1（https://github.com/TehShrike/deepmerge），
   Copyright (c) 2012 James Halliday, Josh Duff, and other contributors。
+
+----------------------------------------------------------------------
+字体（src/assets/brand/fonts/mugsun-saira-600.woff2）
+
+- Saira — Copyright 2020 The Saira Project Authors（https://github.com/Omnibus-Type/Saira），
+  SIL Open Font License 1.1（OFL-1.1），完整条款见 src/assets/brand/fonts/LICENSE-Saira-OFL.txt。
+  本仓库使用的是修改版：固定为 wght 600 / wdth 100 实例，并子集化为仅含 M、U、G、S、N 五个字形，
+  用于渲染字标「MUGSUN」。按 OFL 保留字体名条款，修改版内部字体名改为「Mugsun Saira」。

@@ -68,7 +68,7 @@
     font-family: 'Mugsun Saira';
     font-style: normal;
     font-weight: 600;
-    src: url('@/assets/brand/fonts/saira-600-mugsun.woff2') format('woff2');
+    src: url('@/assets/brand/fonts/mugsun-saira-600.woff2') format('woff2');
     font-display: swap;
     unicode-range: U+0047, U+004D, U+004E, U+0053, U+0055;
   }

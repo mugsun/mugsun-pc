@@ -22,7 +22,7 @@
             :size="28"
             wordmark
             :word-size="16"
-            :word-color="isDark ? '#DDDDDD' : 'var(--art-gray-800)'"
+            :word-color="getBrandTextColor"
             :on-dark="isDark"
           />
         </div>
@@ -240,8 +240,15 @@
     fastEnterMinWidth: headerBarFastEnterMinWidth
   } = useHeaderBar()
 
-  const { menuOpen, systemThemeColor, showSettingGuide, menuType, isDark, tabStyle } =
-    storeToRefs(settingStore)
+  const {
+    menuOpen,
+    systemThemeColor,
+    showSettingGuide,
+    menuType,
+    isDark,
+    tabStyle,
+    getBrandTextColor
+  } = storeToRefs(settingStore)
 
   const { language } = storeToRefs(userStore)
   const { menuList } = storeToRefs(menuStore)

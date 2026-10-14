@@ -7,7 +7,7 @@
         :size="40"
         wordmark
         :word-size="22"
-        :word-color="isDark ? '#DDDDDD' : 'var(--art-gray-800)'"
+        :word-color="getBrandTextColor"
         :on-dark="isDark"
       />
     </div>
@@ -41,7 +41,7 @@
     hideContent?: boolean
   }>()
 
-  const { isDark } = storeToRefs(useSettingStore())
+  const { isDark, getBrandTextColor } = storeToRefs(useSettingStore())
 </script>
 
 <style lang="scss" scoped>
