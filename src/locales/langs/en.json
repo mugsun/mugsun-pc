@@ -426,6 +426,10 @@
       "lab": "Examples"
     }
   },
+  "formRules": {
+    "requiredInput": "Please enter {label}",
+    "requiredSelect": "Please select {label}"
+  },
   "table": {
     "form": {
       "reset": "Reset",

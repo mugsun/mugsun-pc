@@ -426,6 +426,10 @@
       "lab": "示例"
     }
   },
+  "formRules": {
+    "requiredInput": "请输入{label}",
+    "requiredSelect": "请选择{label}"
+  },
   "table": {
     "form": {
       "reset": "重置",
