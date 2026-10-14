@@ -612,6 +612,54 @@
     cursor: not-allowed;
   }
 
+  /* 旋转精调提示（无文字）：滑块外圈 2px #5D87FF 光环 + 轨道淡刻度；进入即显示，退出 150ms 淡出 */
+  .captcha-box .cp-rotate-track {
+    overflow: visible;
+  }
+
+  .captcha-box .cp-rotate-track .cp-fill {
+    border-radius: inherit;
+  }
+
+  .captcha-box .cp-rotate-track::before {
+    position: absolute;
+    inset: 8px 0;
+    pointer-events: none;
+    content: '';
+    background: repeating-linear-gradient(
+      to right,
+      var(--el-text-color-placeholder) 0 1px,
+      transparent 1px 12px
+    );
+    opacity: 0;
+    transition: opacity 150ms ease-out;
+  }
+
+  .captcha-box .cp-rotate-track .cp-handle {
+    box-shadow:
+      0 0 0 2px transparent,
+      0 0 0 4px rgb(93 135 255 / 0%);
+    transition: box-shadow 150ms ease-out;
+  }
+
+  .captcha-box .cp-rotate-track.is-fine::before {
+    opacity: 0.35;
+    transition: none;
+  }
+
+  .captcha-box .cp-rotate-track.is-fine .cp-handle {
+    box-shadow:
+      0 0 0 2px var(--el-bg-color),
+      0 0 0 4px #5d87ff;
+    transition: none;
+  }
+
+  html.dark .captcha-box .cp-rotate-track.is-fine .cp-handle {
+    box-shadow:
+      0 0 0 2px var(--el-bg-color),
+      0 0 0 4px rgb(93 135 255 / 70%);
+  }
+
   /* 2–4 字（含 4 字成语）在 260px 下也不换行：标签与提示图 / 字块都可收缩 */
   .captcha-box .cp-click-hint {
     display: flex;
@@ -827,7 +875,9 @@
     .captcha-box.is-shaking .cp-rotate-stage,
     .captcha-box.is-shaking .cp-track,
     .captcha-box .cp-skeleton,
-    .captcha-box .cp-tile {
+    .captcha-box .cp-tile,
+    .captcha-box .cp-rotate-track::before,
+    .captcha-box .cp-rotate-track .cp-handle {
       transition: none;
       animation: none;
     }

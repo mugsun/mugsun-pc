@@ -24,8 +24,8 @@
     </div>
     <div
       ref="trackRef"
-      class="cp-track"
-      :class="{ 'is-active': dragging || offset > 0 }"
+      class="cp-track cp-rotate-track"
+      :class="{ 'is-active': dragging || offset > 0, ...rotateFineHintClass(dragging, fine) }"
       :style="{ width: `${width}px` }"
     >
       <div class="cp-fill" :style="{ width: `${handleLeft + 22}px` }" />
@@ -70,6 +70,7 @@
     normalizeAngle,
     rotateAngleToTravel,
     RotateFineTuner,
+    rotateFineHintClass,
     rotateKeyboardStep,
     rotateTravelToAngle,
     toDisplay,
@@ -101,6 +102,8 @@
   let lastX = 0
   let lastT = 0
   const tuner = new RotateFineTuner()
+  /** 精调提示状态（光环 + 刻度），跟随 tuner.fine */
+  const fine = ref(false)
   let keySteps = 0
 
   const bgW = computed(() => props.challenge.bgWidth || 320)
@@ -142,16 +145,18 @@
     lastX = e.clientX
     lastT = performance.now()
     tuner.reset()
+    fine.value = false
     // 轨迹 x = 逻辑行程（布局像素），首末位移 = answer 换算行程
     recorder = new TrackRecorder(Date.now())
   }
   function onPointerMove(e: PointerEvent) {
     if (!dragging.value || !recorder) return
     e.preventDefault()
-    // 低速精调：慢速移动时逻辑位移按 0.5 倍累加；track.x 记逻辑位置（v0.6.2 §3）
+    // 低速精调：持续慢 200ms 且已拖 ≥24px 后逻辑位移按 0.6 倍累加；track.x 记逻辑位置（v0.6.2 §3）
     const now = performance.now()
     const dx = (e.clientX - lastX) / scale
     offset.value = clampOffset(offset.value + tuner.delta(dx, now - lastT, now), props.width)
+    fine.value = tuner.fine
     lastX = e.clientX
     lastT = now
     angle.value = rotateTravelToAngle(offset.value, props.width)
@@ -160,6 +165,8 @@
   function onPointerUp(e: PointerEvent) {
     if (!dragging.value || !recorder) return
     dragging.value = false
+    tuner.reset()
+    fine.value = false
     const el = e.currentTarget as HTMLElement
     if (el.hasPointerCapture?.(e.pointerId)) el.releasePointerCapture(e.pointerId)
     recorder.sample(offset.value, (e.clientY - startY) / scale, Date.now(), true)

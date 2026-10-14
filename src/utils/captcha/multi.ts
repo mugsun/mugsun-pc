@@ -159,19 +159,26 @@ export function clickTargetCount(c: { count?: unknown }): number {
 }
 
 /**
- * ROTATE 低速精调（契约 v0.6.2 §3，手感 v0.6.3 调整）：
- * 指针持续低速（< ROTATE_SLOW_SPEED px/ms）满 ROTATE_FINE_ENTER_MS 才进入 0.5 倍，
- * 一旦超过阈值立即退出。前端不知道目标位置，用「持续慢」近似「接近目标在对准」，
- * 避免普通拖动末尾自然减速被折半而「拖不到位」。
+ * ROTATE 低速精调（契约 v0.6.2 §3，手感按体验设计官规格调整）：
+ * - 指针持续低速（< ROTATE_SLOW_SPEED px/ms）满 ROTATE_FINE_ENTER_MS 才进入精调；
+ * - 本次拖动累计指针位移不到 ROTATE_FINE_MIN_TRAVEL 时不进入（刚按下就慢拖不折扣）；
+ * - 精调期间逻辑位移 × ROTATE_SLOW_GAIN，一旦超过阈值立即恢复原速；
+ * - track.x 仍记逻辑位置（由调用方用返回值累加）。
+ * 前端不知道目标位置，用「持续慢」近似「接近目标在对准」。
  */
 export const ROTATE_SLOW_SPEED = 0.08
-export const ROTATE_SLOW_GAIN = 0.5
-export const ROTATE_FINE_ENTER_MS = 150
+export const ROTATE_SLOW_GAIN = 0.6
+export const ROTATE_FINE_ENTER_MS = 200
+export const ROTATE_FINE_MIN_TRAVEL = 24
+/** 退出精调后提示（光环 / 刻度）淡出时长，与 CaptchaDialog 样式一致 */
+export const ROTATE_FINE_HINT_FADE_MS = 150
 
 export class RotateFineTuner {
   private slowSince: number | null = null
+  /** 本次拖动累计指针位移（布局像素，绝对值） */
+  private travel = 0
 
-  /** 是否处于精调 */
+  /** 是否处于精调（提示状态即跟随此值：进入即显示，退出后 150ms 淡出） */
   fine = false
 
   /**
@@ -182,10 +189,12 @@ export class RotateFineTuner {
    */
   delta(dx: number, dt: number, now: number): number {
     if (!Number.isFinite(dx)) return 0
+    this.travel += Math.abs(dx)
     const speed = dt > 0 ? Math.abs(dx) / dt : Math.abs(dx) > 0 ? Infinity : 0
     if (speed < ROTATE_SLOW_SPEED) {
       if (this.slowSince === null) this.slowSince = now
-      this.fine = now - this.slowSince >= ROTATE_FINE_ENTER_MS
+      this.fine =
+        this.travel >= ROTATE_FINE_MIN_TRAVEL && now - this.slowSince >= ROTATE_FINE_ENTER_MS
     } else {
       this.slowSince = null
       this.fine = false
@@ -195,8 +204,14 @@ export class RotateFineTuner {
 
   reset(): void {
     this.slowSince = null
+    this.travel = 0
     this.fine = false
   }
+}
+
+/** 精调提示类名：拖动中且处于精调时为 is-fine；其余时间无类名（样式负责 150ms 淡出） */
+export function rotateFineHintClass(dragging: boolean, fine: boolean): Record<string, boolean> {
+  return { 'is-fine': dragging && fine }
 }
 
 /** 读屏用提示：WORD_CLICK 拼成整词（「一帆风顺」），ICON_CLICK 用空格分隔名称 */

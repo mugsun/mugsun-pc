@@ -214,29 +214,59 @@ describe('WORD_CLICK 词语 / 成语（点击数由响应决定）', () => {
 })
 
 describe('v0.6.2 旋转低速精调 / 40016', () => {
-  it('持续低速 ≥150ms 才进入 0.5 倍，加速立即退出', () => {
+  it('精调参数：0.08 px/ms、200ms、0.6 倍、24px', () => {
+    expect(m.ROTATE_SLOW_SPEED).toBe(0.08)
+    expect(m.ROTATE_FINE_ENTER_MS).toBe(200)
+    expect(m.ROTATE_SLOW_GAIN).toBe(0.6)
+    expect(m.ROTATE_FINE_MIN_TRAVEL).toBe(24)
+  })
+  it('已拖 ≥24px 后持续低速满 200ms 才进入 0.6 倍', () => {
     const f = new m.RotateFineTuner()
-    expect(f.delta(10, 16, 0)).toBe(10) // 快
-    expect(f.delta(1, 16, 16)).toBe(1) // 刚变慢：不折半
-    expect(f.delta(1, 16, 100)).toBe(1) // 慢 84ms
-    expect(f.delta(1, 16, 170)).toBe(0.5) // 慢 ≥150ms：精调
+    expect(f.delta(30, 16, 0)).toBe(30) // 快拖 30px
+    expect(f.delta(1, 16, 16)).toBe(1) // 刚变慢
+    expect(f.delta(1, 16, 150)).toBe(1) // 慢 134ms：未满 200ms
+    expect(f.delta(1, 16, 215)).toBe(1) // 慢 199ms
+    expect(f.fine).toBe(false)
+    expect(f.delta(1, 16, 216)).toBeCloseTo(0.6) // 慢满 200ms：精调
     expect(f.fine).toBe(true)
-    expect(f.delta(1, 20, 300)).toBe(0.5)
-    expect(f.delta(8, 16, 316)).toBe(8) // 加速：立即退出
+  })
+  it('累计不到 24px 时一直慢拖也不进入精调', () => {
+    const f = new m.RotateFineTuner()
+    let t = 0
+    // 每 20ms 1px（0.05 px/ms），20 次累计 20px，历时 400ms
+    for (let i = 0; i < 20; i++, t += 20) expect(f.delta(1, 20, t)).toBe(1)
+    expect(f.fine).toBe(false)
+    // 再慢拖到累计 ≥24px：慢已持续 >200ms，立即进入
+    for (let i = 0; i < 3; i++, t += 20) f.delta(1, 20, t)
+    expect(f.fine).toBe(false)
+    expect(f.delta(1, 20, t)).toBeCloseTo(0.6) // 累计 24px
+    expect(f.fine).toBe(true)
+  })
+  it('一加速立即恢复原速，重新计时；reset 清零累计位移', () => {
+    const f = new m.RotateFineTuner()
+    f.delta(30, 16, 0)
+    f.delta(1, 16, 16)
+    expect(f.delta(1, 16, 300)).toBeCloseTo(0.6)
+    expect(f.delta(8, 16, 316)).toBe(8) // 0.5 px/ms：退出
     expect(f.fine).toBe(false)
     expect(f.delta(1, 16, 332)).toBe(1) // 重新计时
     f.reset()
-    expect(f.delta(0, 0, 400)).toBe(0)
-    expect(f.delta(5, 0, 400)).toBe(5)
+    f.delta(1, 16, 400)
+    expect(f.delta(1, 16, 700)).toBe(1) // reset 后累计仅 2px
+    expect(f.delta(0, 0, 800)).toBe(0)
+    expect(f.delta(5, 0, 800)).toBe(5)
   })
-  it('阈值 0.08 px/ms：0.1 px/ms 的近距离慢拖不折半，真正微调（≤0.0625）才折半', () => {
-    expect(m.ROTATE_SLOW_SPEED).toBe(0.08)
+  it('提示状态：拖动中精调为 is-fine，退出或松手即去掉（样式 150ms 淡出）', () => {
     const f = new m.RotateFineTuner()
-    for (let t = 0; t <= 400; t += 20) expect(f.delta(2, 20, t)).toBe(2)
-    expect(f.fine).toBe(false)
-    const g = new m.RotateFineTuner()
-    g.delta(1, 16, 0)
-    expect(g.delta(1, 16, 160)).toBe(0.5)
+    expect(m.rotateFineHintClass(true, f.fine)).toEqual({ 'is-fine': false })
+    f.delta(30, 16, 0)
+    f.delta(1, 16, 16)
+    f.delta(1, 16, 216)
+    expect(m.rotateFineHintClass(true, f.fine)).toEqual({ 'is-fine': true })
+    f.delta(8, 16, 232)
+    expect(m.rotateFineHintClass(true, f.fine)).toEqual({ 'is-fine': false })
+    expect(m.rotateFineHintClass(false, true)).toEqual({ 'is-fine': false })
+    expect(m.ROTATE_FINE_HINT_FADE_MS).toBe(150)
   })
   it('40016 归类为 unavailable，不自动重试', () => {
     expect(m.classifyCaptchaError(new HttpError('暂不可用', 40016))).toMatchObject({
