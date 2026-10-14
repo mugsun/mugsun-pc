@@ -72,8 +72,29 @@ describe('AI 助手抽屉', () => {
 
   it('抽屉内容按需加载，不进插件 chunk', () => {
     const host = src('modules/ai/views/shared/AiDrawerHost.vue')
-    expect(host).toMatch(/defineAsyncComponent\(\s*\(\)\s*=>\s*import\(/)
+    expect(host).toMatch(/import\(\s*['"]\.\.\/assistant\/drawer\/AiDrawerChat\.vue['"]\s*\)/)
+    expect(host).toMatch(/defineAsyncComponent\(\{/)
     expect(host).not.toMatch(/import\s+\w+\s+from\s+['"][^'"]*AiDrawerChat/)
     expect(host).not.toMatch(/from\s+['"]vue-element-plus-x/)
+  })
+
+  it('抽屉 chunk 加载有 loading / 出错重试 / 超时', () => {
+    const host = src('modules/ai/views/shared/AiDrawerHost.vue')
+    expect(host).toMatch(/loadingComponent:\s*ChatLoading/)
+    expect(host).toMatch(/errorComponent:\s*ChatError/)
+    expect(host).toMatch(/timeout:\s*CHAT_LOAD_TIMEOUT/)
+    // 重试必须换新的异步组件并加查询参数：浏览器会缓存失败的动态 import
+    expect(host).toMatch(/retry=\$\{attempt\}/)
+    for (const lang of ['zh', 'en']) {
+      const d = JSON.parse(src(`src/locales/langs/${lang}.json`)).aiDrawer
+      expect(d.loading, lang).toBeTruthy()
+      expect(d.loadFailed, lang).toBeTruthy()
+    }
+  })
+
+  it('消息的重试、复制按钮可以 Tab 到', () => {
+    const chat = src('modules/ai/views/assistant/drawer/AiDrawerChat.vue')
+    expect(chat).not.toMatch(/<ElButton[^>]*tabindex="-1"/)
+    expect(chat).not.toMatch(/#5d87ff/i)
   })
 })

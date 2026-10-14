@@ -31,3 +31,11 @@ Mugsun-pc
 - vue-element-plus-x（https://github.com/HeJiaYue520/Element-Plus-X），MIT License。
   用于 AI 助手抽屉（Conversations、BubbleList、XSender、Welcome、Prompts），按需异步加载。
   版权归原作者所有，完整许可条款见上述仓库的 LICENSE 文件。
+
+  vue-element-plus-x 的运行时依赖（随 AI 助手抽屉 chunk 一起打包），均为 MIT License：
+- radash 12.1.1（https://github.com/rayepps/radash），Copyright (c) 2022 radash。
+- virtua 0.49.3（https://github.com/inokawa/virtua），Copyright (c) 2022 inokawa。
+- x-sender 1.4.6（https://github.com/WengJianFei/x-sender），Copyright (c) 2025-present, jianfv。
+- ts-md5 2.0.1（https://github.com/cotag/ts-md5），Copyright (c) 2020 Place Technology。
+- deepmerge 4.3.1（https://github.com/TehShrike/deepmerge），
+  Copyright (c) 2012 James Halliday, Josh Duff, and other contributors。

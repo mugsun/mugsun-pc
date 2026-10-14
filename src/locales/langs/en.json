@@ -4374,6 +4374,8 @@
     "ex2": "Error trend over the last 7 days",
     "ex3": "Generate CRUD for a user table",
     "ex4": "How do I use this page?",
-    "resize": "Drag to resize"
+    "resize": "Drag to resize",
+    "loading": "Loading AI assistant…",
+    "loadFailed": "The AI assistant failed to load. Check your network and try again."
   }
 }

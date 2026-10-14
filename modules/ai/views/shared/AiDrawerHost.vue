@@ -33,8 +33,10 @@
           :aria-valuemax="DRAWER_WIDTH_MAX"
           @pointerdown.prevent="startResize"
         />
-        <AiDrawerChat
+        <component
+          :is="AiDrawerChat"
           v-if="visible"
+          :key="chatKey"
           :fullscreen="isFullscreen"
           :can-fullscreen="!forcedFullscreen"
           @toggle-fullscreen="fullscreen = !fullscreen"
@@ -46,7 +48,10 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, defineAsyncComponent, ref } from 'vue'
+  import { computed, defineAsyncComponent, defineComponent, h, ref, shallowRef } from 'vue'
+  import { ElButton, ElIcon } from 'element-plus'
+  import { Loading, WarningFilled } from '@element-plus/icons-vue'
+  import { useI18n } from 'vue-i18n'
   import { useEventListener, useStorage, useWindowSize } from '@vueuse/core'
   import {
     DRAWER_FULLSCREEN_BREAKPOINT,
@@ -57,8 +62,71 @@
     clampDrawerWidth
   } from '../assistant/drawer/drawerLayout'
 
-  /** 抽屉内容（含 vue-element-plus-x）按需加载：首屏和插件 chunk 都不带它 */
-  const AiDrawerChat = defineAsyncComponent(() => import('../assistant/drawer/AiDrawerChat.vue'))
+  /** chunk 加载超过这个时间按失败处理，显示「重试」 */
+  const CHAT_LOAD_TIMEOUT = 15_000
+
+  const ChatLoading = defineComponent({
+    name: 'AiDrawerChatLoading',
+    setup() {
+      const { t } = useI18n()
+      return () =>
+        h('div', { class: 'ai-drawer__state', role: 'status', 'aria-live': 'polite' }, [
+          h(ElIcon, { class: 'is-loading', size: 20 }, () => h(Loading)),
+          h('span', t('aiDrawer.loading'))
+        ])
+    }
+  })
+
+  const ChatError = defineComponent({
+    name: 'AiDrawerChatError',
+    setup() {
+      const { t } = useI18n()
+      return () =>
+        h('div', { class: 'ai-drawer__state is-error', role: 'alert' }, [
+          h(ElIcon, { size: 20 }, () => h(WarningFilled)),
+          h('span', t('aiDrawer.loadFailed')),
+          h(ElButton, { type: 'primary', size: 'small', onClick: reloadChat }, () =>
+            t('aiDrawer.retry')
+          )
+        ])
+    }
+  })
+
+  /**
+   * 抽屉内容（含 vue-element-plus-x）按需加载：首屏和插件 chunk 都不带它。
+   * 浏览器会缓存失败的动态 import（同一 URL 再 import 直接复用失败结果），
+   * 所以重试时从错误信息里取出 chunk URL，加查询参数重新请求；取不到 URL 时退回原 import。
+   */
+  let failedUrl: string | null = null
+  let attempt = 0
+  function loadChat(): Promise<any> {
+    const url = failedUrl
+    const p = url
+      ? import(/* @vite-ignore */ `${url}${url.includes('?') ? '&' : '?'}retry=${attempt}`)
+      : import('../assistant/drawer/AiDrawerChat.vue')
+    return p.catch((e: unknown) => {
+      const m = String((e as Error)?.message ?? e).match(/(https?:\/\/\S+)/)
+      if (m) failedUrl = m[1].replace(/[?&]retry=\d+$/, '')
+      throw e
+    })
+  }
+
+  function createChat() {
+    return defineAsyncComponent({
+      loader: loadChat,
+      loadingComponent: ChatLoading,
+      errorComponent: ChatError,
+      delay: 200,
+      timeout: CHAT_LOAD_TIMEOUT
+    })
+  }
+  const AiDrawerChat = shallowRef(createChat())
+  const chatKey = ref(0)
+  function reloadChat() {
+    attempt++
+    AiDrawerChat.value = createChat()
+    chatKey.value++
+  }
 
   defineProps<{ visible: boolean }>()
   defineEmits<{ 'update:visible': [boolean]; open: [] }>()
@@ -155,6 +223,23 @@
     content: '';
     background: var(--el-color-primary);
     opacity: 0;
+  }
+
+  .ai-drawer__state {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    height: 100%;
+    padding: 24px;
+    font-size: 14px;
+    color: var(--el-text-color-secondary);
+    text-align: center;
+  }
+
+  .ai-drawer__state.is-error :deep(.el-icon) {
+    color: var(--el-color-danger);
   }
 
   .ai-drawer__resizer:hover::after,

@@ -153,7 +153,7 @@
               :closable="false"
               show-icon
             >
-              <ElButton size="small" tabindex="-1" :disabled="streaming" @click="retry(item.raw)">
+              <ElButton size="small" :disabled="streaming" @click="retry(item.raw)">
                 {{ $t('aiDrawer.retry') }}
               </ElButton>
             </ElAlert>
@@ -186,7 +186,6 @@
                 text
                 size="small"
                 class="ai-dmsg-actions__btn"
-                tabindex="-1"
                 :aria-label="$t('aiDrawer.copy')"
                 @click="copyMessage(item)"
               >
@@ -1045,17 +1044,20 @@
     align-items: center;
     height: 24px;
     margin-top: 4px;
-    visibility: hidden;
+    opacity: 0;
   }
 
-  /* AI 消息的操作行常显（带模型名），属于消息本身；用户消息的复制按钮悬停才出现 */
+  /*
+   * AI 消息的操作行常显（带模型名），属于消息本身；用户消息的复制按钮悬停或 Tab 到时出现。
+   * 用 opacity 而不是 visibility 隐藏：visibility:hidden 的按钮 Tab 不到。
+   */
   .ai-dmsg-actions:not(.is-user) {
-    visibility: visible;
+    opacity: 1;
   }
 
   .ai-dchat__list :deep(.elx-bubble:hover) .ai-dmsg-actions,
   .ai-dmsg-actions:focus-within {
-    visibility: visible;
+    opacity: 1;
   }
 
   .ai-dmsg-actions__btn.el-button {
@@ -1259,8 +1261,10 @@
     gap: 8px;
     align-items: center;
     justify-content: space-between;
-    height: 36px;
-    padding: 0 8px 4px;
+
+    /* 底部/左侧留够 4px 以上：chip 的 focus-visible 描边（2px + 偏移 2px）不能贴住卡片边框 */
+    height: 40px;
+    padding: 0 10px 8px;
   }
 
   .ai-dchat__chips {
@@ -1292,8 +1296,9 @@
   .ai-dchat__chip:focus-visible,
   .ai-dchat__send:focus-visible,
   .ai-dchat__icon-btn.el-button:focus-visible,
-  .ai-dchat__title:focus-visible {
-    outline: 2px solid #5d87ff !important;
+  .ai-dchat__title:focus-visible,
+  .ai-dmsg-actions__btn.el-button:focus-visible {
+    outline: 2px solid var(--el-color-primary) !important;
     outline-offset: 2px;
   }
 
