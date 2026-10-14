@@ -66,17 +66,12 @@
 <script setup lang="ts">
   import { computed, onMounted, ref } from 'vue'
   import { useRouter } from 'vue-router'
-  import { useI18n } from 'vue-i18n'
   import { fetchGisStatus, type GisStatus } from '@/api/gis'
-  import { hasPerm } from '@/utils/permission'
+  import { useGisProviderEntry } from './useGisProviderEntry'
   import {
-    basemapDocUrl,
     basemapErrorKind,
     basemapStateOf,
     isCanceled,
-    GIS_PROVIDER_PERM,
-    GIS_PROVIDER_ROUTE,
-    GIS_PROVIDER_ROUTE_NAME,
     type GisBasemapErrorKind,
     type GisBasemapState
   } from '@/gis/basemapState'
@@ -97,7 +92,6 @@
   }>()
 
   const router = useRouter()
-  const { locale } = useI18n()
 
   const selfState = ref<GisBasemapState>('loading')
   const selfErrorKind = ref<GisBasemapErrorKind>('network')
@@ -115,18 +109,7 @@
   const checking = computed(() => (props.controlled ? !!props.loading : selfChecking.value))
   let hadError = false
 
-  const docUrl = computed(() => basemapDocUrl(String(locale.value)))
-
-  /** 配置入口：有底图查看权限、且菜单里确实注册了底图路由 */
-  const canConfigure = computed(() => {
-    if (!hasPerm(GIS_PROVIDER_PERM)) {
-      return false
-    }
-    if (router.hasRoute(GIS_PROVIDER_ROUTE_NAME)) {
-      return true
-    }
-    return router.resolve(GIS_PROVIDER_ROUTE).matched.some((r) => r.path === GIS_PROVIDER_ROUTE)
-  })
+  const { canConfigure, docUrl, goConfigure } = useGisProviderEntry()
 
   async function check() {
     selfChecking.value = true
@@ -157,10 +140,6 @@
     if (hadError && state.value === 'ready') {
       router.go(0)
     }
-  }
-
-  function goConfigure() {
-    router.push(GIS_PROVIDER_ROUTE)
   }
 
   onMounted(() => {

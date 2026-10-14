@@ -12,6 +12,7 @@
     </div>
     <template v-else>
       <div class="gis-map-shell">
+        <GisTileErrorHint :host="viewMode === '3d' ? cesiumHost : olHost" :top="64" />
         <div v-show="viewMode === '2d'" ref="olHost" class="gis-map"></div>
         <div v-show="viewMode === '3d'" ref="cesiumHost" class="gis-map">
           <div v-if="loading3d" class="gis-loading">{{ $t('pages.gis.load3d') }}</div>
@@ -477,6 +478,7 @@
 
 <script setup lang="ts">
   import GisBasemapEmpty from '../../components/GisBasemapEmpty.vue'
+  import GisTileErrorHint from '../../components/GisTileErrorHint.vue'
   import { basemapStateOf, isCanceled } from '@/gis/basemapState'
   import {
     computed,

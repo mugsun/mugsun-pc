@@ -2,6 +2,7 @@
   <div class="gis-lab-play">
     <div class="gis-lab-stage">
       <GisBasemapEmpty />
+      <GisTileErrorHint :host="is3d ? cesiumHost : mapHost" />
       <div v-show="!is3d" ref="mapHost" class="gis-map"></div>
       <div v-if="is3d" ref="cesiumHost" class="gis-map">
         <div v-if="loading3d" class="gis-loading">{{ $t('pages.gis.load3d') }}</div>
@@ -135,6 +136,7 @@
 
 <script setup lang="ts">
   import GisBasemapEmpty from '../../components/GisBasemapEmpty.vue'
+  import GisTileErrorHint from '../../components/GisTileErrorHint.vue'
   import {
     computed,
     nextTick,

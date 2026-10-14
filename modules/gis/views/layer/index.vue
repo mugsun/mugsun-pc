@@ -3,6 +3,7 @@
   <div class="gis-shell art-full-height">
     <div class="gis-map-shell gis-map-shell--panel">
       <GisBasemapEmpty />
+      <GisTileErrorHint :host="mapHost" />
       <div ref="mapHost" class="gis-map"></div>
       <aside class="gis-hud gis-hud-panel">
         <div class="gis-hud-head">
@@ -147,6 +148,7 @@
 
 <script setup lang="ts">
   import GisBasemapEmpty from '../../components/GisBasemapEmpty.vue'
+  import GisTileErrorHint from '../../components/GisTileErrorHint.vue'
   import GisCoach from '../../components/GisCoach.vue'
   import {
     computed,
