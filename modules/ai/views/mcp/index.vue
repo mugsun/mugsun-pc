@@ -71,8 +71,8 @@
       :title="form.id ? '编辑 MCP' : '添加 MCP'"
       width="640px"
     >
-      <ElForm :model="form" label-width="110px">
-        <ElFormItem label="协议名称" required>
+      <ElForm ref="formRef" :model="form" label-width="110px">
+        <ElFormItem label="协议名称" prop="name" :rules="requiredRule('协议名称')">
           <ElInput
             v-model="form.name"
             maxlength="64"
@@ -80,7 +80,7 @@
             placeholder="用来在列表里区分"
           />
         </ElFormItem>
-        <ElFormItem label="协议描述" required>
+        <ElFormItem label="协议描述" prop="description" :rules="requiredRule('协议描述')">
           <ElInput
             v-model="form.description"
             maxlength="255"
@@ -88,7 +88,7 @@
             placeholder="用来说明这个工具做什么"
           />
         </ElFormItem>
-        <ElFormItem label="分类" required>
+        <ElFormItem label="分类" prop="category" :rules="requiredRule('分类', true)">
           <ElSelect v-model="form.category" style="width: 100%">
             <ElOption label="地图工具" value="map" /><ElOption label="聊天工具" value="chat" />
             <ElOption label="浏览器工具" value="browser" /><ElOption
@@ -98,17 +98,27 @@
             <ElOption label="自定义" value="custom" />
           </ElSelect>
         </ElFormItem>
-        <ElFormItem label="协议类型" required>
+        <ElFormItem label="协议类型" prop="protocolType" :rules="requiredRule('协议类型', true)">
           <ElRadioGroup v-model="form.protocolType">
             <ElRadio label="SSE">SSE</ElRadio>
             <ElRadio label="STDIO">STDIO</ElRadio>
             <ElRadio label="HTTP">Streamable HTTP</ElRadio>
           </ElRadioGroup>
         </ElFormItem>
-        <ElFormItem v-if="form.protocolType !== 'STDIO'" label="SSE 地址" required>
+        <ElFormItem
+          v-if="form.protocolType !== 'STDIO'"
+          label="SSE 地址"
+          prop="sseUrl"
+          :rules="requiredRule('SSE 地址')"
+        >
           <ElInput v-model="form.sseUrl" placeholder="https://" />
         </ElFormItem>
-        <ElFormItem v-if="form.protocolType === 'STDIO'" label="命令行" required>
+        <ElFormItem
+          v-if="form.protocolType === 'STDIO'"
+          label="命令行"
+          prop="command"
+          :rules="requiredRule('命令行')"
+        >
           <ElInput v-model="form.command" type="textarea" :rows="3" />
         </ElFormItem>
         <ElFormItem label="API Key"
@@ -152,8 +162,10 @@
   </div>
 </template>
 <script setup lang="ts">
+  import type { FormInstance } from 'element-plus'
+  import { requiredRule } from '../shared/formRules'
   import type { ColumnOption } from '@/types/component'
-  import { h, onMounted, reactive, ref } from 'vue'
+  import { h, onMounted, reactive, ref, nextTick } from 'vue'
   import { ElButton, ElMessage, ElMessageBox, ElSwitch } from 'element-plus'
   import {
     fetchAiMcpPage,
@@ -167,6 +179,7 @@
     fetchToggleAiMcpServer
   } from '../../api'
   defineOptions({ name: 'AiMcp' })
+  const formRef = ref<FormInstance>()
   const category = ref('')
   const keyword = ref('')
   const searched = ref(false)
@@ -253,6 +266,7 @@
     )
     parsedTools.value = []
     visible.value = true
+    nextTick(() => formRef.value?.clearValidate())
   }
   async function parseTools() {
     if (!form.id) {
@@ -276,6 +290,7 @@
     }
   }
   async function save() {
+    if (!(await formRef.value?.validate().catch(() => false))) return
     saving.value = true
     try {
       const payload: Record<string, any> = {

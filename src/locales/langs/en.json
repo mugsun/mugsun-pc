@@ -1218,6 +1218,7 @@
           "name": "Please enter name",
           "code": "2 to 12 digits, for example 11 or 1101"
         },
+        "codeRequired": "Enter the region code",
         "codeRule": "Use 2 to 12 digits for the region code",
         "levels": {
           "province": "Province",
