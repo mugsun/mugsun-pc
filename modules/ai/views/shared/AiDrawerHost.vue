@@ -48,7 +48,16 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, defineAsyncComponent, defineComponent, h, ref, shallowRef } from 'vue'
+  import {
+    computed,
+    defineAsyncComponent,
+    defineComponent,
+    h,
+    onBeforeUnmount,
+    onMounted,
+    ref,
+    shallowRef
+  } from 'vue'
   import { ElButton, ElIcon } from 'element-plus'
   import { Loading, WarningFilled } from '@element-plus/icons-vue'
   import { useI18n } from 'vue-i18n'
@@ -71,6 +80,8 @@
 
   /** chunk 加载超过这个时间按失败处理，显示「重试」 */
   const CHAT_LOAD_TIMEOUT = 15_000
+  /** 内容区加载提示的延迟（顶栏不延迟） */
+  const SPINNER_DELAY = 200
 
   defineProps<{ visible: boolean }>()
   const emit = defineEmits<{ 'update:visible': [boolean]; open: [] }>()
@@ -84,6 +95,13 @@
     name: 'AiDrawerChatLoading',
     setup() {
       const { t } = useI18n()
+      // 顶栏立即显示；内容区的加载提示延迟出现，加载很快时不闪
+      const showSpinner = ref(false)
+      let timer: ReturnType<typeof setTimeout> | undefined
+      onMounted(() => {
+        timer = setTimeout(() => (showSpinner.value = true), SPINNER_DELAY)
+      })
+      onBeforeUnmount(() => clearTimeout(timer))
       return () =>
         h('div', { class: 'ai-drawer__shell' }, [
           h(AiDrawerHeaderShell, {
@@ -91,10 +109,12 @@
             canFullscreen: !forcedFullscreen.value,
             onClose: closeDrawer
           }),
-          h('div', { class: 'ai-drawer__state', role: 'status', 'aria-live': 'polite' }, [
-            h(ElIcon, { class: 'is-loading', size: 20 }, () => h(Loading)),
-            h('span', t('aiDrawer.loading'))
-          ])
+          showSpinner.value
+            ? h('div', { class: 'ai-drawer__state', role: 'status', 'aria-live': 'polite' }, [
+                h(ElIcon, { class: 'is-loading', size: 20 }, () => h(Loading)),
+                h('span', t('aiDrawer.loading'))
+              ])
+            : h('div', { class: 'ai-drawer__state' })
         ])
     }
   })
@@ -161,7 +181,7 @@
       loader: loadChat,
       loadingComponent: ChatLoading,
       errorComponent: ChatError,
-      // 不延迟：一打开就显示顶栏（含关闭按钮），避免出现无法关闭的空白抽屉
+      // 不延迟：一打开就显示顶栏（含关闭按钮）；内容区提示另有 SPINNER_DELAY
       delay: 0,
       timeout: CHAT_LOAD_TIMEOUT
     })

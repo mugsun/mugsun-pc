@@ -74,10 +74,25 @@ for (const mode of ['loading', 'error'] as const) {
     await expect(page.locator('.ai-dshell__hd')).toHaveAttribute('data-state', mode, {
       timeout: 30_000
     })
+    if (mode === 'loading') {
+      // 顶栏先出，加载提示 200ms 后才出现
+      await expect(page.locator('.ai-drawer__state[role="status"]')).toBeVisible()
+    }
     const hd = await page.locator('.ai-dshell__hd').boundingBox()
     expect(hd?.height).toBe(48)
     if (mode === 'error') {
       await expect(page.locator('.ai-drawer__state.is-error .el-button')).toHaveCount(1)
+    }
+    if (uiTheme === 'light') {
+      // 键盘聚焦关闭按钮：有 2px 描边
+      await close.focus()
+      await page.keyboard.press('Shift+Tab')
+      await page.keyboard.press('Tab')
+      const o = await close.evaluate((e) => {
+        const cs = getComputedStyle(e)
+        return `${cs.outlineStyle} ${cs.outlineWidth}`
+      })
+      expect(o).toBe('solid 2px')
     }
     await close.click()
     await expect(page.locator('.ai-dshell__hd')).toBeHidden()

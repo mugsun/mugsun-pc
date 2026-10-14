@@ -106,6 +106,10 @@ describe('AI 助手抽屉', () => {
     expect(host).toMatch(/state: 'error'/)
     // 不延迟显示 loading，避免打开后一段时间没有关闭按钮
     expect(host).toMatch(/delay:\s*0/)
+    // 内容区加载提示延迟 200ms 出现，顶栏不延迟
+    expect(host).toMatch(/const SPINNER_DELAY = 200/)
+    expect(host).toMatch(/setTimeout\(\(\) => \(showSpinner\.value = true\), SPINNER_DELAY\)/)
+    expect(host).toMatch(/onBeforeUnmount\(\(\) => clearTimeout\(timer\)\)/)
     // 正式顶栏与状态顶栏用同一个关闭按钮组件
     expect(chat).toMatch(/<AiDrawerCloseButton @close=/)
     expect(shell).toMatch(/<AiDrawerCloseButton @close=/)
@@ -137,6 +141,10 @@ describe('AI 助手抽屉', () => {
     expect(btn).toMatch(/background: var\(--el-fill-color-light\)/)
     expect(btn).toMatch(/outline: 2px solid var\(--el-color-primary\)/)
     expect(btn).toMatch(/outline-offset: 2px/)
+    // 窄屏 44px 按钮描边内偏，避免被 48px 顶栏裁掉
+    expect(btn).toMatch(
+      /width <= 640px\)[\s\S]*\.ai-dclose\.el-button:focus-visible\s*\{\s*outline-offset: -2px/
+    )
     // 暗色沿用同一组变量：样式里不写死颜色值
     const css = btn.slice(btn.indexOf('<style')).replace(/\/\*[\s\S]*?\*\//g, '')
     expect(css).not.toMatch(/#[0-9a-f]{3,6}\b|rgb\(/i)

@@ -51,5 +51,10 @@
       width: 44px;
       height: 44px;
     }
+
+    /* 44px 按钮放在 48px 顶栏里，外偏描边会被抽屉 overflow 裁掉，窄屏改为内偏 */
+    .ai-dclose.el-button:focus-visible {
+      outline-offset: -2px;
+    }
   }
 </style>
