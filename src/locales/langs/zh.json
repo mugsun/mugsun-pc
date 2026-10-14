@@ -89,10 +89,9 @@
       "logout": "退出登录"
     },
     "guide": {
-      "title": "点击这里查看",
+      "text": "点击这里查看{theme}、{menu}等更多配置",
       "theme": "主题风格",
       "menu": "开启顶栏菜单",
-      "description": "等更多配置",
       "gotIt": "知道了"
     }
   },

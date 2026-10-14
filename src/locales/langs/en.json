@@ -89,10 +89,9 @@
       "logout": "Log out"
     },
     "guide": {
-      "title": "Click here to view",
-      "theme": "Theme style",
-      "menu": "Open top menu",
-      "description": "More configurations",
+      "text": "Click here to view {theme}, {menu} and more settings",
+      "theme": "theme style",
+      "menu": "top menu",
       "gotIt": "Got it"
     }
   },
@@ -2884,7 +2883,7 @@
       },
       "genModeling": {
         "tabModeling": "Rule Modeling",
-        "nlPlaceholder": "Describe in one sentence (English table/field names + Chinese meanings + types). E.g.: product_comment 商品评论; content 评论内容 text, score 评分 integer, author 作者 text, comment_time 评论时间 date",
+        "nlPlaceholder": "Describe in one sentence (English table/field names + meanings + types). E.g.: product_comment product comments; content comment content text, score rating integer, author author text, comment_time comment time date",
         "genDraft": "Generate Draft",
         "startBlank": "New model",
         "tableRequired": "Enter a table name starting with a lowercase letter. Use only lowercase letters, digits, or underscores.",
