@@ -3686,7 +3686,7 @@
       "labIngestRun": "Parse",
       "labIngestPlaceholder": "Paste WKT / CSV / KML / GPX, or GeoJSON",
       "labIngestFailed": "Parse failed — check the format and coordinate order (lon before lat)",
-      "analyzeHint": "Analysis runs JTS server-side: normalize to WGS84 GeoJSON, compute in Web Mercator metres. Save results to the layer catalog and overlay by layerId.",
+      "analyzeHint": "Analysis runs JTS server-side: normalize to WGS84 GeoJSON, metric results are geodesic on the WGS84 ellipsoid (PostGIS geography when available, otherwise GeographicLib). Save results to the layer catalog and overlay by layerId.",
       "analyzeOp": "Operation",
       "analyzeSource": "Source layer",
       "analyzeOther": "Other layer",
