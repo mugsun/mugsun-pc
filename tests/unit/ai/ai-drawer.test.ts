@@ -83,8 +83,10 @@ describe('AI 助手抽屉', () => {
     expect(host).toMatch(/loadingComponent:\s*ChatLoading/)
     expect(host).toMatch(/errorComponent:\s*ChatError/)
     expect(host).toMatch(/timeout:\s*CHAT_LOAD_TIMEOUT/)
-    // 重试必须换新的异步组件并加查询参数：浏览器会缓存失败的动态 import
-    expect(host).toMatch(/retry=\$\{attempt\}/)
+    // 重试必须换新的异步组件并加查询参数（浏览器会缓存失败的动态 import），兜底整页刷新
+    expect(host).toMatch(/buildRetryUrl\(failedUrl, attempt\)/)
+    expect(host).toMatch(/decideOnFailure\(.*\) === 'reload'/)
+    expect(host).toMatch(/window\.location\.reload\(\)/)
     for (const lang of ['zh', 'en']) {
       const d = JSON.parse(src(`src/locales/langs/${lang}.json`)).aiDrawer
       expect(d.loading, lang).toBeTruthy()

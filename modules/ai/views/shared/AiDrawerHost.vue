@@ -61,6 +61,12 @@
     DRAWER_WIDTH_STORAGE_KEY,
     clampDrawerWidth
   } from '../assistant/drawer/drawerLayout'
+  import {
+    buildRetryUrl,
+    decideOnFailure,
+    parseFailedUrl,
+    stripRetryParam
+  } from '../assistant/drawer/chatChunkRetry'
 
   /** chunk 加载超过这个时间按失败处理，显示「重试」 */
   const CHAT_LOAD_TIMEOUT = 15_000
@@ -95,20 +101,40 @@
   /**
    * 抽屉内容（含 vue-element-plus-x）按需加载：首屏和插件 chunk 都不带它。
    * 浏览器会缓存失败的动态 import（同一 URL 再 import 直接复用失败结果），
-   * 所以重试时从错误信息里取出 chunk URL，加查询参数重新请求；取不到 URL 时退回原 import。
+   * 所以入口 .js 失败时从报错里取出 URL，重试时加 ?retry=N 重新请求。
+   * CSS、嵌套 chunk 失败或连续失败 MAX_CHAT_LOAD_FAILURES 次，改用整页刷新兜底，
+   * 同一会话只自动刷新一次（见 chatChunkRetry.ts）。
    */
   let failedUrl: string | null = null
   let attempt = 0
+  let consecutiveFailures = 0
+  function sessionStore(): Storage | null {
+    try {
+      return window.sessionStorage
+    } catch {
+      return null
+    }
+  }
   function loadChat(): Promise<any> {
-    const url = failedUrl
-    const p = url
-      ? import(/* @vite-ignore */ `${url}${url.includes('?') ? '&' : '?'}retry=${attempt}`)
+    const retryUrl = buildRetryUrl(failedUrl, attempt)
+    const p = retryUrl
+      ? import(/* @vite-ignore */ retryUrl)
       : import('../assistant/drawer/AiDrawerChat.vue')
-    return p.catch((e: unknown) => {
-      const m = String((e as Error)?.message ?? e).match(/(https?:\/\/\S+)/)
-      if (m) failedUrl = m[1].replace(/[?&]retry=\d+$/, '')
-      throw e
-    })
+    return p.then(
+      (mod) => {
+        consecutiveFailures = 0
+        return mod
+      },
+      (e: unknown) => {
+        consecutiveFailures++
+        const url = parseFailedUrl(e)
+        if (url) failedUrl = stripRetryParam(url)
+        if (decideOnFailure(url, consecutiveFailures, sessionStore()) === 'reload') {
+          window.location.reload()
+        }
+        throw e
+      }
+    )
   }
 
   function createChat() {
