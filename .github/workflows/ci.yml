@@ -92,6 +92,10 @@ jobs:
       - name: Install Playwright Chromium
         run: pnpm exec playwright install --with-deps chromium
 
+      # 中文字形与本地一致，否则中文 label/提示用回退字体，宽度不同会影响溢出判断
+      - name: Install CJK fonts
+        run: sudo apt-get update -q && sudo apt-get install -y -q fonts-noto-cjk
+
       # 空提交所有新增/编辑弹窗与表单页，中/英 × 亮/暗 四组合断言校验提示与标签完整可见
       - name: UI self-check (form layout + standalone apps)
         run: pnpm test:ui-check

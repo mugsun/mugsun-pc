@@ -15,6 +15,7 @@ const combos = [
 
 export default defineConfig({
   testDir: './e2e-ui',
+  globalSetup: './e2e-ui/warmup.ts',
   timeout: 20 * 60_000,
   expect: { timeout: 5_000 },
   retries: 0,

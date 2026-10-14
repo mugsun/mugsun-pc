@@ -51,7 +51,16 @@ for (const app of apps) {
     const trigger = host.locator('button:visible, [role="button"]:visible').first()
     await expect(trigger, `#${app.id} 内没有可点击的入口`).toBeVisible()
     await trigger.click()
-    await page.waitForTimeout(1_000)
+    // 等抽屉/弹窗出现并且过渡结束；没出现也继续，先断言控制台错误（通常就是根因）
+    await page
+      .locator('.el-drawer:visible, .el-dialog:visible')
+      .first()
+      .waitFor({ timeout: 10_000 })
+      .catch(() => {})
+    await page.waitForFunction(() =>
+      document.getAnimations().every((a) => a.playState !== 'running')
+    )
+    await page.waitForLoadState('networkidle')
     // 先报控制台错误（根因），再检查抽屉/弹窗是否真的打开
     expect(errors, `${app.file} 打开后有报错`).toEqual([])
     await expect(page.locator('.el-drawer:visible, .el-dialog:visible').first()).toBeVisible()
