@@ -58,23 +58,32 @@ export function fetchRegister(data: {
   password: string
   nickname?: string
   phone?: string
-  captchaUuid: string
-  captchaCode: string
+  /** 旧数字码（config.type 非 SLIDER 时，过渡一个版本） */
+  captchaUuid?: string
+  captchaCode?: string
+  /** 滑块验证码一次性令牌（config.enabled && type=SLIDER） */
+  captchaToken?: string
 }) {
   return request.post<null>({ url: '/api/auth/register', data })
 }
 
 /** 短信登录：发送验证码（开发回显 code） */
-export function fetchSmsCode(phone: string) {
-  return request.post<{ code?: string }>({ url: '/api/auth/sms-code', data: { phone } })
+export function fetchSmsCode(phone: string, captchaToken?: string) {
+  return request.post<{ code?: string }>({
+    url: '/api/auth/sms-code',
+    data: captchaToken ? { phone, captchaToken } : { phone }
+  })
 }
 
 /** 短信登录：校验验证码换 token（图形验证码前置，与账号登录同口径） */
 export function fetchSmsLogin(data: {
   phone: string
   code: string
-  captchaUuid: string
-  captchaCode: string
+  /** 旧数字码（config.type 非 SLIDER 时，过渡一个版本） */
+  captchaUuid?: string
+  captchaCode?: string
+  /** 滑块验证码一次性令牌（config.enabled && type=SLIDER） */
+  captchaToken?: string
 }) {
   return request.post<Api.Auth.LoginResponse>({ url: '/api/auth/sms-login', data })
 }
@@ -95,8 +104,11 @@ export function fetchSocialSources() {
 export function fetchForgetCode(data: {
   username: string
   tenantId?: string
-  captchaUuid: string
-  captchaCode: string
+  /** 旧数字码（config.type 非 SLIDER 时，过渡一个版本） */
+  captchaUuid?: string
+  captchaCode?: string
+  /** 滑块验证码一次性令牌（config.enabled && type=SLIDER） */
+  captchaToken?: string
 }) {
   return request.post<null>({ url: '/api/auth/forget-code', data })
 }

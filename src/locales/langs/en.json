@@ -667,7 +667,7 @@
         "enterUsernameFirst": "Account is required. Enter the account, then request a verification code.",
         "resetRequired": "Account, verification code, and new password are required. Fill in all three, then reset again.",
         "enterCaptchaFirst": "Please enter the image captcha first",
-        "codeSent": "If the account exists and has a bound email, the verification code has been sent",
+        "codeSent": "If the account exists, a verification code has been sent to its email",
         "passwordMismatch": "The two passwords do not match",
         "passwordRule": "At least 8 characters, containing at least 3 of: uppercase, lowercase, digit, special character",
         "resetSuccess": "Password has been reset. Please log in with your new password"
@@ -698,6 +698,23 @@
         "changeTitle": "6. Changes to This Policy",
         "changeContent": "If this policy is updated, we will notify you via platform announcements. Continuing to use the platform after changes constitutes acceptance of the updated policy.",
         "backToRegister": "Back to Register"
+      },
+      "slider": {
+        "title": "Security Check",
+        "hint": "Drag the slider to complete the puzzle",
+        "loading": "Loading…",
+        "verifying": "Verifying…",
+        "success": "Verified",
+        "failed": "Please try again",
+        "expired": "The puzzle expired and was refreshed",
+        "limited": "Too many attempts. Try again in {s}s",
+        "networkError": "Failed to load. Check your network",
+        "retry": "Retry",
+        "refresh": "New puzzle",
+        "close": "Close",
+        "ariaLabel": "Puzzle slider. Drag or use arrow keys to move the piece",
+        "keyboardHint": "Use the Left/Right arrow keys to move the piece, hold Shift for larger steps, press Enter to submit",
+        "modeSwitched": "Input mode changed — please complete the puzzle again"
       }
     },
     "dashboard": {
@@ -1764,7 +1781,8 @@
         "deleteTitle": "Delete",
         "deleteConfirm": "Delete client \"{name}\"? Sign-in with this code will use the default policy",
         "deleteSelectedConfirm": "Delete the {count} selected clients? The built-in console and mobile clients cannot be deleted",
-        "deleteSuccess": "Deleted. These clients no longer appear in the list"
+        "deleteSuccess": "Deleted. These clients no longer appear in the list",
+        "captchaHint": "Only applies in legacy IMAGE captcha mode. In slider mode this switch cannot disable captcha; use the tenant switch (platform admin)."
       },
       "online": {
         "pageTitle": "Online Sessions",

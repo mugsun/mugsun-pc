@@ -70,6 +70,8 @@ declare namespace Api {
       tenantId?: string
       captchaUuid?: string
       captchaCode?: string
+      /** 滑块验证码一次性令牌 */
+      captchaToken?: string
     }
 
     /** 图形验证码 */

@@ -139,7 +139,10 @@
           <ElInput v-model="form.clientName" />
         </ElFormItem>
         <ElFormItem :label="$t('pages.system.client.colCaptcha')">
-          <ElSwitch v-model="form.captchaEnabled" :active-value="1" :inactive-value="0" />
+          <div class="flex flex-col gap-1">
+            <ElSwitch v-model="form.captchaEnabled" :active-value="1" :inactive-value="0" />
+            <span class="text-xs text-g-500">{{ $t('pages.system.client.captchaHint') }}</span>
+          </div>
         </ElFormItem>
         <ElFormItem :label="$t('pages.system.client.colMaxOnline')">
           <ElInputNumber v-model="form.maxOnline" :min="0" />
