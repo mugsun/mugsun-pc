@@ -164,7 +164,7 @@ export function clickTargetCount(c: { count?: unknown }): number {
  * 一旦超过阈值立即退出。前端不知道目标位置，用「持续慢」近似「接近目标在对准」，
  * 避免普通拖动末尾自然减速被折半而「拖不到位」。
  */
-export const ROTATE_SLOW_SPEED = 0.12
+export const ROTATE_SLOW_SPEED = 0.08
 export const ROTATE_SLOW_GAIN = 0.5
 export const ROTATE_FINE_ENTER_MS = 150
 

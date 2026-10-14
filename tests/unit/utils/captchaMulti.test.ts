@@ -229,6 +229,15 @@ describe('v0.6.2 旋转低速精调 / 40016', () => {
     expect(f.delta(0, 0, 400)).toBe(0)
     expect(f.delta(5, 0, 400)).toBe(5)
   })
+  it('阈值 0.08 px/ms：0.1 px/ms 的近距离慢拖不折半，真正微调（≤0.0625）才折半', () => {
+    expect(m.ROTATE_SLOW_SPEED).toBe(0.08)
+    const f = new m.RotateFineTuner()
+    for (let t = 0; t <= 400; t += 20) expect(f.delta(2, 20, t)).toBe(2)
+    expect(f.fine).toBe(false)
+    const g = new m.RotateFineTuner()
+    g.delta(1, 16, 0)
+    expect(g.delta(1, 16, 160)).toBe(0.5)
+  })
   it('40016 归类为 unavailable，不自动重试', () => {
     expect(m.classifyCaptchaError(new HttpError('暂不可用', 40016))).toMatchObject({
       kind: 'unavailable'
