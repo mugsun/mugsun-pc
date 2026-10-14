@@ -340,6 +340,7 @@
               <p v-if="queryHint" class="gis-query-hint" data-test="gis-query-hint">
                 {{ queryHint }}
               </p>
+              <GisSkippedHint :count="querySkipped" />
             </div>
             <ElTabPane
               :label="`${$t('pages.gis.wsSide3d')} (${tilesetRows.length})`"
@@ -491,6 +492,8 @@
     watch
   } from 'vue'
   import { useI18n } from 'vue-i18n'
+  import GisSkippedHint from '../../components/GisSkippedHint.vue'
+  import { skippedCount } from '@/gis/skippedHint'
   import { useRoute, useRouter, onBeforeRouteLeave } from 'vue-router'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import type Map from 'ol/Map'
@@ -1012,6 +1015,7 @@
   const queryMeters = ref(2000)
   const queryBusy = ref(false)
   const queryHint = ref('')
+  const querySkipped = ref(0)
   const QUERY_OVERLAY_ID = 'ov-spatial-query'
 
   /** 只有矢量 / 热力图层有几何可查，栅格与三维切片没有 */
@@ -1038,6 +1042,7 @@
       color: '#f97316'
     })
     syncOverlayRows()
+    querySkipped.value = skippedCount(result)
     queryHint.value = feats.length
       ? `${t('pages.gis.wsQueryHitCount')} ${result.count} · ${t('pages.gis.wsQueryEngine')} ${result.engine}` +
         (result.truncated ? ` · ${t('pages.gis.wsQueryTruncated')}` : '')
@@ -1050,6 +1055,7 @@
   /** 三个查询共用的前置检查与异常收口，避免各自重复 try/catch */
   const runQuery = async (fn: (layerId: string) => Promise<GisSpatialResult>): Promise<void> => {
     if (!queryLayerId.value) {
+      querySkipped.value = 0
       queryHint.value = t('pages.gis.wsQueryNoLayer')
       return
     }
@@ -1057,6 +1063,7 @@
     try {
       showQueryResult(await fn(queryLayerId.value))
     } catch (e) {
+      querySkipped.value = 0
       queryHint.value = e instanceof Error ? e.message : String(e)
     } finally {
       queryBusy.value = false

@@ -3242,6 +3242,8 @@
       "wsQueryEngine": "引擎",
       "wsQueryHitCount": "命中",
       "wsQueryTruncated": "结果已截断",
+      "skippedHint": "已跳过 {n} 个要素（极区或跨 180°）",
+      "skippedHintDoc": "查看限制说明",
       "wsQueryPickCenter": "在地图上点一下取圆心",
       "wsQueryNoLayer": "请先选择一个矢量图层",
       "wsQueryEmpty": "没有命中要素",

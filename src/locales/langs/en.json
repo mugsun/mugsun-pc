@@ -3242,6 +3242,8 @@
       "wsQueryEngine": "Engine",
       "wsQueryHitCount": "Hits",
       "wsQueryTruncated": "Result truncated",
+      "skippedHint": "Skipped {n} features (polar or crossing 180°)",
+      "skippedHintDoc": "See limits",
       "wsQueryPickCenter": "Click the map to set the center",
       "wsQueryNoLayer": "Pick a vector layer first",
       "wsQueryEmpty": "No features matched",
