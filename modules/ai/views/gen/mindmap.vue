@@ -1,5 +1,5 @@
 <template>
-  <GenLayout type="mindmap" title="思维导图" />
+  <GenLayout type="mindmap" :title="$t('aiGen.pageMindmap')" />
 </template>
 <script setup lang="ts">
   import GenLayout from './GenLayout.vue'

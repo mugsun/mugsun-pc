@@ -2,33 +2,35 @@
   <div class="art-full-height kb-detail">
     <AiNotFound
       v-if="notFound"
-      :what="$t('aiShared.whatKnowledge')"
+      :what="$t('aiKbDetail.what')"
       :id="kbId"
       back-path="/ai/knowledge"
-      :back-text="$t('aiShared.backToKnowledge')"
+      :back-text="$t('aiKbDetail.backToList')"
     />
     <ElCard v-else class="art-table-card" shadow="never">
       <div class="hd">
-        <ElButton @click="$router.push('/ai/knowledge')">返回</ElButton>
+        <ElButton @click="$router.push('/ai/knowledge')">{{ $t('aiKbDetail.back') }}</ElButton>
         <div class="hd-main">
-          <h3>{{ kb?.name || `知识库 #${kbId}` }}</h3>
+          <h3>{{ kb?.name || $t('aiKbDetail.titleFallback', { id: kbId }) }}</h3>
           <div class="hd-meta">
             <ElTag :type="kb?.status === 1 ? 'success' : 'info'" size="small">
-              {{ kb?.status === 1 ? '启用' : '停用' }}
+              {{ kb?.status === 1 ? $t('aiKbDetail.enabled') : $t('aiKbDetail.disabled') }}
             </ElTag>
             <span>{{ kb?.retrievalMode || 'hybrid' }}</span>
             <span>TopK {{ kb?.topK ?? 6 }}</span>
-            <span>最低分 {{ kb?.minScore ?? '-' }}</span>
+            <span>{{ $t('aiKbDetail.minScore') }} {{ kb?.minScore ?? '-' }}</span>
           </div>
           <p v-if="kb?.description" class="hd-desc">{{ kb.description }}</p>
         </div>
       </div>
 
       <ElTabs v-model="tab">
-        <ElTabPane label="资料" name="asset">
+        <ElTabPane :label="$t('aiKbDetail.tabAssets')" name="asset">
           <div class="toolbar">
-            <ElButton type="primary" @click="uploadVisible = true">上传资料</ElButton>
-            <ElButton @click="loadAssets">刷新</ElButton>
+            <ElButton type="primary" @click="uploadVisible = true">{{
+              $t('aiKbDetail.upload')
+            }}</ElButton>
+            <ElButton @click="loadAssets">{{ $t('aiKbDetail.refresh') }}</ElButton>
           </div>
           <ArtTable
             :loading="assetLoading"
@@ -50,10 +52,10 @@
           />
         </ElTabPane>
 
-        <ElTabPane label="分段" name="segment">
+        <ElTabPane :label="$t('aiKbDetail.tabSegments')" name="segment">
           <div class="toolbar">
-            <ElButton @click="loadSegs">刷新</ElButton>
-            <span class="hint">共 {{ segTotal }} 段 · 编辑后会自动重新向量化</span>
+            <ElButton @click="loadSegs">{{ $t('aiKbDetail.refresh') }}</ElButton>
+            <span class="hint">{{ $t('aiKbDetail.segHint', { n: segTotal }) }}</span>
           </div>
           <ArtTable
             :loading="segLoading"
@@ -75,106 +77,122 @@
           />
         </ElTabPane>
 
-        <ElTabPane label="向量化" name="vector">
+        <ElTabPane :label="$t('aiKbDetail.tabVector')" name="vector">
           <div class="vec-stats" v-loading="vecLoading">
             <div class="stat"
               ><b>{{ vecStats.total }}</b
-              ><span>总分段</span></div
+              ><span>{{ $t('aiKbDetail.statTotal') }}</span></div
             >
             <div class="stat ok"
               ><b>{{ vecStats.success }}</b
-              ><span>已向量化</span></div
+              ><span>{{ $t('aiKbDetail.statSuccess') }}</span></div
             >
             <div class="stat warn"
               ><b>{{ vecStats.pending }}</b
-              ><span>待处理</span></div
+              ><span>{{ $t('aiKbDetail.statPending') }}</span></div
             >
             <div class="stat err"
               ><b>{{ vecStats.failed }}</b
-              ><span>失败</span></div
+              ><span>{{ $t('aiKbDetail.statFailed') }}</span></div
             >
           </div>
           <div class="toolbar">
             <ElButton type="primary" :loading="vecActing === 'start'" @click="vec('start')">
-              开始向量化（仅待处理）
+              {{ $t('aiKbDetail.vecStart') }}
             </ElButton>
             <ElButton type="warning" :loading="vecActing === 'rebuild'" @click="vec('rebuild')">
-              全量重建
+              {{ $t('aiKbDetail.vecRebuild') }}
             </ElButton>
-            <ElButton @click="loadVecStats">刷新统计</ElButton>
+            <ElButton @click="loadVecStats">{{ $t('aiKbDetail.refreshStats') }}</ElButton>
           </div>
-          <ElAlert
-            type="info"
-            :closable="false"
-            title="向量化为同步执行：完成后统计会更新。不支持暂停。全量重建会先清理旧向量再重新 Embedding。"
-          />
+          <ElAlert type="info" :closable="false" :title="$t('aiKbDetail.vecTip')" />
         </ElTabPane>
 
-        <ElTabPane label="命中测试" name="hit">
+        <ElTabPane :label="$t('aiKbDetail.tabHit')" name="hit">
           <ElInput
             v-model="hitQuery"
             type="textarea"
             :rows="3"
-            placeholder="输入业务问题，例如：创建知识库时推荐什么检索模式？"
+            :placeholder="$t('aiKbDetail.hitPlaceholder')"
           />
           <div class="toolbar" style="margin-top: 8px">
             <span>TopK</span>
             <ElInputNumber v-model="hitTopK" :min="1" :max="20" size="small" />
-            <ElButton type="primary" :loading="hitting" @click="runHit">命中测试</ElButton>
+            <ElButton type="primary" :loading="hitting" @click="runHit">{{
+              $t('aiKbDetail.tabHit')
+            }}</ElButton>
           </div>
           <ElTable
             :data="hitResults"
             style="margin-top: 12px"
             max-height="420"
-            empty-text="暂无命中，请先上传资料并完成向量化"
+            :empty-text="$t('aiKbDetail.hitEmpty')"
           >
-            <ElTableColumn label="分数" width="100">
+            <ElTableColumn :label="$t('aiKbDetail.score')" width="100">
               <template #default="{ row }">{{ formatScore(row.score) }}</template>
             </ElTableColumn>
-            <ElTableColumn prop="source" label="来源" width="140" show-overflow-tooltip />
-            <ElTableColumn prop="content" label="内容" min-width="320" show-overflow-tooltip />
+            <ElTableColumn
+              prop="source"
+              :label="$t('aiKbDetail.source')"
+              width="140"
+              show-overflow-tooltip
+            />
+            <ElTableColumn
+              prop="content"
+              :label="$t('aiKbDetail.content')"
+              min-width="320"
+              show-overflow-tooltip
+            />
           </ElTable>
         </ElTabPane>
       </ElTabs>
     </ElCard>
 
-    <ElDialog v-model="uploadVisible" title="上传资料" width="520px" destroy-on-close>
-      <ElForm label-width="100px">
-        <ElFormItem label="文件" required>
+    <ElDialog
+      v-model="uploadVisible"
+      :title="$t('aiKbDetail.upload')"
+      width="520px"
+      destroy-on-close
+    >
+      <ElForm label-width="auto">
+        <ElFormItem :label="$t('aiKbDetail.file')" required>
           <input
             ref="fileInputRef"
             type="file"
             accept=".txt,.md,.markdown,.csv,.json,.log,.html,.htm"
             @change="onFilePicked"
           />
-          <div v-if="uploadForm.fileName" class="hint"
-            >已选：{{ uploadForm.fileName }}（{{ uploadForm.contentText?.length || 0 }} 字）</div
-          >
+          <div v-if="uploadForm.fileName" class="hint">{{
+            $t('aiKbDetail.picked', {
+              name: uploadForm.fileName,
+              n: uploadForm.contentText?.length || 0
+            })
+          }}</div>
         </ElFormItem>
-        <ElFormItem label="分段策略">
+        <ElFormItem :label="$t('aiKbDetail.segStrategy')">
           <ElSelect v-model="uploadForm.segmentType" style="width: 100%">
-            <ElOption label="Markdown 标题" value="markdown" />
-            <ElOption label="段落" value="paragraph" />
-            <ElOption label="定长" value="length" />
-            <ElOption label="按行" value="newline" />
+            <ElOption :label="$t('aiKbDetail.segMarkdown')" value="markdown" />
+            <ElOption :label="$t('aiKbDetail.segParagraph')" value="paragraph" />
+            <ElOption :label="$t('aiKbDetail.segLength')" value="length" />
+            <ElOption :label="$t('aiKbDetail.segNewline')" value="newline" />
           </ElSelect>
         </ElFormItem>
-        <ElFormItem label="分段长度">
+        <ElFormItem :label="$t('aiKbDetail.segLengthLabel')">
           <ElInputNumber v-model="uploadForm.segmentLength" :min="100" :max="4000" />
         </ElFormItem>
-        <ElFormItem label="重叠">
+        <ElFormItem :label="$t('aiKbDetail.overlap')">
           <ElInputNumber v-model="uploadForm.segmentOverlap" :min="0" :max="500" />
         </ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="uploadVisible = false">取消</ElButton>
+        <ElButton @click="uploadVisible = false">{{ $t('aiKbDetail.cancel') }}</ElButton>
         <ElButton
           type="primary"
           :loading="uploading"
           :disabled="!uploadForm.contentText"
           @click="doUpload"
         >
-          上传并向量化
+          {{ $t('aiKbDetail.uploadAndVectorize') }}
         </ElButton>
       </template>
     </ElDialog>
@@ -182,6 +200,7 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import type { ColumnOption } from '@/types/component'
   import { computed, h, nextTick, onMounted, reactive, ref, watch } from 'vue'
   import AiNotFound from '../shared/AiNotFound.vue'
@@ -203,6 +222,7 @@
   } from '../../api'
 
   defineOptions({ name: 'AiKnowledgeDetail' })
+  const { t } = useI18n()
   /** id 不存在或已删除时只显示占位与返回入口（UX-105） */
   const notFound = ref(false)
 
@@ -224,46 +244,48 @@
 
   const statusTag = (st: string) => {
     const s = (st || '').toLowerCase()
-    if (s === 'success') return { type: 'success' as const, label: '已向量化' }
-    if (s === 'failed') return { type: 'danger' as const, label: '失败' }
-    if (s === 'pending') return { type: 'warning' as const, label: '待处理' }
-    return { type: 'info' as const, label: st || '未知' }
+    if (s === 'success') return { type: 'success' as const, label: t('aiKbDetail.statSuccess') }
+    if (s === 'failed') return { type: 'danger' as const, label: t('aiKbDetail.statFailed') }
+    if (s === 'pending') return { type: 'warning' as const, label: t('aiKbDetail.statPending') }
+    return { type: 'info' as const, label: st || t('aiKbDetail.unknown') }
   }
 
-  const assetCols: ColumnOption[] = [
-    { prop: 'fileName', label: '文件名', minWidth: 200 },
-    { prop: 'fileType', label: '类型', width: 100 },
-    { prop: 'segmentCount', label: '分段数', width: 90 },
+  const assetCols = computed<ColumnOption[]>(() => [
+    { prop: 'fileName', label: t('aiKbDetail.colFileName'), minWidth: 200 },
+    { prop: 'fileType', label: t('aiKbDetail.colType'), width: 100 },
+    { prop: 'segmentCount', label: t('aiKbDetail.colSegments'), width: 110 },
     {
       prop: 'vectorStatus',
-      label: '向量状态',
+      label: t('aiKbDetail.colVectorStatus'),
       width: 110,
       formatter: (row: any) => {
-        const t = statusTag(row.vectorStatus)
-        return h(ElTag, { type: t.type, size: 'small' }, () => t.label)
+        const tag = statusTag(row.vectorStatus)
+        return h(ElTag, { type: tag.type, size: 'small' }, () => tag.label)
       }
     },
     {
       prop: 'progress',
-      label: '进度',
-      width: 80,
+      label: t('aiKbDetail.colProgress'),
+      width: 100,
       formatter: (row: any) => `${row.progress ?? 0}%`
     },
     {
       prop: 'operation',
-      label: '操作',
+      label: t('aiKbDetail.colActions'),
       width: 180,
       formatter: (row: any) =>
         h('div', [
-          h(ElButton, { link: true, size: 'small', onClick: () => reseg(row) }, () => '重分段'),
+          h(ElButton, { link: true, size: 'small', onClick: () => reseg(row) }, () =>
+            t('aiKbDetail.reseg')
+          ),
           h(
             ElButton,
             { link: true, type: 'danger', size: 'small', onClick: () => rmAsset(row) },
-            () => '删除'
+            () => t('aiKbDetail.delete')
           )
         ])
     }
-  ]
+  ])
 
   const segLoading = ref(false)
   const segments = ref<any[]>([])
@@ -277,23 +299,23 @@
   }))
   const allSegs = ref<any[]>([])
 
-  const segCols: ColumnOption[] = [
+  const segCols = computed<ColumnOption[]>(() => [
     { prop: 'seq', label: '#', width: 60 },
-    { prop: 'content', label: '内容', minWidth: 280, showOverflowTooltip: true },
+    { prop: 'content', label: t('aiKbDetail.content'), minWidth: 280, showOverflowTooltip: true },
     { prop: 'tokenCount', label: 'Tokens', width: 90 },
     {
       prop: 'vectorStatus',
-      label: '向量',
+      label: t('aiKbDetail.colVector'),
       width: 100,
       formatter: (row: any) => {
-        const t = statusTag(row.vectorStatus)
-        return h(ElTag, { type: t.type, size: 'small' }, () => t.label)
+        const tag = statusTag(row.vectorStatus)
+        return h(ElTag, { type: tag.type, size: 'small' }, () => tag.label)
       }
     },
     {
       prop: 'enabled',
-      label: '启用',
-      width: 80,
+      label: t('aiKbDetail.enabled'),
+      width: 100,
       formatter: (row: any) =>
         h(ElSwitch, {
           modelValue: row.enabled === 1,
@@ -306,12 +328,14 @@
     },
     {
       prop: 'operation',
-      label: '操作',
+      label: t('aiKbDetail.colActions'),
       width: 100,
       formatter: (row: any) =>
-        h(ElButton, { link: true, size: 'small', onClick: () => editSeg(row) }, () => '编辑')
+        h(ElButton, { link: true, size: 'small', onClick: () => editSeg(row) }, () =>
+          t('aiKbDetail.edit')
+        )
     }
-  ]
+  ])
 
   const vecLoading = ref(false)
   const vecActing = ref('')
@@ -400,7 +424,7 @@
     if (!file) return
     const lower = file.name.toLowerCase()
     if (!/\.(txt|md|markdown|csv|json|log|html?)$/.test(lower)) {
-      ElMessage.warning('当前仅支持文本类：txt / md / csv / json / log / html')
+      ElMessage.warning(t('aiKbDetail.onlyText'))
       input.value = ''
       return
     }
@@ -421,7 +445,7 @@
 
   async function doUpload() {
     if (!uploadForm.contentText?.trim()) {
-      ElMessage.warning('请选择文件')
+      ElMessage.warning(t('aiKbDetail.pickFile'))
       return
     }
     uploading.value = true
@@ -435,7 +459,9 @@
         segmentLength: uploadForm.segmentLength,
         segmentOverlap: uploadForm.segmentOverlap
       })
-      ElMessage.success(`上传成功，分段 ${r?.segmentCount ?? 0}，向量状态 ${r?.vectorStatus || ''}`)
+      ElMessage.success(
+        t('aiKbDetail.uploadOk', { n: r?.segmentCount ?? 0, status: r?.vectorStatus || '' })
+      )
       uploadVisible.value = false
       uploadForm.fileName = ''
       uploadForm.contentText = ''
@@ -447,26 +473,36 @@
   }
 
   async function reseg(row: any) {
-    await ElMessageBox.confirm(`对「${row.fileName}」重新分段并向量化？`, '重分段')
+    await ElMessageBox.confirm(
+      t('aiKbDetail.resegConfirm', { name: row.fileName }),
+      t('aiKbDetail.reseg')
+    )
     const r = await fetchResegmentKbAsset(row.id)
-    ElMessage.success(`重分段完成，共 ${r?.segmentCount ?? '?'} 段`)
+    ElMessage.success(t('aiKbDetail.resegOk', { n: r?.segmentCount ?? '?' }))
     await Promise.all([loadAssets(), loadSegs(), loadVecStats()])
   }
 
   async function rmAsset(row: any) {
-    await ElMessageBox.confirm(`删除「${row.fileName}」后，资料和分段都会清掉`, '确认')
+    await ElMessageBox.confirm(
+      t('aiKbDetail.removeConfirm', { name: row.fileName }),
+      t('aiKbDetail.confirmTitle')
+    )
     await fetchRemoveKbAsset(row.id)
     await Promise.all([loadAssets(), loadSegs(), loadVecStats(), loadKb()])
   }
 
   async function editSeg(row: any) {
-    const { value } = await ElMessageBox.prompt('编辑分段内容（保存后自动重新向量化）', '分段', {
-      inputValue: row.content,
-      inputType: 'textarea',
-      customClass: 'kb-seg-edit'
-    })
+    const { value } = await ElMessageBox.prompt(
+      t('aiKbDetail.editSegPrompt'),
+      t('aiKbDetail.tabSegments'),
+      {
+        inputValue: row.content,
+        inputType: 'textarea',
+        customClass: 'kb-seg-edit'
+      }
+    )
     await fetchSaveKbSegment({ id: row.id, content: value })
-    ElMessage.success('已保存并重新向量化')
+    ElMessage.success(t('aiKbDetail.savedRevectorized'))
     await Promise.all([loadSegs(), loadVecStats()])
   }
 
@@ -484,10 +520,7 @@
 
   async function vec(act: 'start' | 'rebuild') {
     if (act === 'rebuild') {
-      await ElMessageBox.confirm(
-        '将清除全部向量并重新 Embedding，耗时取决于分段数量。继续？',
-        '全量重建'
-      )
+      await ElMessageBox.confirm(t('aiKbDetail.rebuildConfirm'), t('aiKbDetail.vecRebuild'))
     }
     vecActing.value = act
     try {
@@ -495,12 +528,16 @@
       const r = await fn({ knowledgeId: kbId.value })
       ElMessage.success(
         act === 'rebuild'
-          ? `重建完成，处理 ${r?.count ?? 0} 段`
-          : `向量化完成，处理 ${r?.count ?? 0} 段（待处理 ${r?.pending ?? 0} → 成功 ${r?.success ?? 0}）`
+          ? t('aiKbDetail.rebuildOk', { n: r?.count ?? 0 })
+          : t('aiKbDetail.vecOk', {
+              n: r?.count ?? 0,
+              pending: r?.pending ?? 0,
+              success: r?.success ?? 0
+            })
       )
       await Promise.all([loadAssets(), loadSegs(), loadVecStats()])
     } catch (e: any) {
-      ElMessage.error(e?.message || '向量化失败')
+      ElMessage.error(e?.message || t('aiKbDetail.vecFailed'))
     } finally {
       vecActing.value = ''
     }
@@ -508,7 +545,7 @@
 
   async function runHit() {
     if (!hitQuery.value.trim()) {
-      ElMessage.warning('请输入测试问题')
+      ElMessage.warning(t('aiKbDetail.enterQuestion'))
       return
     }
     hitting.value = true
@@ -520,7 +557,7 @@
       })
       hitResults.value = Array.isArray(r) ? r : r?.hits || r?.records || []
       if (!hitResults.value.length) {
-        ElMessage.warning('未命中分段：检查是否已向量化、最低分是否过高')
+        ElMessage.warning(t('aiKbDetail.noHitTip'))
       }
     } finally {
       hitting.value = false
