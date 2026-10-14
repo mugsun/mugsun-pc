@@ -1,11 +1,11 @@
 <template>
   <div class="ai-drawer-host">
-    <button class="ai-fab" type="button" title="AI 助手" @click="$emit('open')">
+    <button class="ai-fab" type="button" :title="$t('aiShared.assistant')" @click="$emit('open')">
       <span>AI</span>
     </button>
     <ElDrawer
       :model-value="visible"
-      title="AI 助手"
+      :title="$t('aiShared.assistant')"
       direction="rtl"
       size="420px"
       append-to-body
