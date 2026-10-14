@@ -52,7 +52,7 @@
           />
         </div>
       </aside>
-      <p class="gis-hud gis-hud-status">{{ $t('pages.gis.layerCoach') }}</p>
+      <GisCoach>{{ $t('pages.gis.layerCoach') }}</GisCoach>
     </div>
 
     <ElDialog
@@ -145,6 +145,7 @@
 </template>
 
 <script setup lang="ts">
+  import GisCoach from '../../components/GisCoach.vue'
   import {
     computed,
     nextTick,

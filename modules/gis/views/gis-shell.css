@@ -166,3 +166,24 @@
 .gis-w-full .el-input-number {
   width: 100%;
 }
+
+/* 窄屏：底部提示改为整行横条（可收起），面板与缩放按钮让出位置（UX-114） */
+@media (width <= 768px) {
+  .gis-hud-status.gis-coach {
+    right: 72px;
+    bottom: 40px;
+    left: 12px;
+    align-items: flex-start;
+    max-height: 30%;
+    overflow-y: auto;
+  }
+
+  .gis-hud-panel {
+    bottom: 124px;
+  }
+
+  .gis-map .ol-zoom,
+  .gis-map-shell .ol-zoom {
+    bottom: 132px;
+  }
+}

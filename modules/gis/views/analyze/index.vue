@@ -86,12 +86,13 @@
           <div v-for="item in metricsText" :key="item">{{ item }}</div>
         </dl>
       </aside>
-      <p class="gis-hud gis-hud-status">{{ $t('pages.gis.analyzeCoach') }}</p>
+      <GisCoach>{{ $t('pages.gis.analyzeCoach') }}</GisCoach>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+  import GisCoach from '../../components/GisCoach.vue'
   import { computed, nextTick, onActivated, onBeforeUnmount, onMounted, ref } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { useRouter } from 'vue-router'
