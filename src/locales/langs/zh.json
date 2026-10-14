@@ -3686,7 +3686,7 @@
       "labIngestRun": "解析",
       "labIngestPlaceholder": "贴 WKT / CSV / KML / GPX 原文，或 GeoJSON",
       "labIngestFailed": "解析失败：检查格式与坐标顺序（先经度后纬度）",
-      "analyzeHint": "运算走服务端 JTS：先规范化成 WGS84 GeoJSON，再在 Web Mercator 上算米制。结果可存图层库，任意模块按 layerId 叠加。",
+      "analyzeHint": "运算走服务端 JTS：先规范化成 WGS84 GeoJSON，米制结果按 WGS84 椭球测地线计算（库内有 PostGIS 时用 geography，否则用 GeographicLib）。结果可存图层库，任意模块按 layerId 叠加。",
       "analyzeOp": "运算",
       "analyzeSource": "源图层",
       "analyzeOther": "对照图层",
