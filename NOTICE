@@ -7,7 +7,26 @@ Mugsun-pc
 
 本仓库在上述基座之上的修改与新增部分：Copyright (c) 2026 北京定旭晨信息科技工作室 (mugsun)。
 
-第三方组件：
+----------------------------------------------------------------------
+离线图标数据（src/assets/icons/offline-icons.json）
+
+由 scripts/gen-offline-icons.mjs 从以下 Iconify 图标集包中抽取本项目实际用到的图标（未修改图形），
+来源包版本已钉死：
+
+- Remix Icon — Remix Design，Apache-2.0（@iconify-json/ri@1.2.10）
+- Fluent UI System Icons — Microsoft Corporation，MIT（@iconify-json/fluent@1.2.60）
+- IconPark Outline — ByteDance，Apache-2.0（@iconify-json/icon-park-outline@1.2.4）
+- Vaadin Icons — Vaadin，Apache-2.0（@iconify-json/vaadin@1.2.1）
+- Siemens Industrial Experience Icons — Siemens AG，MIT（@iconify-json/ix@1.2.13）
+- Solar — 480 Design（https://www.figma.com/community/file/1166831539721848736），
+  CC BY 4.0（https://creativecommons.org/licenses/by/4.0/）（@iconify-json/solar@1.2.13）
+  使用的图标：solar:double-alt-arrow-right-linear
+- IconaMoon — Dariush Habibpour（https://github.com/dariushhpg1/IconaMoon），
+  CC BY 4.0（https://creativecommons.org/licenses/by/4.0/）（@iconify-json/iconamoon@1.2.2）
+  使用的图标：iconamoon:arrow-down-2-thin
+
+----------------------------------------------------------------------
+第三方组件（npm 依赖）
 
 - vue-element-plus-x（https://github.com/HeJiaYue520/Element-Plus-X），MIT License。
   用于 AI 助手抽屉（Conversations、BubbleList、XSender、Welcome、Prompts），按需异步加载。
