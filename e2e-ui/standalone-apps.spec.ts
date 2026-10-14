@@ -10,6 +10,7 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative } from 'node:path'
 import { expect } from '@playwright/test'
 import { test, mockAll, seedSession } from './support/session'
+import { waitFiniteAnimations } from './support/animations'
 
 const ROOT = process.cwd()
 function walk(dir: string, out: string[] = []): string[] {
@@ -57,11 +58,8 @@ for (const app of apps) {
       .first()
       .waitFor({ timeout: 10_000 })
       .catch(() => {})
-    await page.waitForFunction(
-      () => document.getAnimations().every((a) => a.playState !== 'running'),
-      null,
-      { timeout: 10_000 }
-    )
+    // 与 form-layout 共用：排除无限循环动画，超时不判失败（下面有可见性断言兜底）
+    await waitFiniteAnimations(page, 10_000)
     await page.waitForLoadState('networkidle')
     // 先报控制台错误（根因），再检查抽屉/弹窗是否真的打开
     expect(errors, `${app.file} 打开后有报错`).toEqual([])

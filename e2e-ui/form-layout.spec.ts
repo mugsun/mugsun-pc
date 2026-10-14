@@ -17,6 +17,7 @@ import {
   SUBMIT_RE,
   SKIP_ROUTE
 } from './support/session'
+import { waitFiniteAnimations } from './support/animations'
 
 /**
  * 覆盖下限：低于这个数说明有弹窗/提示没被打开或没被查到，直接判失败。
@@ -29,24 +30,8 @@ const MIN_ERRORS = BASELINE.errors - 2
 
 /** 等动画/过渡结束（自检注入了 transition:none，这里兜底等 Web Animations 与两帧渲染） */
 async function settle(page: Page) {
-  // 只等有限动画：无限循环的（转圈 loading、骨架屏、呼吸徽标）永远不会停，排除；
-  // 超时也不判失败，直接继续（后面还有 DOM 稳定判断兜底）
-  await page
-    .waitForFunction(
-      () =>
-        document.getAnimations().every((a) => {
-          if (a.playState !== 'running') return true
-          const t = a.effect?.getComputedTiming()
-          if (t && t.iterations === Infinity) return true
-          const el = (a.effect as KeyframeEffect | null)?.target as Element | null
-          return !!el?.closest?.(
-            '.is-loading, .el-loading-mask, .el-skeleton, .el-badge, [class*="loading"], [class*="skeleton"], [class*="pulse"], [class*="breath"]'
-          )
-        }),
-      null,
-      { timeout: 5_000 }
-    )
-    .catch(() => {})
+  // 只等有限动画（无限循环的排除），超时不判失败；后面还有 DOM 稳定判断兜底
+  await waitFiniteAnimations(page, 5_000)
   // 再等 DOM 稳定：连续 10 帧里表单项、校验提示的文字和位置都不变
   // （同一个弹窗先新增后编辑时，上一次的红字会在打开后被清掉，不能在清的过程中量）
   await page.evaluate(

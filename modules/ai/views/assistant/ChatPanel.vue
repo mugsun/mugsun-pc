@@ -80,7 +80,7 @@
         </div>
       </header>
 
-      <div ref="msgBoxRef" class="ai-chat-msgs">
+      <div ref="msgBoxRef" class="ai-chat-msgs" @click="onMsgsClick">
         <div v-for="(msg, idx) in messages" :key="msg.id || idx" class="ai-msg" :class="msg.role">
           <div class="ai-msg__role">{{
             msg.role === 'user' ? $t('aiChat.me') : $t('aiChat.assistant')
@@ -155,10 +155,9 @@
   import { useI18n } from 'vue-i18n'
   import { displaySessionTitle, newSessionTitle } from './sessionTitle'
   import { computed, nextTick, onMounted, ref, watch } from 'vue'
-  import { useWindowSize } from '@vueuse/core'
+  import { useClipboard, useWindowSize } from '@vueuse/core'
   import { ElMessage, ElMessageBox } from 'element-plus'
-  import DOMPurify from 'dompurify'
-  import hljs from 'highlight.js'
+  import { handleCodeCopy, renderMarkdown } from './renderMarkdown'
   import {
     fetchAiChatReplay,
     fetchAiChatStop,
@@ -216,22 +215,11 @@
     return String(v).replace('T', ' ').slice(0, 16)
   }
 
-  function renderMd(text?: string) {
-    const raw = text || ''
-    // 轻量：代码块高亮 + 转义换行；完整 Markdown 可后续换专用渲染器
-    let html = raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_m, lang, code) => {
-      try {
-        const highlighted = lang
-          ? hljs.highlight(code, { language: lang }).value
-          : hljs.highlightAuto(code).value
-        return `<pre><code class="hljs">${highlighted}</code></pre>`
-      } catch {
-        return `<pre><code>${code}</code></pre>`
-      }
-    })
-    html = html.replace(/\n/g, '<br/>')
-    return DOMPurify.sanitize(html)
+  /** 与 AI 助手抽屉共用同一套 Markdown 渲染 */
+  const renderMd = (text?: string) => renderMarkdown(text, t('aiDrawer.copy'))
+  const { copy } = useClipboard({ legacy: true })
+  function onMsgsClick(e: MouseEvent) {
+    void handleCodeCopy(e, copy, t('aiDrawer.copy'), t('aiDrawer.copied'))
   }
 
   async function scrollBottom() {
