@@ -327,14 +327,18 @@
   const overviewLoading = ref(false)
 
   /**
-   * 后端按 tenant_id 分组，name 是租户编号（如 000000）。横轴换成租户名（UX-013）；
+   * 租户图表横轴显示租户名（UX-013）。boot#42 起接口直接在 name 里返回租户名称（没有名称的租户仍是编号），
+   * 此时直接用；只有 name 仍是编号（纯数字，如 000000）的行才用租户列表反查，兼容 #42 合并前的接口。
    * 取租户列表失败或没对上时保留编号，不影响图表。
    */
+  const isTenantCode = (v: unknown) => /^\d+$/.test(String(v ?? ''))
   const withTenantNames = async (rows: any[]) => {
     if (!rows.length) return rows
-    // 平台租户 000000 没有 sys_tenant 行，单独给名字
+    // 平台租户 000000 在 #42 前没有 sys_tenant 行，单独给名字
     const platform = (r: any) =>
       String(r.name) === '000000' ? { ...r, name: t('pages.dashboard.console.platformTenant') } : r
+    // 接口已给名称：不再请求租户列表
+    if (!rows.some((r) => isTenantCode(r.name))) return rows
     try {
       const tenants = (await fetchTenantList()) || []
       const names = new Map<string, string>()
@@ -343,7 +347,9 @@
         for (const k of [t.tenantId, t.tenantCode])
           if (k != null) names.set(String(k), t.tenantName)
       }
-      return rows.map((r) => platform({ ...r, name: names.get(String(r.name)) ?? r.name }))
+      return rows.map((r) =>
+        isTenantCode(r.name) ? platform({ ...r, name: names.get(String(r.name)) ?? r.name }) : r
+      )
     } catch {
       return rows.map(platform)
     }
