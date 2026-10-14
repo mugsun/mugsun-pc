@@ -80,16 +80,7 @@
             <ElIcon :size="16"><component :is="fullscreen ? Aim : FullScreen" /></ElIcon>
           </ElButton>
         </ElTooltip>
-        <ElTooltip :content="$t('aiDrawer.close')" placement="bottom">
-          <ElButton
-            text
-            class="ai-dchat__icon-btn"
-            :aria-label="$t('aiDrawer.close')"
-            @click="$emit('close')"
-          >
-            <ElIcon :size="20"><Close /></ElIcon>
-          </ElButton>
-        </ElTooltip>
+        <AiDrawerCloseButton @close="$emit('close')" />
       </div>
     </header>
 
@@ -366,7 +357,6 @@
     Aim,
     ArrowDown,
     Check,
-    Close,
     CopyDocument,
     FullScreen,
     Plus,
@@ -379,6 +369,7 @@
   import { hasPerm } from '@/utils/permission'
   import { handleCodeCopy, renderMarkdown } from '../renderMarkdown'
   import { displaySessionTitle, newSessionTitle } from '../sessionTitle'
+  import AiDrawerCloseButton from './AiDrawerCloseButton.vue'
   import { SESSION_GROUP_ORDER, sessionGroupOf } from './drawerLayout'
   import {
     fetchAiChatStop,
@@ -837,7 +828,7 @@
     align-items: center;
     justify-content: space-between;
     height: 48px;
-    padding: 0 16px;
+    padding: 0 8px 0 16px;
     border-bottom: 1px solid var(--el-border-color-lighter);
   }
 

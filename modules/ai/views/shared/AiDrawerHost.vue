@@ -48,7 +48,17 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, defineAsyncComponent, defineComponent, h, ref, shallowRef } from 'vue'
+  import {
+    computed,
+    defineAsyncComponent,
+    defineComponent,
+    h,
+    onBeforeUnmount,
+    onMounted,
+    ref,
+    shallowRef,
+    watch
+  } from 'vue'
   import { ElButton, ElIcon } from 'element-plus'
   import { Loading, WarningFilled } from '@element-plus/icons-vue'
   import { useI18n } from 'vue-i18n'
@@ -61,18 +71,44 @@
     DRAWER_WIDTH_STORAGE_KEY,
     clampDrawerWidth
   } from '../assistant/drawer/drawerLayout'
+  import { CHAT_LOAD_TIMEOUT, createChatLoader } from '../assistant/drawer/chatChunkRetry'
+  import AiDrawerHeaderShell from '../assistant/drawer/AiDrawerHeaderShell.vue'
 
-  /** chunk 加载超过这个时间按失败处理，显示「重试」 */
-  const CHAT_LOAD_TIMEOUT = 15_000
+  /** 内容区加载提示的延迟（顶栏不延迟） */
+  const SPINNER_DELAY = 200
 
+  const props = defineProps<{ visible: boolean }>()
+  const emit = defineEmits<{ 'update:visible': [boolean]; open: [] }>()
+  const closeDrawer = () => emit('update:visible', false)
+
+  /**
+   * 加载中 / 加载失败也保留 48px 顶栏（体验设计官 pc#71 规格）：
+   * 状态只替换顶栏下面的内容区，关闭按钮始终在同一位置可用。
+   */
   const ChatLoading = defineComponent({
     name: 'AiDrawerChatLoading',
     setup() {
       const { t } = useI18n()
+      // 顶栏立即显示；内容区的加载提示延迟出现，加载很快时不闪
+      const showSpinner = ref(false)
+      let timer: ReturnType<typeof setTimeout> | undefined
+      onMounted(() => {
+        timer = setTimeout(() => (showSpinner.value = true), SPINNER_DELAY)
+      })
+      onBeforeUnmount(() => clearTimeout(timer))
       return () =>
-        h('div', { class: 'ai-drawer__state', role: 'status', 'aria-live': 'polite' }, [
-          h(ElIcon, { class: 'is-loading', size: 20 }, () => h(Loading)),
-          h('span', t('aiDrawer.loading'))
+        h('div', { class: 'ai-drawer__shell' }, [
+          h(AiDrawerHeaderShell, {
+            state: 'loading',
+            canFullscreen: !forcedFullscreen.value,
+            onClose: closeDrawer
+          }),
+          showSpinner.value
+            ? h('div', { class: 'ai-drawer__state', role: 'status', 'aria-live': 'polite' }, [
+                h(ElIcon, { class: 'is-loading', size: 20 }, () => h(Loading)),
+                h('span', t('aiDrawer.loading'))
+              ])
+            : h('div', { class: 'ai-drawer__state' })
         ])
     }
   })
@@ -82,12 +118,15 @@
     setup() {
       const { t } = useI18n()
       return () =>
-        h('div', { class: 'ai-drawer__state is-error', role: 'alert' }, [
-          h(ElIcon, { size: 20 }, () => h(WarningFilled)),
-          h('span', t('aiDrawer.loadFailed')),
-          h(ElButton, { type: 'primary', size: 'small', onClick: reloadChat }, () =>
-            t('aiDrawer.retry')
-          )
+        h('div', { class: 'ai-drawer__shell' }, [
+          h(AiDrawerHeaderShell, { state: 'error', onClose: closeDrawer }),
+          h('div', { class: 'ai-drawer__state is-error', role: 'alert' }, [
+            h(ElIcon, { size: 20 }, () => h(WarningFilled)),
+            h('span', t('aiDrawer.loadFailed')),
+            h(ElButton, { type: 'primary', size: 'small', onClick: reloadChat }, () =>
+              t('aiDrawer.retry')
+            )
+          ])
         ])
     }
   })
@@ -95,41 +134,65 @@
   /**
    * 抽屉内容（含 vue-element-plus-x）按需加载：首屏和插件 chunk 都不带它。
    * 浏览器会缓存失败的动态 import（同一 URL 再 import 直接复用失败结果），
-   * 所以重试时从错误信息里取出 chunk URL，加查询参数重新请求；取不到 URL 时退回原 import。
+   * 所以入口 .js 失败时从报错里取出 URL，重试时加 ?retry=N 重新请求。
+   * CSS、嵌套 chunk 失败或连续失败 MAX_CHAT_LOAD_FAILURES 次，改用整页刷新兜底，
+   * 同一会话只自动刷新一次（见 chatChunkRetry.ts）。
    */
-  let failedUrl: string | null = null
-  let attempt = 0
-  function loadChat(): Promise<any> {
-    const url = failedUrl
-    const p = url
-      ? import(/* @vite-ignore */ `${url}${url.includes('?') ? '&' : '?'}retry=${attempt}`)
-      : import('../assistant/drawer/AiDrawerChat.vue')
-    return p.catch((e: unknown) => {
-      const m = String((e as Error)?.message ?? e).match(/(https?:\/\/\S+)/)
-      if (m) failedUrl = m[1].replace(/[?&]retry=\d+$/, '')
-      throw e
-    })
+  function sessionStore(): Storage | null {
+    try {
+      return window.sessionStorage
+    } catch {
+      return null
+    }
   }
+  // 超时 / 失败计数 / 刷新兜底见 createChatLoader；抽屉不可见时旧加载作废，不会刷新页面
+  const chatLoader = createChatLoader({
+    importer: (retryUrl) =>
+      retryUrl
+        ? import(/* @vite-ignore */ retryUrl)
+        : import('../assistant/drawer/AiDrawerChat.vue'),
+    isActive: () => props.visible,
+    storage: sessionStore,
+    reload: () => window.location.reload(),
+    timeout: CHAT_LOAD_TIMEOUT
+  })
+  const loadChat = () => chatLoader.load()
 
   function createChat() {
     return defineAsyncComponent({
       loader: loadChat,
       loadingComponent: ChatLoading,
       errorComponent: ChatError,
-      delay: 200,
-      timeout: CHAT_LOAD_TIMEOUT
+      // 不延迟：一打开就显示顶栏（含关闭按钮）；内容区提示另有 SPINNER_DELAY
+      delay: 0
     })
   }
   const AiDrawerChat = shallowRef(createChat())
   const chatKey = ref(0)
+  /**
+   * 抽屉关闭或卸载：作废进行中的加载（超时不再刷新页面、不计失败）。
+   * 还没加载成功时换一个新的异步组件，下次打开重新加载。
+   */
+  function abandonLoad() {
+    chatLoader.invalidate()
+    if (!chatLoader.loaded) {
+      AiDrawerChat.value = createChat()
+      chatKey.value++
+    }
+  }
+  watch(
+    () => props.visible,
+    (v) => {
+      if (!v) abandonLoad()
+    }
+  )
+  onBeforeUnmount(() => chatLoader.invalidate())
+
   function reloadChat() {
-    attempt++
+    chatLoader.retry()
     AiDrawerChat.value = createChat()
     chatKey.value++
   }
-
-  defineProps<{ visible: boolean }>()
-  defineEmits<{ 'update:visible': [boolean]; open: [] }>()
 
   const { width: viewportWidth } = useWindowSize()
   const stored = useStorage(DRAWER_WIDTH_STORAGE_KEY, DRAWER_WIDTH_DEFAULT)
@@ -225,23 +288,6 @@
     opacity: 0;
   }
 
-  .ai-drawer__state {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    align-items: center;
-    justify-content: center;
-    height: 100%;
-    padding: 24px;
-    font-size: 14px;
-    color: var(--el-text-color-secondary);
-    text-align: center;
-  }
-
-  .ai-drawer__state.is-error :deep(.el-icon) {
-    color: var(--el-color-danger);
-  }
-
   .ai-drawer__resizer:hover::after,
   .is-resizing .ai-drawer__resizer::after {
     opacity: 1;
@@ -253,6 +299,37 @@
   .ai-drawer.el-drawer .el-drawer__body {
     padding: 0;
     overflow: hidden;
+  }
+
+  /* 加载中 / 失败状态由 h() 渲染，不带 scoped 属性，样式放这里 */
+  .ai-drawer .ai-drawer__shell {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--el-bg-color);
+  }
+
+  .ai-drawer .ai-drawer__state {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    padding: 24px;
+    font-size: 14px;
+    color: var(--el-text-color-secondary);
+    text-align: center;
+  }
+
+  .ai-drawer .ai-drawer__state.is-error .el-icon {
+    color: var(--el-color-danger);
+  }
+
+  /* 加载中标题占位条：浅色提高对比度，暗色沿用 fill-color */
+  html.dark .ai-drawer .ai-dshell__skeleton {
+    background: var(--el-fill-color);
   }
 
   .ai-drawer.is-resizing {

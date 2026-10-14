@@ -4339,6 +4339,7 @@
     "fullscreen": "全屏",
     "restore": "还原",
     "close": "关闭",
+    "closeAssistant": "关闭 AI 助手",
     "history": "历史对话",
     "searchHistory": "搜索对话",
     "groupToday": "今天",
