@@ -2,6 +2,7 @@ import { createApp, h, ref, watch } from 'vue'
 import ElementPlus from 'element-plus'
 import { hasPerm } from '@/utils/permission'
 import { useUserStore } from '@/store/modules/user'
+import i18n from '@/locales'
 import AiDrawerHost from './views/shared/AiDrawerHost.vue'
 
 let mounted = false
@@ -50,5 +51,8 @@ export function setupAi(): void {
     }
   })
     .use(ElementPlus)
+    // 独立 app 也要装同一个 i18n 实例：AiDrawerHost 的 $t 和 ChatPanel 的 useI18n 都依赖它，
+    // 且与主应用共用 locale，切换语言时同步
+    .use(i18n)
     .mount(el)
 }

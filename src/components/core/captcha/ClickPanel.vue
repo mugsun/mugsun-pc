@@ -1,0 +1,163 @@
+<!--
+  文字 / 图标点选（契约 v0.6.1）：提示优先显示服务端 promptImage，prompt / promptNames 供读屏；
+  点击坐标为显示像素、原点底图左上角（外壳被 CSS 缩放时先换回布局像素）；集满 count 个自动提交。
+-->
+<template>
+  <div ref="panelRef" class="cp-panel">
+    <div class="cp-click-hint">
+      <span class="cp-click-label">{{
+        challenge.type === 'WORD_CLICK'
+          ? t('pages.auth.slider.wordHint')
+          : t('pages.auth.slider.iconHint')
+      }}</span>
+      <img
+        v-if="challenge.promptImage"
+        class="cp-prompt-img"
+        :src="challenge.promptImage"
+        :alt="promptLabel"
+        draggable="false"
+      />
+      <template v-else>
+        <b
+          v-for="(h, i) in promptTexts"
+          :key="i"
+          class="cp-chip"
+          :class="{ 'is-done': i < points.length }"
+          >{{ h }}</b
+        >
+      </template>
+    </div>
+    <div
+      ref="stageRef"
+      tabindex="-1"
+      class="cp-stage cp-click-stage"
+      role="group"
+      :aria-label="`${t('pages.auth.slider.clickAria')}：${promptLabel}`"
+      :aria-describedby="'cp-click-note'"
+      :style="{ width: `${width}px`, height: `${bgHeight}px` }"
+      @click="onStageClick"
+    >
+      <img class="cp-img" :src="challenge.background" alt="" draggable="false" />
+      <button
+        v-for="(p, i) in points"
+        :key="i"
+        type="button"
+        class="cp-marker"
+        :style="{ left: `${p.x}px`, top: `${p.y}px`, '--cp-hit': `${hitDiameter}px` }"
+        :aria-label="t('pages.auth.slider.clickMarker', { n: i + 1 })"
+        :disabled="disabled"
+        @click.stop="undo(i)"
+        >{{ i + 1 }}</button
+      >
+      <slot name="overlay" />
+    </div>
+    <div class="cp-actions" :style="{ width: `${width}px` }">
+      <span class="cp-progress" aria-live="polite">
+        {{ t('pages.auth.slider.clickProgress', { n: points.length, total }) }}
+      </span>
+      <button type="button" class="cp-btn" :disabled="disabled || !points.length" @click="undo()">
+        {{ t('pages.auth.slider.undo') }}
+      </button>
+    </div>
+    <p id="cp-click-note" class="cp-sr-only">{{ t('pages.auth.slider.clickKeyboardNote') }}</p>
+  </div>
+</template>
+
+<script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
+  import type { ClickChallenge } from '@/api/captcha'
+  import {
+    clickPromptChars,
+    clickPromptLabel,
+    clickTargetCount,
+    addClickPoint,
+    buildClickAnswer,
+    clickHitRadius,
+    cssScale,
+    toDisplay,
+    undoClickPoint,
+    type ClickPoint,
+    type InputMode,
+    type PanelSubmit,
+    type TrackPoint
+  } from '@/utils/captcha'
+
+  defineOptions({ name: 'ClickPanel' })
+
+  const props = defineProps<{
+    challenge: ClickChallenge
+    width: number
+    disabled: boolean
+    inputMode: InputMode
+  }>()
+  const emit = defineEmits<{ submit: [part: PanelSubmit]; wantMode: [mode: InputMode] }>()
+  const { t } = useI18n()
+
+  const stageRef = ref<HTMLElement>()
+  const panelRef = ref<HTMLElement>()
+  const points = ref<ClickPoint[]>([])
+  // 字数 / 点击数由响应决定（v0.6.2：2–4 字词语或成语，含干扰字，点击数不固定）
+  const promptTexts = computed(() => clickPromptChars(props.challenge))
+  const promptLabel = computed(() => clickPromptLabel(props.challenge))
+  const total = computed(() => clickTargetCount(props.challenge))
+  const bgHeight = computed(() =>
+    Math.round(toDisplay(props.challenge.bgHeight, props.challenge.bgWidth, props.width))
+  )
+  /** 服务端命中圈直径（显示像素）：max(itemSize × 0.75, 22) × 2，按显示比例换算；标记外圈按此绘制 */
+  const hitDiameter = computed(() =>
+    Math.round(
+      toDisplay(clickHitRadius(props.challenge.itemSize) * 2, props.challenge.bgWidth, props.width)
+    )
+  )
+  let startTime = 0
+  let track: TrackPoint[] = []
+
+  watch(
+    () => props.width,
+    () => {
+      points.value = []
+      track = []
+    }
+  )
+
+  function onStageClick(e: MouseEvent) {
+    if (props.disabled || !stageRef.value || points.value.length >= total.value) return
+    const el = stageRef.value
+    const rect = el.getBoundingClientRect()
+    const k = cssScale(rect.width, el.offsetWidth)
+    const x = Math.min(props.width, Math.max(0, (e.clientX - rect.left) / k))
+    const y = Math.min(bgHeight.value, Math.max(0, (e.clientY - rect.top) / k))
+    const now = Date.now()
+    if (!points.value.length) {
+      startTime = now
+      track = []
+    }
+    points.value = addClickPoint(points.value, { x, y }, total.value)
+    // track[].t 为相对 startTime 的毫秒数（v0.6.1 #8）
+    track.push({ x: Math.round(x * 10) / 10, y: Math.round(y * 10) / 10, t: now - startTime })
+    if (points.value.length >= total.value) {
+      emit('submit', {
+        answer: buildClickAnswer(points.value),
+        track: track.slice(),
+        startTime,
+        endTime: now,
+        keyPresses: null
+      })
+    }
+  }
+
+  function undo(index?: number) {
+    if (props.disabled) return
+    points.value = undoClickPoint(points.value, index)
+    track = track.slice(0, points.value.length)
+  }
+
+  // 「撤销」按钮在点击区外：在整个面板内找；不可用（禁用）时退回聚焦点击区
+  defineExpose({
+    focus: () => {
+      const btn = panelRef.value?.querySelector<HTMLButtonElement>('.cp-btn:not(:disabled)')
+      if (btn) btn.focus()
+      else stageRef.value?.focus()
+    }
+  })
+</script>

@@ -55,8 +55,19 @@
       width="480px"
       align-center
     >
-      <ElForm label-width="88px">
-        <ElFormItem :label="$t('pages.system.topMenu.name')">
+      <ElForm ref="formRef" :model="form" label-width="88px">
+        <ElFormItem
+          :label="$t('pages.system.topMenu.name')"
+          prop="name"
+          :rules="[
+            {
+              required: true,
+              whitespace: true,
+              message: t('pages.system.topMenu.nameRequired'),
+              trigger: 'blur'
+            }
+          ]"
+        >
           <ElInput
             v-model="form.name"
             maxlength="64"
@@ -64,7 +75,18 @@
             :placeholder="$t('pages.system.topMenu.namePlaceholder')"
           />
         </ElFormItem>
-        <ElFormItem :label="$t('pages.system.topMenu.code')">
+        <ElFormItem
+          :label="$t('pages.system.topMenu.code')"
+          prop="code"
+          :rules="[
+            {
+              required: true,
+              whitespace: true,
+              message: t('pages.system.topMenu.codeRequired'),
+              trigger: 'blur'
+            }
+          ]"
+        >
           <ElInput
             v-model="form.code"
             maxlength="64"
@@ -123,6 +145,7 @@
 </template>
 
 <script setup lang="ts">
+  import type { FormInstance } from 'element-plus'
   import { computed, nextTick, reactive, ref } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { ElMessage, ElMessageBox } from 'element-plus'
@@ -156,6 +179,7 @@
   ])
 
   const editVisible = ref(false)
+  const formRef = ref<FormInstance>()
   const form = reactive({ id: '', name: '', code: '', icon: '', path: '', sort: 0 })
   const grantVisible = ref(false)
   const grantId = ref('')
@@ -192,17 +216,11 @@
     form.path = row?.path || ''
     form.sort = row?.sort ?? 0
     editVisible.value = true
+    nextTick(() => formRef.value?.clearValidate())
   }
 
   const submit = async () => {
-    if (!form.name.trim()) {
-      ElMessage.warning(t('pages.system.topMenu.nameRequired'))
-      return
-    }
-    if (!form.code.trim()) {
-      ElMessage.warning(t('pages.system.topMenu.codeRequired'))
-      return
-    }
+    if (!(await formRef.value?.validate().catch(() => false))) return
     saving.value = true
     try {
       await fetchSaveTopMenu({

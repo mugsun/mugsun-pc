@@ -1,9 +1,11 @@
 <template>
-  <div class="ai-chat-panel" :class="{ compact }">
+  <div class="ai-chat-panel" :class="{ compact, narrow }">
     <aside v-show="!collapsed" class="ai-chat-sessions">
       <div class="ai-chat-sessions__hd">
-        <ElButton type="primary" size="small" @click="createSession">新对话</ElButton>
-        <ElButton text size="small" @click="collapsed = true">折叠</ElButton>
+        <ElButton type="primary" size="small" @click="createSession">{{
+          $t('aiChat.newChat')
+        }}</ElButton>
+        <ElButton text size="small" @click="collapsed = true">{{ $t('aiChat.collapse') }}</ElButton>
       </div>
       <div v-loading="sessionLoading" class="ai-chat-sessions__list">
         <div
@@ -22,16 +24,18 @@
               @keyup.esc="renamingId = null"
               @blur="confirmRename(s)"
             />
-            <span v-else>{{ s.title || '新对话' }}</span>
+            <span v-else>{{ displaySessionTitle(s.title, t) }}</span>
           </div>
           <div class="ai-chat-session__meta">
             <span>{{ formatTime(s.updateTime || s.createTime) }}</span>
-            <ElButton link type="danger" size="small" @click.stop="removeSession(s)">删除</ElButton>
+            <ElButton link type="danger" size="small" @click.stop="removeSession(s)">{{
+              $t('aiChat.delete')
+            }}</ElButton>
           </div>
         </div>
         <ElEmpty
           v-if="!sessionLoading && !sessions.length"
-          description="还没有会话。点新对话开始提问"
+          :description="$t('aiChat.emptySessions')"
           :image-size="64"
         />
       </div>
@@ -39,12 +43,18 @@
 
     <section class="ai-chat-main">
       <header class="ai-chat-main__hd">
-        <ElButton v-if="collapsed" text @click="collapsed = false">会话</ElButton>
-        <span class="ai-chat-main__title">{{ activeSession?.title || '机器人助手' }}</span>
+        <ElButton v-if="collapsed" text @click="collapsed = false">{{
+          $t('aiChat.sessions')
+        }}</ElButton>
+        <span class="ai-chat-main__title">{{
+          activeSession?.title
+            ? displaySessionTitle(activeSession.title, t)
+            : $t('aiChat.assistantTitle')
+        }}</span>
         <div class="ai-chat-main__tools">
           <ElSelect
             v-model="modelId"
-            placeholder="选择模型"
+            :placeholder="$t('aiChat.selectModel')"
             filterable
             clearable
             style="width: 200px"
@@ -54,24 +64,30 @@
           </ElSelect>
           <ElSelect
             v-model="knowledgeId"
-            placeholder="知识库（可选）"
+            :placeholder="$t('aiChat.knowledgeOptional')"
             filterable
             clearable
             style="width: 180px"
           >
             <ElOption v-for="k in knowledgeList" :key="k.id" :label="k.name" :value="k.id" />
           </ElSelect>
-          <ElButton :disabled="!activeId || streaming" @click="clearMessages">清空</ElButton>
-          <ElButton :disabled="!activeId" @click="exportSession">导出</ElButton>
+          <ElButton :disabled="!activeId || streaming" @click="clearMessages">{{
+            $t('aiChat.clear')
+          }}</ElButton>
+          <ElButton :disabled="!activeId" @click="exportSession">{{
+            $t('aiChat.export')
+          }}</ElButton>
         </div>
       </header>
 
       <div ref="msgBoxRef" class="ai-chat-msgs">
         <div v-for="(msg, idx) in messages" :key="msg.id || idx" class="ai-msg" :class="msg.role">
-          <div class="ai-msg__role">{{ msg.role === 'user' ? '我' : '助手' }}</div>
+          <div class="ai-msg__role">{{
+            msg.role === 'user' ? $t('aiChat.me') : $t('aiChat.assistant')
+          }}</div>
           <div class="ai-msg__body">
             <ElCollapse v-if="msg.thinkContent" class="ai-msg__think">
-              <ElCollapseItem title="思考过程" name="1">
+              <ElCollapseItem :title="$t('aiChat.thinking')" name="1">
                 <pre>{{ msg.thinkContent }}</pre>
               </ElCollapseItem>
             </ElCollapse>
@@ -83,10 +99,10 @@
               :disabled="streaming"
               @click="replayMessage(msg)"
             >
-              续传
+              {{ $t('aiChat.resume') }}
             </ElButton>
             <div v-if="msg.refs?.length" class="ai-msg__refs">
-              <div class="ai-msg__refs-title">引用 {{ msg.refs.length }}</div>
+              <div class="ai-msg__refs-title">{{ $t('aiChat.refs', { n: msg.refs.length }) }}</div>
               <div v-for="(r, ri) in msg.refs" :key="ri" class="ai-msg__ref">
                 <span class="ai-msg__ref-meta">
                   #{{ ri + 1 }}
@@ -108,7 +124,7 @@
         </div>
         <ElEmpty
           v-if="!messages.length"
-          description="还没有消息。在下面输入问题后发送"
+          :description="$t('aiChat.emptyMessages')"
           :image-size="72"
         />
       </div>
@@ -118,14 +134,16 @@
           v-model="input"
           type="textarea"
           :rows="compact ? 2 : 3"
-          placeholder="输入消息，Enter 发送，Shift+Enter 换行"
+          :placeholder="$t('aiChat.inputPlaceholder')"
           :disabled="streaming"
           @keydown="onKeydown"
         />
         <div class="ai-chat-input__actions">
-          <ElButton v-if="streaming" type="danger" @click="stopStream">停止</ElButton>
+          <ElButton v-if="streaming" type="danger" @click="stopStream">{{
+            $t('aiChat.stop')
+          }}</ElButton>
           <ElButton type="primary" :loading="streaming" :disabled="!input.trim()" @click="send">
-            发送
+            {{ $t('aiChat.send') }}
           </ElButton>
         </div>
       </footer>
@@ -134,7 +152,10 @@
 </template>
 
 <script setup lang="ts">
-  import { nextTick, onMounted, ref, watch } from 'vue'
+  import { useI18n } from 'vue-i18n'
+  import { displaySessionTitle, newSessionTitle } from './sessionTitle'
+  import { computed, nextTick, onMounted, ref, watch } from 'vue'
+  import { useWindowSize } from '@vueuse/core'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import DOMPurify from 'dompurify'
   import hljs from 'highlight.js'
@@ -152,6 +173,8 @@
     fetchSaveAiSession
   } from '../../api'
 
+  const { t } = useI18n()
+
   defineProps<{ compact?: boolean }>()
 
   interface ChatMsg {
@@ -167,6 +190,10 @@
   }
 
   const collapsed = ref(false)
+  /** 窄屏（UX-113）：单栏，会话列表收成覆盖层，默认收起，选中会话后自动收起 */
+  const { width: viewportWidth } = useWindowSize()
+  const narrow = computed(() => viewportWidth.value <= 640)
+  watch(narrow, (v) => (collapsed.value = v), { immediate: true })
   const sessionLoading = ref(false)
   const sessions = ref<any[]>([])
   const activeId = ref<string | number | null>(null)
@@ -255,6 +282,7 @@
   }
 
   async function selectSession(s: any) {
+    if (narrow.value) collapsed.value = true
     activeId.value = s.id
     activeSession.value = s
     modelId.value = s.modelId || modelId.value
@@ -275,7 +303,7 @@
   async function createSession() {
     const n = sessions.value.length + 1
     const row = await fetchSaveAiSession({
-      title: `新对话 ${n}`,
+      title: newSessionTitle(n),
       source: 'assistant',
       modelId: modelId.value
     })
@@ -303,8 +331,10 @@
 
   async function removeSession(s: any) {
     await ElMessageBox.confirm(
-      `删除「${s.title || '这条会话'}」后，列表里不会再出现。消息也会一起清掉`,
-      '确认'
+      t('aiChat.removeConfirm', {
+        name: s.title ? displaySessionTitle(s.title, t) : t('aiChat.thisSession')
+      }),
+      t('aiChat.confirmTitle')
     )
     await fetchRemoveAiSession(s.id)
     if (activeId.value === s.id) {
@@ -317,7 +347,7 @@
 
   async function clearMessages() {
     if (!activeId.value) return
-    await ElMessageBox.confirm('清空后，这条会话里的消息不会再出现。会话还在', '确认')
+    await ElMessageBox.confirm(t('aiChat.clearConfirm'), t('aiChat.confirmTitle'))
     await fetchClearAiSession(activeId.value)
     messages.value = []
   }
@@ -346,7 +376,7 @@
     if (!text || streaming.value) return
     if (!activeId.value) await createSession()
     if (!activeId.value) {
-      ElMessage.warning('请先创建会话')
+      ElMessage.warning(t('aiChat.createFirst'))
       return
     }
     input.value = ''
@@ -370,8 +400,8 @@
           assistant.content += c
           void scrollBottom()
         },
-        onThink: (t) => {
-          assistant.thinkContent = (assistant.thinkContent || '') + t
+        onThink: (chunk) => {
+          assistant.thinkContent = (assistant.thinkContent || '') + chunk
         },
         onRefs: (refs: any) => {
           const list = Array.isArray(refs) ? refs : refs?.refs
@@ -410,7 +440,7 @@
         onError: (msg) => {
           streaming.value = false
           abortCtrl.value = null
-          const text = msg || '生成失败。请检查模型后再发送'
+          const text = msg || t('aiChat.genFailed')
           if (!assistant.content) assistant.content = text
           ElMessage.error(text)
         }
@@ -426,16 +456,16 @@
       onChunk: (c) => {
         if (c && !msg.content.includes(c)) msg.content += c
       },
-      onThink: (t) => {
-        if (t && !(msg.thinkContent || '').includes(t)) {
-          msg.thinkContent = (msg.thinkContent || '') + t
+      onThink: (chunk) => {
+        if (chunk && !(msg.thinkContent || '').includes(chunk)) {
+          msg.thinkContent = (msg.thinkContent || '') + chunk
         }
       },
       onError: (m) => {
         failed = true
         streaming.value = false
         abortCtrl.value = null
-        ElMessage.error(m || '没有可续传的回答。请重新发送')
+        ElMessage.error(m || t('aiChat.nothingToResume'))
       },
       onDone: (payload) => {
         streaming.value = false
@@ -445,7 +475,7 @@
           payload && typeof payload === 'object' && 'message' in payload
             ? String((payload as { message?: unknown }).message || '')
             : ''
-        ElMessage.success(text || '已取回这段回答。内容已经补在这条消息上')
+        ElMessage.success(text || t('aiChat.resumed'))
       }
     })
   }
@@ -456,7 +486,7 @@
     const id = requestId.value
     streaming.value = false
     if (!id) {
-      ElMessage.warning('生成还没开始。请等回答出现后再停止')
+      ElMessage.warning(t('aiChat.notStarted'))
       return
     }
     try {
@@ -559,6 +589,28 @@
     flex-wrap: wrap;
     gap: 8px;
     align-items: center;
+  }
+
+  /* 窄屏单栏（UX-113）：会话列表覆盖在聊天区上，工具栏下拉各占半行 */
+  .ai-chat-panel.narrow {
+    position: relative;
+  }
+
+  .ai-chat-panel.narrow .ai-chat-sessions {
+    position: absolute;
+    inset: 0;
+    z-index: 5;
+    width: 100%;
+    background: var(--el-bg-color);
+    border-right: none;
+  }
+
+  .ai-chat-panel.narrow .ai-chat-main__tools {
+    width: 100%;
+  }
+
+  .ai-chat-panel.narrow .ai-chat-main__tools .el-select {
+    width: calc(50% - 4px) !important;
   }
 
   .ai-chat-msgs {

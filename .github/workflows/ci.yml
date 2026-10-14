@@ -15,32 +15,43 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Checkout analytics SDK (mugsun-track)
-        run: git clone --depth 1 https://github.com/mugsun/mugsun-track.git ../mugsun-track
+        # 固定到 mugsun-track 的具体提交，避免上游分支漂移带入未审代码
+        env:
+          TRACK_REF: e5bb24db4ec904db8f8666ea326d29fc47c6402e
+        run: |
+          git init -q ../mugsun-track
+          git -C ../mugsun-track fetch -q --depth 1 https://github.com/mugsun/mugsun-track.git "$TRACK_REF"
+          git -C ../mugsun-track checkout -q FETCH_HEAD
 
+      # 版本取自 package.json 的 packageManager（pnpm@11.28.2，与 mugsun-track 一致）
       - name: Set up pnpm
-        uses: pnpm/action-setup@v4
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
 
       - name: Set up Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 22
           cache: pnpm
 
       - name: Build analytics SDK
-        run: pnpm --dir ../mugsun-track install && pnpm --dir ../mugsun-track build
+        run: pnpm --dir ../mugsun-track install --frozen-lockfile && pnpm --dir ../mugsun-track build
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      # 为 ESLint 生成 auto-import 的全局声明文件，避免缺失导致 Lint 读取失败
-      - name: Generate ESLint auto-imports
-        run: pnpm exec vite build --emptyOutDir=false
+      # 先跑 vite（unplugin-auto-import / components）生成 src/types/import/*.d.ts，
+      # 这两个文件不入库；vue-tsc 与 ESLint 都依赖它们，必须在其之前生成
+      - name: Generate auto-imports.d.ts (vite build)
+        run: pnpm exec vite build
+
+      - name: Verify generated declarations
+        run: test -s src/types/import/auto-imports.d.ts && test -s src/types/import/components.d.ts
+
+      - name: Typecheck (vue-tsc)
+        run: pnpm run typecheck
 
       - name: Lint
         run: pnpm run lint
-
-      - name: Build
-        run: pnpm run build

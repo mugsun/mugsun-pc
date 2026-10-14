@@ -1,6 +1,9 @@
 <template>
   <div class="gis-pick">
-    <div ref="host" class="gis-pick-map" data-testid="gis-pick-map"></div>
+    <div class="gis-pick-map-wrap">
+      <div ref="host" class="gis-pick-map" data-testid="gis-pick-map"></div>
+      <GisTileErrorHint :host="host" />
+    </div>
     <div class="gis-pick-bar">
       <span class="gis-pick-addr" :title="label">{{ label }}</span>
       <ElButton v-if="picked" link type="danger" :disabled="disabled" @click="clear">
@@ -11,8 +14,11 @@
 </template>
 
 <script setup lang="ts">
+  import GisTileErrorHint from './GisTileErrorHint.vue'
   import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
+  // 设计器 / 填报弹窗里单独使用时也要带上 OpenLayers 控件样式（否则缩放按钮、署名退化成纯文本）
+  import 'ol/ol.css'
   import type Map from 'ol/Map'
   import { fetchGisReverse, fetchGisStatus, type GisProviderStatus } from '@/api/gis'
   import { rememberedOrFirst } from '@/gis/preferProvider'
@@ -186,6 +192,10 @@
 <style scoped>
   .gis-pick {
     width: 100%;
+  }
+
+  .gis-pick-map-wrap {
+    position: relative;
   }
 
   .gis-pick-map {

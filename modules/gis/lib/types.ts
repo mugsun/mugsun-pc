@@ -1,4 +1,5 @@
-export type GisProviderCode = 'tianditu' | 'amap' | 'baidu' | 'google'
+/** xyz：自定义 XYZ 瓦片（OSM / CARTO 等，免密钥），按 WGS84 处理，不做 GCJ/BD 纠偏 */
+export type GisProviderCode = 'tianditu' | 'amap' | 'baidu' | 'google' | 'xyz'
 export type GisStyleCode = 'vec' | 'img' | 'img_label' | 'vec_label'
 export type GisViewMode = '2d' | '3d'
 export type GisFeatureKind =
@@ -319,8 +320,12 @@ export function newSketchId(): string {
   return `s-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`
 }
 
-/** 样式对应的瓦片图层（影像注记 = 底图 + 注记叠层；Google/百度仅单层） */
+/** 样式对应的瓦片图层（影像注记 = 底图 + 注记叠层；Google/百度/自定义瓦片仅单层） */
 export function layersForStyle(style: GisStyleCode, provider?: GisProviderCode): string[] {
+  if (provider === 'xyz') {
+    // 自定义瓦片只有一层，样式切换不适用
+    return ['base']
+  }
   if (provider === 'google' || provider === 'baidu') {
     return style.startsWith('img') ? ['img'] : ['vec']
   }

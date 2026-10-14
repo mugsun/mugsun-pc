@@ -53,7 +53,9 @@
 
       <template #empty>
         <div v-if="loading"></div>
-        <ElEmpty v-else :description="errorMessage || emptyText" :image-size="120" />
+        <ArtEmptyState v-else :error="!!errorMessage" :description="errorMessage || emptyText">
+          <template v-if="$slots['empty-actions']" #actions><slot name="empty-actions" /></template>
+        </ArtEmptyState>
       </template>
     </ElTable>
 
@@ -77,6 +79,7 @@
 </template>
 
 <script setup lang="ts">
+  import ArtEmptyState from '@/components/core/others/art-empty-state/index.vue'
   import { ref, computed, nextTick, watchEffect, getCurrentInstance, useAttrs } from 'vue'
   import type { ElTable, TableProps } from 'element-plus'
   import { storeToRefs } from 'pinia'

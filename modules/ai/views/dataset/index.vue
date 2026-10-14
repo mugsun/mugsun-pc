@@ -5,71 +5,76 @@
         <ElInput
           v-model="keyword"
           clearable
-          placeholder="搜索问数"
+          :placeholder="$t('aiDatasetList.searchPh')"
           style="width: 220px"
           @keyup.enter="reload"
           @clear="reload"
         />
-        <ElButton @click="reload">搜索</ElButton>
-        <ElButton type="primary" @click="openEdit()">新建</ElButton>
+        <ElButton @click="reload">{{ $t('aiDatasetList.search') }}</ElButton>
+        <ElButton type="primary" @click="openEdit()">{{ $t('aiDatasetList.add') }}</ElButton>
       </div>
       <div v-loading="loading" class="card-grid">
         <ElCard v-for="row in records" :key="row.id" shadow="hover">
           <div class="title">{{ row.name }}</div>
-          <div class="meta">数据源和表在配置里选择</div>
-          <div class="desc">{{ row.description || '还没有描述' }}</div>
+          <div class="meta">{{ $t('aiDatasetList.meta') }}</div>
+          <div class="desc">{{ row.description || $t('aiDatasetList.noDesc') }}</div>
           <div class="ops">
-            <ElButton link type="primary" @click="goConfig(row)">配置</ElButton>
-            <ElButton link @click="goRun(row)">问数</ElButton>
-            <ElButton link @click="goDash(row)">仪表盘</ElButton>
-            <ElButton link @click="openEdit(row)">编辑</ElButton>
-            <ElButton link @click="copy(row)">复制</ElButton>
-            <ElButton link type="danger" @click="remove(row)">删除</ElButton>
+            <ElButton link type="primary" @click="goConfig(row)">{{
+              $t('aiDatasetList.config')
+            }}</ElButton>
+            <ElButton link @click="goRun(row)">{{ $t('aiDatasetList.run') }}</ElButton>
+            <ElButton link @click="goDash(row)">{{ $t('aiDatasetList.dashboard') }}</ElButton>
+            <ElButton link @click="openEdit(row)">{{ $t('aiDatasetList.edit') }}</ElButton>
+            <ElButton link @click="copy(row)">{{ $t('aiDatasetList.copy') }}</ElButton>
+            <ElButton link type="danger" @click="remove(row)">{{
+              $t('aiDatasetList.remove')
+            }}</ElButton>
           </div>
         </ElCard>
         <ElEmpty
           v-if="!loading && !records.length"
-          :description="
-            searched ? '没有符合条件的问数。换个名称再查' : '还没有问数。点新建开始配置'
-          "
+          :description="searched ? $t('aiDatasetList.emptySearched') : $t('aiDatasetList.empty')"
         />
       </div>
     </ElCard>
     <ElDialog
       v-model="visible"
       class="ai-dataset-dialog"
-      :title="form.id ? '编辑问数' : '新建问数'"
+      :title="form.id ? $t('aiForm.editDataset') : $t('aiForm.newDataset')"
       width="560px"
     >
-      <ElForm :model="form" label-width="72px">
-        <ElFormItem label="名称" required>
+      <ElForm ref="formRef" :model="form" label-width="auto">
+        <ElFormItem :label="$t('aiForm.name')" prop="name" :rules="requiredRule($t('aiForm.name'))">
           <ElInput
             v-model="form.name"
             maxlength="64"
             show-word-limit
-            placeholder="用来在列表里区分"
+            :placeholder="$t('aiForm.phListName')"
           />
         </ElFormItem>
-        <ElFormItem label="描述">
+        <ElFormItem :label="$t('aiForm.description')">
           <ElInput
             v-model="form.description"
             type="textarea"
             :rows="3"
             maxlength="200"
             show-word-limit
-            placeholder="数据源和表保存后，到配置里选择"
+            :placeholder="$t('aiForm.phDatasetTables')"
           />
         </ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="visible = false">取消</ElButton>
-        <ElButton type="primary" :loading="saving" @click="save">保存</ElButton>
+        <ElButton @click="visible = false">{{ $t('aiForm.cancel') }}</ElButton>
+        <ElButton type="primary" :loading="saving" @click="save">{{ $t('aiForm.save') }}</ElButton>
       </template>
     </ElDialog>
   </div>
 </template>
 <script setup lang="ts">
-  import { onMounted, reactive, ref } from 'vue'
+  import type { FormInstance } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
+  import { requiredRule } from '../shared/formRules'
+  import { onMounted, reactive, ref, nextTick } from 'vue'
   import { useRouter } from 'vue-router'
   import { ElMessageBox } from 'element-plus'
   import {
@@ -79,6 +84,8 @@
     fetchSaveAiDataset
   } from '../../api'
   defineOptions({ name: 'AiDataset' })
+  const { t } = useI18n()
+  const formRef = ref<FormInstance>()
   const router = useRouter()
   const keyword = ref('')
   const searched = ref(false)
@@ -114,8 +121,10 @@
     Object.keys(form).forEach((k) => delete form[k])
     Object.assign(form, row ? { ...row } : {})
     visible.value = true
+    nextTick(() => formRef.value?.clearValidate())
   }
   async function save() {
+    if (!(await formRef.value?.validate().catch(() => false))) return
     saving.value = true
     try {
       await fetchSaveAiDataset({ id: form.id, name: form.name, description: form.description })
@@ -133,8 +142,8 @@
   }
   async function remove(row: any) {
     await ElMessageBox.confirm(
-      `删除「${row.name}」后，列表里不会再出现，配置的表也会一起去掉`,
-      '确认'
+      t('aiDatasetList.removeConfirm', { name: row.name }),
+      t('aiDatasetList.confirm')
     )
     await fetchRemoveAiDataset(row.id)
     await reload()

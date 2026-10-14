@@ -1,4 +1,5 @@
 import request from '@/utils/http'
+import { rememberAttributions } from './lib/attribution'
 
 export type GisId = string | number
 
@@ -7,6 +8,34 @@ export interface GisProviderStatus {
   configured: boolean
   enabled: boolean
   id?: number
+  /** 底图版权归属文本（纯文本），地图右下角显示 */
+  attribution?: string
+  /** 自定义瓦片的最大缩放级别 */
+  maxZoom?: number | null
+}
+
+export interface GisXyzTemplate {
+  url: string
+  subdomains: string[]
+  attribution: string
+  maxZoom: number
+  code?: string
+}
+
+export interface GisXyzConfig {
+  available: boolean
+  allowedHosts: string[]
+  usingDefault: boolean
+  current: GisXyzTemplate | null
+  presets: GisXyzTemplate[]
+}
+
+export interface GisProviderTestResult {
+  ok: boolean
+  status?: number
+  bytes?: number
+  millis?: number
+  message?: string
 }
 
 export interface GisStatus {
@@ -34,8 +63,27 @@ export interface GisScene {
   remark?: string
 }
 
-export function fetchGisStatus() {
-  return request.get<GisStatus>({ url: '/api/system/gis/status' })
+/** silent：静默探测，失败不弹 toast（由调用方展示页内错误态） */
+export function fetchGisStatus(opts: { silent?: boolean } = {}) {
+  return request
+    .get<GisStatus>({
+      url: '/api/system/gis/status',
+      ...(opts.silent ? { showErrorMessage: false } : {})
+    })
+    .then((status) => {
+      rememberAttributions(status?.providers)
+      return status
+    })
+}
+
+/** 自定义瓦片：当前配置、预设与部署白名单 */
+export function fetchGisXyzConfig() {
+  return request.get<GisXyzConfig>({ url: '/api/system/gis/provider/xyz' })
+}
+
+/** 测试取一张瓦片（可带未保存的草稿 extraJson） */
+export function fetchTestGisProvider(data: Record<string, unknown>) {
+  return request.post<GisProviderTestResult>({ url: '/api/system/gis/provider/test', data })
 }
 
 export function fetchGisProviderList() {
@@ -200,6 +248,8 @@ export interface GisAnalyzeResult {
   crs?: string
   metrics?: Record<string, number | boolean | string>
   collection?: { count?: number; features?: unknown[]; bbox?: number[] }
+  /** 转交图层查询（Java 回落）时跳过的极区 / 跨 180° 要素数，mugsun-boot#48 起返回 */
+  skipped?: number
 }
 
 export function fetchGisAnalyze(data: Record<string, unknown>) {
@@ -234,6 +284,8 @@ export interface GisSpatialResult {
   /** postgis 表示下沉数据库执行，java 表示回落内存执行 */
   engine: 'postgis' | 'java'
   truncated: boolean
+  /** Java 回落路径跳过的极区 / 跨 180° 要素数，mugsun-boot#48 起返回；PostGIS 路径不带 */
+  skipped?: number
 }
 
 export interface GisSpatialStatus {

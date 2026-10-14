@@ -1,15 +1,17 @@
 /**
- * 验证码闸门：提交前按 config 决定走滑块 / 旧数字码 / 不验证
+ * 验证码闸门：提交前按 config 决定走行为验证码 / 旧数字码 / 不验证
  *
- * - config.enabled && type === 'SLIDER'：提交前弹滑块，拿到 captchaToken 再调业务接口
- * - config.type 非 SLIDER（如 IMAGE）或 config 拉取失败：保留旧数字码流程（过渡一个版本）
+ * - config.enabled && type 为 RANDOM 或已知题型（SLIDER/ROTATE/WORD_CLICK/ICON_CLICK/JIGSAW）：
+ *   提交前弹 CaptchaDialog（实际题型看 challenge.type），拿到 captchaToken 再调业务接口
+ * - config.type 为 IMAGE / 未知值，或 config 拉取失败：保留旧数字码流程（过渡一个版本）
+ * - challenge 返回未知题型：CaptchaDialog 触发 fallback，闸门切到旧数字码
  * - config.enabled === false：不带 token
  * - 业务接口返回 CAPTCHA_REQUIRED(40013)：重拉 config 并只自动重弹一次，再次失败交由全局 msg 提示
  */
 import { computed, ref } from 'vue'
 import type { CaptchaConfig, CaptchaScene } from '@/api/captcha'
 import { fetchCaptchaConfig } from '@/api/captcha'
-import { isCaptchaRequired } from '@/utils/captcha'
+import { isBehaviorConfigType, isCaptchaRequired } from '@/utils/captcha'
 
 /** 用户关闭滑块弹层（调用方静默处理即可） */
 export class CaptchaCancelledError extends Error {
@@ -31,11 +33,17 @@ export function useCaptchaGate(
 
   let pending: { resolve: (t: string) => void; reject: (e: Error) => void } | null = null
 
-  /** 走滑块 */
-  const sliderEnabled = computed(() => !!config.value?.enabled && config.value.type === 'SLIDER')
-  /** 走旧数字码：config 不可用（旧后端）或 type 非 SLIDER */
+  /** challenge 下发了前端不认识的题型：本页回退旧数字码 */
+  const forceLegacy = ref(false)
+  /** 走行为验证码（多题型） */
+  const sliderEnabled = computed(
+    () => !forceLegacy.value && !!config.value?.enabled && isBehaviorConfigType(config.value.type)
+  )
+  /** 走旧数字码：config 不可用（旧后端）、type 非行为题型，或出现未知题型 */
   const legacyEnabled = computed(
-    () => !config.value || (config.value.enabled && config.value.type !== 'SLIDER')
+    () =>
+      !config.value ||
+      (config.value.enabled && (forceLegacy.value || !isBehaviorConfigType(config.value.type)))
   )
 
   async function loadConfig() {
@@ -73,6 +81,14 @@ export function useCaptchaGate(
     pending = null
   }
 
+  /** challenge 返回未知题型：关闭弹层、切旧数字码，调用方需提示用户填写数字码后重新提交 */
+  function onFallback() {
+    forceLegacy.value = true
+    visible.value = false
+    pending?.reject(new CaptchaCancelledError())
+    pending = null
+  }
+
   function onClose() {
     visible.value = false
     pending?.reject(new CaptchaCancelledError())
@@ -106,6 +122,7 @@ export function useCaptchaGate(
     run,
     onSuccess,
     onSkip,
+    onFallback,
     onClose
   }
 }

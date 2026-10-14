@@ -4,29 +4,90 @@ import type { VerifyPayload } from '@/utils/captcha'
 /** 验证码场景 */
 export type CaptchaScene = 'login' | 'register' | 'sms' | 'forget'
 
-/** 验证码开关与类型（type 非 SLIDER 时走旧数字码，过渡一个版本） */
+/**
+ * 行为验证码类型（契约 v0.6.1，mugsun-boot#35）。
+ * 实际出什么题只看 challenge 响应的 type；客户端不能指定类型（请求不带 type，带了服务端也忽略）。
+ */
+export type CaptchaType = 'SLIDER' | 'ROTATE' | 'WORD_CLICK' | 'ICON_CLICK' | 'JIGSAW'
+
+/** config.type：RANDOM 或某一具体类型（仅提示，以 challenge 为准）；IMAGE / 其他未知值走旧数字码 */
+export type CaptchaConfigType = CaptchaType | 'RANDOM' | 'IMAGE' | (string & {})
+
+/** 验证码开关与类型 */
 export interface CaptchaConfig {
   enabled: boolean
-  type: 'SLIDER' | 'IMAGE' | string
+  type: CaptchaConfigType
   scene?: string
 }
 
-/** 滑块挑战（不含答案 x，拼图块与底图同高，前端只横向平移） */
-export interface CaptchaChallenge {
+interface ChallengeBase {
   captchaId: string
-  type: string
-  /** 出题时声明的输入模式；verify 必须一致 */
+  /** 出题时声明的输入模式；verify 必须一致。keyboard 题服务端只出 SLIDER / ROTATE */
   inputMode: 'pointer' | 'keyboard'
-  background: string
-  piece: string
+  expireSeconds: number
+  /** 底图原始像素（默认 320×180）；JIGSAW 为整张 2×2 网格的原始尺寸 */
   bgWidth: number
   bgHeight: number
-  pieceWidth: number
-  pieceHeight: number
-  expireSeconds: number
-  /** 仅 keyboard 题返回：每次 ←/→ 移动的原图像素，默认 4；前端换算为显示像素 */
+  /**
+   * 仅 keyboard 题返回：每次 ←/→ 的移动量。
+   * SLIDER 为原图像素（默认 4，前端换算显示像素）；ROTATE 为角度（度，默认 5）。
+   */
   keyboardStep?: number
 }
+
+/** 滑块拼图（不含答案 x，拼图块与底图同高，前端只横向平移） */
+export interface SliderChallenge extends ChallengeBase {
+  type: 'SLIDER'
+  /** 服务端渲染的真实底图（JPEG data URL） */
+  background: string
+  piece: string
+  pieceWidth: number
+  pieceHeight: number
+}
+
+/**
+ * 旋转：background 为浅化底图 + 圆位阴影；piece 为已被服务端随机旋转的圆图（PNG），居中叠放。
+ * answer.angle = 用户施加的顺时针纠正量 = (360 − 服务端施加角) mod 360。
+ */
+export interface RotateChallenge extends ChallengeBase {
+  type: 'ROTATE'
+  background: string
+  piece: string
+  /** 圆图直径（原始像素，默认 160） */
+  pieceSize: number
+}
+
+/** 文字 / 图标点选：按提示顺序点击；answer.points 为显示像素，原点底图左上角 */
+export interface ClickChallenge extends ChallengeBase {
+  type: 'WORD_CLICK' | 'ICON_CLICK'
+  background: string
+  /** 提示图（data:image/png），前端优先显示 */
+  promptImage?: string
+  /** WORD_CLICK：整词字符串（v0.6.2，如「一帆风顺」，读屏用）；兼容 v0.6.1 的逐字数组 */
+  prompt?: string | string[]
+  /** ICON_CLICK：图标名（读屏） */
+  promptNames?: string[]
+  /** 需点击个数（WORD_CLICK 3 或 4，ICON_CLICK 3）；前端只认此字段 */
+  count?: number
+  /** WORD_CLICK：画面含 1–2 个形近 / 同音干扰字 */
+  hasDecoy?: boolean
+  /** v0.6.1 可选：字号 / 图标边长名义值（原始像素） */
+  itemSize?: number
+}
+
+/**
+ * 拼图还原：无 background 字段；tiles 为 JPEG data URL，按当前打乱后的位置顺序（行优先）。
+ * answer.order[cell] = 该格最终放的 tiles 下标；bgDisplayWidth = 整个网格的显示宽度。
+ */
+export interface JigsawChallenge extends ChallengeBase {
+  type: 'JIGSAW'
+  grid: { rows: number; cols: number }
+  tiles: string[]
+  tileWidth: number
+  tileHeight: number
+}
+
+export type CaptchaChallenge = SliderChallenge | RotateChallenge | ClickChallenge | JigsawChallenge
 
 export interface CaptchaVerifyResult {
   captchaToken: string
@@ -71,7 +132,7 @@ export async function fetchCaptchaConfig(params: SceneParams) {
   })
 }
 
-/** 获取滑块挑战（须声明 inputMode） */
+/** 获取挑战（须声明 inputMode；不带 type，题型由服务端决定） */
 export async function fetchCaptchaChallenge(params: ChallengeParams) {
   const body = withScene(params) as ChallengeParams
   if (useMock) return (await loadMock()).mockChallenge(body.inputMode)
@@ -82,7 +143,7 @@ export async function fetchCaptchaChallenge(params: ChallengeParams) {
   })
 }
 
-/** 校验落点与轨迹，成功换一次性 captchaToken */
+/** 校验答案与轨迹，成功换一次性 captchaToken */
 export async function fetchCaptchaVerify(data: VerifyPayload) {
   if (useMock) return (await loadMock()).mockVerify(data)
   return request.post<CaptchaVerifyResult>({

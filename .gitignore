@@ -22,3 +22,6 @@ test-results/
 preview.log
 vite-e2e.log
 dev.log
+
+# compose 口令文件（docker/compose.pc.yml）
+docker/.env

@@ -21,7 +21,10 @@ import { ElLoading } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
 import { ApiStatus } from './status'
 import { HttpError, handleError, showError, showSuccess } from './error'
-import { $t } from '@/locales'
+import { reportApiError } from './api-error-report'
+import i18n, { $t } from '@/locales'
+import { unref } from 'vue'
+import { toAcceptLanguage } from './lang'
 import { BaseResponse } from '@/types'
 import { parseJsonSafe } from '@/utils/json'
 
@@ -112,11 +115,24 @@ function isCancelError(error: unknown): boolean {
   return (error instanceof HttpError && error.canceled) || axios.isCancel(error)
 }
 
+/** 当前界面语言对应的 Accept-Language；i18n 未就绪时回退 zh-CN */
+function currentAcceptLanguage(): string {
+  try {
+    return toAcceptLanguage(unref(i18n.global.locale))
+  } catch {
+    return 'zh-CN'
+  }
+}
+
 /** 请求拦截器 */
 axiosInstance.interceptors.request.use(
   (request: InternalAxiosRequestConfig) => {
     const { accessToken } = useUserStore()
     if (accessToken) request.headers.set('Authorization', `${TOKEN_SCHEME}${accessToken}`)
+    // 当前界面语言（验证码 promptNames / 题型可用性等按此本地化）；调用方显式传入时不覆盖
+    if (!request.headers.has('Accept-Language')) {
+      request.headers.set('Accept-Language', currentAcceptLanguage())
+    }
 
     if (request.data && !(request.data instanceof FormData) && !request.headers['Content-Type']) {
       request.headers.set('Content-Type', 'application/json')
@@ -141,8 +157,19 @@ axiosInstance.interceptors.response.use(
     const { code, msg, data } = response.data
     if (code === ApiStatus.success) return response
     if (code === ApiStatus.unauthorized) handleUnauthorizedError(msg)
+    const message = msg || $t('httpMsg.requestFailed')
+    const url = response.config.url
+    const method = response.config.method?.toUpperCase()
+    // HTTP 200 业务失败：axios 视为成功，接口监控记不到，单独上报一次（带 biz_code）
+    reportApiError({ url, method, status: response.status, bizCode: code, message })
     // 业务错误携带 R.data（如验证码限流 data.retryAfter），供调用方按 code 分支
-    throw createHttpError(msg || $t('httpMsg.requestFailed'), code, data)
+    throw new HttpError(message, code, {
+      data,
+      url,
+      method,
+      errorKind: 'business',
+      bizCode: typeof code === 'number' ? code : undefined
+    })
   },
   (error) => {
     if (error.response?.status === ApiStatus.unauthorized) handleUnauthorizedError()

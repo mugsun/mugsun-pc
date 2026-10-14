@@ -187,6 +187,7 @@
   import { enableGis } from '@/modules/flags'
   import { useI18n } from 'vue-i18n'
   import { fmtTrackClock, fmtTrackDuration, useTrackApp } from '@/views/track/shared/useTrackApp'
+  import { fmtAvgSessionDuration, fmtBounceRate } from '@/views/track/shared/settledCards'
   import { useChartOps } from '@/hooks/core/useChart'
   import type { LineDataItem, PieDataItem } from '@/types/component/chart'
   import {
@@ -221,7 +222,8 @@
     sessionCount: 0,
     eventCount: 0,
     avgSessionDurationMs: 0,
-    bounceRate: 0
+    bounceRate: 0,
+    settledSessionCount: null as number | null
   })
   const referrerDist = ref<PieDataItem[]>([])
   const deviceDist = ref<PieDataItem[]>([])
@@ -268,7 +270,7 @@
     {
       key: 'avgSessionDurationMs',
       label: t('pages.track.overview.avgSessionDuration'),
-      value: fmtTrackDuration(cards.avgSessionDurationMs),
+      value: fmtAvgSessionDuration(cards, fmtTrackDuration),
       icon: 'ri:time-line',
       bg: 'var(--el-color-info-light-9)',
       color: 'var(--el-color-info)'
@@ -276,7 +278,7 @@
     {
       key: 'bounceRate',
       label: t('pages.track.overview.bounceRate'),
-      value: `${(Number(cards.bounceRate || 0) * 100).toFixed(1)}%`,
+      value: fmtBounceRate(cards),
       icon: 'ri:logout-box-line',
       bg: 'var(--el-color-error-light-9)',
       color: 'var(--el-color-error)'
@@ -358,7 +360,8 @@
         sessionCount: ov?.cards?.sessionCount ?? 0,
         eventCount: ov?.cards?.eventCount ?? 0,
         avgSessionDurationMs: ov?.cards?.avgSessionDurationMs ?? 0,
-        bounceRate: ov?.cards?.bounceRate ?? 0
+        bounceRate: ov?.cards?.bounceRate ?? 0,
+        settledSessionCount: ov?.cards?.settledSessionCount ?? null
       })
       referrerDist.value = ov?.referrerDist ?? []
       deviceDist.value = ov?.deviceDist ?? []
