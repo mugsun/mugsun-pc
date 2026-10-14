@@ -27,6 +27,16 @@
   left: 12px;
 }
 
+/* 带左侧面板的页面：缩放按钮挪到面板右侧，避免被面板盖住（UX-109） */
+.gis-map-shell--panel .ol-zoom {
+  left: 304px;
+}
+
+.gis-map-shell--panel:has(.gis-hud-panel-wide) .ol-zoom,
+.gis-map-shell--panel:has(.gis-hud-panel-wide) .gis-hud-status {
+  left: 324px;
+}
+
 .gis-hud {
   position: absolute;
   z-index: 5;
@@ -165,4 +175,25 @@
 
 .gis-w-full .el-input-number {
   width: 100%;
+}
+
+/* 窄屏：底部提示改为整行横条（可收起），面板与缩放按钮让出位置（UX-114） */
+@media (width <= 768px) {
+  .gis-hud-status.gis-coach {
+    right: 72px;
+    bottom: 40px;
+    left: 12px;
+    align-items: flex-start;
+    max-height: 30%;
+    overflow-y: auto;
+  }
+
+  .gis-hud-panel {
+    bottom: 124px;
+  }
+
+  .gis-map .ol-zoom,
+  .gis-map-shell .ol-zoom {
+    bottom: 132px;
+  }
 }

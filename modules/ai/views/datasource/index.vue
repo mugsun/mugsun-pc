@@ -29,11 +29,11 @@
       :title="form.id ? '编辑数据源' : '新增数据源'"
       width="600px"
     >
-      <ElForm :model="form" label-width="100px">
-        <ElFormItem label="名称" required>
+      <ElForm ref="formRef" :model="form" label-width="100px">
+        <ElFormItem label="名称" prop="name" :rules="requiredRule('名称')">
           <ElInput v-model="form.name" maxlength="64" placeholder="用来在列表里区分" />
         </ElFormItem>
-        <ElFormItem label="类型" required>
+        <ElFormItem label="类型" prop="dbType" :rules="requiredRule('类型', true)">
           <ElSelect v-model="form.dbType" style="width: 100%">
             <ElOption label="PostgreSQL" value="postgresql" />
             <ElOption label="MySQL" value="mysql" />
@@ -43,7 +43,7 @@
             <ElOption label="StarRocks" value="starrocks" />
           </ElSelect>
         </ElFormItem>
-        <ElFormItem label="JDBC 地址" required>
+        <ElFormItem label="JDBC 地址" prop="jdbcUrl" :rules="requiredRule('JDBC 地址')">
           <ElInput v-model="form.jdbcUrl" placeholder="例如 jdbc:postgresql://主机:端口/库名" />
         </ElFormItem>
         <ElFormItem label="用户名"><ElInput v-model="form.username" /></ElFormItem>
@@ -64,8 +64,10 @@
   </div>
 </template>
 <script setup lang="ts">
+  import type { FormInstance } from 'element-plus'
+  import { requiredRule } from '../shared/formRules'
   import type { ColumnOption } from '@/types/component'
-  import { computed, h, onMounted, reactive, ref } from 'vue'
+  import { computed, h, onMounted, reactive, ref, nextTick } from 'vue'
   import { ElButton, ElMessageBox } from 'element-plus'
   import {
     fetchAiDatasourcePage,
@@ -74,6 +76,7 @@
     fetchTestAiDatasource
   } from '../../api'
   defineOptions({ name: 'AiDatasource' })
+  const formRef = ref<FormInstance>()
   const TYPE_LABEL: Record<string, string> = {
     postgresql: 'PostgreSQL',
     mysql: 'MySQL',
@@ -159,8 +162,10 @@
     Object.keys(form).forEach((k) => delete form[k])
     Object.assign(form, row ? { ...row, password: '' } : { dbType: 'postgresql' })
     visible.value = true
+    nextTick(() => formRef.value?.clearValidate())
   }
   async function save() {
+    if (!(await formRef.value?.validate().catch(() => false))) return
     saving.value = true
     try {
       const payload = { ...form }

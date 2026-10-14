@@ -67,6 +67,7 @@
           fit-view-on-init
           :default-viewport="{ zoom: 0.9 }"
           @node-click="onNodeClick"
+          @connect="onConnect"
           @pane-click="selected = null"
         >
           <template #node-custom="{ data, id }">
@@ -131,7 +132,15 @@
   import { computed, onMounted, reactive, ref } from 'vue'
   import { useRoute } from 'vue-router'
   import { ElMessage } from 'element-plus'
-  import { VueFlow, Handle, Position, MarkerType, type Edge, type Node } from '@vue-flow/core'
+  import {
+    VueFlow,
+    Handle,
+    Position,
+    MarkerType,
+    type Connection,
+    type Edge,
+    type Node
+  } from '@vue-flow/core'
   import '@vue-flow/core/dist/style.css'
   import '@vue-flow/core/dist/theme-default.css'
   import { fetchAiAppDetail, fetchRunAiApp, fetchSaveAiAppDsl, fetchShareAiApp } from '../../api'
@@ -222,6 +231,14 @@
     const raw = e.dataTransfer?.getData('application/vueflow')
     if (!raw) return
     const n = JSON.parse(raw) as { type: string; label: string }
+    // 开始 / 结束只能各有一个（UX-106）
+    if (
+      (n.type === 'start' || n.type === 'end') &&
+      nodes.value.some((x) => x.data?.type === n.type)
+    ) {
+      ElMessage.warning(`画布上已经有「${n.label}」节点，一个流程只能有一个`)
+      return
+    }
     const bounds = (e.currentTarget as HTMLElement).getBoundingClientRect()
     const id = `${n.type}_${Date.now()}`
     nodes.value.push({
@@ -241,6 +258,45 @@
         outputVar: ''
       }
     })
+  }
+
+  /**
+   * 连线（UX-107）：VueFlow 只发 connect 事件、不自动加边，之前没有处理所以拖了也连不上。
+   * 去掉自连和重复边。
+   */
+  function onConnect(c: Connection) {
+    if (!c.source || !c.target || c.source === c.target) return
+    if (edges.value.some((e) => e.source === c.source && e.target === c.target)) return
+    edges.value = [
+      ...edges.value,
+      {
+        id: `e_${c.source}_${c.target}_${Date.now()}`,
+        source: c.source,
+        target: c.target,
+        sourceHandle: c.sourceHandle,
+        targetHandle: c.targetHandle,
+        markerEnd: MarkerType.ArrowClosed
+      }
+    ]
+  }
+
+  /** 保存前校验（UX-106）：恰好一个开始、一个结束，且没有孤立节点 */
+  function validateFlow(): string | null {
+    const label = (n: Node) => n.data?.label || n.data?.type || n.id
+    const starts = nodes.value.filter((n) => n.data?.type === 'start')
+    const ends = nodes.value.filter((n) => n.data?.type === 'end')
+    if (starts.length !== 1) return `流程需要恰好 1 个「开始」节点，当前 ${starts.length} 个`
+    if (ends.length !== 1) return `流程需要恰好 1 个「结束」节点，当前 ${ends.length} 个`
+    const noIn = nodes.value.filter(
+      (n) => n.data?.type !== 'start' && !edges.value.some((e) => e.target === n.id)
+    )
+    const noOut = nodes.value.filter(
+      (n) => n.data?.type !== 'end' && !edges.value.some((e) => e.source === n.id)
+    )
+    const loose = [...new Set([...noIn, ...noOut])]
+    if (loose.length)
+      return `这些节点还没连好：${loose.map(label).join('、')}。请连线或删除后再保存`
+    return null
   }
 
   function onNodeClick({ node }: { node: Node }) {
@@ -312,6 +368,13 @@
   }
 
   async function save() {
+    if (app.value?.appType !== 'chat') {
+      const err = validateFlow()
+      if (err) {
+        ElMessage.warning(err)
+        return
+      }
+    }
     saving.value = true
     try {
       await fetchSaveAiAppDsl({ id: appId.value, dsl: buildDsl(), dslJson: buildDsl() })

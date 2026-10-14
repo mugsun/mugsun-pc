@@ -119,6 +119,8 @@
       ElMessage.success('已保存')
       visible.value = false
       await reload()
+    } catch {
+      /* 失败提示由请求层展示，弹窗留着方便改完再存 */
     } finally {
       saving.value = false
     }

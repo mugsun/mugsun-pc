@@ -1,7 +1,7 @@
 <!-- 示例中心：全幅地图，能力树以 HUD 浮在左侧。 -->
 <template>
   <div class="gis-shell art-full-height">
-    <div class="gis-map-shell">
+    <div class="gis-map-shell gis-map-shell--panel">
       <PlayerPane v-if="code" :code="code" :catalog="catalog" />
       <LabNav :items="catalog" :active="code" />
     </div>

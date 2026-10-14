@@ -1,6 +1,13 @@
 <template>
   <div class="art-full-height">
-    <ElCard class="art-table-card" shadow="never">
+    <AiNotFound
+      v-if="notFound"
+      what="数据集"
+      :id="datasetId"
+      back-path="/ai/dataset"
+      back-text="返回数据集列表"
+    />
+    <ElCard v-else class="art-table-card" shadow="never">
       <div class="hd">
         <ElButton @click="$router.back()">返回</ElButton>
         <h3>问数配置 #{{ datasetId }}</h3>
@@ -70,6 +77,7 @@
 <script setup lang="ts">
   import type { ColumnOption } from '@/types/component'
   import { computed, h, onMounted, reactive, ref } from 'vue'
+  import AiNotFound from '../shared/AiNotFound.vue'
   import { useRoute } from 'vue-router'
   import { ElButton, ElMessageBox } from 'element-plus'
   import {
@@ -79,9 +87,12 @@
     fetchDatasetTables,
     fetchRemoveAiTerminology,
     fetchSaveAiTerminology,
-    fetchSaveDatasetTables
+    fetchSaveDatasetTables,
+    aiDatasetExists
   } from '../../api'
   defineOptions({ name: 'AiDatasetConfig' })
+  /** id 不存在或已删除时只显示占位与返回入口（UX-105） */
+  const notFound = ref(false)
   const route = useRoute()
   const datasetId = computed(() => route.params.id as string)
   const tab = ref('tables')
@@ -196,6 +207,10 @@
     await loadTerms()
   }
   onMounted(async () => {
+    if (!(await aiDatasetExists(datasetId.value))) {
+      notFound.value = true
+      return
+    }
     await loadDatasources()
     await load()
     await loadTerms()

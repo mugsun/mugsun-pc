@@ -8,19 +8,15 @@
 
 [文档](https://docs.mugsun.com/pc/) · [快速开始](https://docs.mugsun.com/guide/getting-started) · [演示说明](https://docs.mugsun.com/demo)
 
-![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vuedotjs&logoColor=white)
-![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white)
-![Element%20Plus](https://img.shields.io/badge/Element%20Plus-2.11-409EFF)
-![pnpm](https://img.shields.io/badge/pnpm-11.9-F69220?logo=pnpm&logoColor=white)
-![License](https://img.shields.io/badge/License-MIT-green.svg)
+![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vuedotjs&logoColor=white) ![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white) ![Element%20Plus](https://img.shields.io/badge/Element%20Plus-2.11-409EFF) ![pnpm](https://img.shields.io/badge/pnpm-11.28-F69220?logo=pnpm&logoColor=white) ![License](https://img.shields.io/badge/License-MIT-green.svg)
 
 ## 概述
 
 | 项 | 说明 |
 | --- | --- |
 | 包名 | `mugsun-pc` |
-| 版本 | `0.0.1`（以 `package.json` 为准） |
-| 运行时 | Node.js ≥ 20.19；pnpm ≥ 8.8（`packageManager` 锁定 `pnpm@11.9.0`） |
+| 版本 | `0.1.0`（以 `package.json` 为准） |
+| 运行时 | Node.js ≥ 22.13；pnpm ≥ 11.11（`packageManager` 锁定 `pnpm@11.28.2`） |
 | 技术栈 | Vue 3.5 · Vite 7 · Element Plus 2.11 · Pinia · Vue Router |
 | 后端 | [mugsun-boot](https://github.com/mugsun/mugsun-boot)（开发默认 `http://localhost:8080`） |
 | 许可 | [MIT](./LICENSE)；UI 基座致谢见 [NOTICE](./NOTICE) |
@@ -30,10 +26,10 @@
 
 ## 部署
 
-前置条件：Node.js ≥ 20.19、pnpm ≥ 8.8；[mugsun-boot](https://github.com/mugsun/mugsun-boot) 已在 `:8080` 运行。默认开启埋点模块时，须与 [mugsun-track](https://github.com/mugsun/mugsun-track) **平级** clone（`@mugsun/track-web` 以 `file:../mugsun-track` 引用，源码仓不提交 `dist/`）。
+前置条件：Node.js ≥ 22.13、pnpm ≥ 11.11；[mugsun-boot](https://github.com/mugsun/mugsun-boot) 已在 `:8080` 运行。无论是否开启埋点，都须与 [mugsun-track](https://github.com/mugsun/mugsun-track) **平级** clone，否则 `pnpm install` 会因找不到 `../mugsun-track` 而失败（`@mugsun/track-web` 以 `file:../mugsun-track` 引用，源码仓不提交 `dist/`）。
 
 ```bash
-pnpm setup:sdk   # 对 ../mugsun-track 执行 install + build；VITE_ENABLE_TRACK=false 时可跳过
+pnpm setup:sdk   # 对 ../mugsun-track 执行 install + build；VITE_ENABLE_TRACK=false 时可跳过构建，但平级目录仍须存在
 pnpm install
 pnpm dev
 ```
@@ -47,7 +43,7 @@ mugsun/
   mugsun-core/
   mugsun-boot/     # :8080
   mugsun-pc/       # 本仓 :3006
-  mugsun-track/    # file: 依赖（埋点开启时）
+  mugsun-track/    # file: 依赖（pnpm install 恒需要）
 ```
 
 逐步说明见 [文档 · 快速开始](https://docs.mugsun.com/guide/getting-started)。
@@ -75,7 +71,7 @@ mugsun-pc/
 | 变量 | 作用 |
 | --- | --- |
 | `VITE_ENABLE_GIS` | 注册 GIS 路由与相关别名；关闭时可删除 `modules/gis` |
-| `VITE_ENABLE_TRACK` | 注册埋点路由与 SDK 插件；关闭时可跳过 `setup:sdk` 并删除 `modules/track` |
+| `VITE_ENABLE_TRACK` | 注册埋点路由与 SDK 插件；关闭时可跳过 `setup:sdk` 并删除 `modules/track`（平级 `../mugsun-track` 目录仍须存在，供 `pnpm install` 解析） |
 | `VITE_ENABLE_AI` | 注册 AI 路由与插件；关闭时可删除 `modules/ai` |
 
 请求链路：视图与 hooks 经 axios 访问 `/api`；开发期由 Vite 代理至 boot。埋点 SDK 经同源 `/api/track/collect` 上报，同样经代理进入 boot 的 track 模块。
