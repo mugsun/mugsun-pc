@@ -3,10 +3,13 @@
     <ElCard class="art-table-card" shadow="never">
       <div class="toolbar">
         <ElSelect v-model="days" style="width: 120px" @change="loadTrend">
-          <ElOption :value="7" label="近 7 天" /><ElOption :value="30" label="近 30 天" />
+          <ElOption :value="7" :label="$t('aiBilling.lastDays', { n: 7 })" /><ElOption
+            :value="30"
+            :label="$t('aiBilling.lastDays', { n: 30 })"
+          />
         </ElSelect>
-        <ElButton @click="reload">刷新</ElButton>
-        <ElButton @click="doExport">导出</ElButton>
+        <ElButton @click="reload">{{ $t('aiBilling.refresh') }}</ElButton>
+        <ElButton @click="doExport">{{ $t('aiBilling.export') }}</ElButton>
       </div>
       <div class="chart-wrap">
         <div ref="chartRef" class="chart" :class="{ 'is-hidden': trendEmpty }" />
@@ -16,8 +19,8 @@
           class="chart-empty"
           size="compact"
           icon="ri:line-chart-line"
-          :title="`近 ${days} 天还没有调用记录`"
-          description="AI 应用、助手被调用后，这里按天显示 Token 用量"
+          :title="$t('aiBilling.emptyTitle', { n: days })"
+          :description="$t('aiBilling.emptyDesc')"
         />
       </div>
       <ArtTable
@@ -42,12 +45,14 @@
   </div>
 </template>
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import ArtEmptyState from '@/components/core/others/art-empty-state/index.vue'
   import type { ColumnOption } from '@/types/component'
   import { computed, nextTick, onMounted, onUnmounted, ref } from 'vue'
   import * as echarts from 'echarts'
   import { fetchAiBillingPage, fetchAiBillingTrend, fetchExportAiBilling } from '../../api'
   defineOptions({ name: 'AiBilling' })
+  const { t } = useI18n()
   const days = ref(30)
   const loading = ref(false)
   const records = ref<any[]>([])
@@ -62,16 +67,16 @@
     size: pageSize.value,
     total: total.value
   }))
-  const columns: ColumnOption[] = [
+  const columns = computed<ColumnOption[]>(() => [
     { type: 'index', width: 60, label: '#' },
-    { prop: 'callTime', label: '时间', width: 170 },
-    { prop: 'userId', label: '用户', width: 160 },
-    { prop: 'modelName', label: '模型', minWidth: 140 },
-    { prop: 'promptTokens', label: '输入', width: 90 },
-    { prop: 'completionTokens', label: '输出', width: 90 },
-    { prop: 'amount', label: '费用', width: 100 },
-    { prop: 'bizType', label: '来源', width: 100 }
-  ]
+    { prop: 'callTime', label: t('aiBilling.colTime'), width: 170 },
+    { prop: 'userId', label: t('aiBilling.colUser'), width: 160 },
+    { prop: 'modelName', label: t('aiBilling.colModel'), minWidth: 140 },
+    { prop: 'promptTokens', label: t('aiBilling.colInput'), width: 90 },
+    { prop: 'completionTokens', label: t('aiBilling.colOutput'), width: 90 },
+    { prop: 'amount', label: t('aiBilling.colAmount'), width: 100 },
+    { prop: 'bizType', label: t('aiBilling.colSource'), width: 100 }
+  ])
   async function reload() {
     loading.value = true
     try {

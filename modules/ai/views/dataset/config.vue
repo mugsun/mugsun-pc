@@ -2,26 +2,28 @@
   <div class="art-full-height">
     <AiNotFound
       v-if="notFound"
-      what="数据集"
+      :what="$t('aiDatasetConfig.what')"
       :id="datasetId"
       back-path="/ai/dataset"
-      back-text="返回数据集列表"
+      :back-text="$t('aiDatasetConfig.backToList')"
     />
     <ElCard v-else class="art-table-card" shadow="never">
       <div class="hd">
-        <ElButton @click="$router.back()">返回</ElButton>
-        <h3>问数配置 #{{ datasetId }}</h3>
-        <ElButton type="primary" :loading="saving" @click="saveTables">保存表配置</ElButton>
+        <ElButton @click="$router.back()">{{ $t('aiDatasetConfig.back') }}</ElButton>
+        <h3>{{ $t('aiDatasetConfig.title', { id: datasetId }) }}</h3>
+        <ElButton type="primary" :loading="saving" @click="saveTables">{{
+          $t('aiDatasetConfig.saveTables')
+        }}</ElButton>
       </div>
       <ElTabs v-model="tab">
-        <ElTabPane label="数据表" name="tables">
-          <ElForm label-width="88px">
-            <ElFormItem label="数据源" required>
+        <ElTabPane :label="$t('aiDatasetConfig.tabTables')" name="tables">
+          <ElForm label-width="auto">
+            <ElFormItem :label="$t('aiDatasetConfig.datasource')" required>
               <ElSelect
                 v-model="datasourceId"
                 filterable
                 clearable
-                placeholder="先选数据源，再选表"
+                :placeholder="$t('aiDatasetConfig.tablePlaceholder')"
                 style="width: 360px"
                 @change="loadSchema"
               >
@@ -38,43 +40,48 @@
             v-model="selectedTables"
             :data="tableOptions"
             filterable
-            :titles="['可选表', '已选表']"
+            :titles="[$t('aiDatasetConfig.available'), $t('aiDatasetConfig.selected')]"
           />
-          <ElForm style="margin-top: 16px" label-width="88px">
-            <ElFormItem label="业务语义">
+          <ElForm style="margin-top: 16px" label-width="auto">
+            <ElFormItem :label="$t('aiDatasetConfig.semantics')">
               <ElInput
                 v-model="bizDesc"
                 type="textarea"
                 :rows="4"
-                placeholder="描述业务口径、指标定义"
+                :placeholder="$t('aiDatasetConfig.semanticsPlaceholder')"
               />
             </ElFormItem>
           </ElForm>
         </ElTabPane>
-        <ElTabPane label="术语库" name="terms">
+        <ElTabPane :label="$t('aiDatasetConfig.tabTerms')" name="terms">
           <div class="toolbar">
-            <ElButton type="primary" @click="openTerm()">新增术语</ElButton>
-            <ElButton @click="loadTerms">刷新</ElButton>
+            <ElButton type="primary" @click="openTerm()">{{
+              $t('aiDatasetConfig.addTerm')
+            }}</ElButton>
+            <ElButton @click="loadTerms">{{ $t('aiDatasetConfig.refresh') }}</ElButton>
           </div>
           <ArtTable :loading="termLoading" :data="terms" :columns="termCols" />
         </ElTabPane>
       </ElTabs>
     </ElCard>
-    <ElDialog v-model="termVisible" title="术语" width="480px">
-      <ElForm :model="termForm" label-width="80px">
-        <ElFormItem label="术语" required><ElInput v-model="termForm.name" /></ElFormItem>
-        <ElFormItem label="释义" required
+    <ElDialog v-model="termVisible" :title="$t('aiDatasetConfig.term')" width="480px">
+      <ElForm :model="termForm" label-width="auto">
+        <ElFormItem :label="$t('aiDatasetConfig.term')" required
+          ><ElInput v-model="termForm.name"
+        /></ElFormItem>
+        <ElFormItem :label="$t('aiDatasetConfig.definition')" required
           ><ElInput v-model="termForm.content" type="textarea" :rows="3"
         /></ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="termVisible = false">取消</ElButton>
-        <ElButton type="primary" @click="saveTerm">保存</ElButton>
+        <ElButton @click="termVisible = false">{{ $t('aiDatasetConfig.cancel') }}</ElButton>
+        <ElButton type="primary" @click="saveTerm">{{ $t('aiDatasetConfig.save') }}</ElButton>
       </template>
     </ElDialog>
   </div>
 </template>
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import type { ColumnOption } from '@/types/component'
   import { computed, h, onMounted, reactive, ref } from 'vue'
   import AiNotFound from '../shared/AiNotFound.vue'
@@ -91,6 +98,7 @@
     aiDatasetExists
   } from '../../api'
   defineOptions({ name: 'AiDatasetConfig' })
+  const { t } = useI18n()
   /** id 不存在或已删除时只显示占位与返回入口（UX-105） */
   const notFound = ref(false)
   const route = useRoute()
@@ -106,24 +114,26 @@
   const terms = ref<any[]>([])
   const termVisible = ref(false)
   const termForm = reactive<Record<string, any>>({})
-  const termCols: ColumnOption[] = [
-    { prop: 'name', label: '术语', minWidth: 120 },
-    { prop: 'content', label: '释义', minWidth: 200 },
+  const termCols = computed<ColumnOption[]>(() => [
+    { prop: 'name', label: t('aiDatasetConfig.term'), minWidth: 120 },
+    { prop: 'content', label: t('aiDatasetConfig.definition'), minWidth: 200 },
     {
       prop: 'operation',
-      label: '操作',
+      label: t('aiDatasetConfig.colActions'),
       width: 140,
       formatter: (row: any) =>
         h('div', [
-          h(ElButton, { link: true, size: 'small', onClick: () => openTerm(row) }, () => '编辑'),
+          h(ElButton, { link: true, size: 'small', onClick: () => openTerm(row) }, () =>
+            t('aiDatasetConfig.edit')
+          ),
           h(
             ElButton,
             { link: true, type: 'danger', size: 'small', onClick: () => rmTerm(row) },
-            () => '删除'
+            () => t('aiDatasetConfig.delete')
           )
         ])
     }
-  ]
+  ])
   async function loadDatasources() {
     const res = await fetchAiDatasourcePage({ pageNum: 1, pageSize: 100 })
     datasources.value = res?.records ?? []
@@ -193,8 +203,8 @@
   async function rmTerm(row: any) {
     try {
       await ElMessageBox.confirm(
-        `确定删除术语「${row.name || ''}」吗？问数时不会再带上它。`,
-        '确认'
+        t('aiDatasetConfig.removeConfirm', { name: row.name || '' }),
+        t('aiDatasetConfig.confirmTitle')
       )
     } catch {
       return

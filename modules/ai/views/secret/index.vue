@@ -1,13 +1,15 @@
 <template>
   <div class="art-full-height">
     <ElCard class="art-table-card" shadow="never">
-      <div class="toolbar"><ElButton type="primary" @click="openEdit()">新增密钥</ElButton></div>
+      <div class="toolbar"
+        ><ElButton type="primary" @click="openEdit()">{{ $t('aiSecret.add') }}</ElButton></div
+      >
       <ArtTable
         :loading="loading"
         :data="records"
         :columns="columns"
         :pagination="pager"
-        empty-text="还没有密钥。点新增密钥开始发放"
+        :empty-text="$t('aiSecret.empty')"
         @pagination:size-change="
           (s: number) => {
             pageSize = s
@@ -63,6 +65,7 @@
   </div>
 </template>
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import type { FormInstance } from 'element-plus'
   import { requiredRule } from '../shared/formRules'
   import type { ColumnOption } from '@/types/component'
@@ -75,6 +78,7 @@
     fetchStatusAiSecret
   } from '../../api'
   defineOptions({ name: 'AiSecret' })
+  const { t } = useI18n()
   const formRef = ref<FormInstance>()
   const loading = ref(false)
   const records = ref<any[]>([])
@@ -89,27 +93,31 @@
     size: pageSize.value,
     total: total.value
   }))
-  const columns: ColumnOption[] = [
+  const columns = computed<ColumnOption[]>(() => [
     { type: 'index', width: 60, label: '#' },
-    { prop: 'description', label: '说明', minWidth: 160 },
+    { prop: 'description', label: t('aiSecret.colDescription'), minWidth: 160 },
     {
       prop: 'apiKeyMask',
-      label: '密钥',
+      label: t('aiSecret.colKey'),
       minWidth: 160,
       formatter: (r: any) => r.apiKeyMask || r.apiKey || '***'
     },
     {
       prop: 'scopeType',
-      label: '作用域',
+      label: t('aiSecret.colScope'),
       width: 100,
       formatter: (row: any) =>
-        row.scopeType === 'user' ? '用户' : row.scopeType === 'app' ? '应用' : '租户'
+        row.scopeType === 'user'
+          ? t('aiSecret.scopeUser')
+          : row.scopeType === 'app'
+            ? t('aiSecret.scopeApp')
+            : t('aiSecret.scopeTenant')
     },
-    { prop: 'rateLimit', label: '限流', width: 90 },
-    { prop: 'usedCount', label: '调用次数', width: 100 },
+    { prop: 'rateLimit', label: t('aiSecret.colRateLimit'), width: 90 },
+    { prop: 'usedCount', label: t('aiSecret.colUsedCount'), width: 100 },
     {
       prop: 'status',
-      label: '状态',
+      label: t('aiSecret.colStatus'),
       width: 100,
       formatter: (row: any) =>
         h(ElSwitch, {
@@ -126,7 +134,7 @@
     },
     {
       prop: 'operation',
-      label: '操作',
+      label: t('aiSecret.colActions'),
       width: 140,
       fixed: 'right',
       formatter: (row: any) =>
@@ -134,16 +142,16 @@
           h(
             ElButton,
             { link: true, type: 'primary', size: 'small', onClick: () => openEdit(row) },
-            () => '编辑'
+            () => t('aiSecret.edit')
           ),
           h(
             ElButton,
             { link: true, type: 'danger', size: 'small', onClick: () => remove(row) },
-            () => '删除'
+            () => t('aiSecret.delete')
           )
         ])
     }
-  ]
+  ])
   async function reload() {
     loading.value = true
     try {
@@ -166,7 +174,7 @@
     try {
       const r = await fetchSaveAiSecret({ ...form })
       if (r?.apiKey) {
-        await ElMessageBox.alert(String(r.apiKey), '请立刻复制。关掉后无法再查看')
+        await ElMessageBox.alert(String(r.apiKey), t('aiSecret.copyNow'))
       }
       visible.value = false
       await reload()
@@ -178,8 +186,8 @@
   }
   async function remove(row: any) {
     await ElMessageBox.confirm(
-      `删除「${row.description || '这把密钥'}」后，列表里不会再出现，也不能再调用`,
-      '确认'
+      t('aiSecret.removeConfirm', { name: row.description || t('aiSecret.thisKey') }),
+      t('aiSecret.confirmTitle')
     )
     await fetchRemoveAiSecret(row.id)
     await reload()

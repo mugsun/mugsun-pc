@@ -1,7 +1,9 @@
 <template>
   <div class="art-full-height">
     <ElCard class="art-table-card" shadow="never">
-      <div class="toolbar"><ElButton type="primary" @click="openEdit()">配置配额</ElButton></div>
+      <div class="toolbar"
+        ><ElButton type="primary" @click="openEdit()">{{ $t('aiQuota.configure') }}</ElButton></div
+      >
       <ArtTable
         :loading="loading"
         :data="records"
@@ -57,11 +59,13 @@
   </div>
 </template>
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import type { ColumnOption } from '@/types/component'
   import { computed, h, onMounted, reactive, ref } from 'vue'
   import { ElButton, ElMessage } from 'element-plus'
   import { fetchAiQuotaPage, fetchSaveAiQuota } from '../../api'
   defineOptions({ name: 'AiQuota' })
+  const { t } = useI18n()
   const loading = ref(false)
   const records = ref<any[]>([])
   const pageNum = ref(1)
@@ -75,28 +79,28 @@
     size: pageSize.value,
     total: total.value
   }))
-  const columns: ColumnOption[] = [
+  const columns = computed<ColumnOption[]>(() => [
     { type: 'index', width: 60, label: '#' },
-    { prop: 'scopeType', label: '作用域', width: 100 },
-    { prop: 'tokenLimit', label: 'Token 上限', width: 120 },
-    { prop: 'usedTokens', label: '已用 Token', width: 120 },
-    { prop: 'amountLimit', label: '费用上限', width: 120 },
-    { prop: 'usedAmount', label: '已用费用', width: 120 },
-    { prop: 'warnPercent', label: '预警%', width: 90 },
-    { prop: 'overAction', label: '超额动作', width: 110 },
+    { prop: 'scopeType', label: t('aiQuota.colScope'), width: 100 },
+    { prop: 'tokenLimit', label: t('aiQuota.colTokenLimit'), width: 120 },
+    { prop: 'usedTokens', label: t('aiQuota.colUsedTokens'), width: 120 },
+    { prop: 'amountLimit', label: t('aiQuota.colAmountLimit'), width: 120 },
+    { prop: 'usedAmount', label: t('aiQuota.colUsedAmount'), width: 120 },
+    { prop: 'warnPercent', label: t('aiQuota.colWarnPercent'), width: 90 },
+    { prop: 'overAction', label: t('aiQuota.colOverAction'), width: 110 },
     {
       prop: 'operation',
-      label: '操作',
+      label: t('aiQuota.colActions'),
       width: 100,
       fixed: 'right',
       formatter: (row: any) =>
         h(
           ElButton,
           { link: true, type: 'primary', size: 'small', onClick: () => openEdit(row) },
-          () => '编辑'
+          () => t('aiQuota.edit')
         )
     }
-  ]
+  ])
   async function reload() {
     loading.value = true
     try {
@@ -119,7 +123,7 @@
     saving.value = true
     try {
       await fetchSaveAiQuota({ ...form })
-      ElMessage.success('已保存')
+      ElMessage.success(t('aiQuota.saved'))
       visible.value = false
       await reload()
     } catch {

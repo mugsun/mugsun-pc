@@ -248,6 +248,8 @@ export interface GisAnalyzeResult {
   crs?: string
   metrics?: Record<string, number | boolean | string>
   collection?: { count?: number; features?: unknown[]; bbox?: number[] }
+  /** 转交图层查询（Java 回落）时跳过的极区 / 跨 180° 要素数，mugsun-boot#48 起返回 */
+  skipped?: number
 }
 
 export function fetchGisAnalyze(data: Record<string, unknown>) {
@@ -282,6 +284,8 @@ export interface GisSpatialResult {
   /** postgis 表示下沉数据库执行，java 表示回落内存执行 */
   engine: 'postgis' | 'java'
   truncated: boolean
+  /** Java 回落路径跳过的极区 / 跨 180° 要素数，mugsun-boot#48 起返回；PostGIS 路径不带 */
+  skipped?: number
 }
 
 export interface GisSpatialStatus {
