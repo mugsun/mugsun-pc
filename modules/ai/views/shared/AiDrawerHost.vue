@@ -56,7 +56,8 @@
     onBeforeUnmount,
     onMounted,
     ref,
-    shallowRef
+    shallowRef,
+    watch
   } from 'vue'
   import { ElButton, ElIcon } from 'element-plus'
   import { Loading, WarningFilled } from '@element-plus/icons-vue'
@@ -70,21 +71,13 @@
     DRAWER_WIDTH_STORAGE_KEY,
     clampDrawerWidth
   } from '../assistant/drawer/drawerLayout'
-  import {
-    CHAT_LOAD_TIMEOUT,
-    buildRetryUrl,
-    clearReloadFlag,
-    decideOnFailure,
-    parseFailedUrl,
-    stripRetryParam,
-    withTimeout
-  } from '../assistant/drawer/chatChunkRetry'
+  import { CHAT_LOAD_TIMEOUT, createChatLoader } from '../assistant/drawer/chatChunkRetry'
   import AiDrawerHeaderShell from '../assistant/drawer/AiDrawerHeaderShell.vue'
 
   /** 内容区加载提示的延迟（顶栏不延迟） */
   const SPINNER_DELAY = 200
 
-  defineProps<{ visible: boolean }>()
+  const props = defineProps<{ visible: boolean }>()
   const emit = defineEmits<{ 'update:visible': [boolean]; open: [] }>()
   const closeDrawer = () => emit('update:visible', false)
 
@@ -145,9 +138,6 @@
    * CSS、嵌套 chunk 失败或连续失败 MAX_CHAT_LOAD_FAILURES 次，改用整页刷新兜底，
    * 同一会话只自动刷新一次（见 chatChunkRetry.ts）。
    */
-  let failedUrl: string | null = null
-  let attempt = 0
-  let consecutiveFailures = 0
   function sessionStore(): Storage | null {
     try {
       return window.sessionStorage
@@ -155,29 +145,18 @@
       return null
     }
   }
-  function loadChat(): Promise<any> {
-    const retryUrl = buildRetryUrl(failedUrl, attempt)
-    const p = retryUrl
-      ? import(/* @vite-ignore */ retryUrl)
-      : import('../assistant/drawer/AiDrawerChat.vue')
-    // 超时也走失败分支，计入连续失败次数（不用 defineAsyncComponent 的 timeout，它不会拒绝 loader）
-    return withTimeout(p, CHAT_LOAD_TIMEOUT).then(
-      (mod) => {
-        consecutiveFailures = 0
-        clearReloadFlag(sessionStore())
-        return mod
-      },
-      (e: unknown) => {
-        consecutiveFailures++
-        const url = parseFailedUrl(e)
-        if (url) failedUrl = stripRetryParam(url)
-        if (decideOnFailure(url, consecutiveFailures, sessionStore()) === 'reload') {
-          window.location.reload()
-        }
-        throw e
-      }
-    )
-  }
+  // 超时 / 失败计数 / 刷新兜底见 createChatLoader；抽屉不可见时旧加载作废，不会刷新页面
+  const chatLoader = createChatLoader({
+    importer: (retryUrl) =>
+      retryUrl
+        ? import(/* @vite-ignore */ retryUrl)
+        : import('../assistant/drawer/AiDrawerChat.vue'),
+    isActive: () => props.visible,
+    storage: sessionStore,
+    reload: () => window.location.reload(),
+    timeout: CHAT_LOAD_TIMEOUT
+  })
+  const loadChat = () => chatLoader.load()
 
   function createChat() {
     return defineAsyncComponent({
@@ -190,8 +169,27 @@
   }
   const AiDrawerChat = shallowRef(createChat())
   const chatKey = ref(0)
+  /**
+   * 抽屉关闭或卸载：作废进行中的加载（超时不再刷新页面、不计失败）。
+   * 还没加载成功时换一个新的异步组件，下次打开重新加载。
+   */
+  function abandonLoad() {
+    chatLoader.invalidate()
+    if (!chatLoader.loaded) {
+      AiDrawerChat.value = createChat()
+      chatKey.value++
+    }
+  }
+  watch(
+    () => props.visible,
+    (v) => {
+      if (!v) abandonLoad()
+    }
+  )
+  onBeforeUnmount(() => chatLoader.invalidate())
+
   function reloadChat() {
-    attempt++
+    chatLoader.retry()
     AiDrawerChat.value = createChat()
     chatKey.value++
   }

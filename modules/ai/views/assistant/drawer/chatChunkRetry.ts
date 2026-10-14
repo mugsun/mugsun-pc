@@ -119,3 +119,81 @@ export function clearReloadFlag(storage: Pick<Storage, 'removeItem'> | null): vo
     // sessionStorage 不可用时忽略
   }
 }
+
+export interface ChatLoaderOptions<T> {
+  /** 实际的 import：retryUrl 为 null 时走原始 import */
+  importer: (retryUrl: string | null) => Promise<T>
+  /** 抽屉当前是否可见；不可见时不计失败、不自动刷新 */
+  isActive: () => boolean
+  storage: () => FlagStorage | null
+  reload: () => void
+  timeout?: number
+}
+
+/**
+ * 抽屉 chunk 加载器：重试参数、超时、连续失败计数、整页刷新兜底。
+ * 每次 load() 有一个代数编号，invalidate()（抽屉关闭 / 卸载）后旧的加载作废：
+ * 结果照常交给调用方，但不计数、不清标记、不刷新。
+ * 同一次加载只结算一次：超时后原请求再成功或失败都不再计数。
+ */
+export function createChatLoader<T>(opts: ChatLoaderOptions<T>) {
+  const ms = opts.timeout ?? CHAT_LOAD_TIMEOUT
+  let failedUrl: string | null = null
+  let attempt = 0
+  let failures = 0
+  let generation = 0
+  let loaded = false
+
+  function load(): Promise<T> {
+    const gen = ++generation
+    const p = opts.importer(buildRetryUrl(failedUrl, attempt))
+    return new Promise<T>((resolve, reject) => {
+      let settled = false
+      const stale = () => gen !== generation || !opts.isActive()
+      const finish = (ok: boolean, v: unknown) => {
+        if (settled) return
+        settled = true
+        clearTimeout(timer)
+        if (ok) {
+          loaded = true
+          if (!stale()) {
+            failures = 0
+            clearReloadFlag(opts.storage())
+          }
+          resolve(v as T)
+          return
+        }
+        if (!stale()) {
+          failures++
+          const url = parseFailedUrl(v)
+          if (url) failedUrl = stripRetryParam(url)
+          if (decideOnFailure(url, failures, opts.storage()) === 'reload') opts.reload()
+        }
+        reject(v)
+      }
+      const timer = setTimeout(() => finish(false, new ChatLoadTimeoutError(ms)), ms)
+      p.then(
+        (m) => finish(true, m),
+        (e) => finish(false, e)
+      )
+    })
+  }
+
+  return {
+    load,
+    /** 点「重试」：下次 import 换新的 ?retry=N */
+    retry() {
+      attempt++
+    },
+    /** 抽屉关闭 / 卸载：作废进行中的加载 */
+    invalidate() {
+      generation++
+    },
+    get failures() {
+      return failures
+    },
+    get loaded() {
+      return loaded
+    }
+  }
+}

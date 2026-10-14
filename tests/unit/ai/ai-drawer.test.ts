@@ -84,15 +84,17 @@ describe('AI 助手抽屉', () => {
     const host = src('modules/ai/views/shared/AiDrawerHost.vue')
     expect(host).toMatch(/loadingComponent:\s*ChatLoading/)
     expect(host).toMatch(/errorComponent:\s*ChatError/)
-    // 超时由 withTimeout 拒绝 loader，才能计入连续失败；不用 defineAsyncComponent 的 timeout
-    expect(host).toMatch(/withTimeout\(p, CHAT_LOAD_TIMEOUT\)/)
-    expect(host).not.toMatch(/timeout:\s*CHAT_LOAD_TIMEOUT/)
-    // 加载成功：清零计数并清掉自动刷新标记
-    expect(host).toMatch(/consecutiveFailures = 0\s*clearReloadFlag\(sessionStore\(\)\)/)
-    // 重试必须换新的异步组件并加查询参数（浏览器会缓存失败的动态 import），兜底整页刷新
-    expect(host).toMatch(/buildRetryUrl\(failedUrl, attempt\)/)
-    expect(host).toMatch(/decideOnFailure\(.*\) === 'reload'/)
-    expect(host).toMatch(/window\.location\.reload\(\)/)
+    // 超时 / 计数 / 刷新兜底都在 createChatLoader（行为见 chat-chunk-retry.test.ts）
+    expect(host).toMatch(/createChatLoader\(\{/)
+    expect(host).toMatch(/timeout: CHAT_LOAD_TIMEOUT/)
+    expect(host).toMatch(/isActive: \(\) => props\.visible/)
+    expect(host).toMatch(/reload: \(\) => window\.location\.reload\(\)/)
+    expect(host).not.toMatch(/timeout:\s*CHAT_LOAD_TIMEOUT\s*\n\s*\}\)\s*\n\s*\}/)
+    // 关闭 / 卸载时作废进行中的加载
+    expect(host).toMatch(/if \(!v\) abandonLoad\(\)/)
+    expect(host).toMatch(/onBeforeUnmount\(\(\) => chatLoader\.invalidate\(\)\)/)
+    // 重试换新的异步组件并换 ?retry=N
+    expect(host).toMatch(/chatLoader\.retry\(\)\s*AiDrawerChat\.value = createChat\(\)/)
     for (const lang of ['zh', 'en']) {
       const d = JSON.parse(src(`src/locales/langs/${lang}.json`)).aiDrawer
       expect(d.loading, lang).toBeTruthy()

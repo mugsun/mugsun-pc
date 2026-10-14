@@ -6,6 +6,7 @@ import {
   MAX_CHAT_LOAD_FAILURES,
   buildRetryUrl,
   clearReloadFlag,
+  createChatLoader,
   decideOnFailure,
   isEntryChunk,
   needsReload,
@@ -147,5 +148,122 @@ describe('clearReloadFlag', () => {
       }
     }
     expect(() => clearReloadFlag(broken)).not.toThrow()
+  })
+})
+
+describe('createChatLoader', () => {
+  afterEach(() => vi.useRealTimers())
+
+  function deferred<T = unknown>() {
+    let resolve!: (v: T) => void
+    let reject!: (e: unknown) => void
+    const promise = new Promise<T>((res, rej) => {
+      resolve = res
+      reject = rej
+    })
+    return { promise, resolve, reject }
+  }
+
+  function setup(active = { v: true }) {
+    const pending: ReturnType<typeof deferred>[] = []
+    const reload = vi.fn()
+    const storage = memStorage()
+    const loader = createChatLoader({
+      importer: () => {
+        const d = deferred()
+        pending.push(d)
+        return d.promise
+      },
+      isActive: () => active.v,
+      storage: () => storage,
+      reload,
+      timeout: 1000
+    })
+    return { loader, pending, reload, storage, active }
+  }
+
+  it('抽屉关闭后发生超时：不刷新页面，也不计失败', async () => {
+    vi.useFakeTimers()
+    const { loader, reload, active } = setup()
+    // 已失败过一次，再失败就该整页刷新
+    const first = loader.load().catch(() => {})
+    await vi.advanceTimersByTimeAsync(1000)
+    await first
+    expect(loader.failures).toBe(1)
+    const second = loader.load().catch((e) => e)
+    // 用户关掉抽屉
+    active.v = false
+    loader.invalidate()
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(await second).toBeInstanceOf(ChatLoadTimeoutError)
+    expect(reload).not.toHaveBeenCalled()
+    expect(loader.failures).toBe(1)
+  })
+
+  it('只 invalidate（关闭后又打开前）旧加载超时也不刷新', async () => {
+    vi.useFakeTimers()
+    const { loader, reload } = setup()
+    loader.load().catch(() => {})
+    await vi.advanceTimersByTimeAsync(1000)
+    const stale = loader.load().catch(() => {})
+    loader.invalidate()
+    await vi.advanceTimersByTimeAsync(1000)
+    await stale
+    expect(reload).not.toHaveBeenCalled()
+    expect(loader.failures).toBe(1)
+  })
+
+  it('超时后原请求再返回成功或失败，不重复计数', async () => {
+    vi.useFakeTimers()
+    const { loader, pending, reload, storage } = setup()
+    const a = loader.load().catch((e) => e)
+    await vi.advanceTimersByTimeAsync(1000)
+    expect(await a).toBeInstanceOf(ChatLoadTimeoutError)
+    expect(loader.failures).toBe(1)
+    // 原请求迟到失败：不再计数，不触发刷新
+    pending[0].reject(new TypeError(`Failed to fetch dynamically imported module: ${ENTRY}`))
+    await vi.advanceTimersByTimeAsync(0)
+    expect(loader.failures).toBe(1)
+    expect(reload).not.toHaveBeenCalled()
+
+    // 第二次也超时：到达 2 次，刷新一次
+    storage.setItem('x', '1')
+    const b = loader.load().catch(() => {})
+    await vi.advanceTimersByTimeAsync(1000)
+    await b
+    expect(loader.failures).toBe(2)
+    expect(reload).toHaveBeenCalledTimes(1)
+    // 原请求迟到成功：不清零计数、不清标记
+    pending[1].resolve({ default: {} })
+    await vi.advanceTimersByTimeAsync(0)
+    expect(loader.failures).toBe(2)
+    expect(storage.getItem(CHAT_RELOAD_FLAG_KEY)).toBe('1')
+  })
+
+  it('加载成功清零计数并清标记；失败的 .js 下次重试加 ?retry=N', async () => {
+    const urls: (string | null)[] = []
+    const storage = memStorage()
+    let fail = true
+    const loader = createChatLoader({
+      importer: (u) => {
+        urls.push(u)
+        return fail
+          ? Promise.reject(new TypeError(`Failed to fetch dynamically imported module: ${ENTRY}`))
+          : Promise.resolve('ok')
+      },
+      isActive: () => true,
+      storage: () => storage,
+      reload: () => {}
+    })
+    await loader.load().catch(() => {})
+    expect(loader.failures).toBe(1)
+    loader.retry()
+    fail = false
+    storage.setItem(CHAT_RELOAD_FLAG_KEY, '1')
+    await expect(loader.load()).resolves.toBe('ok')
+    expect(urls).toEqual([null, `${ENTRY}?retry=1`])
+    expect(loader.failures).toBe(0)
+    expect(storage.getItem(CHAT_RELOAD_FLAG_KEY)).toBeNull()
+    expect(loader.loaded).toBe(true)
   })
 })
