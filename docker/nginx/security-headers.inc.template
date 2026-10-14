@@ -6,7 +6,5 @@ add_header Permissions-Policy "camera=(), microphone=(), geolocation=(self)" alw
 add_header Cross-Origin-Opener-Policy "same-origin" always;
 # HSTS 只应在 HTTPS 终端开启；由外层 TLS 网关负责时在网关上加
 # add_header Strict-Transport-Security "max-age=31536000; includeSubDomains" always;
-# CSP 先以 Report-Only 上线验证（浏览器控制台可见违规，不拦截）；确认无误后改为 Content-Security-Policy。
-# 不含 unsafe-eval。style-src 'unsafe-inline' 为 Element Plus 运行时内联样式所需；Cesium 需要 worker-src blob:。
-# img-src / connect-src 仅放行地图瓦片域与埋点域，额外域名经 MUGSUN_CSP_TILE_HOSTS / MUGSUN_CSP_TRACK_HOSTS 追加。
-add_header Content-Security-Policy-Report-Only "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https://*.tianditu.gov.cn https://*.autonavi.com https://*.amap.com ${MUGSUN_CSP_TILE_HOSTS}; connect-src 'self' https://*.tianditu.gov.cn https://*.autonavi.com https://*.amap.com ${MUGSUN_CSP_TILE_HOSTS} ${MUGSUN_CSP_TRACK_HOSTS}; font-src 'self' data:; worker-src 'self' blob:; object-src 'none'; base-uri 'self'; frame-ancestors 'self'; form-action 'self'" always;
+# CSP 由 15-mugsun-gateway.sh 按 MUGSUN_CSP_MODE（report-only | enforce）生成到 csp-headers.inc（非 .conf，不会被 http 级 include）。
+include /etc/nginx/conf.d/csp-headers.inc;

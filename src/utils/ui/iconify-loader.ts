@@ -1,31 +1,20 @@
 /**
  * 离线图标加载器
  *
- * 用于在内网环境下支持 Iconify 图标的离线加载。
- * 通过预加载图标集数据，避免运行时从 CDN 获取图标。
+ * 启动时把用到的 Iconify 图标子集（src/assets/icons/offline-icons.json，由
+ * scripts/gen-offline-icons.mjs 生成）注册进 @iconify/vue，并关掉在线 API：
+ * 运行时不再请求 api.iconify.design 等外域，CSP connect-src 只需 'self'。
  *
- * 使用方式：
- * 1. 安装所需图标集：pnpm add -D @iconify-json/[icon-set-name]
- * 2. 在此文件中导入并注册图标集
- * 3. 在组件中使用：<ArtSvgIcon icon="ri:home-line" />
+ * 新增图标：在组件里写 <ArtSvgIcon icon="ri:xxx" /> 后重新运行生成脚本并提交 JSON；
+ * 后端菜单种子数据里的图标写进 scripts/offline-icons.extra.txt。未收录的图标显示为空白，不会外联。
  *
  * @module utils/ui/iconify-loader
  * @author Mugsun
  */
+import { addCollection, _api, type IconifyJSON } from '@iconify/vue'
+import offlineIcons from '@/assets/icons/offline-icons.json'
 
-// import { addCollection } from '@iconify/vue'
+for (const set of offlineIcons as unknown as IconifyJSON[]) addCollection(set)
 
-// // 导入离线图标数据
-
-// // 系统必要图标库
-// import riIcons from '@iconify-json/ri/icons.json'
-
-// // 演示图标库（可选，生产环境可移除）
-// import svgSpinners from '@iconify-json/svg-spinners/icons.json'
-// import lineMd from '@iconify-json/line-md/icons.json'
-
-// // 注册离线图标集
-
-// addCollection(riIcons)
-// addCollection(svgSpinners)
-// addCollection(lineMd)
+// 禁止在线兜底：未收录的图标不发任何网络请求
+_api.setFetch(() => Promise.reject(new Error('iconify online API disabled (offline icons only)')))
