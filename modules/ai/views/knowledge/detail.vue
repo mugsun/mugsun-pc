@@ -1,6 +1,13 @@
 <template>
   <div class="art-full-height kb-detail">
-    <ElCard class="art-table-card" shadow="never">
+    <AiNotFound
+      v-if="notFound"
+      what="知识库"
+      :id="kbId"
+      back-path="/ai/knowledge"
+      back-text="返回知识库列表"
+    />
+    <ElCard v-else class="art-table-card" shadow="never">
       <div class="hd">
         <ElButton @click="$router.push('/ai/knowledge')">返回</ElButton>
         <div class="hd-main">
@@ -177,6 +184,7 @@
 <script setup lang="ts">
   import type { ColumnOption } from '@/types/component'
   import { computed, h, nextTick, onMounted, reactive, ref, watch } from 'vue'
+  import AiNotFound from '../shared/AiNotFound.vue'
   import { useRoute } from 'vue-router'
   import { ElButton, ElMessage, ElMessageBox, ElSwitch, ElTag } from 'element-plus'
   import {
@@ -195,6 +203,8 @@
   } from '../../api'
 
   defineOptions({ name: 'AiKnowledgeDetail' })
+  /** id 不存在或已删除时只显示占位与返回入口（UX-105） */
+  const notFound = ref(false)
 
   const route = useRoute()
   const kbId = computed(() => String(route.params.id || ''))
@@ -330,6 +340,16 @@
 
   async function loadKb() {
     kb.value = await fetchAiKnowledgeDetail(kbId.value)
+  }
+
+  /** 首次进入静默探测：报错或空都算不存在，不再弹 toast 后照常渲染假页面 */
+  async function probeKb(): Promise<boolean> {
+    try {
+      kb.value = await fetchAiKnowledgeDetail(kbId.value, { showErrorMessage: false })
+    } catch {
+      kb.value = null
+    }
+    return !!kb.value?.id
   }
 
   async function loadAssets() {
@@ -514,7 +534,10 @@
   })
 
   onMounted(async () => {
-    await loadKb()
+    if (!(await probeKb())) {
+      notFound.value = true
+      return
+    }
     await loadAssets()
   })
 </script>
