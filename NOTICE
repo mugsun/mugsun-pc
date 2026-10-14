@@ -6,3 +6,9 @@ Mugsun-pc
 完整许可条款见同目录 LICENSE 文件。
 
 本仓库在上述基座之上的修改与新增部分：Copyright (c) 2026 北京定旭晨信息科技工作室 (mugsun)。
+
+第三方组件：
+
+- vue-element-plus-x（https://github.com/HeJiaYue520/Element-Plus-X），MIT License。
+  用于 AI 助手抽屉（Conversations、BubbleList、XSender、Welcome、Prompts），按需异步加载。
+  版权归原作者所有，完整许可条款见上述仓库的 LICENSE 文件。

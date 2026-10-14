@@ -157,8 +157,7 @@
   import { computed, nextTick, onMounted, ref, watch } from 'vue'
   import { useWindowSize } from '@vueuse/core'
   import { ElMessage, ElMessageBox } from 'element-plus'
-  import DOMPurify from 'dompurify'
-  import hljs from 'highlight.js'
+  import { renderMarkdown } from './renderMarkdown'
   import {
     fetchAiChatReplay,
     fetchAiChatStop,
@@ -216,23 +215,8 @@
     return String(v).replace('T', ' ').slice(0, 16)
   }
 
-  function renderMd(text?: string) {
-    const raw = text || ''
-    // 轻量：代码块高亮 + 转义换行；完整 Markdown 可后续换专用渲染器
-    let html = raw.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
-    html = html.replace(/```(\w*)\n([\s\S]*?)```/g, (_m, lang, code) => {
-      try {
-        const highlighted = lang
-          ? hljs.highlight(code, { language: lang }).value
-          : hljs.highlightAuto(code).value
-        return `<pre><code class="hljs">${highlighted}</code></pre>`
-      } catch {
-        return `<pre><code>${code}</code></pre>`
-      }
-    })
-    html = html.replace(/\n/g, '<br/>')
-    return DOMPurify.sanitize(html)
-  }
+  /** 与 AI 助手抽屉共用同一套 Markdown 渲染 */
+  const renderMd = (text?: string) => renderMarkdown(text)
 
   async function scrollBottom() {
     await nextTick()
