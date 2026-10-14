@@ -3291,6 +3291,7 @@
       "shared": {
         "all": "全部",
         "allBlocksMissing": "回放块全部缺失或已过期",
+        "noSnapshot": "回放缺少首屏快照（开头的回放块缺失或已过期），无法播放",
         "appPlaceholder": "请选择应用",
         "copy": "复制",
         "count": "次数",

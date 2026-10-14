@@ -75,6 +75,7 @@
   import { ElAlert, ElDrawer, ElEmpty, ElResult, ElTag, ElTooltip } from 'element-plus'
   import { useI18n } from 'vue-i18n'
   import 'rrweb-player/dist/style.css'
+  import { assembleReplayEvents, type ReplayEventLike } from './replayEvents'
 
   interface Props {
     visible: boolean
@@ -234,6 +235,14 @@
         errorMsg.value = blockMsg || t('pages.track.shared.allBlocksMissing')
         return
       }
+      // seq 空洞容错：按时间排序，从第一个全量快照开始（缺了前序块时快照前的增量无法回放）
+      const assembled = assembleReplayEvents(events as ReplayEventLike[])
+      if (assembled.noSnapshot) {
+        errorMsg.value = t('pages.track.shared.noSnapshot')
+        return
+      }
+      events.length = 0
+      events.push(...assembled.events)
       loadedEvents.value = events.length
 
       const { default: Player } = await import('rrweb-player')
