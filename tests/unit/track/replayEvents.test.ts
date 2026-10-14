@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 import {
   assembleReplayBlocks,
-  assembleReplayEvents
+  assembleReplayEvents,
+  fillSeqGaps
 } from '../../../modules/track/views/shared/replayEvents'
 
 const ev = (type: number, timestamp: number, id = 0) => ({ type, timestamp, data: { id } })
@@ -72,5 +73,33 @@ describe('assembleReplayBlocks（缺块后从下一个全量快照接着播）',
     const r = assembleReplayBlocks([[ev(4, 1), ev(2, 2)], [ev(3, 3)]])
     expect(r.events).toHaveLength(3)
     expect(r.droppedAfterGap).toBe(0)
+  })
+
+  it('缺块后有全量快照：incompleteTail 为 false', () => {
+    const r = assembleReplayBlocks([[ev(4, 1), ev(2, 2)], null, [ev(4, 30), ev(2, 31)]])
+    expect(r.incompleteTail).toBe(false)
+  })
+
+  it('缺块后没有全量快照：incompleteTail 为 true', () => {
+    expect(assembleReplayBlocks([[ev(4, 1), ev(2, 2)], null, [ev(3, 20)]]).incompleteTail).toBe(
+      true
+    )
+    expect(assembleReplayBlocks([[ev(4, 1), ev(2, 2)], null]).incompleteTail).toBe(true)
+  })
+
+  it('没有缺块：incompleteTail 为 false', () => {
+    expect(assembleReplayBlocks([[ev(4, 1), ev(2, 2)], [ev(3, 3)]]).incompleteTail).toBe(false)
+  })
+})
+
+describe('fillSeqGaps', () => {
+  it('补齐清单里缺的 seq（含开头）', () => {
+    expect(fillSeqGaps([3, 1, 4])).toEqual([null, 1, null, 3, 4])
+  })
+  it('连续：原样', () => {
+    expect(fillSeqGaps([0, 1, 2])).toEqual([0, 1, 2])
+  })
+  it('空清单', () => {
+    expect(fillSeqGaps([])).toEqual([])
   })
 })

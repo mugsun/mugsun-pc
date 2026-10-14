@@ -3654,6 +3654,7 @@
         "session": "Session",
         "sessionCount": "Sessions",
         "size": "Size",
+        "incompleteTail": "Later recording is incomplete: no full snapshot after the missing block, so the replay ends at the gap",
         "skippedBlocksTip": "{count} blocks missing or expired and skipped (timeline may have gaps)",
         "start": "Started",
         "status": "Status",

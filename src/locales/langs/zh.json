@@ -3654,6 +3654,7 @@
         "session": "会话",
         "sessionCount": "会话数",
         "size": "大小",
+        "incompleteTail": "后续录制不完整：缺失的块之后没有全量快照，回放到缺块处结束",
         "skippedBlocksTip": "{count} 个块缺失或已过期，已跳过（时间轴可能有空洞）",
         "start": "开始",
         "status": "状态",
