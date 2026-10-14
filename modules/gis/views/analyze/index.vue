@@ -2,6 +2,7 @@
 <template>
   <div class="gis-shell art-full-height">
     <div class="gis-map-shell gis-map-shell--panel">
+      <GisBasemapEmpty />
       <div ref="mapHost" class="gis-map"></div>
       <aside class="gis-hud gis-hud-panel gis-hud-panel-wide">
         <p class="gis-panel-lead">{{ $t('pages.gis.analyzeHint') }}</p>
@@ -92,6 +93,7 @@
 </template>
 
 <script setup lang="ts">
+  import GisBasemapEmpty from '../../components/GisBasemapEmpty.vue'
   import GisCoach from '../../components/GisCoach.vue'
   import { computed, nextTick, onActivated, onBeforeUnmount, onMounted, ref } from 'vue'
   import { useI18n } from 'vue-i18n'

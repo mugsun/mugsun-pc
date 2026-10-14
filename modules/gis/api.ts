@@ -63,11 +63,17 @@ export interface GisScene {
   remark?: string
 }
 
-export function fetchGisStatus() {
-  return request.get<GisStatus>({ url: '/api/system/gis/status' }).then((status) => {
-    rememberAttributions(status?.providers)
-    return status
-  })
+/** silent：静默探测，失败不弹 toast（由调用方展示页内错误态） */
+export function fetchGisStatus(opts: { silent?: boolean } = {}) {
+  return request
+    .get<GisStatus>({
+      url: '/api/system/gis/status',
+      ...(opts.silent ? { showErrorMessage: false } : {})
+    })
+    .then((status) => {
+      rememberAttributions(status?.providers)
+      return status
+    })
 }
 
 /** 自定义瓦片：当前配置、预设与部署白名单 */
