@@ -836,7 +836,7 @@
         "rules": {
           "usernameFormat": "Start with a letter. Use letters, digits, and underscores only.",
           "nicknameLen": "Nickname must be 64 characters or fewer",
-          "emailFormat": "Use an address like name@example.com, or leave it empty.",
+          "emailFormat": "Use an address like name{'@'}example.com, or leave it empty.",
           "phoneFormat": "Use an 11-digit mobile number starting with 1, or leave it empty.",
           "idCardFormat": "Invalid ID number format"
         },
@@ -1472,7 +1472,7 @@
         "statusOn": "Enabled",
         "statusOff": "Disabled",
         "configLabel": "Config",
-        "configPlaceholder": "Mail can use {\"host\":\"smtp.example.com\",\"port\":465}. Leave in-app and SMS empty.",
+        "configPlaceholder": "Mail can use {'{'}\"host\":\"smtp.example.com\",\"port\":465{'}'}. Leave in-app and SMS empty.",
         "secretLabel": "Secret",
         "secretPlaceholder": "Leave blank to keep the current secret. Mail uses the SMTP password.",
         "remarkLabel": "Remark",
@@ -2600,7 +2600,7 @@
         "errRuleIncomplete": "A condition rule is missing a field or operator. Fill in both, then publish again.",
         "errOpUnsupported": "This condition operator is not supported. Use equal, not equal, greater than, greater or equal, less than, less or equal, contains, or not contains, then publish again.",
         "errFieldInvalid": "This condition variable name is not valid. Start it with a letter or underscore, use only letters, digits, and underscores, then publish again.",
-        "errValueInvalid": "This condition value contains a character that is not allowed (a vertical bar, @@, or a line break). Remove those characters, then publish again.",
+        "errValueInvalid": "This condition value contains a character that is not allowed (a vertical bar, {'@@'}, or a line break). Remove those characters, then publish again.",
         "errNodeType": "This node type is not recognized. Use approval, condition, or parallel, then publish again.",
         "errRatio": "The countersign ratio must be an integer from 0 to 100. Change it to an integer in that range, then publish again."
       },
