@@ -69,7 +69,7 @@
     keyboardPressCount,
     normalizeAngle,
     rotateAngleToTravel,
-    rotateFineDelta,
+    RotateFineTuner,
     rotateKeyboardStep,
     rotateTravelToAngle,
     toDisplay,
@@ -100,6 +100,7 @@
   let scale = 1
   let lastX = 0
   let lastT = 0
+  const tuner = new RotateFineTuner()
   let keySteps = 0
 
   const bgW = computed(() => props.challenge.bgWidth || 320)
@@ -140,6 +141,7 @@
     startY = e.clientY
     lastX = e.clientX
     lastT = performance.now()
+    tuner.reset()
     // 轨迹 x = 逻辑行程（布局像素），首末位移 = answer 换算行程
     recorder = new TrackRecorder(Date.now())
   }
@@ -149,7 +151,7 @@
     // 低速精调：慢速移动时逻辑位移按 0.5 倍累加；track.x 记逻辑位置（v0.6.2 §3）
     const now = performance.now()
     const dx = (e.clientX - lastX) / scale
-    offset.value = clampOffset(offset.value + rotateFineDelta(dx, now - lastT), props.width)
+    offset.value = clampOffset(offset.value + tuner.delta(dx, now - lastT, now), props.width)
     lastX = e.clientX
     lastT = now
     angle.value = rotateTravelToAngle(offset.value, props.width)

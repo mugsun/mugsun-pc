@@ -159,16 +159,44 @@ export function clickTargetCount(c: { count?: unknown }): number {
 }
 
 /**
- * ROTATE 低速精调（契约 v0.6.2 §3）：指针速度低于阈值时逻辑位移按 0.5 倍累加。
- * @param dx 本次指针位移（布局像素）
- * @param dt 距上次采样的毫秒数
+ * ROTATE 低速精调（契约 v0.6.2 §3，手感 v0.6.3 调整）：
+ * 指针持续低速（< ROTATE_SLOW_SPEED px/ms）满 ROTATE_FINE_ENTER_MS 才进入 0.5 倍，
+ * 一旦超过阈值立即退出。前端不知道目标位置，用「持续慢」近似「接近目标在对准」，
+ * 避免普通拖动末尾自然减速被折半而「拖不到位」。
  */
 export const ROTATE_SLOW_SPEED = 0.12
 export const ROTATE_SLOW_GAIN = 0.5
-export function rotateFineDelta(dx: number, dt: number): number {
-  if (!Number.isFinite(dx)) return 0
-  const speed = dt > 0 ? Math.abs(dx) / dt : Infinity
-  return speed < ROTATE_SLOW_SPEED ? dx * ROTATE_SLOW_GAIN : dx
+export const ROTATE_FINE_ENTER_MS = 150
+
+export class RotateFineTuner {
+  private slowSince: number | null = null
+
+  /** 是否处于精调 */
+  fine = false
+
+  /**
+   * @param dx 本次指针位移（布局像素）
+   * @param dt 距上次事件毫秒数
+   * @param now 当前时间（ms，单调）
+   * @returns 计入逻辑行程的位移
+   */
+  delta(dx: number, dt: number, now: number): number {
+    if (!Number.isFinite(dx)) return 0
+    const speed = dt > 0 ? Math.abs(dx) / dt : Math.abs(dx) > 0 ? Infinity : 0
+    if (speed < ROTATE_SLOW_SPEED) {
+      if (this.slowSince === null) this.slowSince = now
+      this.fine = now - this.slowSince >= ROTATE_FINE_ENTER_MS
+    } else {
+      this.slowSince = null
+      this.fine = false
+    }
+    return this.fine ? dx * ROTATE_SLOW_GAIN : dx
+  }
+
+  reset(): void {
+    this.slowSince = null
+    this.fine = false
+  }
 }
 
 /** 读屏用提示：WORD_CLICK 拼成整词（「一帆风顺」），ICON_CLICK 用空格分隔名称 */

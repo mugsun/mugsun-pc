@@ -214,11 +214,20 @@ describe('WORD_CLICK 词语 / 成语（点击数由响应决定）', () => {
 })
 
 describe('v0.6.2 旋转低速精调 / 40016', () => {
-  it('慢速移动位移按 0.5 倍，快速不变', () => {
-    expect(m.rotateFineDelta(1, 16)).toBe(0.5)
-    expect(m.rotateFineDelta(10, 16)).toBe(10)
-    expect(m.rotateFineDelta(-1, 20)).toBe(-0.5)
-    expect(m.rotateFineDelta(5, 0)).toBe(5)
+  it('持续低速 ≥150ms 才进入 0.5 倍，加速立即退出', () => {
+    const f = new m.RotateFineTuner()
+    expect(f.delta(10, 16, 0)).toBe(10) // 快
+    expect(f.delta(1, 16, 16)).toBe(1) // 刚变慢：不折半
+    expect(f.delta(1, 16, 100)).toBe(1) // 慢 84ms
+    expect(f.delta(1, 16, 170)).toBe(0.5) // 慢 ≥150ms：精调
+    expect(f.fine).toBe(true)
+    expect(f.delta(1, 20, 300)).toBe(0.5)
+    expect(f.delta(8, 16, 316)).toBe(8) // 加速：立即退出
+    expect(f.fine).toBe(false)
+    expect(f.delta(1, 16, 332)).toBe(1) // 重新计时
+    f.reset()
+    expect(f.delta(0, 0, 400)).toBe(0)
+    expect(f.delta(5, 0, 400)).toBe(5)
   })
   it('40016 归类为 unavailable，不自动重试', () => {
     expect(m.classifyCaptchaError(new HttpError('暂不可用', 40016))).toMatchObject({
