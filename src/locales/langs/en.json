@@ -3413,6 +3413,7 @@
       "shared": {
         "all": "All",
         "allBlocksMissing": "All replay blocks are missing or expired",
+        "noSnapshot": "The replay has no full snapshot (its first blocks are missing or expired), so it cannot be played",
         "appPlaceholder": "Select an application",
         "copy": "Copy",
         "count": "Count",
