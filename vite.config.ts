@@ -37,6 +37,8 @@ export default ({ mode }: { mode: string }) => {
 
   return defineConfig({
     define: {
+      // vue-i18n 消息走 JIT（AST 求值），不再用 new Function 编译，CSP 无需 'unsafe-eval'
+      __INTLIFY_JIT_COMPILATION__: true,
       __APP_VERSION__: JSON.stringify(VITE_VERSION),
       __PKG_VERSION__: JSON.stringify(pkgVersion),
       CESIUM_BASE_URL: JSON.stringify(
