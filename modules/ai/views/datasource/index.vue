@@ -5,13 +5,13 @@
         <ElInput
           v-model="keyword"
           clearable
-          placeholder="按名称搜索"
+          :placeholder="$t('aiDatasourceList.searchPh')"
           style="width: 200px"
           @keyup.enter="reload"
           @clear="reload"
         />
-        <ElButton @click="reload">搜索</ElButton>
-        <ElButton type="primary" @click="openEdit()">新增数据源</ElButton>
+        <ElButton @click="reload">{{ $t('aiDatasourceList.search') }}</ElButton>
+        <ElButton type="primary" @click="openEdit()">{{ $t('aiDatasourceList.add') }}</ElButton>
       </div>
       <ArtTable
         :loading="loading"
@@ -73,6 +73,7 @@
 </template>
 <script setup lang="ts">
   import type { FormInstance } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
   import { requiredRule } from '../shared/formRules'
   import type { ColumnOption } from '@/types/component'
   import { computed, h, onMounted, reactive, ref, nextTick } from 'vue'
@@ -84,14 +85,20 @@
     fetchTestAiDatasource
   } from '../../api'
   defineOptions({ name: 'AiDatasource' })
+  const { t } = useI18n()
   const formRef = ref<FormInstance>()
   const TYPE_LABEL: Record<string, string> = {
     postgresql: 'PostgreSQL',
     mysql: 'MySQL',
-    kingbase: '金仓',
-    dm: '达梦',
+    kingbase: 'Kingbase',
+    dm: 'DM',
     mariadb: 'MariaDB',
     starrocks: 'StarRocks'
+  }
+  /** 国产库在中文界面显示中文名，英文界面显示 Kingbase / DM */
+  const DB_LABEL_KEYS: Record<string, string> = {
+    kingbase: 'aiDatasourceList.dbKingbase',
+    dm: 'aiDatasourceList.dbDm'
   }
   const keyword = ref('')
   const searched = ref(false)
@@ -109,21 +116,24 @@
     total: total.value
   }))
   const emptyText = computed(() =>
-    searched.value ? '没有符合条件的数据源。换个名称再查' : '还没有数据源。点新增数据源开始配置'
+    searched.value ? t('aiDatasourceList.emptySearched') : t('aiDatasourceList.empty')
   )
-  const columns: ColumnOption[] = [
+  const columns = computed<ColumnOption[]>(() => [
     { type: 'index', width: 60, label: '#' },
-    { prop: 'name', label: '名称', minWidth: 140 },
+    { prop: 'name', label: t('aiDatasourceList.colName'), minWidth: 140 },
     {
       prop: 'dbType',
-      label: '类型',
+      label: t('aiDatasourceList.colType'),
       width: 120,
-      formatter: (row: any) => TYPE_LABEL[row.dbType] || row.dbType || ''
+      formatter: (row: any) =>
+        DB_LABEL_KEYS[row.dbType]
+          ? t(DB_LABEL_KEYS[row.dbType])
+          : TYPE_LABEL[row.dbType] || row.dbType || ''
     },
     { prop: 'jdbcUrl', label: 'JDBC', minWidth: 220, showOverflowTooltip: true },
     {
       prop: 'operation',
-      label: '操作',
+      label: t('aiDatasourceList.colOps'),
       width: 220,
       fixed: 'right',
       formatter: (row: any) =>
@@ -131,17 +141,19 @@
           h(
             ElButton,
             { link: true, type: 'primary', size: 'small', onClick: () => openEdit(row) },
-            () => '编辑'
+            () => t('aiDatasourceList.edit')
           ),
-          h(ElButton, { link: true, size: 'small', onClick: () => test(row) }, () => '测试连接'),
+          h(ElButton, { link: true, size: 'small', onClick: () => test(row) }, () =>
+            t('aiDatasourceList.test')
+          ),
           h(
             ElButton,
             { link: true, type: 'danger', size: 'small', onClick: () => remove(row) },
-            () => '删除'
+            () => t('aiDatasourceList.remove')
           )
         ])
     }
-  ]
+  ])
   async function reload() {
     loading.value = true
     const name = keyword.value.trim()
@@ -196,8 +208,8 @@
   }
   async function remove(row: any) {
     await ElMessageBox.confirm(
-      `删除「${row.name || '这个数据源'}」后，列表里不会再出现，问数里也不能再选`,
-      '确认'
+      t('aiDatasourceList.removeConfirm', { name: row.name || t('aiDatasourceList.thisOne') }),
+      t('aiDatasourceList.confirm')
     )
     await fetchRemoveAiDatasource(row.id)
     await reload()
