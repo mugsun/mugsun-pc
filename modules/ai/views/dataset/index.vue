@@ -38,32 +38,32 @@
     <ElDialog
       v-model="visible"
       class="ai-dataset-dialog"
-      :title="form.id ? '编辑问数' : '新建问数'"
+      :title="form.id ? $t('aiForm.editDataset') : $t('aiForm.newDataset')"
       width="560px"
     >
-      <ElForm ref="formRef" :model="form" label-width="72px">
-        <ElFormItem label="名称" prop="name" :rules="requiredRule('名称')">
+      <ElForm ref="formRef" :model="form" label-width="auto">
+        <ElFormItem :label="$t('aiForm.name')" prop="name" :rules="requiredRule($t('aiForm.name'))">
           <ElInput
             v-model="form.name"
             maxlength="64"
             show-word-limit
-            placeholder="用来在列表里区分"
+            :placeholder="$t('aiForm.phListName')"
           />
         </ElFormItem>
-        <ElFormItem label="描述">
+        <ElFormItem :label="$t('aiForm.description')">
           <ElInput
             v-model="form.description"
             type="textarea"
             :rows="3"
             maxlength="200"
             show-word-limit
-            placeholder="数据源和表保存后，到配置里选择"
+            :placeholder="$t('aiForm.phDatasetTables')"
           />
         </ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="visible = false">取消</ElButton>
-        <ElButton type="primary" :loading="saving" @click="save">保存</ElButton>
+        <ElButton @click="visible = false">{{ $t('aiForm.cancel') }}</ElButton>
+        <ElButton type="primary" :loading="saving" @click="save">{{ $t('aiForm.save') }}</ElButton>
       </template>
     </ElDialog>
   </div>

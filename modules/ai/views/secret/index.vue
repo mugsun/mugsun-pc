@@ -22,26 +22,33 @@
         "
       />
     </ElCard>
-    <ElDialog v-model="visible" :title="form.id ? '编辑密钥' : '新增密钥'" width="560px">
-      <ElForm ref="formRef" :model="form" label-width="100px">
-        <ElFormItem label="说明" prop="description" :rules="requiredRule('说明')"
+    <ElDialog
+      v-model="visible"
+      :title="form.id ? $t('aiForm.editSecret') : $t('aiForm.newSecret')"
+      width="560px"
+    >
+      <ElForm ref="formRef" :model="form" label-width="auto">
+        <ElFormItem
+          :label="$t('aiForm.secretDesc')"
+          prop="description"
+          :rules="requiredRule($t('aiForm.secretDesc'))"
           ><ElInput v-model="form.description"
         /></ElFormItem>
-        <ElFormItem label="作用域">
+        <ElFormItem :label="$t('aiForm.scope')">
           <ElSelect v-model="form.scopeType" style="width: 100%">
-            <ElOption label="租户" value="tenant" /><ElOption label="用户" value="user" /><ElOption
-              label="应用"
-              value="app"
-            />
+            <ElOption :label="$t('aiForm.optTenant')" value="tenant" /><ElOption
+              :label="$t('aiForm.optUser')"
+              value="user"
+            /><ElOption :label="$t('aiForm.optApp')" value="app" />
           </ElSelect>
         </ElFormItem>
-        <ElFormItem label="限流/分钟"
+        <ElFormItem :label="$t('aiForm.rateLimit')"
           ><ElInputNumber v-model="form.rateLimit" :min="0"
         /></ElFormItem>
-        <ElFormItem label="允许 IP"
-          ><ElInput v-model="form.allowIps" placeholder="CIDR 逗号分隔"
+        <ElFormItem :label="$t('aiForm.allowIps')"
+          ><ElInput v-model="form.allowIps" :placeholder="$t('aiForm.phCidr')"
         /></ElFormItem>
-        <ElFormItem label="过期时间"
+        <ElFormItem :label="$t('aiForm.expireAt')"
           ><ElDatePicker
             v-model="form.expireTime"
             type="datetime"
@@ -49,8 +56,8 @@
         /></ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="visible = false">取消</ElButton>
-        <ElButton type="primary" :loading="saving" @click="save">保存</ElButton>
+        <ElButton @click="visible = false">{{ $t('aiForm.cancel') }}</ElButton>
+        <ElButton type="primary" :loading="saving" @click="save">{{ $t('aiForm.save') }}</ElButton>
       </template>
     </ElDialog>
   </div>

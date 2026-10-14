@@ -45,29 +45,39 @@
     <ElDialog
       v-model="visible"
       class="ai-vector-dialog"
-      :title="form.id ? '编辑向量库' : '创建向量库'"
+      :title="form.id ? $t('aiForm.editVector') : $t('aiForm.newVector')"
       width="560px"
     >
-      <ElForm ref="formRef" :model="form" label-width="100px">
-        <ElFormItem label="名称" prop="name" :rules="requiredRule('名称')">
-          <ElInput v-model="form.name" maxlength="64" placeholder="用来在列表里区分" />
+      <ElForm ref="formRef" :model="form" label-width="auto">
+        <ElFormItem :label="$t('aiForm.name')" prop="name" :rules="requiredRule($t('aiForm.name'))">
+          <ElInput v-model="form.name" maxlength="64" :placeholder="$t('aiForm.phListName')" />
         </ElFormItem>
-        <ElFormItem label="类型" prop="storeType" :rules="requiredRule('类型', true)">
+        <ElFormItem
+          :label="$t('aiForm.type')"
+          prop="storeType"
+          :rules="requiredRule($t('aiForm.type'), true)"
+        >
           <ElSelect v-model="form.storeType" style="width: 100%">
             <ElOption label="PgVector" value="pgvector" />
             <ElOption label="Milvus" value="milvus" />
-            <ElOption label="自定义" value="custom" />
+            <ElOption :label="$t('aiForm.optCustom')" value="custom" />
           </ElSelect>
         </ElFormItem>
-        <ElFormItem label="连接地址" prop="url" :rules="requiredRule('连接地址')">
-          <ElInput v-model="form.url" placeholder="jdbc:postgresql://主机:端口/库名" />
+        <ElFormItem
+          :label="$t('aiForm.connUrl')"
+          prop="url"
+          :rules="requiredRule($t('aiForm.connUrl'))"
+        >
+          <ElInput v-model="form.url" :placeholder="$t('aiForm.phJdbc')" />
         </ElFormItem>
-        <ElFormItem label="维度"><ElInputNumber v-model="form.dimensions" :min="1" /></ElFormItem>
-        <ElFormItem label="备注"><ElInput v-model="form.remark" /></ElFormItem>
+        <ElFormItem :label="$t('aiForm.dim')"
+          ><ElInputNumber v-model="form.dimensions" :min="1"
+        /></ElFormItem>
+        <ElFormItem :label="$t('aiForm.remark')"><ElInput v-model="form.remark" /></ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="visible = false">取消</ElButton>
-        <ElButton type="primary" :loading="saving" @click="save">保存</ElButton>
+        <ElButton @click="visible = false">{{ $t('aiForm.cancel') }}</ElButton>
+        <ElButton type="primary" :loading="saving" @click="save">{{ $t('aiForm.save') }}</ElButton>
       </template>
     </ElDialog>
   </div>

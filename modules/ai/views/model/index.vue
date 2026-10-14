@@ -71,23 +71,35 @@
     <ElDialog
       v-model="dialogVisible"
       class="ai-model-dialog"
-      :title="form.id ? '编辑模型' : '添加模型'"
+      :title="form.id ? $t('aiForm.editModel') : $t('aiForm.addModel')"
       width="640px"
       destroy-on-close
     >
-      <ElForm ref="formRef" :model="form" label-width="100px">
-        <ElFormItem label="模型名称" prop="modelName" :rules="requiredRule('模型名称')">
-          <ElInput v-model="form.modelName" placeholder="如 DeepSeek-V3-Chat" />
+      <ElForm ref="formRef" :model="form" label-width="auto">
+        <ElFormItem
+          :label="$t('aiForm.modelName')"
+          prop="modelName"
+          :rules="requiredRule($t('aiForm.modelName'))"
+        >
+          <ElInput v-model="form.modelName" :placeholder="$t('aiForm.phModelName')" />
         </ElFormItem>
-        <ElFormItem label="模型类型" prop="modelType" :rules="requiredRule('模型类型', true)">
+        <ElFormItem
+          :label="$t('aiForm.modelType')"
+          prop="modelType"
+          :rules="requiredRule($t('aiForm.modelType'), true)"
+        >
           <ElSelect v-model="form.modelType" style="width: 100%">
-            <ElOption label="对话" value="chat" />
-            <ElOption label="向量" value="embedding" />
-            <ElOption label="图像" value="image" />
-            <ElOption label="音频" value="audio" />
+            <ElOption :label="$t('aiForm.optChat')" value="chat" />
+            <ElOption :label="$t('aiForm.optEmbedding')" value="embedding" />
+            <ElOption :label="$t('aiForm.optImage')" value="image" />
+            <ElOption :label="$t('aiForm.optAudio')" value="audio" />
           </ElSelect>
         </ElFormItem>
-        <ElFormItem label="提供商" prop="provider" :rules="requiredRule('提供商', true)">
+        <ElFormItem
+          :label="$t('aiForm.provider')"
+          prop="provider"
+          :rules="requiredRule($t('aiForm.provider'), true)"
+        >
           <ElSelect v-model="form.provider" style="width: 100%" @change="onProvider">
             <ElOption v-for="p in providers" :key="p.value" :label="p.label" :value="p.value" />
           </ElSelect>
@@ -95,15 +107,19 @@
         <ElFormItem label="Base URL" prop="baseUrl" :rules="requiredRule('Base URL')">
           <ElInput v-model="form.baseUrl" />
         </ElFormItem>
-        <ElFormItem label="模型标识" prop="modelCode" :rules="requiredRule('模型标识')">
-          <ElInput v-model="form.modelCode" placeholder="如 deepseek-chat" />
+        <ElFormItem
+          :label="$t('aiForm.modelCode')"
+          prop="modelCode"
+          :rules="requiredRule($t('aiForm.modelCode'))"
+        >
+          <ElInput v-model="form.modelCode" :placeholder="$t('aiForm.phModelCode')" />
         </ElFormItem>
         <ElFormItem label="API Key" prop="apiKey" :rules="form.id ? [] : requiredRule('API Key')">
           <ElInput
             v-model="form.apiKey"
             type="password"
             show-password
-            placeholder="编辑留空表示不修改"
+            :placeholder="$t('aiForm.phKeepUnchanged')"
           />
         </ElFormItem>
         <ElFormItem label="Secret Key">
@@ -111,28 +127,28 @@
         </ElFormItem>
         <ElFormItem
           v-if="form.modelType === 'embedding'"
-          label="向量维度"
+          :label="$t('aiForm.dimensions')"
           prop="dimensions"
-          :rules="requiredRule('向量维度')"
+          :rules="requiredRule($t('aiForm.dimensions'))"
         >
           <ElInputNumber v-model="form.dimensions" :min="1" :max="8192" />
         </ElFormItem>
-        <ElFormItem v-if="form.modelType === 'chat'" label="支持视觉">
+        <ElFormItem v-if="form.modelType === 'chat'" :label="$t('aiForm.vision')">
           <ElSwitch v-model="form.visionFlag" :active-value="1" :inactive-value="0" />
         </ElFormItem>
-        <ElFormItem label="输入单价">
+        <ElFormItem :label="$t('aiForm.priceInput')">
           <ElInputNumber v-model="form.priceInput" :min="0" :step="0.001" :precision="6" />
         </ElFormItem>
-        <ElFormItem label="输出单价">
+        <ElFormItem :label="$t('aiForm.priceOutput')">
           <ElInputNumber v-model="form.priceOutput" :min="0" :step="0.001" :precision="6" />
         </ElFormItem>
-        <ElFormItem label="备注">
+        <ElFormItem :label="$t('aiForm.remark')">
           <ElInput v-model="form.remark" />
         </ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="dialogVisible = false">取消</ElButton>
-        <ElButton type="primary" :loading="saving" @click="save">保存</ElButton>
+        <ElButton @click="dialogVisible = false">{{ $t('aiForm.cancel') }}</ElButton>
+        <ElButton type="primary" :loading="saving" @click="save">{{ $t('aiForm.save') }}</ElButton>
       </template>
     </ElDialog>
   </div>

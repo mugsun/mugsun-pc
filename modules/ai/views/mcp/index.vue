@@ -68,37 +68,56 @@
     <ElDialog
       v-model="visible"
       class="ai-mcp-dialog"
-      :title="form.id ? '编辑 MCP' : '添加 MCP'"
+      :title="form.id ? $t('aiForm.editMcp') : $t('aiForm.addMcp')"
       width="640px"
     >
-      <ElForm ref="formRef" :model="form" label-width="110px">
-        <ElFormItem label="协议名称" prop="name" :rules="requiredRule('协议名称')">
+      <ElForm ref="formRef" :model="form" label-width="auto">
+        <ElFormItem
+          :label="$t('aiForm.protocolName')"
+          prop="name"
+          :rules="requiredRule($t('aiForm.protocolName'))"
+        >
           <ElInput
             v-model="form.name"
             maxlength="64"
             show-word-limit
-            placeholder="用来在列表里区分"
+            :placeholder="$t('aiForm.phListName')"
           />
         </ElFormItem>
-        <ElFormItem label="协议描述" prop="description" :rules="requiredRule('协议描述')">
+        <ElFormItem
+          :label="$t('aiForm.protocolDesc')"
+          prop="description"
+          :rules="requiredRule($t('aiForm.protocolDesc'))"
+        >
           <ElInput
             v-model="form.description"
             maxlength="255"
             show-word-limit
-            placeholder="用来说明这个工具做什么"
+            :placeholder="$t('aiForm.phProtocolDesc')"
           />
         </ElFormItem>
-        <ElFormItem label="分类" prop="category" :rules="requiredRule('分类', true)">
+        <ElFormItem
+          :label="$t('aiForm.category')"
+          prop="category"
+          :rules="requiredRule($t('aiForm.category'), true)"
+        >
           <ElSelect v-model="form.category" style="width: 100%">
-            <ElOption label="地图工具" value="map" /><ElOption label="聊天工具" value="chat" />
-            <ElOption label="浏览器工具" value="browser" /><ElOption
-              label="文件工具"
+            <ElOption :label="$t('aiForm.optMapTool')" value="map" /><ElOption
+              :label="$t('aiForm.optChatTool')"
+              value="chat"
+            />
+            <ElOption :label="$t('aiForm.optBrowserTool')" value="browser" /><ElOption
+              :label="$t('aiForm.optFileTool')"
               value="file"
             />
-            <ElOption label="自定义" value="custom" />
+            <ElOption :label="$t('aiForm.optCustom')" value="custom" />
           </ElSelect>
         </ElFormItem>
-        <ElFormItem label="协议类型" prop="protocolType" :rules="requiredRule('协议类型', true)">
+        <ElFormItem
+          :label="$t('aiForm.protocolType')"
+          prop="protocolType"
+          :rules="requiredRule($t('aiForm.protocolType'), true)"
+        >
           <ElRadioGroup v-model="form.protocolType">
             <ElRadio label="SSE">SSE</ElRadio>
             <ElRadio label="STDIO">STDIO</ElRadio>
@@ -107,56 +126,58 @@
         </ElFormItem>
         <ElFormItem
           v-if="form.protocolType !== 'STDIO'"
-          label="SSE 地址"
+          :label="$t('aiForm.sseUrl')"
           prop="sseUrl"
-          :rules="requiredRule('SSE 地址')"
+          :rules="requiredRule($t('aiForm.sseUrl'))"
         >
           <ElInput v-model="form.sseUrl" placeholder="https://" />
         </ElFormItem>
         <ElFormItem
           v-if="form.protocolType === 'STDIO'"
-          label="命令行"
+          :label="$t('aiForm.command')"
           prop="command"
-          :rules="requiredRule('命令行')"
+          :rules="requiredRule($t('aiForm.command'))"
         >
           <ElInput v-model="form.command" type="textarea" :rows="3" />
         </ElFormItem>
         <ElFormItem label="API Key"
           ><ElInput v-model="form.apiKey" type="password" show-password
         /></ElFormItem>
-        <ElFormItem label="环境变量"
+        <ElFormItem :label="$t('aiForm.envVars')"
           ><ElInput
             v-model="form.envJson"
             type="textarea"
             :rows="2"
-            placeholder="JSON，留空表示不额外传"
+            :placeholder="$t('aiForm.phEnvVars')"
         /></ElFormItem>
-        <ElFormItem label="状态"
+        <ElFormItem :label="$t('aiForm.status')"
           ><ElSwitch v-model="form.status" :active-value="1" :inactive-value="0"
         /></ElFormItem>
         <ElFormItem>
-          <ElButton @click="parseTools">解析工具清单</ElButton>
+          <ElButton @click="parseTools">{{ $t('aiForm.parseTools') }}</ElButton>
         </ElFormItem>
-        <ElFormItem v-if="parsedTools.length" label="工具清单">
+        <ElFormItem v-if="parsedTools.length" :label="$t('aiForm.toolList')">
           <ElTable :data="parsedTools" size="small" max-height="200">
-            <ElTableColumn prop="name" label="名称" />
-            <ElTableColumn prop="description" label="描述" />
+            <ElTableColumn prop="name" :label="$t('aiForm.name')" />
+            <ElTableColumn prop="description" :label="$t('aiForm.description')" />
           </ElTable>
         </ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="visible = false">取消</ElButton>
-        <ElButton type="primary" :loading="saving" @click="save">保存</ElButton>
+        <ElButton @click="visible = false">{{ $t('aiForm.cancel') }}</ElButton>
+        <ElButton type="primary" :loading="saving" @click="save">{{ $t('aiForm.save') }}</ElButton>
       </template>
     </ElDialog>
 
-    <ElDialog v-model="debugVisible" title="MCP 调试" width="640px">
-      <ElForm label-width="88px">
-        <ElFormItem label="测试提示词"
+    <ElDialog v-model="debugVisible" :title="$t('aiForm.mcpDebug')" width="640px">
+      <ElForm label-width="auto">
+        <ElFormItem :label="$t('aiForm.testPrompt')"
           ><ElInput v-model="debugPrompt" type="textarea" :rows="4"
         /></ElFormItem>
       </ElForm>
-      <ElButton type="primary" :loading="debugging" @click="runDebug">调试</ElButton>
+      <ElButton type="primary" :loading="debugging" @click="runDebug">{{
+        $t('aiForm.debug')
+      }}</ElButton>
       <pre class="debug-out">{{ debugResult }}</pre>
     </ElDialog>
   </div>

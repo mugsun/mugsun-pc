@@ -21,34 +21,37 @@
         "
       />
     </ElCard>
-    <ElDialog v-model="visible" title="配额配置" width="560px">
-      <ElForm :model="form" label-width="120px">
-        <ElFormItem label="作用域">
+    <ElDialog v-model="visible" :title="$t('aiForm.quotaConfig')" width="560px">
+      <ElForm :model="form" label-width="auto">
+        <ElFormItem :label="$t('aiForm.scope')">
           <ElSelect v-model="form.scopeType" style="width: 100%">
-            <ElOption label="租户" value="tenant" /><ElOption label="用户" value="user" />
+            <ElOption :label="$t('aiForm.optTenant')" value="tenant" /><ElOption
+              :label="$t('aiForm.optUser')"
+              value="user"
+            />
           </ElSelect>
         </ElFormItem>
-        <ElFormItem label="月 Token 上限"
+        <ElFormItem :label="$t('aiForm.monthlyTokenLimit')"
           ><ElInputNumber v-model="form.tokenLimit" :min="0"
         /></ElFormItem>
-        <ElFormItem label="月费用上限"
+        <ElFormItem :label="$t('aiForm.monthlyCostLimit')"
           ><ElInputNumber v-model="form.amountLimit" :min="0" :precision="2"
         /></ElFormItem>
-        <ElFormItem label="预警阈值(%)"
+        <ElFormItem :label="$t('aiForm.warnThreshold')"
           ><ElInputNumber v-model="form.warnPercent" :min="1" :max="100"
         /></ElFormItem>
-        <ElFormItem label="超额动作">
+        <ElFormItem :label="$t('aiForm.overLimitAction')">
           <ElSelect v-model="form.overAction" style="width: 100%">
-            <ElOption label="仅告警" value="warn_only" /><ElOption
-              label="拒绝调用"
+            <ElOption :label="$t('aiForm.optWarnOnly')" value="warn_only" /><ElOption
+              :label="$t('aiForm.optReject')"
               value="reject"
             />
           </ElSelect>
         </ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="visible = false">取消</ElButton>
-        <ElButton type="primary" :loading="saving" @click="save">保存</ElButton>
+        <ElButton @click="visible = false">{{ $t('aiForm.cancel') }}</ElButton>
+        <ElButton type="primary" :loading="saving" @click="save">{{ $t('aiForm.save') }}</ElButton>
       </template>
     </ElDialog>
   </div>

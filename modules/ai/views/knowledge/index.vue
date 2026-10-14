@@ -42,24 +42,28 @@
       </div>
     </ElCard>
 
-    <ElDialog v-model="visible" :title="form.id ? '编辑知识库' : '新建知识库'" width="560px">
-      <ElForm ref="formRef" :model="form" label-width="110px">
-        <ElFormItem label="名称" prop="name" :rules="requiredRule('名称')"
-          ><ElInput v-model="form.name" placeholder="如：客户支持知识库"
+    <ElDialog
+      v-model="visible"
+      :title="form.id ? $t('aiForm.editKnowledge') : $t('aiForm.newKnowledge')"
+      width="560px"
+    >
+      <ElForm ref="formRef" :model="form" label-width="auto">
+        <ElFormItem :label="$t('aiForm.name')" prop="name" :rules="requiredRule($t('aiForm.name'))"
+          ><ElInput v-model="form.name" :placeholder="$t('aiForm.phKnowledgeName')"
         /></ElFormItem>
-        <ElFormItem label="描述"
+        <ElFormItem :label="$t('aiForm.description')"
           ><ElInput
             v-model="form.description"
             type="textarea"
             :rows="3"
-            placeholder="用途说明，便于团队识别"
+            :placeholder="$t('aiForm.phKnowledgeDesc')"
         /></ElFormItem>
         <ElFormItem label="Embedding">
           <ElSelect
             v-model="form.embeddingModelId"
             clearable
             filterable
-            placeholder="选择向量模型"
+            :placeholder="$t('aiForm.phEmbeddingModel')"
             style="width: 100%"
           >
             <ElOption
@@ -70,37 +74,47 @@
             />
           </ElSelect>
         </ElFormItem>
-        <ElFormItem label="检索模式">
+        <ElFormItem :label="$t('aiForm.retrievalMode')">
           <ElSelect v-model="form.retrievalMode" style="width: 100%">
-            <ElOption label="混合检索 (hybrid)" value="hybrid" />
-            <ElOption label="向量检索 (vector)" value="vector" />
-            <ElOption label="关键词 (keyword)" value="keyword" />
+            <ElOption :label="$t('aiForm.optHybrid')" value="hybrid" />
+            <ElOption :label="$t('aiForm.optVector')" value="vector" />
+            <ElOption :label="$t('aiForm.optKeyword')" value="keyword" />
           </ElSelect>
         </ElFormItem>
         <ElFormItem label="TopK"
           ><ElInputNumber v-model="form.topK" :min="1" :max="20"
         /></ElFormItem>
-        <ElFormItem label="最低分"
+        <ElFormItem :label="$t('aiForm.minScore')"
           ><ElInputNumber v-model="form.minScore" :min="0" :max="1" :step="0.05" :precision="2"
         /></ElFormItem>
-        <ElFormItem label="状态"
+        <ElFormItem :label="$t('aiForm.status')"
           ><ElSwitch v-model="form.status" :active-value="1" :inactive-value="0"
         /></ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="visible = false">取消</ElButton>
-        <ElButton type="primary" :loading="saving" @click="save">保存</ElButton>
+        <ElButton @click="visible = false">{{ $t('aiForm.cancel') }}</ElButton>
+        <ElButton type="primary" :loading="saving" @click="save">{{ $t('aiForm.save') }}</ElButton>
       </template>
     </ElDialog>
 
-    <ElDialog v-model="testVisible" title="知识库命中测试" width="720px">
-      <div class="test-q">问题：{{ testQuery }}</div>
-      <ElTable :data="testHits" max-height="400" empty-text="未命中">
-        <ElTableColumn label="分数" width="100">
+    <ElDialog v-model="testVisible" :title="$t('aiForm.knowledgeHitTest')" width="720px">
+      <div class="test-q">{{ $t('aiForm.questionPrefix') }}{{ testQuery }}</div>
+      <ElTable :data="testHits" max-height="400" :empty-text="$t('aiForm.noHits')">
+        <ElTableColumn :label="$t('aiForm.score')" width="100">
           <template #default="{ row }">{{ Number(row.score ?? 0).toFixed(3) }}</template>
         </ElTableColumn>
-        <ElTableColumn prop="source" label="来源" width="140" show-overflow-tooltip />
-        <ElTableColumn prop="content" label="内容" min-width="360" show-overflow-tooltip />
+        <ElTableColumn
+          prop="source"
+          :label="$t('aiForm.source')"
+          width="140"
+          show-overflow-tooltip
+        />
+        <ElTableColumn
+          prop="content"
+          :label="$t('aiForm.content')"
+          min-width="360"
+          show-overflow-tooltip
+        />
       </ElTable>
     </ElDialog>
   </div>
