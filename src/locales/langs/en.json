@@ -704,6 +704,7 @@
       "console": {
         "userStatusChart": "User Status Distribution",
         "tenantUserChart": "Users per Tenant",
+        "platformTenant": "Platform",
         "noData": "No data",
         "myTodo": "My Todos",
         "viewAll": "All",

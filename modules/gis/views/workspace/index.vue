@@ -450,7 +450,7 @@
         </p>
 
         <div class="gis-hud gis-hud-status">
-          <span>{{ drawHint }}</span>
+          <span class="gis-hud-hint">{{ drawHint }}</span>
           <span v-if="cursorText">{{ cursorText }}</span>
           <span v-if="placeText">{{ placeText }}</span>
         </div>
@@ -2001,6 +2001,23 @@
     max-width: min(520px, calc(100% - 160px));
     font-size: 12px;
     color: var(--el-text-color-regular);
+  }
+
+  /* 窄屏（UX-017）：长操作提示收起，状态条让开左下缩放/比例尺和右下 AI 浮钮 */
+  @media screen and (width <= 640px) {
+    .gis-hud-status {
+      right: 60px;
+      left: 52px;
+      max-width: none;
+    }
+
+    .gis-hud-status:not(:has(span + span)) {
+      display: none;
+    }
+
+    .gis-hud-hint {
+      display: none;
+    }
   }
 
   .gis-tool {

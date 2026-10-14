@@ -124,6 +124,17 @@
       letter-spacing: 2px;
       writing-mode: vertical-lr;
     }
+
+    /* 窄屏（UX-017）：缩成细条、半透明，只留图标，少挡卡片内容 */
+    @media screen and (width <= 640px) {
+      bottom: 76px;
+      padding: 8px 3px;
+      opacity: 0.6;
+
+      .help-trigger-text {
+        display: none;
+      }
+    }
   }
 
   .help-items {

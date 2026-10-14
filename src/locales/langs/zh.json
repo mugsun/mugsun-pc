@@ -704,6 +704,7 @@
       "console": {
         "userStatusChart": "用户状态分布",
         "tenantUserChart": "租户用户数",
+        "platformTenant": "平台",
         "noData": "暂无数据",
         "myTodo": "我的待办",
         "viewAll": "全部",
