@@ -19,7 +19,7 @@
           $t('aiDashDesign.delete')
         }}</ElButton>
       </div>
-      <ElForm label-width="88px" style="max-width: 640px; margin-bottom: 12px">
+      <ElForm label-width="auto" style="max-width: 640px; margin-bottom: 12px">
         <ElFormItem :label="$t('aiDashDesign.name')" required>
           <ElInput
             v-model="name"

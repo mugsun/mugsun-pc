@@ -17,7 +17,7 @@
       </div>
       <ElTabs v-model="tab">
         <ElTabPane :label="$t('aiDatasetConfig.tabTables')" name="tables">
-          <ElForm label-width="88px">
+          <ElForm label-width="auto">
             <ElFormItem :label="$t('aiDatasetConfig.datasource')" required>
               <ElSelect
                 v-model="datasourceId"
@@ -42,7 +42,7 @@
             filterable
             :titles="[$t('aiDatasetConfig.available'), $t('aiDatasetConfig.selected')]"
           />
-          <ElForm style="margin-top: 16px" label-width="88px">
+          <ElForm style="margin-top: 16px" label-width="auto">
             <ElFormItem :label="$t('aiDatasetConfig.semantics')">
               <ElInput
                 v-model="bizDesc"
