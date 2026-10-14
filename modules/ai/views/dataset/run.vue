@@ -2,22 +2,24 @@
   <div class="art-full-height ai-dataset-run">
     <AiNotFound
       v-if="notFound"
-      what="数据集"
+      :what="$t('aiDatasetRun.what')"
       :id="datasetId"
       back-path="/ai/dataset"
-      back-text="返回数据集列表"
+      :back-text="$t('aiDatasetRun.backToList')"
     />
     <ElCard v-else class="art-table-card" shadow="never">
       <div class="hd">
-        <ElButton @click="$router.back()">返回</ElButton>
-        <h3>问数对话 #{{ datasetId }}</h3>
+        <ElButton @click="$router.back()">{{ $t('aiDatasetRun.back') }}</ElButton>
+        <h3>{{ $t('aiDatasetRun.title', { id: datasetId }) }}</h3>
       </div>
       <div class="suggest">
         <ElTag v-for="s in suggests" :key="s" class="tag" @click="ask(s)">{{ s }}</ElTag>
       </div>
       <div ref="boxRef" class="msgs">
         <div v-for="(m, i) in messages" :key="i" class="msg" :class="m.role">
-          <div class="role">{{ m.role === 'user' ? '问' : '答' }}</div>
+          <div class="role">{{
+            m.role === 'user' ? $t('aiDatasetRun.question') : $t('aiDatasetRun.answer')
+          }}</div>
           <div class="body">
             <div>{{ m.content }}</div>
             <pre v-if="m.sql" class="sql">{{ m.sql }}</pre>
@@ -37,9 +39,15 @@
               />
             </ElTable>
             <div v-if="m.role === 'assistant'" class="ops">
-              <ElButton link size="small" @click="analyze(m)">数据分析</ElButton>
-              <ElButton link size="small" @click="predict(m)">数据预测</ElButton>
-              <ElButton link size="small" @click="editSql(m)">编辑 SQL 重跑</ElButton>
+              <ElButton link size="small" @click="analyze(m)">{{
+                $t('aiDatasetRun.analyze')
+              }}</ElButton>
+              <ElButton link size="small" @click="predict(m)">{{
+                $t('aiDatasetRun.predict')
+              }}</ElButton>
+              <ElButton link size="small" @click="editSql(m)">{{
+                $t('aiDatasetRun.editSql')
+              }}</ElButton>
             </div>
           </div>
         </div>
@@ -49,16 +57,20 @@
           v-model="question"
           type="textarea"
           :rows="2"
-          placeholder="用自然语言提问"
+          :placeholder="$t('aiDatasetRun.askPlaceholder')"
           @keydown.enter.exact.prevent="ask()"
         />
-        <ElButton type="primary" :loading="asking" @click="ask()">提问</ElButton>
+        <ElButton type="primary" :loading="asking" @click="ask()">{{
+          $t('aiDatasetRun.ask')
+        }}</ElButton>
       </div>
     </ElCard>
   </div>
 </template>
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import { computed, nextTick, onMounted, ref } from 'vue'
+  import { analyzeQuestion, predictQuestion } from './askText'
   import AiNotFound from '../shared/AiNotFound.vue'
   import { useRoute } from 'vue-router'
   import { ElMessageBox } from 'element-plus'
@@ -71,6 +83,7 @@
     aiDatasetExists
   } from '../../api'
   defineOptions({ name: 'AiDatasetRun' })
+  const { t } = useI18n()
   /** id 不存在或已删除时只显示占位与返回入口（UX-105） */
   const notFound = ref(false)
   const route = useRoute()
@@ -105,9 +118,11 @@
       const r = await fetchDatasetAsk({ datasetId: datasetId.value, question: text })
       bot.sql = r?.sql || ''
       bot.rows = r?.rows || []
-      bot.content = Array.isArray(bot.rows) ? `查询完成，共 ${bot.rows.length} 行` : '查询完成'
+      bot.content = Array.isArray(bot.rows)
+        ? t('aiDatasetRun.queryDoneRows', { n: bot.rows.length })
+        : t('aiDatasetRun.queryDone')
     } catch (e: any) {
-      bot.content = e?.message || '这次没有问成。请先配置数据表，再试一次'
+      bot.content = e?.message || t('aiDatasetRun.askFailed')
     } finally {
       asking.value = false
       await scroll()
@@ -116,19 +131,20 @@
   async function analyze(m: any) {
     const r = await fetchDatasetAnalyze({
       datasetId: datasetId.value,
-      question: m.sql ? `基于 SQL 分析：${m.sql}` : question.value
+      question: m.sql ? analyzeQuestion(m.sql) : question.value
     })
-    m.content += '\n[分析] ' + (r?.analysis || JSON.stringify(r))
+    m.content += '\n' + t('aiDatasetRun.analysisPrefix') + ' ' + (r?.analysis || JSON.stringify(r))
   }
   async function predict(m: any) {
     const r = await fetchDatasetPredict({
       datasetId: datasetId.value,
-      question: m.sql ? `基于 SQL 预测：${m.sql}` : question.value
+      question: m.sql ? predictQuestion(m.sql) : question.value
     })
-    m.content += '\n[预测] ' + (r?.prediction || JSON.stringify(r))
+    m.content +=
+      '\n' + t('aiDatasetRun.predictionPrefix') + ' ' + (r?.prediction || JSON.stringify(r))
   }
   async function editSql(m: any) {
-    const { value } = await ElMessageBox.prompt('编辑 SQL 后重跑', 'SQL', {
+    const { value } = await ElMessageBox.prompt(t('aiDatasetRun.editSqlPrompt'), 'SQL', {
       inputValue: m.sql,
       inputType: 'textarea'
     })
@@ -139,7 +155,7 @@
     })
     m.sql = value
     m.rows = r?.rows || []
-    m.content = r?.message || '已重跑'
+    m.content = r?.message || t('aiDatasetRun.rerun')
   }
   onMounted(async () => {
     if (!(await aiDatasetExists(datasetId.value))) {

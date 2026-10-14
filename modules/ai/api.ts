@@ -1,5 +1,6 @@
 import request from '@/utils/http'
 import { useUserStore } from '@/store/modules/user'
+import { $t } from '@/locales'
 
 export type AiId = string | number
 
@@ -67,7 +68,7 @@ export async function consumeAiSse(
         } catch {
           /* 读不到正文时用状态说明 */
         }
-        handlers.onError?.(msg || '生成失败。请检查后再发送')
+        handlers.onError?.(msg || $t('aiApi.genFailed'))
         return
       }
       const reader = resp.body.getReader()
@@ -122,7 +123,7 @@ export async function consumeAiSse(
       finish()
     } catch (e: any) {
       if (e?.name !== 'AbortError') {
-        handlers.onError?.(e?.message || 'SSE 中断')
+        handlers.onError?.(e?.message || $t('aiApi.sseAborted'))
       }
     }
   })()
@@ -536,7 +537,7 @@ export function fetchKbVectorStart(data: Record<string, any>) {
   })
 }
 export function fetchKbVectorPause() {
-  return Promise.reject(new Error('同步向量化不支持暂停'))
+  return Promise.reject(new Error($t('aiApi.noPause')))
 }
 export function fetchKbVectorRebuild(data: Record<string, any>) {
   return request.post<any>({
@@ -630,11 +631,14 @@ export function fetchDatasetAskStream(data: Record<string, any>, handlers: AiSse
       if (r?.sql) handlers.onEvent?.('sql', String(r.sql))
       if (r?.rows) handlers.onEvent?.('rows', JSON.stringify(r.rows))
       const summary =
-        r?.message || (Array.isArray(r?.rows) ? `查询完成，共 ${r.rows.length} 行` : '查询完成')
+        r?.message ||
+        (Array.isArray(r?.rows)
+          ? $t('aiApi.queryDoneRows', { n: r.rows.length })
+          : $t('aiApi.queryDone'))
       handlers.onChunk?.(summary)
       handlers.onDone?.(r)
     } catch (e: any) {
-      handlers.onError?.(e?.message || '问数失败')
+      handlers.onError?.(e?.message || $t('aiApi.askFailed'))
     }
   })()
   return new AbortController()
