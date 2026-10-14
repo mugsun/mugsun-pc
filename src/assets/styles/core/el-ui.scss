@@ -32,6 +32,24 @@
   line-height: var(--el-component-custom-height) !important;
 }
 
+// 校验提示参与文档流，避免被下一个表单项遮挡
+// Element Plus 默认把 .el-form-item__error 绝对定位在 margin-bottom(18px) 里，
+// 页面把 margin-bottom 压小、或英文长提示换行时就会压到下一个字段上。
+// 改成静态定位后，提示会把下一个字段往下推，长文案可以正常换行。
+.el-form-item__error:not(.el-form-item__error--inline) {
+  position: static;
+  width: 100%;
+  padding-top: 2px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+  white-space: normal;
+}
+
+// 出错时提示已占位，收回默认留白，避免出错时整体跳得太多
+.el-form-item.is-error:not(.el-form-item--inline-message) {
+  margin-bottom: 8px;
+}
+
 // 日期选择器
 .el-date-range-picker {
   --el-datepicker-inrange-bg-color: var(--art-gray-200) !important;
