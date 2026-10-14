@@ -2,23 +2,23 @@
   <div class="ai-model-page art-full-height">
     <ElCard class="art-table-card" shadow="never">
       <ElTabs v-model="modelType" @tab-change="onTabChange">
-        <ElTabPane label="对话模型" name="chat" />
-        <ElTabPane label="向量模型" name="embedding" />
-        <ElTabPane label="图像模型" name="image" />
-        <ElTabPane label="音频模型" name="audio" />
+        <ElTabPane :label="$t('aiModelList.tabChat')" name="chat" />
+        <ElTabPane :label="$t('aiModelList.tabEmbedding')" name="embedding" />
+        <ElTabPane :label="$t('aiModelList.tabImage')" name="image" />
+        <ElTabPane :label="$t('aiModelList.tabAudio')" name="audio" />
       </ElTabs>
 
       <div class="ai-model-toolbar">
         <ElInput
           v-model="keyword"
           clearable
-          placeholder="按名称搜索"
+          :placeholder="$t('aiModelList.searchPlaceholder')"
           style="width: 220px"
           @keyup.enter="reload"
           @clear="reload"
         />
-        <ElButton @click="reload">搜索</ElButton>
-        <ElButton type="primary" @click="openEdit()">添加新模型</ElButton>
+        <ElButton @click="reload">{{ $t('aiModelList.search') }}</ElButton>
+        <ElButton type="primary" @click="openEdit()">{{ $t('aiModelList.add') }}</ElButton>
       </div>
 
       <div v-loading="loading" class="ai-model-grid">
@@ -29,8 +29,12 @@
             <div class="ai-model-card__titles">
               <div class="name">
                 {{ row.modelName }}
-                <ElTag v-if="row.defaultFlag === 1" size="small" type="success">默认</ElTag>
-                <ElTag v-if="row.builtinFlag === 1" size="small">内置</ElTag>
+                <ElTag v-if="row.defaultFlag === 1" size="small" type="success">{{
+                  $t('aiModelList.default')
+                }}</ElTag>
+                <ElTag v-if="row.builtinFlag === 1" size="small">{{
+                  $t('aiModelList.builtin')
+                }}</ElTag>
               </div>
               <div class="sub">
                 <ElTag size="small" effect="plain">{{ row.provider }}</ElTag>
@@ -38,18 +42,27 @@
               </div>
             </div>
             <ElTag :type="row.activateFlag === 1 ? 'success' : 'info'" size="small">
-              {{ row.activateFlag === 1 ? '已激活' : '未激活' }}
+              {{
+                row.activateFlag === 1 ? $t('aiModelList.activated') : $t('aiModelList.inactive')
+              }}
             </ElTag>
           </div>
           <div class="ai-model-card__price">
-            输入 {{ row.priceInput ?? '-' }} / 输出 {{ row.priceOutput ?? '-' }} 元/千token
+            {{
+              $t('aiModelList.price', {
+                input: row.priceInput ?? '-',
+                output: row.priceOutput ?? '-'
+              })
+            }}
           </div>
           <div class="ai-model-card__ops">
-            <ElButton link type="primary" @click="openEdit(row)">编辑</ElButton>
-            <ElButton link @click="setDefault(row)">设为默认</ElButton>
-            <ElButton link @click="testModel(row)">测试</ElButton>
+            <ElButton link type="primary" @click="openEdit(row)">{{
+              $t('aiModelList.edit')
+            }}</ElButton>
+            <ElButton link @click="setDefault(row)">{{ $t('aiModelList.setDefault') }}</ElButton>
+            <ElButton link @click="testModel(row)">{{ $t('aiModelList.test') }}</ElButton>
             <ElButton link type="danger" :disabled="row.builtinFlag === 1" @click="remove(row)">
-              删除
+              {{ $t('aiModelList.delete') }}
             </ElButton>
           </div>
         </ElCard>
@@ -155,6 +168,7 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import type { FormInstance } from 'element-plus'
   import { requiredRule } from '../shared/formRules'
   import { computed, nextTick, onMounted, reactive, ref } from 'vue'
@@ -168,6 +182,7 @@
   } from '../../api'
 
   defineOptions({ name: 'AiModel' })
+  const { t } = useI18n()
   const formRef = ref<FormInstance>()
 
   const providers = [
@@ -195,7 +210,7 @@
   const searching = ref(false)
   const form = reactive<Record<string, any>>({})
   const emptyText = computed(() =>
-    searching.value ? '没有符合条件的模型。换个名称再查' : '还没有模型。点添加新模型开始配置'
+    searching.value ? t('aiModelList.emptySearched') : t('aiModelList.empty')
   )
 
   async function reload() {
@@ -281,8 +296,8 @@
 
   async function remove(row: any) {
     await ElMessageBox.confirm(
-      `删除「${row.modelName}」后，列表里不会再出现。已设成默认的也会一起清掉`,
-      '确认'
+      t('aiModelList.removeConfirm', { name: row.modelName }),
+      t('aiModelList.confirmTitle')
     )
     await fetchRemoveAiModel(row.id)
     await reload()

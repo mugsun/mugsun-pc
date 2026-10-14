@@ -5,12 +5,12 @@
         <ElInput
           v-model="keyword"
           clearable
-          placeholder="搜索知识库"
+          :placeholder="$t('aiKbList.searchPlaceholder')"
           style="width: 200px"
           @keyup.enter="reload"
         />
-        <ElButton @click="reload">搜索</ElButton>
-        <ElButton type="primary" @click="openEdit()">新建知识库</ElButton>
+        <ElButton @click="reload">{{ $t('aiKbList.search') }}</ElButton>
+        <ElButton type="primary" @click="openEdit()">{{ $t('aiKbList.add') }}</ElButton>
       </div>
       <div v-loading="loading" class="card-grid">
         <ElCard
@@ -23,19 +23,21 @@
           <div class="title">
             {{ row.name }}
             <ElTag :type="row.status === 1 ? 'success' : 'info'" size="small">{{
-              row.status === 1 ? '启用' : '停用'
+              row.status === 1 ? $t('aiKbList.enabled') : $t('aiKbList.disabled')
             }}</ElTag>
           </div>
           <div class="meta"
-            >文档 {{ row.docCount ?? 0 }} · 分段 {{ row.segmentCount ?? 0 }} ·
+            >{{ $t('aiKbList.meta', { docs: row.docCount ?? 0, segs: row.segmentCount ?? 0 }) }}
             {{ modeLabel(row.retrievalMode) }}</div
           >
-          <div class="desc">{{ row.description || '暂无描述' }}</div>
+          <div class="desc">{{ row.description || $t('aiKbList.noDescription') }}</div>
           <div class="ops" @click.stop>
-            <ElButton link type="primary" @click="openEdit(row)">编辑</ElButton>
-            <ElButton link @click="copy(row)">复制</ElButton>
-            <ElButton link @click="test(row)">测试</ElButton>
-            <ElButton link type="danger" @click="remove(row)">删除</ElButton>
+            <ElButton link type="primary" @click="openEdit(row)">{{
+              $t('aiKbList.edit')
+            }}</ElButton>
+            <ElButton link @click="copy(row)">{{ $t('aiKbList.copy') }}</ElButton>
+            <ElButton link @click="test(row)">{{ $t('aiKbList.test') }}</ElButton>
+            <ElButton link type="danger" @click="remove(row)">{{ $t('aiKbList.delete') }}</ElButton>
           </div>
         </ElCard>
         <ElEmpty v-if="!loading && !records.length" :description="emptyText" />
@@ -120,6 +122,7 @@
   </div>
 </template>
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import type { FormInstance } from 'element-plus'
   import { requiredRule } from '../shared/formRules'
   import { computed, onMounted, reactive, ref, nextTick } from 'vue'
@@ -134,6 +137,7 @@
     fetchTestAiKnowledge
   } from '../../api'
   defineOptions({ name: 'AiKnowledge' })
+  const { t } = useI18n()
   const formRef = ref<FormInstance>()
   const router = useRouter()
   const keyword = ref('')
@@ -144,12 +148,12 @@
   const form = reactive<Record<string, any>>({})
   const searching = ref(false)
   const emptyText = computed(() =>
-    searching.value ? '没有符合条件的知识库。换个名称再查' : '还没有知识库。点新建知识库开始配置'
+    searching.value ? t('aiKbList.emptySearched') : t('aiKbList.empty')
   )
   function modeLabel(mode?: string) {
-    if (mode === 'vector') return '向量检索'
-    if (mode === 'keyword') return '关键词'
-    return '混合检索'
+    if (mode === 'vector') return t('aiKbList.modeVector')
+    if (mode === 'keyword') return t('aiKbList.modeKeyword')
+    return t('aiKbList.modeHybrid')
   }
   const embedModels = ref<any[]>([])
   const testVisible = ref(false)
@@ -221,23 +225,28 @@
     }
   }
   async function test(row: any) {
-    const { value } = await ElMessageBox.prompt('输入要检索的问题', `测试 · ${row.name}`, {
-      inputValue: '如何创建知识库？',
-      confirmButtonText: '测试'
-    }).catch(() => ({ value: '' }))
+    const { value } = await ElMessageBox.prompt(
+      t('aiKbList.testPrompt'),
+      t('aiKbList.testTitle', { name: row.name }),
+      {
+        inputValue: t('aiKbList.testDefault'),
+        confirmButtonText: t('aiKbList.test')
+      }
+    ).catch(() => ({ value: '' }))
     if (!value) return
     const r = await fetchTestAiKnowledge({ id: row.id, query: value })
     testQuery.value = value
     testHits.value = Array.isArray(r?.hits) ? r.hits : []
     testVisible.value = true
-    const message = r?.message || (testHits.value.length ? `命中 ${testHits.value.length} 条` : '')
+    const message =
+      r?.message || (testHits.value.length ? t('aiKbList.hits', { n: testHits.value.length }) : '')
     if (testHits.value.length) ElMessage.success(message)
-    else ElMessage.warning(message || '没有命中资料。请先上传内容，或换一个更接近原文的问题再测')
+    else ElMessage.warning(message || t('aiKbList.noHits'))
   }
   async function remove(row: any) {
     await ElMessageBox.confirm(
-      `删除「${row.name}」后，列表里不会再出现。资料和分段也会一起清掉`,
-      '确认'
+      t('aiKbList.removeConfirm', { name: row.name }),
+      t('aiKbList.confirmTitle')
     )
     await fetchRemoveAiKnowledge(row.id)
     await reload()
