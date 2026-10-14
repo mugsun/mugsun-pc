@@ -3004,6 +3004,7 @@
       "created": "Scene created",
       "load3d": "Loading 3D engine…",
       "mapHint": "Tiles are proxied by the server so keys never reach the browser.",
+      "coachClose": "Hide tip",
       "help": "Help",
       "helpTitle": "Where to get basemap keys",
       "helpTianditu": "Tianditu: request a tk from the national geospatial platform console.",

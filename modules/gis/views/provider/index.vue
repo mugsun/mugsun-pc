@@ -125,12 +125,13 @@
           <ElOption value="vec_label" :label="$t('pages.gis.styleVecLabel')" />
         </ElSelect>
       </div>
-      <p class="gis-hud gis-hud-status">{{ $t('pages.gis.providerCoach') }}</p>
+      <GisCoach>{{ $t('pages.gis.providerCoach') }}</GisCoach>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+  import GisCoach from '../../components/GisCoach.vue'
   import {
     nextTick,
     onActivated,

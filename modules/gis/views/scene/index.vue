@@ -51,12 +51,13 @@
           />
         </div>
       </aside>
-      <p class="gis-hud gis-hud-status">{{ $t('pages.gis.sceneCoach') }}</p>
+      <GisCoach>{{ $t('pages.gis.sceneCoach') }}</GisCoach>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+  import GisCoach from '../../components/GisCoach.vue'
   import { nextTick, onActivated, onBeforeUnmount, onDeactivated, onMounted, ref } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { useRouter, onBeforeRouteLeave } from 'vue-router'
