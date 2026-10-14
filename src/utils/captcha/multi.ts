@@ -209,6 +209,43 @@ export class RotateFineTuner {
   }
 }
 
+/**
+ * 旋转拖动模型：角度按增量累加 angle += dx × (360 / width) × 当前倍率，
+ * 进入 / 退出精调时不回算已累加部分（不会跳角）；滑块位置 = 角度反算的左边缘行程，
+ * 精调时滑块随角度一起变慢而不是紧跟指针。track.x 记的就是这个反算行程，
+ * 故服务端由 track 首末位移换算的角度与 answer.angle 一致（契约 v0.6.x R1′）。
+ */
+export class RotateDrag {
+  readonly tuner = new RotateFineTuner()
+  /** 当前角度（度，[0, 360)），即显示角，也是提交的 answer.angle */
+  angle = 0
+
+  constructor(private width: number) {}
+
+  get fine(): boolean {
+    return this.tuner.fine
+  }
+
+  /** 滑块左边缘逻辑行程（显示像素），由角度反算 */
+  get offset(): number {
+    return rotateAngleToTravel(this.angle, this.width)
+  }
+
+  reset(width = this.width): void {
+    this.width = width
+    this.angle = 0
+    this.tuner.reset()
+  }
+
+  /** @param dx 指针位移（布局像素） @param dt 距上次事件 ms @param now 当前时间 ms */
+  move(dx: number, dt: number, now: number): number {
+    if (!this.width || this.width <= 0) return this.angle
+    const step = this.tuner.delta(dx, dt, now) * (360 / this.width)
+    this.angle = normalizeAngle(Math.min(359.9, Math.max(0, this.angle + step)))
+    return this.angle
+  }
+}
+
 /** 精调提示类名：拖动中且处于精调时为 is-fine；其余时间无类名（样式负责 150ms 淡出） */
 export function rotateFineHintClass(dragging: boolean, fine: boolean): Record<string, boolean> {
   return { 'is-fine': dragging && fine }

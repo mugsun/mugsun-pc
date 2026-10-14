@@ -268,6 +268,43 @@ describe('v0.6.2 旋转低速精调 / 40016', () => {
     expect(m.rotateFineHintClass(false, true)).toEqual({ 'is-fine': false })
     expect(m.ROTATE_FINE_HINT_FADE_MS).toBe(150)
   })
+  it('快拖 → 慢拖 → 快拖：角度按增量累加，全程连续、不跳角', () => {
+    const W = 320
+    const d = new m.RotateDrag(W)
+    const k = 360 / W
+    let t = 0
+    let prev = 0
+    const seq: Array<[number, number]> = []
+    for (let i = 0; i < 10; i++) seq.push([8, 16]) // 快 0.5 px/ms
+    for (let i = 0; i < 20; i++) seq.push([1, 20]) // 慢 0.05 px/ms（满 200ms 进入精调）
+    for (let i = 0; i < 10; i++) seq.push([8, 16]) // 再快
+    let sawFine = false
+    for (const [dx, dt] of seq) {
+      t += dt
+      const wasFine = d.fine
+      const a = d.move(dx, dt, t)
+      sawFine ||= d.fine
+      const gain = d.fine ? m.ROTATE_SLOW_GAIN : 1
+      // 每步增量只等于本步 dx × k × 当前倍率（容 0.1° 取整），切换倍率时不回算已累加部分
+      expect(Math.abs(a - prev - dx * k * gain)).toBeLessThanOrEqual(0.11)
+      if (wasFine !== d.fine) expect(Math.abs(a - prev)).toBeLessThanOrEqual(8 * k + 0.11)
+      // 滑块由角度反算
+      expect(d.offset).toBeCloseTo(m.rotateAngleToTravel(a, W), 5)
+      prev = a
+    }
+    expect(sawFine).toBe(true)
+    expect(d.fine).toBe(false)
+  })
+  it('提交的答案等于显示角度，track 行程换算的角度与之一致', () => {
+    const W = 320
+    const d = new m.RotateDrag(W)
+    let t = 0
+    for (let i = 0; i < 6; i++) d.move(8, 16, (t += 16))
+    for (let i = 0; i < 30; i++) d.move(1, 20, (t += 20))
+    const shown = Math.round(d.angle * 10) / 10
+    expect(m.buildRotateAnswer(d.angle)).toEqual({ angle: shown })
+    expect(Math.abs((d.offset / W) * 360 - shown)).toBeLessThanOrEqual(0.2)
+  })
   it('40016 归类为 unavailable，不自动重试', () => {
     expect(m.classifyCaptchaError(new HttpError('暂不可用', 40016))).toMatchObject({
       kind: 'unavailable'

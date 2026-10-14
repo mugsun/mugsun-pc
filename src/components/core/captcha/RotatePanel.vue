@@ -63,16 +63,14 @@
   import {
     TrackRecorder,
     buildRotateAnswer,
-    clampOffset,
     clampRotateSteps,
     cssScale,
     keyboardPressCount,
     normalizeAngle,
     rotateAngleToTravel,
-    RotateFineTuner,
+    RotateDrag,
     rotateFineHintClass,
     rotateKeyboardStep,
-    rotateTravelToAngle,
     toDisplay,
     type InputMode,
     type PanelSubmit
@@ -101,8 +99,8 @@
   let scale = 1
   let lastX = 0
   let lastT = 0
-  const tuner = new RotateFineTuner()
-  /** 精调提示状态（光环 + 刻度），跟随 tuner.fine */
+  const drag = new RotateDrag(0)
+  /** 精调提示状态（光环 + 刻度），跟随 drag.fine */
   const fine = ref(false)
   let keySteps = 0
 
@@ -144,7 +142,7 @@
     startY = e.clientY
     lastX = e.clientX
     lastT = performance.now()
-    tuner.reset()
+    drag.reset(props.width)
     fine.value = false
     // 轨迹 x = 逻辑行程（布局像素），首末位移 = answer 换算行程
     recorder = new TrackRecorder(Date.now())
@@ -152,20 +150,20 @@
   function onPointerMove(e: PointerEvent) {
     if (!dragging.value || !recorder) return
     e.preventDefault()
-    // 低速精调：持续慢 200ms 且已拖 ≥24px 后逻辑位移按 0.6 倍累加；track.x 记逻辑位置（v0.6.2 §3）
+    // 低速精调：角度按增量累加（精调 0.6 倍），滑块由角度反算；track.x 记反算行程（v0.6.2 §3）
     const now = performance.now()
     const dx = (e.clientX - lastX) / scale
-    offset.value = clampOffset(offset.value + tuner.delta(dx, now - lastT, now), props.width)
-    fine.value = tuner.fine
+    angle.value = drag.move(dx, now - lastT, now)
+    offset.value = drag.offset
+    fine.value = drag.fine
     lastX = e.clientX
     lastT = now
-    angle.value = rotateTravelToAngle(offset.value, props.width)
     recorder.sample(offset.value, (e.clientY - startY) / scale, Date.now())
   }
   function onPointerUp(e: PointerEvent) {
     if (!dragging.value || !recorder) return
     dragging.value = false
-    tuner.reset()
+    drag.tuner.reset()
     fine.value = false
     const el = e.currentTarget as HTMLElement
     if (el.hasPointerCapture?.(e.pointerId)) el.releasePointerCapture(e.pointerId)
