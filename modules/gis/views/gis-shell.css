@@ -178,8 +178,11 @@
 }
 
 /* 窄屏：底部提示改为整行横条（可收起），面板与缩放按钮让出位置（UX-114） */
+
+/* 宽面板页（空间分析）上方的 left: 324px 特异性更高，这里同样带上 :has 选择器才能覆盖，否则 390px 下提示被挤成一列竖排 */
 @media (width <= 768px) {
-  .gis-hud-status.gis-coach {
+  .gis-hud-status.gis-coach,
+  .gis-map-shell--panel:has(.gis-hud-panel-wide) .gis-hud-status.gis-coach {
     right: 72px;
     bottom: 40px;
     left: 12px;

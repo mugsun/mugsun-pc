@@ -337,7 +337,7 @@
     }
     const got = analyzed.collection?.count
     if (!parts.length && typeof got === 'number') {
-      parts.push(t('pages.gis.metricsCount', { n: got }))
+      parts.push(t('pages.gis.metricsCount', { n: got }, got))
     }
     lines.value = parts
     opsText.value = parts.join(' · ') || t('pages.gis.labOpsNoMetrics')
@@ -404,7 +404,11 @@
       })
       bag.overlays.fit('lab-ingest')
       bag.map.updateSize()
-      ingestText.value = t('pages.gis.metricsCount', { n: parsed.count ?? feats.length })
+      ingestText.value = t(
+        'pages.gis.metricsCount',
+        { n: parsed.count ?? feats.length },
+        parsed.count ?? feats.length
+      )
     } catch {
       ingestText.value = t('pages.gis.labIngestFailed')
     } finally {
