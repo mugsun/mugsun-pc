@@ -3,7 +3,7 @@
  * 否则第一个组合里个别弹窗组件编译慢，会在等待时间内打不开。
  */
 import { chromium, type FullConfig } from '@playwright/test'
-import { mockAll, seedSession, SKIP_ROUTE } from './support/session'
+import { mockAll, seedSession } from './support/session'
 
 export default async function warmup(config: FullConfig) {
   const baseURL = config.projects[0].use.baseURL as string
@@ -15,20 +15,20 @@ export default async function warmup(config: FullConfig) {
   await page.waitForFunction(() => (document.querySelector('#app') as any)?.__vue_app__, null, {
     timeout: 120_000
   })
-  const paths: string[] = await page.evaluate(() =>
-    (document.querySelector('#app') as any).__vue_app__.config.globalProperties.$router
-      .getRoutes()
-      .filter((r: any) => r.components?.default && !r.children?.length)
-      .map((r: any) => r.path)
-  )
-  const targets = [...new Set(paths)].filter((p) => p !== '/' && !SKIP_ROUTE.test(p))
   const started = Date.now()
-  for (const p of targets) {
-    await page.goto('/#' + p)
-    await page.waitForLoadState('networkidle', { timeout: 60_000 })
-  }
+  // 直接调用每个路由的懒加载函数：等 import() 完成，dev server 就把页面及其依赖都编译好了
+  const n: number = await page.evaluate(async () => {
+    const router = (document.querySelector('#app') as any).__vue_app__.config.globalProperties
+      .$router
+    const loaders = router
+      .getRoutes()
+      .map((r: any) => r.components?.default)
+      .filter((c: any) => typeof c === 'function')
+    for (const load of loaders) await Promise.resolve(load()).catch(() => {})
+    return loaders.length
+  })
   console.log(
-    `[warmup] ${targets.length} 个路由预热完成，用时 ${Math.round((Date.now() - started) / 1000)}s`
+    `[warmup] ${n} 个路由组件预热完成，用时 ${Math.round((Date.now() - started) / 1000)}s`
   )
   await browser.close()
 }

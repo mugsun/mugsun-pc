@@ -27,6 +27,20 @@ const ROW = {
 }
 export const ADD_RE = /^\s*(\+\s*)?(新增|添加|新建|创建|Add|New|Create)/i
 export const SUBMIT_RE = /^\s*(保存|提交|确定|确认|Save|Submit|OK|Confirm)\s*$/i
+/**
+ * 文字像「新增」但不打开弹窗的按钮（页内加一行 / 新开会话 / 进入设计器）。
+ * 只按「路由 + 按钮文字」精确豁免，新增条目要写明原因。
+ */
+export const NOT_DIALOG: { route: string; text: RegExp; why: string }[] = [
+  { route: '/ai/assistant', text: /^(新对话|新建对话|New chat)$/i, why: '新开一个会话，不是弹窗' },
+  { route: '/system/message-send', text: /添加变量|Add Variable/i, why: '在表单里加一行变量' },
+  { route: '/track/funnel', text: /^(添加步骤|Add step)$/i, why: '在漏斗里加一个步骤' },
+  {
+    route: '/system/gen-modeling',
+    text: /^(手工新建|New model)$/i,
+    why: '在页内打开空白建模画布'
+  }
+]
 export const EDIT_RE = /^\s*(编辑|修改|Edit)\s*$/i
 /** 只读/外链/示例路由不检查 */
 export const SKIP_ROUTE = /^\/(auth|exception|outside|iframe|lock|redirect)\b|:/
@@ -42,6 +56,11 @@ export async function mockAll(page: Page) {
     (r) => {
       const u = r.request().url()
       if (u.includes('/auth/info')) return r.fulfill(ok(INFO))
+      // GIS：模块开启且有可用底图，否则「模块未开启」遮罩会盖住整页按钮
+      if (u.includes('/system/gis/status'))
+        return r.fulfill(
+          ok({ enabled: true, providers: [{ code: 'mock', configured: true, enabled: true }] })
+        )
       if (/\/(page|list)\b/.test(u))
         return r.fulfill(
           ok({ records: [ROW], list: [ROW], rows: [ROW], total: 1, current: 1, size: 10 })

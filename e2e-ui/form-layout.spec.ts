@@ -9,6 +9,7 @@
 import { expect, type Page, type Locator } from '@playwright/test'
 import {
   test,
+  NOT_DIALOG,
   mockAll,
   seedSession,
   ADD_RE,
@@ -28,9 +29,35 @@ async function settle(page: Page) {
     null,
     { timeout: 5_000 }
   )
+  // 再等 DOM 稳定：连续 10 帧里表单项、校验提示的文字和位置都不变
+  // （同一个弹窗先新增后编辑时，上一次的红字会在打开后被清掉，不能在清的过程中量）
   await page.evaluate(
-    () => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(() => r(null))))
+    () =>
+      new Promise((resolve) => {
+        const sig = () =>
+          [...document.querySelectorAll('.el-form-item, .el-form-item__error')]
+            .map((e) => {
+              const r = e.getBoundingClientRect()
+              return `${e.className}|${e.textContent?.length}|${r.x | 0},${r.y | 0},${r.height | 0}`
+            })
+            .join(';')
+        let last = sig()
+        let same = 0
+        let frames = 0
+        const tick = () => {
+          const now = sig()
+          same = now === last ? same + 1 : 0
+          last = now
+          if (same >= 10 || ++frames > 300) resolve(null)
+          else requestAnimationFrame(tick)
+        }
+        requestAnimationFrame(tick)
+      })
   )
+}
+
+function root0(page: Page, inDialog: boolean, scope: Locator) {
+  return inDialog ? scope : page.locator('body')
 }
 
 /** 断言当前可见表单中的每条校验提示与标签都完整可见 */
@@ -47,8 +74,17 @@ async function checkForms(page: Page, where: string, problems: string[]) {
         )
         .last()
     : page.locator('button:visible').filter({ hasText: SUBMIT_RE }).first()
+  // 编辑弹窗打开后会再拉详情并回填表单，回填会清掉校验提示；先等数据和渲染稳定再提交
+  await page.waitForLoadState('networkidle', { timeout: 15_000 })
+  await settle(page)
   // 点击失败直接抛出，由调用方记入 broken 并判失败，不静默跳过
   if (await submit.count()) await submit.click({ timeout: 5_000 })
+  // 校验是异步的：等第一条提示出现（没有必填项的表单可能一条都没有，所以不强制）
+  await root0(page, inDialog, scope)
+    .locator('.el-form-item__error')
+    .first()
+    .waitFor({ timeout: 3_000 })
+    .catch(() => {})
   await settle(page)
   const root = inDialog ? scope : page.locator('body')
   const errors = root.locator('.el-form-item__error:visible')
@@ -159,8 +195,11 @@ test('表单校验提示与标签完整可见', async ({ page, uiLang, uiTheme }
       )
     ]
   })
-  const targets = paths.filter((p) => p !== '/' && !SKIP_ROUTE.test(p)).sort()
-  expect(targets.length, '未发现任何路由').toBeGreaterThan(10)
+  const only = process.env.UI_CHECK_ONLY ? new RegExp(process.env.UI_CHECK_ONLY) : null
+  const targets = paths
+    .filter((p) => p !== '/' && !SKIP_ROUTE.test(p) && (!only || only.test(p)))
+    .sort()
+  expect(targets.length, '未发现任何路由').toBeGreaterThan(only ? 0 : 10)
 
   const problems: string[] = []
   const stats = {
@@ -179,10 +218,29 @@ test('表单校验提示与标签完整可见', async ({ page, uiLang, uiTheme }
         await page.goto('/#' + path)
         await page.waitForLoadState('networkidle', { timeout: 15_000 })
         await settle(page)
+        // 等当前路由的页面组件真正挂载，并给它的根元素打标记；按钮只在这个页面里找，
+        // 避免拿到上一个页面（keep-alive 标签页）残留的按钮
+        await page.waitForFunction(
+          (p) => {
+            const r = (document.querySelector('#app') as any).__vue_app__.config.globalProperties
+              .$router.currentRoute.value
+            const inst = r.matched.at(-1)?.instances?.default
+            const el = inst?.$el as HTMLElement | undefined
+            if (r.path !== p || !el) return false
+            document
+              .querySelectorAll('[data-ui-check-page]')
+              .forEach((e) => e.removeAttribute('data-ui-check-page'))
+            ;(el.nodeType === 1 ? el : el.parentElement!).setAttribute('data-ui-check-page', '')
+            return true
+          },
+          path,
+          { timeout: 20_000 }
+        )
+        const pageRoot = page.locator('[data-ui-check-page]')
         await closeDialogs(page)
         stats.pages++
         // 页面本身的表单（排除查询栏：没有必填项的表单不会出错，自然跳过）
-        if (await page.locator('.el-form:visible .el-form-item.is-required').count()) {
+        if (await pageRoot.locator('.el-form:visible .el-form-item.is-required').count()) {
           stats.pageForms++
           stats.errors += await checkForms(page, `${path} 页面表单`, problems)
         }
@@ -191,17 +249,30 @@ test('表单校验提示与标签完整可见', async ({ page, uiLang, uiTheme }
           ['新增', ADD_RE],
           ['编辑', EDIT_RE]
         ] as const) {
-          const btn: Locator = page
+          const btn: Locator = pageRoot
             .locator('button:visible, a.el-link:visible')
             .filter({ hasText: re })
             .first()
           if (!(await btn.count())) continue
+          const label = ((await btn.textContent()) || '').trim()
+          const exempt = NOT_DIALOG.find((x) => x.route === path && x.text.test(label))
+          if (exempt) {
+            stats.navigations.push(`${path} 「${label}」豁免：${exempt.why}`)
+            continue
+          }
           const dlg = page.locator('.el-overlay:visible .el-dialog, .el-overlay:visible .el-drawer')
           const before = page.url()
           let opened = false
           // 找到按钮却没出弹窗：重试一次，仍不出来就判失败（不静默跳过）
           for (let attempt = 0; attempt < 2 && !opened; attempt++) {
-            await btn.click({ timeout: 5_000 })
+            await btn.click({ timeout: 5_000 }).catch((e: Error) => {
+              const why =
+                e.message
+                  .split('\n')
+                  .find((l) => /intercepts|not (visible|enabled|stable)/.test(l)) ||
+                e.message.split('\n')[0]
+              throw new Error(`「${label}」按钮点不动：${why.trim()}`)
+            })
             opened = await dlg
               .first()
               .waitFor({ timeout: 10_000 })
@@ -215,7 +286,7 @@ test('表单校验提示与标签完整可见', async ({ page, uiLang, uiTheme }
               stats.navigations.push(`${path} ${kind} → ${new URL(page.url()).hash}`)
               continue
             }
-            throw new Error(`「${kind}」按钮已点击两次，弹窗仍未出现`)
+            throw new Error(`「${kind}」按钮「${label}」已点击两次，弹窗仍未出现`)
           }
           await settle(page)
           stats.dialogs++
@@ -240,11 +311,13 @@ test('表单校验提示与标签完整可见', async ({ page, uiLang, uiTheme }
   expect
     .soft(stats.broken, `${info.project.name}: ${stats.broken.length} 个页面/弹窗无法检查`)
     .toEqual([])
-  expect
-    .soft(stats.dialogs, `${info.project.name}: 弹窗数 ${stats.dialogs} 低于下限 ${MIN_DIALOGS}`)
-    .toBeGreaterThanOrEqual(MIN_DIALOGS)
-  expect
-    .soft(stats.errors, `${info.project.name}: 校验提示数 ${stats.errors} 低于下限 ${MIN_ERRORS}`)
-    .toBeGreaterThanOrEqual(MIN_ERRORS)
+  if (!only)
+    expect
+      .soft(stats.dialogs, `${info.project.name}: 弹窗数 ${stats.dialogs} 低于下限 ${MIN_DIALOGS}`)
+      .toBeGreaterThanOrEqual(MIN_DIALOGS)
+  if (!only)
+    expect
+      .soft(stats.errors, `${info.project.name}: 校验提示数 ${stats.errors} 低于下限 ${MIN_ERRORS}`)
+      .toBeGreaterThanOrEqual(MIN_ERRORS)
   expect(problems, `${info.project.name}: 发现 ${problems.length} 处表单布局问题`).toEqual([])
 })
