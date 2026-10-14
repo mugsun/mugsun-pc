@@ -154,7 +154,7 @@ export function fetchTrackFunnel(params: Record<string, any>) {
 // ===== 留存分析（G103） =====
 /**
  * 新客留存网格：{rows: [{cohortDate, cohortSize, retained: {offset: n}}]}——
- * cohort=窗口内新客（首活跃日 > 回看窗首日，截断保守排除），活跃=当天任意事件，UTC 日切；days ≤30。
+ * cohort=窗口内新客（首活跃日 > 回看窗首日，截断保守排除），活跃=当天任意事件，按租户时区零点切天（boot#36，默认 Asia/Shanghai）；days ≤30。
  */
 export function fetchTrackRetention(params: Record<string, any>) {
   return request.get<any>({ url: '/api/system/track/retention', params })
