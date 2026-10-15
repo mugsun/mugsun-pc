@@ -3,6 +3,7 @@ import ElementPlus from 'element-plus'
 import { hasPerm } from '@/utils/permission'
 import { useUserStore } from '@/store/modules/user'
 import i18n from '@/locales'
+import { bindElementLocale } from '@/locales/element'
 import AiDrawerHost from './views/shared/AiDrawerHost.vue'
 
 let mounted = false
@@ -28,7 +29,14 @@ export function setupAi(): void {
   const el = document.createElement('div')
   el.id = 'mugsun-ai-drawer-host'
   document.body.appendChild(el)
-  createApp({
+  /*
+   * 独立 app（AI 抽屉），不是主应用的子树：
+   * - 依赖主应用设置的 pinia：主应用 initStore 已 setActivePinia，这里的 useUserStore() 拿的是同一个 store，
+   *   所以必须在主应用 initStore 之后调用 setupAi；
+   * - 没有 App.vue 的 ElConfigProvider，Element Plus 自带文案（空数据、分页、确认按钮等）要单独
+   *   provideGlobalConfig，复用主应用同一份 locale 映射（bindElementLocale）。
+   */
+  const drawerApp = createApp({
     setup() {
       const userStore = useUserStore()
       watch(
@@ -50,9 +58,11 @@ export function setupAi(): void {
       }
     }
   })
+  drawerApp
     .use(ElementPlus)
     // 独立 app 也要装同一个 i18n 实例：AiDrawerHost 的 $t 和 ChatPanel 的 useI18n 都依赖它，
     // 且与主应用共用 locale，切换语言时同步
     .use(i18n)
-    .mount(el)
+  bindElementLocale(drawerApp)
+  drawerApp.mount(el)
 }
