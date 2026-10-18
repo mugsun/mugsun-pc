@@ -258,16 +258,6 @@ export function fetchDefaultAiMcp(id: AiId) {
     showSuccessMessage: true
   })
 }
-export function fetchAiMcpServerList() {
-  return request.get<any[]>({ url: '/api/system/ai/mcp/server/list' })
-}
-export function fetchToggleAiMcpServer(data: Record<string, any>) {
-  return request.post<void>({
-    url: '/api/system/ai/mcp/server/toggle',
-    data,
-    showSuccessMessage: true
-  })
-}
 
 // ===== 向量库 =====
 export function fetchAiVectorPage(params: Record<string, any>) {

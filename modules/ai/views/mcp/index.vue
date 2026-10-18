@@ -8,65 +8,53 @@
         <ElTabPane :label="$t('aiMcpList.tabBrowser')" name="browser" />
         <ElTabPane :label="$t('aiMcpList.tabFile')" name="file" />
         <ElTabPane :label="$t('aiMcpList.tabCustom')" name="custom" />
-        <ElTabPane :label="$t('aiMcpList.tabServer')" name="server" />
       </ElTabs>
-      <template v-if="category !== 'server'">
-        <div class="toolbar">
-          <ElInput
-            v-model="keyword"
-            clearable
-            :placeholder="$t('aiMcpList.searchPlaceholder')"
-            style="width: 200px"
-            @keyup.enter="reload"
-            @clear="reload"
-          />
-          <ElButton @click="reload">{{ $t('aiMcpList.search') }}</ElButton>
-          <ElButton type="primary" @click="openEdit()">{{ $t('aiMcpList.add') }}</ElButton>
-        </div>
-        <div v-loading="loading" class="card-grid">
-          <ElCard v-for="row in records" :key="row.id" shadow="hover">
-            <div class="title"
-              >{{ row.name }}
-              <ElTag size="small">{{ row.protocolType }}</ElTag>
-              <ElTag v-if="row.defaultFlag === 1" size="small" type="success">{{
-                $t('aiMcpList.default')
-              }}</ElTag>
-              <ElTag v-if="row.lockFlag === 1" size="small" type="warning">{{
-                $t('aiMcpList.lock')
-              }}</ElTag>
-            </div>
-            <div class="meta">
-              {{ $t('aiMcpList.toolCount', { n: toolCount(row) }) }} · {{ row.description }}
-            </div>
-            <div class="ops">
-              <ElButton link type="primary" :disabled="row.lockFlag === 1" @click="openEdit(row)">{{
-                $t('aiMcpList.edit')
-              }}</ElButton>
-              <ElButton link @click="debug(row)">{{ $t('aiMcpList.debug') }}</ElButton>
-              <ElButton link @click="setDefault(row)">{{ $t('aiMcpList.setDefault') }}</ElButton>
-              <ElButton link @click="toggleLock(row)">{{
-                row.lockFlag === 1 ? $t('aiMcpList.unlock') : $t('aiMcpList.lock')
-              }}</ElButton>
-              <ElButton link type="danger" :disabled="row.lockFlag === 1" @click="remove(row)">{{
-                $t('aiMcpList.delete')
-              }}</ElButton>
-            </div>
-          </ElCard>
-          <ElEmpty
-            v-if="!loading && !records.length"
-            :description="searched ? $t('aiMcpList.emptySearched') : $t('aiMcpList.empty')"
-          />
-        </div>
-      </template>
-      <template v-else>
-        <ArtTable
-          v-if="serverLoading || servers.length"
-          :loading="serverLoading"
-          :data="servers"
-          :columns="serverColumns"
+      <div class="toolbar">
+        <ElInput
+          v-model="keyword"
+          clearable
+          :placeholder="$t('aiMcpList.searchPlaceholder')"
+          style="width: 200px"
+          @keyup.enter="reload"
+          @clear="reload"
         />
-        <ElEmpty v-else :description="$t('aiMcpList.emptyServer')" />
-      </template>
+        <ElButton @click="reload">{{ $t('aiMcpList.search') }}</ElButton>
+        <ElButton type="primary" @click="openEdit()">{{ $t('aiMcpList.add') }}</ElButton>
+      </div>
+      <div v-loading="loading" class="card-grid">
+        <ElCard v-for="row in records" :key="row.id" shadow="hover">
+          <div class="title"
+            >{{ row.name }}
+            <ElTag size="small">{{ row.protocolType }}</ElTag>
+            <ElTag v-if="row.defaultFlag === 1" size="small" type="success">{{
+              $t('aiMcpList.default')
+            }}</ElTag>
+            <ElTag v-if="row.lockFlag === 1" size="small" type="warning">{{
+              $t('aiMcpList.lock')
+            }}</ElTag>
+          </div>
+          <div class="meta">
+            {{ $t('aiMcpList.toolCount', { n: toolCount(row) }) }} · {{ row.description }}
+          </div>
+          <div class="ops">
+            <ElButton link type="primary" :disabled="row.lockFlag === 1" @click="openEdit(row)">{{
+              $t('aiMcpList.edit')
+            }}</ElButton>
+            <ElButton link @click="debug(row)">{{ $t('aiMcpList.debug') }}</ElButton>
+            <ElButton link @click="setDefault(row)">{{ $t('aiMcpList.setDefault') }}</ElButton>
+            <ElButton link @click="toggleLock(row)">{{
+              row.lockFlag === 1 ? $t('aiMcpList.unlock') : $t('aiMcpList.lock')
+            }}</ElButton>
+            <ElButton link type="danger" :disabled="row.lockFlag === 1" @click="remove(row)">{{
+              $t('aiMcpList.delete')
+            }}</ElButton>
+          </div>
+        </ElCard>
+        <ElEmpty
+          v-if="!loading && !records.length"
+          :description="searched ? $t('aiMcpList.emptySearched') : $t('aiMcpList.empty')"
+        />
+      </div>
     </ElCard>
 
     <ElDialog
@@ -190,19 +178,16 @@
   import { useI18n } from 'vue-i18n'
   import type { FormInstance } from 'element-plus'
   import { requiredRule } from '../shared/formRules'
-  import type { ColumnOption } from '@/types/component'
-  import { h, onMounted, reactive, ref, nextTick } from 'vue'
+  import { onMounted, reactive, ref, nextTick } from 'vue'
   import { ElButton, ElMessage, ElMessageBox, ElSwitch } from 'element-plus'
   import {
     fetchAiMcpPage,
-    fetchAiMcpServerList,
     fetchDebugAiMcp,
     fetchDefaultAiMcp,
     fetchLockAiMcp,
     fetchParseAiMcp,
     fetchRemoveAiMcp,
-    fetchSaveAiMcp,
-    fetchToggleAiMcpServer
+    fetchSaveAiMcp
   } from '../../api'
   defineOptions({ name: 'AiMcp' })
   const { t } = useI18n()
@@ -236,41 +221,8 @@
   const debugResult = ref('')
   const debugging = ref(false)
   const debugRow = ref<any>(null)
-  const serverLoading = ref(false)
-  const servers = ref<any[]>([])
-  const serverColumns = computed<ColumnOption[]>(() => [
-    { prop: 'name', label: t('aiMcpList.colTool'), minWidth: 160 },
-    { prop: 'description', label: t('aiMcpList.colDescription'), minWidth: 200 },
-    {
-      prop: 'enabled',
-      label: t('aiMcpList.colEnabled'),
-      width: 100,
-      formatter: (row: any) =>
-        h(ElSwitch, {
-          modelValue: row.status === 1,
-          'onUpdate:modelValue': async (v: string | number | boolean) => {
-            try {
-              await fetchToggleAiMcpServer({ id: row.id, status: v ? 1 : 0 })
-              row.status = v ? 1 : 0
-              await reload()
-            } catch {
-              /* 失败时开关保持原样 */
-            }
-          }
-        })
-    }
-  ])
 
   async function reload() {
-    if (category.value === 'server') {
-      serverLoading.value = true
-      try {
-        servers.value = (await fetchAiMcpServerList()) || []
-      } finally {
-        serverLoading.value = false
-      }
-      return
-    }
     loading.value = true
     searched.value = !!keyword.value.trim()
     try {
