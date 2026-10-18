@@ -57,33 +57,8 @@
               />
             </ElFormItem>
 
-            <ElFormItem v-if="captchaGate.legacyEnabled.value" prop="captchaCode">
-              <div class="flex w-full gap-2">
-                <ElInput
-                  class="custom-height"
-                  v-model.trim="formData.captchaCode"
-                  :placeholder="$t('pages.auth.captchaPlaceholder')"
-                  maxlength="4"
-                  @keyup.enter="register"
-                />
-                <img
-                  v-if="captchaImage"
-                  :src="captchaImage"
-                  class="captcha-img"
-                  :title="$t('pages.auth.captchaRefresh')"
-                  :alt="$t('pages.auth.captchaAlt')"
-                  @click="loadCaptcha"
-                />
-                <div
-                  v-else
-                  class="captcha-img captcha-reload"
-                  :title="$t('pages.auth.captchaReload')"
-                  @click="loadCaptcha"
-                >
-                  {{ $t('pages.auth.captchaLoadFailed') }}
-                </div>
-              </div>
-            </ElFormItem>
+            <!-- 验证码配置拿不到：错误态（可重试），不回落 -->
+            <CaptchaConfigError :gate="captchaGate" scene="register" />
 
             <ElFormItem prop="agreement">
               <ElCheckbox v-model="formData.agreement">
@@ -102,6 +77,7 @@
                 type="primary"
                 @click="register"
                 :loading="loading"
+                :disabled="!captchaGate.ready.value"
                 v-ripple
               >
                 {{ $t('register.submitBtnText') }}
@@ -126,7 +102,6 @@
       @success="captchaGate.onSuccess"
       @skip="captchaGate.onSkip"
       @close="captchaGate.onClose"
-      @fallback="onCaptchaFallback"
     />
   </div>
 </template>
@@ -134,10 +109,15 @@
 <script setup lang="ts">
   import { useI18n } from 'vue-i18n'
   import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-  import { fetchRegister, fetchCaptcha } from '@/api/auth'
+  import { fetchRegister } from '@/api/auth'
   import { encryptPassword, isGmEncryptError } from '@/utils/gm'
   import CaptchaDialog from '@/components/core/captcha/CaptchaDialog.vue'
-  import { useCaptchaGate, isCaptchaCancelled } from '@/hooks/core/useCaptchaGate'
+  import CaptchaConfigError from '@/components/core/captcha/CaptchaConfigError.vue'
+  import {
+    useCaptchaGate,
+    isCaptchaCancelled,
+    isCaptchaNotReady
+  } from '@/hooks/core/useCaptchaGate'
 
   defineOptions({ name: 'Register' })
 
@@ -146,7 +126,6 @@
     password: string
     confirmPassword: string
     phone: string
-    captchaCode: string
     agreement: boolean
   }
 
@@ -171,34 +150,12 @@
     password: '',
     confirmPassword: '',
     phone: '',
-    captchaCode: '',
     agreement: false
   })
 
-  // 图形验证码（防批量注册，与登录同机制）
-  const captchaImage = ref('')
-  const captchaUuid = ref('')
-  // 验证码闸门：滑块（SLIDER）/ 旧数字码（IMAGE 或旧后端）/ 关闭
+  // 验证码闸门（防批量注册，与登录同机制）：行为验证码 / 关闭；config 拿不到时显示错误态（不回落）
   const captchaGate = useCaptchaGate('register')
-  /** challenge 下发未知题型：回退旧数字码，提示用户填写后重新提交 */
-  const onCaptchaFallback = () => {
-    captchaGate.onFallback()
-    loadCaptcha()
-    ElMessage.info(t('pages.auth.slider.fallback'))
-  }
-
-  const loadCaptcha = async () => {
-    if (!captchaGate.legacyEnabled.value) return
-    try {
-      const data = await fetchCaptcha()
-      captchaImage.value = data.captchaImage
-      captchaUuid.value = data.captchaUuid
-      formData.captchaCode = data.captchaCode ?? ''
-    } catch (error) {
-      console.error('[Register] load captcha failed:', error)
-    }
-  }
-  onMounted(() => captchaGate.loadConfig().then(() => loadCaptcha()))
+  onMounted(() => captchaGate.loadConfig())
 
   /**
    * 验证密码
@@ -269,9 +226,6 @@
     phone: [
       { pattern: /^1\d{10}$/, message: t('pages.auth.register.phoneInvalid'), trigger: 'blur' }
     ],
-    captchaCode: captchaGate.legacyEnabled.value
-      ? [{ required: true, message: t('pages.auth.captchaPlaceholder'), trigger: 'blur' }]
-      : [],
     agreement: [{ validator: validateAgreement, trigger: 'change' }]
   }))
 
@@ -285,14 +239,12 @@
     try {
       await formRef.value.validate()
       loading.value = true
-      const legacy = captchaGate.legacyEnabled.value
       await captchaGate.run(async (captchaToken) =>
         fetchRegister({
           username: formData.username,
           password: await encryptPassword(formData.password),
           nickname: formData.username,
           phone: formData.phone || undefined,
-          ...(legacy ? { captchaUuid: captchaUuid.value, captchaCode: formData.captchaCode } : {}),
           ...(captchaToken ? { captchaToken } : {})
         })
       )
@@ -304,11 +256,15 @@
         loading.value = false
         return
       }
+      if (isCaptchaNotReady(error)) {
+        ElMessage.warning(t('pages.auth.captchaConfig.notReady'))
+        loading.value = false
+        return
+      }
       console.error('注册失败:', error)
       if (isGmEncryptError(error)) {
         ElMessage.error(t('pages.auth.login.gmEncryptFailed'))
       }
-      loadCaptcha()
       loading.value = false
     }
   }

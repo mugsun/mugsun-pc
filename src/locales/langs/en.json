@@ -1155,19 +1155,19 @@
   },
   "pages": {
     "auth": {
-      "captchaPlaceholder": "Please enter the image captcha",
-      "captchaRefresh": "Click to refresh the captcha",
-      "captchaAlt": "Captcha",
-      "captchaReload": "Click to reload",
-      "captchaLoadFailed": "Failed to load",
       "tenantPlaceholder": "Tenant ID (leave blank for the platform tenant)",
       "phoneInvalid": "Invalid phone number format",
       "sendCode": "Send Code",
+      "captchaConfig": {
+        "failed": "Couldn't load the security check. Select Retry. If it keeps failing, contact your administrator.",
+        "idSep": " ",
+        "idPart": "(Error ID: {id})",
+        "retry": "Retry",
+        "notReady": "The security check isn't ready yet. Wait a moment or select Retry, then submit again."
+      },
       "login": {
         "accountTab": "Account Login",
         "smsTab": "SMS Login",
-        "captchaCodePlaceholder": "Please enter the captcha",
-        "captchaRequired": "Enter the image captcha. Fill it in, then continue.",
         "phonePlaceholder": "Please enter your phone number",
         "smsCodePlaceholder": "Please enter the SMS verification code",
         "socialDivider": "Third-party Login",
@@ -1196,7 +1196,6 @@
         "confirmPasswordPlaceholder": "Please enter the new password again",
         "enterUsernameFirst": "Account is required. Enter the account, then request a verification code.",
         "resetRequired": "Account, verification code, and new password are required. Fill in all three, then reset again.",
-        "enterCaptchaFirst": "Please enter the image captcha first",
         "codeSent": "If the account exists, a verification code has been sent to its linked email.",
         "passwordMismatch": "The two passwords do not match",
         "passwordRule": "At least 8 characters, containing at least 3 of: uppercase, lowercase, digit, special character",
@@ -1245,7 +1244,6 @@
         "ariaLabel": "Puzzle slider. Drag or use arrow keys to move the piece",
         "keyboardHint": "Use the Left/Right arrow keys to move the piece, hold Shift for larger steps, press Enter to submit",
         "modeSwitched": "Input mode changed — please complete the puzzle again",
-        "fallback": "Switched to the image code. Fill it in and submit again",
         "useKeyboard": "Use keyboard",
         "usePointer": "Use mouse / touch",
         "rotateHint": "Drag the slider to turn the picture upright",
@@ -2334,7 +2332,7 @@
         "deleteConfirm": "Delete client \"{name}\"? Sign-in with this code will use the default policy",
         "deleteSelectedConfirm": "Delete the {count} selected clients? The built-in console and mobile clients cannot be deleted",
         "deleteSuccess": "Deleted. These clients no longer appear in the list",
-        "captchaHint": "Only applies in legacy IMAGE captcha mode. In slider mode this switch cannot disable captcha; use the tenant switch (platform admin)."
+        "captchaHint": "This switch doesn't affect the behavior captcha. To turn captcha off, use the tenant switch (platform admin)."
       },
       "online": {
         "pageTitle": "Online Sessions",

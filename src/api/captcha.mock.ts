@@ -399,8 +399,20 @@ function genJigsaw() {
   }
 }
 
+/**
+ * 模拟 config 失败（仅 mock，用于看错误态）：sessionStorage `captchaMockConfig`
+ * = `error`（请求失败）| `unknown`（返回前端不认识的类型）；缺省正常返回 RANDOM。
+ */
 export async function mockConfig(scene: string): Promise<CaptchaConfig> {
   await delay(60)
+  let mode: string | null = null
+  try {
+    mode = sessionStorage.getItem('captchaMockConfig')
+  } catch {
+    mode = null
+  }
+  if (mode === 'error') throw new Error('mock: captcha config failed')
+  if (mode === 'unknown') return { enabled: true, type: 'UNKNOWN_TYPE', scene }
   return { enabled: true, type: 'RANDOM', scene }
 }
 

@@ -36,12 +36,12 @@ export function isBehaviorType(type: unknown): type is BehaviorCaptchaType {
   return typeof type === 'string' && (CAPTCHA_TYPES as readonly string[]).includes(type)
 }
 
-/** config.type 是否走行为验证码（RANDOM 或已知具体类型）；其他值回退旧数字码 */
+/** config.type 是否为前端支持的行为验证码（RANDOM 或已知具体类型）；其他值视为配置不可用 */
 export function isBehaviorConfigType(type: unknown): boolean {
   return type === 'RANDOM' || isBehaviorType(type)
 }
 
-/** challenge.type → 面板；未知类型返回 null（调用方回退旧数字码） */
+/** challenge.type → 面板；未知类型返回 null（弹层显示「验证方式暂不可用」，可换一张重试） */
 export function resolvePanel(type: unknown): CaptchaPanelKind | null {
   switch (type) {
     case 'SLIDER':

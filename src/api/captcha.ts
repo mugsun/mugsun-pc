@@ -1,4 +1,5 @@
 import request from '@/utils/http'
+import { TRACE_HEADER } from '@/utils/http/traceId'
 import type { VerifyPayload } from '@/utils/captcha'
 
 /** 验证码场景 */
@@ -10,8 +11,8 @@ export type CaptchaScene = 'login' | 'register' | 'sms' | 'forget'
  */
 export type CaptchaType = 'SLIDER' | 'ROTATE' | 'WORD_CLICK' | 'ICON_CLICK' | 'JIGSAW'
 
-/** config.type：RANDOM 或某一具体类型（仅提示，以 challenge 为准）；IMAGE / 其他未知值走旧数字码 */
-export type CaptchaConfigType = CaptchaType | 'RANDOM' | 'IMAGE' | (string & {})
+/** config.type：RANDOM 或某一具体类型（仅提示，以 challenge 为准）；其他值前端视为配置不可用，显示错误态 */
+export type CaptchaConfigType = CaptchaType | 'RANDOM' | (string & {})
 
 /** 验证码开关与类型 */
 export interface CaptchaConfig {
@@ -113,7 +114,6 @@ interface ChallengeParams extends SceneParams {
 const useMock = import.meta.env.DEV && import.meta.env.VITE_CAPTCHA_MOCK === 'true'
 const loadMock = () => import('./captcha.mock')
 
-/** 获取验证码开关与类型（匿名） */
 /** 组装请求参数：sms 场景去掉 tenantId（契约 v0.3） */
 function withScene(params: SceneParams): SceneParams {
   if (params.scene === 'sms') {
@@ -122,13 +122,19 @@ function withScene(params: SceneParams): SceneParams {
   return params
 }
 
-export async function fetchCaptchaConfig(params: SceneParams) {
+/**
+ * 获取验证码开关与类型（匿名）。
+ * 失败不弹 toast（showErrorMessage:false），由页面在验证码区域显示错误态；
+ * traceId 放进 X-Trace-Id 头，页面上的「错误编号」就是它，能直接对上后端日志。
+ */
+export async function fetchCaptchaConfig(params: SceneParams, opts: { traceId?: string } = {}) {
   const q = withScene(params)
   if (useMock) return (await loadMock()).mockConfig(q.scene)
   return request.get<CaptchaConfig>({
     url: '/api/auth/captcha/config',
     params: q,
-    showErrorMessage: false
+    showErrorMessage: false,
+    headers: opts.traceId ? { [TRACE_HEADER]: opts.traceId } : undefined
   })
 }
 

@@ -1,7 +1,7 @@
 <!--
   行为验证码弹层（多题型）：按 challenge.type 分发到 Slider / Rotate / Click / Jigsaw 面板。
   壳负责取题、过期换题、校验、失败 / 过期 / 限流 / skip(40014) 与 inputMode 切换；面板只负责交互与 answer 构造。
-  未知题型 → emit('fallback')，由页面回退旧数字码。
+  未知题型 → 显示「验证方式暂不可用」，可点「换一张」重新取题（不回落其他验证方式）。
 -->
 <template>
   <ElDialog
@@ -140,8 +140,6 @@
     success: [captchaToken: string]
     /** challenge 返回 40014：当前无需验证，调用方直接提交 */
     skip: []
-    /** challenge 返回前端不认识的题型：调用方回退旧数字码 */
-    fallback: []
     close: []
     'update:visible': [value: boolean]
   }>()
@@ -239,10 +237,12 @@
       })
       if (!alive || my !== seq) return
       if (!resolvePanel(data?.type)) {
-        // 未知题型：回退旧数字码
+        // 未知题型：不回落，提示暂不可用（「换一张」可重新取题）
+        console.error('[Captcha] unsupported challenge type', data?.type)
         clearTimers()
-        emit('fallback')
-        emit('update:visible', false)
+        challenge.value = null
+        status.value = 'unavailable'
+        announce.value = t('pages.auth.slider.unavailable')
         return
       }
       challenge.value = data

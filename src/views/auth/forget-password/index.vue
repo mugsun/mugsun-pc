@@ -36,33 +36,8 @@
               />
             </ElFormItem>
 
-            <!-- 图形验证码：发码前置防爆破 -->
-            <ElFormItem v-if="captchaGate.legacyEnabled.value" prop="captchaCode">
-              <div class="flex w-full gap-2">
-                <ElInput
-                  class="custom-height"
-                  v-model.trim="formData.captchaCode"
-                  :placeholder="$t('pages.auth.captchaPlaceholder')"
-                  maxlength="4"
-                />
-                <img
-                  v-if="captchaImage"
-                  :src="captchaImage"
-                  class="captcha-img"
-                  :title="$t('pages.auth.captchaRefresh')"
-                  :alt="$t('pages.auth.captchaAlt')"
-                  @click="loadCaptcha"
-                />
-                <div
-                  v-else
-                  class="captcha-img captcha-reload"
-                  :title="$t('pages.auth.captchaReload')"
-                  @click="loadCaptcha"
-                >
-                  {{ $t('pages.auth.captchaLoadFailed') }}
-                </div>
-              </div>
-            </ElFormItem>
+            <!-- 发码前的验证码配置拿不到：错误态（可重试），不回落 -->
+            <CaptchaConfigError :gate="captchaGate" scene="forget" />
 
             <!-- 邮箱验证码：发码按钮带 60s 倒计时 -->
             <ElFormItem prop="code">
@@ -75,7 +50,7 @@
                 />
                 <ElButton
                   class="custom-height mail-code-btn"
-                  :disabled="countdown > 0"
+                  :disabled="countdown > 0 || !captchaGate.ready.value"
                   :loading="sending"
                   @click="sendCode"
                 >
@@ -136,7 +111,6 @@
       @success="captchaGate.onSuccess"
       @skip="captchaGate.onSkip"
       @close="captchaGate.onClose"
-      @fallback="onCaptchaFallback"
     />
   </div>
 </template>
@@ -144,17 +118,21 @@
 <script setup lang="ts">
   import { useI18n } from 'vue-i18n'
   import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
-  import { fetchCaptcha, fetchForgetCode, fetchForgetReset } from '@/api/auth'
+  import { fetchForgetCode, fetchForgetReset } from '@/api/auth'
   import { encryptPassword, isGmEncryptError } from '@/utils/gm'
   import CaptchaDialog from '@/components/core/captcha/CaptchaDialog.vue'
-  import { useCaptchaGate, isCaptchaCancelled } from '@/hooks/core/useCaptchaGate'
+  import CaptchaConfigError from '@/components/core/captcha/CaptchaConfigError.vue'
+  import {
+    useCaptchaGate,
+    isCaptchaCancelled,
+    isCaptchaNotReady
+  } from '@/hooks/core/useCaptchaGate'
 
   defineOptions({ name: 'ForgetPassword' })
 
   interface ForgetForm {
     username: string
     tenantId: string
-    captchaCode: string
     code: string
     newPassword: string
     confirmPassword: string
@@ -176,36 +154,14 @@
   const formData = reactive<ForgetForm>({
     username: '',
     tenantId: '',
-    captchaCode: '',
     code: '',
     newPassword: '',
     confirmPassword: ''
   })
 
-  // 图形验证码（发码防爆破，与登录/注册同机制）
-  const captchaImage = ref('')
-  const captchaUuid = ref('')
-  // 验证码闸门：滑块（SLIDER）/ 旧数字码（IMAGE 或旧后端）/ 关闭
+  // 验证码闸门（发码防爆破，与登录/注册同机制）：行为验证码 / 关闭；config 拿不到时显示错误态（不回落）
   const captchaGate = useCaptchaGate('forget', { tenantId: () => formData.tenantId })
-  /** challenge 下发未知题型：回退旧数字码，提示用户填写后重新提交 */
-  const onCaptchaFallback = () => {
-    captchaGate.onFallback()
-    loadCaptcha()
-    ElMessage.info(t('pages.auth.slider.fallback'))
-  }
-
-  const loadCaptcha = async () => {
-    if (!captchaGate.legacyEnabled.value) return
-    try {
-      const data = await fetchCaptcha()
-      captchaImage.value = data.captchaImage
-      captchaUuid.value = data.captchaUuid
-      formData.captchaCode = data.captchaCode ?? ''
-    } catch (error) {
-      console.error('[ForgetPassword] load captcha failed:', error)
-    }
-  }
-  onMounted(() => captchaGate.loadConfig().then(() => loadCaptcha()))
+  onMounted(() => captchaGate.loadConfig())
 
   // 发码倒计时（同短信登录 60s 节流）
   const countdown = ref(0)
@@ -224,24 +180,18 @@
     if (timer) clearInterval(timer)
   })
 
-  // 发送邮箱验证码：账号+图形验证码前置校验；账号不存在后端同样返回成功（防枚举）
+  // 发送邮箱验证码：账号 + 行为验证码前置校验；账号不存在后端同样返回成功（防枚举）
   const sendCode = async () => {
     if (!formData.username) {
       ElMessage.warning(t('pages.auth.forgetPassword.enterUsernameFirst'))
       return
     }
-    if (captchaGate.legacyEnabled.value && !formData.captchaCode) {
-      ElMessage.warning(t('pages.auth.forgetPassword.enterCaptchaFirst'))
-      return
-    }
     try {
       sending.value = true
-      const legacy = captchaGate.legacyEnabled.value
       await captchaGate.run((captchaToken) =>
         fetchForgetCode({
           username: formData.username,
           tenantId: formData.tenantId || undefined,
-          ...(legacy ? { captchaUuid: captchaUuid.value, captchaCode: formData.captchaCode } : {}),
           ...(captchaToken ? { captchaToken } : {})
         })
       )
@@ -250,8 +200,10 @@
       ElMessage.info(t('pages.auth.forgetPassword.codeSent'))
     } catch (error) {
       if (isCaptchaCancelled(error)) return
-      // 失败刷新图形验证码（答案已在后端消费）
-      loadCaptcha()
+      if (isCaptchaNotReady(error)) {
+        ElMessage.warning(t('pages.auth.captchaConfig.notReady'))
+        return
+      }
       console.error('[ForgetPassword] send code failed:', error)
     } finally {
       sending.value = false
@@ -278,9 +230,6 @@
     username: [
       { required: true, message: t('pages.auth.forgetPassword.resetRequired'), trigger: 'blur' }
     ],
-    captchaCode: captchaGate.legacyEnabled.value
-      ? [{ required: true, message: t('pages.auth.captchaPlaceholder'), trigger: 'blur' }]
-      : [],
     code: [
       {
         required: true,

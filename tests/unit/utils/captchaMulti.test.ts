@@ -13,13 +13,13 @@ describe('题型分发', () => {
     expect(m.resolvePanel('ICON_CLICK')).toBe('click')
     expect(m.resolvePanel('JIGSAW')).toBe('jigsaw')
   })
-  it('未知题型返回 null（回退旧数字码）', () => {
+  it('未知题型返回 null（弹层显示暂不可用，不回落）', () => {
     expect(m.resolvePanel('IMAGE')).toBeNull()
     expect(m.resolvePanel('RANDOM')).toBeNull()
     expect(m.resolvePanel(undefined)).toBeNull()
     expect(m.resolvePanel('GESTURE')).toBeNull()
   })
-  it('config.type：RANDOM 与具体题型走行为验证码，IMAGE / 未知走旧码', () => {
+  it('config.type：RANDOM 与具体题型走行为验证码，IMAGE / 未知视为配置不可用', () => {
     expect(m.isBehaviorConfigType('RANDOM')).toBe(true)
     for (const t of m.CAPTCHA_TYPES) expect(m.isBehaviorConfigType(t)).toBe(true)
     expect(m.isBehaviorConfigType('IMAGE')).toBe(false)
