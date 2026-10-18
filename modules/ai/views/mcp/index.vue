@@ -35,8 +35,8 @@
                 $t('aiMcpList.locked')
               }}</ElTag>
             </div>
-            <div class="meta">
-              {{ $t('aiMcpList.toolCount', { n: toolCount(row) }) }} · {{ row.description }}
+            <div v-if="cardMetaOf(row, t)" class="meta" data-test="mcp-card-meta">
+              {{ cardMetaOf(row, t) }}
             </div>
             <div v-if="row.lockFlag === 1" class="locked-hint" data-test="mcp-locked-hint">
               {{ $t('aiMcpList.lockedHint') }}
@@ -92,11 +92,17 @@
       :title="form.id ? $t('aiForm.editMcp') : $t('aiForm.addMcp')"
       width="640px"
     >
-      <ElForm ref="formRef" :model="form" label-width="auto">
+      <!-- 768 以下标签放上面，输入框占满宽度；≤640 时弹窗宽度由全局样式改为 100% - 24px -->
+      <ElForm
+        ref="formRef"
+        :model="form"
+        :label-position="narrowForm ? 'top' : 'right'"
+        label-width="auto"
+      >
         <ElFormItem
           :label="$t('aiForm.protocolName')"
           prop="name"
-          :rules="requiredRule($t('aiForm.protocolName'))"
+          :rules="mcpRequired('aiMcpList.requiredName')"
         >
           <ElInput
             v-model="form.name"
@@ -108,7 +114,7 @@
         <ElFormItem
           :label="$t('aiForm.protocolDesc')"
           prop="description"
-          :rules="requiredRule($t('aiForm.protocolDesc'))"
+          :rules="mcpRequired('aiMcpList.requiredDesc')"
         >
           <ElInput
             v-model="form.description"
@@ -149,7 +155,7 @@
           v-if="form.protocolType !== 'STDIO'"
           :label="$t('aiForm.sseUrl')"
           prop="sseUrl"
-          :rules="requiredRule($t('aiForm.sseUrl'))"
+          :rules="mcpRequired('aiMcpList.requiredSseUrl')"
         >
           <ElInput v-model="form.sseUrl" placeholder="https://" />
         </ElFormItem>
@@ -157,7 +163,7 @@
           v-if="form.protocolType === 'STDIO'"
           :label="$t('aiForm.command')"
           prop="command"
-          :rules="requiredRule($t('aiForm.command'))"
+          :rules="mcpRequired('aiMcpList.requiredCommand')"
         >
           <ElInput v-model="form.command" type="textarea" :rows="3" />
         </ElFormItem>
@@ -212,6 +218,8 @@
   import { ElButton, ElMessage, ElMessageBox, ElSwitch } from 'element-plus'
   import { CircleCloseFilled } from '@element-plus/icons-vue'
   import { useMcpList } from './useMcpList'
+  import { cardMetaOf, mcpRequired } from './mcpCard'
+  import { useWindowSize } from '@vueuse/core'
   import {
     fetchAiMcpPage,
     fetchAiMcpServerList,
@@ -243,20 +251,9 @@
     t
   })
 
-  const toolCount = (row: any): string | number => {
-    if (row.toolCount != null) {
-      return row.toolCount
-    }
-    if (!row.toolsJson) {
-      return '-'
-    }
-    try {
-      const parsed = JSON.parse(row.toolsJson)
-      return Array.isArray(parsed) ? parsed.length : '-'
-    } catch {
-      return '-'
-    }
-  }
+  const { width: viewportWidth } = useWindowSize()
+  /** 768 以下添加 / 编辑弹窗的标签放到输入框上方 */
+  const narrowForm = computed(() => viewportWidth.value < 768)
   const visible = ref(false)
   const saving = ref(false)
   const form = reactive<Record<string, any>>({})

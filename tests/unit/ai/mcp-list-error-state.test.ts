@@ -216,3 +216,69 @@ describe('MCP 页模板', () => {
     expect(get(en, 'aiMcpList.lockedHint')).toBe('Locked. Unlock to edit or delete.')
   })
 })
+
+describe('MCP 卡片：工具数', () => {
+  it('toolCount 优先；未知（null / undefined / 负数 / NaN / 空串）时退回 toolsJson；0 是已知值', async () => {
+    const { toolCountOf } = await import('../../../modules/ai/views/mcp/mcpCard')
+    expect(toolCountOf({ toolCount: 12 })).toBe(12)
+    expect(toolCountOf({ toolCount: 0 })).toBe(0)
+    expect(toolCountOf({ toolCount: '3' })).toBe(3)
+    expect(toolCountOf({ toolCount: null })).toBeNull()
+    expect(toolCountOf({})).toBeNull()
+    expect(toolCountOf({ toolCount: -1 })).toBeNull()
+    expect(toolCountOf({ toolCount: 'abc' })).toBeNull()
+    expect(toolCountOf({ toolCount: '' })).toBeNull()
+    expect(toolCountOf({ toolCount: -1, toolsJson: '[{"name":"a"},{"name":"b"}]' })).toBe(2)
+    expect(toolCountOf({ toolsJson: '[]' })).toBe(0)
+    expect(toolCountOf({ toolsJson: [{ name: 'a' }] })).toBe(1)
+    expect(toolCountOf({ toolsJson: 'not json' })).toBeNull()
+    expect(toolCountOf({ toolsJson: '{"a":1}' })).toBeNull()
+    expect(toolCountOf({ toolsJson: '  ' })).toBeNull()
+  })
+
+  it('说明行：未知时不显示工具数和分隔点；描述也空时整行为空', async () => {
+    const { cardMetaOf } = await import('../../../modules/ai/views/mcp/mcpCard')
+    const tEn = (k: string, named?: Record<string, unknown>) => fill(get(en, k), named)
+    expect(cardMetaOf({ toolCount: 12, description: '地理编码' }, t)).toBe('工具数 12 · 地理编码')
+    expect(cardMetaOf({ toolCount: 0, description: '地理编码' }, t)).toBe('工具数 0 · 地理编码')
+    expect(cardMetaOf({ toolCount: null, description: '地理编码' }, t)).toBe('地理编码')
+    expect(cardMetaOf({ toolCount: null, description: 'Geocoding' }, tEn)).toBe('Geocoding')
+    expect(cardMetaOf({ toolCount: 5, description: '  ' }, t)).toBe('工具数 5')
+    expect(cardMetaOf({ toolCount: null, description: '' }, t)).toBe('')
+    expect(cardMetaOf({ toolCount: undefined, description: null }, tEn)).toBe('')
+    const src = read('modules/ai/views/mcp/index.vue')
+    expect(src).toMatch(/<div v-if="cardMetaOf\(row, t\)" class="meta"/)
+    expect(src).not.toMatch(/toolCount\(row\)/)
+  })
+})
+
+describe('MCP 添加 / 编辑弹窗', () => {
+  it('必填提示用这个弹窗专用的 key，英文是完整句子；共用模板不变', async () => {
+    const { mcpRequired } = await import('../../../modules/ai/views/mcp/mcpCard')
+    const [rule] = mcpRequired('aiMcpList.requiredName') as any[]
+    expect(rule).toMatchObject({ required: true, whitespace: true, trigger: 'blur' })
+    expect(rule.message()).toBe('aiMcpList.requiredName') // $t 在本文件被 mock 成返回 key
+    const pairs: Array<[string, string, string]> = [
+      ['requiredName', '请输入协议名称', 'Enter a protocol name.'],
+      ['requiredDesc', '请输入协议描述', 'Enter a protocol description.'],
+      ['requiredSseUrl', '请输入 SSE 地址', 'Enter an SSE URL.'],
+      ['requiredCommand', '请输入命令行', 'Enter a command.']
+    ]
+    for (const [k, zhText, enText] of pairs) {
+      expect(get(zh, `aiMcpList.${k}`)).toBe(zhText)
+      expect(get(en, `aiMcpList.${k}`)).toBe(enText)
+    }
+    const src = read('modules/ai/views/mcp/index.vue')
+    for (const k of ['requiredName', 'requiredDesc', 'requiredSseUrl', 'requiredCommand']) {
+      expect(src).toContain(`:rules="mcpRequired('aiMcpList.${k}')"`)
+    }
+    // 共用模板没动，其他 AI 表单不受影响
+    expect(get(en, 'formRules.requiredInput')).toBe('Please enter {label}')
+  })
+
+  it('768 以下标签放到上方', () => {
+    const src = read('modules/ai/views/mcp/index.vue')
+    expect(src).toMatch(/:label-position="narrowForm \? 'top' : 'right'"/)
+    expect(src).toMatch(/narrowForm = computed\(\(\) => viewportWidth\.value < 768\)/)
+  })
+})

@@ -614,7 +614,11 @@
     "locked": "Locked",
     "lockedHint": "Locked. Unlock to edit or delete.",
     "loadFailed": "Failed to load MCP tools. Try again later (Error ID: {id}).",
-    "retry": "Retry"
+    "retry": "Retry",
+    "requiredName": "Enter a protocol name.",
+    "requiredDesc": "Enter a protocol description.",
+    "requiredSseUrl": "Enter an SSE URL.",
+    "requiredCommand": "Enter a command."
   },
   "aiKbList": {
     "searchPlaceholder": "Search knowledge bases",
