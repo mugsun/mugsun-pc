@@ -41,10 +41,11 @@ describe('geoHeatState：概览访问热力卡片状态', () => {
     expect(pick(zh, GEO_HEAT_EMPTY_KEY.serviceOff)).toBe(
       'GIS 地图服务未启用，暂无法显示访问热力。请联系管理员在服务端启用后刷新页面。'
     )
-    expect(pick(zh, GEO_HEAT_EMPTY_KEY.noData)).toBe(
-      '暂无地域数据。开通 IP 属地后按省份统计；开启精确位置后可看热力。'
+    expect(pick(zh, GEO_HEAT_EMPTY_KEY.noData)).toBe('暂无精确坐标，开启精确位置采集后可看热力')
+    expect(pick(en, 'pages.track.overview.geoHeat')).toBe('Visit heatmap')
+    expect(pick(en, GEO_HEAT_EMPTY_KEY.noData)).toBe(
+      'No precise coordinates yet. Turn on precise location collection to see the heatmap.'
     )
-    expect(pick(en, 'pages.track.overview.geoHeat')).toBe('Visit Heatmap')
     expect(pick(en, GEO_HEAT_EMPTY_KEY.noBuild)).toBe(
       'This build does not include the map module, so the visit heatmap is unavailable.'
     )

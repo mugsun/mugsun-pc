@@ -23,7 +23,7 @@ export function geoHeatState(
 export const GEO_HEAT_EMPTY_KEY: Record<Exclude<GeoHeatState, 'ready'>, string> = {
   noBuild: 'pages.track.overview.geoEmptyNoBuild',
   serviceOff: 'pages.track.overview.geoEmptyServiceOff',
-  noData: 'pages.track.overview.geoEmpty'
+  noData: 'pages.track.overview.geoEmptyNoData'
 }
 
 /** 标题旁「精确坐标 N 条」：N=0 时一律隐藏（不论卡片处于哪种状态） */

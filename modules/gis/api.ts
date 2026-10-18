@@ -81,8 +81,9 @@ function isNotFound(err: unknown): boolean {
 /**
  * silent：静默探测，失败不弹 toast（由调用方展示页内错误态）
  *
- * 后端只用系统参数关闭 GIS 时，/system/gis/status 返回 404（boot#87），
- * 这里按「模块未启用」处理，不弹错，页面显示已有的「模块未开启」空态。
+ * 防御性容错：后端关闭 GIS 时 /system/gis/status 返回 200 + enabled:false；
+ * 万一拿到 404（旧后端、网关或路由缺失），也按「模块未启用」兜底处理，
+ * 不弹错，页面显示已有的「模块未开启」空态。
  * 其余错误保持原行为：非 silent 弹 toast；401 由拦截器登出；取消不提示。
  */
 export function fetchGisStatus(opts: { silent?: boolean } = {}) {

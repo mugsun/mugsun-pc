@@ -55,7 +55,7 @@ beforeEach(() => {
 
 const OFF = { enabled: false, providers: [], terrainUrl: '', tilesets: [] }
 
-describe('fetchGisStatus：404 视为 GIS 未启用（boot#87）', () => {
+describe('fetchGisStatus：404 防御性容错，按 GIS 未启用兜底', () => {
   it('HTTP 404 → enabled:false 空状态，不弹错（非 silent 也不弹）', async () => {
     reply = { status: 404, data: { code: 404, msg: 'Not Found' } }
     await expect(fetchGisStatus()).resolves.toEqual(OFF)
