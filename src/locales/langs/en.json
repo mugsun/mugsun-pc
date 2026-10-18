@@ -3868,6 +3868,8 @@
         "regionDist": "Regions",
         "geoHeat": "Visit heat",
         "geoEmpty": "No region data yet. Enable IP geolocation for provinces; turn on precise location for the heat map.",
+        "geoEmptyNoBuild": "This build does not include the map module, so the visit heatmap is unavailable.",
+        "geoEmptyServiceOff": "The GIS map service is not enabled, so the visit heatmap is unavailable. Ask an administrator to enable it on the server, then reload the page.",
         "geoCount": "{n} events with coordinates",
         "needApp": "Select an app first. Analysis is kept per app.",
         "region": "Region",
