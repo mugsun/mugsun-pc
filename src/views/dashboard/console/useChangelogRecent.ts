@@ -1,4 +1,4 @@
-import { compareVersions, validate } from 'compare-versions'
+import { compareVersions, validateStrict } from 'compare-versions'
 import { computed, ref } from 'vue'
 import { isCanceledError } from '@/utils/sys/error-handle'
 import { newTraceId } from '@/utils/http/traceId'
@@ -36,12 +36,15 @@ export interface ChangelogEntry extends ChangelogItem {
   notInstalled: boolean
 }
 
-/** 去掉 v/V 前缀后交给 compare-versions 校验；不合法返回 null（不加标签、不报错） */
+/**
+ * 去掉 v/V 前缀后用 compare-versions 的 validateStrict 校验（严格 semver：x.y.z，可带预发布/构建号）。
+ * 含 x/* 通配的范围写法（1.x、1.*、0.2.x）和不完整版本（1、1.2）都算不合法：返回 null，不加标签、不报错。
+ */
 function normalizeVersion(v: string | null | undefined): string | null {
   const s = String(v ?? '')
     .trim()
     .replace(/^v/i, '')
-  return s && validate(s) ? s : null
+  return s && validateStrict(s) ? s : null
 }
 
 /** 条目版本是否比当前版本新；任一方版本号不合法时返回 false */

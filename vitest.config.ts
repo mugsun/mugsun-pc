@@ -1,4 +1,6 @@
+import { readFileSync } from 'node:fs'
 import path from 'node:path'
+import vue from '@vitejs/plugin-vue'
 import { defineConfig } from 'vitest/config'
 
 /**
@@ -6,8 +8,13 @@ import { defineConfig } from 'vitest/config'
  * 别名须与 vite.config.ts resolve.alias 保持一致。
  */
 const resolvePath = (p: string) => path.resolve(__dirname, p)
+const pkgVersion: string = JSON.parse(readFileSync(resolvePath('package.json'), 'utf-8')).version
 
 export default defineConfig({
+  // 挂载测试（tests/unit/**/*.mount.test.ts）需要编译 .vue；不启用 auto-import，被测组件需显式 import
+  plugins: [vue()],
+  // 与 vite.config.ts define 保持一致
+  define: { __PKG_VERSION__: JSON.stringify(pkgVersion) },
   resolve: {
     alias: {
       '@/gis': resolvePath('modules/gis/lib'),

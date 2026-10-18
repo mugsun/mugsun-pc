@@ -84,6 +84,7 @@
 </template>
 
 <script setup lang="ts">
+  import { onMounted, onUnmounted } from 'vue'
   import { CircleCloseFilled } from '@element-plus/icons-vue'
   import { useI18n } from 'vue-i18n'
   import { fetchChangelogRecent } from '@/api/feedback'
@@ -134,10 +135,21 @@
 </script>
 
 <style lang="scss" scoped>
+  /*
+   * 「有新版本」文字色用局部变量，不动全局 --el-color-warning。实测（版本框底色 #f5f7fa / 暗色 #262727）：
+   * warning #e6a23c 浅色约 2:1、warning-dark-2 浅色 2.69:1，都不到 4.5:1；
+   * 浅色取 #9a5b00，暗色保持 #e6a23c。
+   */
   .changelog-card {
+    --changelog-update-color: #9a5b00;
+
     display: flex;
     flex-direction: column;
     min-width: 0;
+  }
+
+  html.dark .changelog-card {
+    --changelog-update-color: #e6a23c;
   }
 
   /* 工作台 index.vue 的 .card-head/.card-title 是 scoped 样式，进不到子组件内部，这里按同款写一份 */
@@ -197,7 +209,7 @@
     &__update {
       margin-left: auto;
       font-size: 12px;
-      color: var(--el-color-warning);
+      color: var(--changelog-update-color);
       white-space: nowrap;
     }
   }
