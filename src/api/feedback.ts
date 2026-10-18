@@ -1,4 +1,5 @@
 import request from '@/utils/http'
+import { TRACE_HEADER } from '@/utils/http/traceId'
 
 // ------------------------- 意见反馈 -------------------------
 /** 上传附件，返回 SysAttach（id/name/url） */
@@ -41,9 +42,19 @@ export function fetchRemoveFeedback(ids: (number | string)[]) {
 }
 
 // ------------------------- 版本更新记录 -------------------------
-/** 首页最近更新 */
-export function fetchChangelogRecent(limit = 5) {
-  return request.get<any[]>({ url: '/api/system/changelog/recent', params: { limit } })
+/**
+ * 首页最近更新（后端 GET /system/changelog/recent：登录即可，limit 夹到 1–20，默认 5；
+ * 只返 id/version/type/title/publishTime，按发布时间倒序）。
+ * 工作台卡片自己展示错误态（含错误编号），所以不弹全局 toast；
+ * traceId 放进 X-Trace-Id 头，后端沿用它作为本次请求的链路编号。
+ */
+export function fetchChangelogRecent(limit = 5, opts: { traceId?: string } = {}) {
+  return request.get<any[]>({
+    url: '/api/system/changelog/recent',
+    params: { limit },
+    showErrorMessage: false,
+    headers: opts.traceId ? { [TRACE_HEADER]: opts.traceId } : undefined
+  })
 }
 
 export function fetchChangelogPage(params: Record<string, any>) {
