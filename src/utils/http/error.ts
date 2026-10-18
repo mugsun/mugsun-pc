@@ -191,7 +191,7 @@ export function showError(error: HttpError, showMessage: boolean = true): void {
     return
   }
   ElMessage.error(error.message)
-  // 已提示给用户：埋点错误监控据此跳过（UX-007）
+  // 已提示给用户：SDK 在 skipHandledErrors=true 时据此跳过
   error.handled = true
   // 记录错误日志
   console.error('[HTTP Error]', error.toLogData())

@@ -43,10 +43,11 @@ beforeAll(() => {
   )
 })
 
-function setup(skipHandledErrors: boolean) {
+function setup(skipHandledErrors?: boolean) {
   return import('../../../modules/track/plugin').then(({ setupTrack }) => {
     const app = createApp({})
-    setupTrack(app, { skipHandledErrors })
+    if (skipHandledErrors === undefined) setupTrack(app)
+    else setupTrack(app, { skipHandledErrors })
     const client = app.config.globalProperties.$track as TrackClient
     const track = vi.spyOn(client, 'track').mockImplementation(() => {})
     return { app, client, track }
@@ -70,6 +71,35 @@ describe('真实 SDK 过滤路径', () => {
       ctx.skip()
     }
     app.config.errorHandler!(handled(), null, 'setup')
+    expect(errorCalls(track)).toBe(0)
+    app.config.errorHandler!(new Error('real'), null, 'setup')
+    expect(errorCalls(track)).toBe(1)
+  })
+
+  it('不传参：一个已处理的 HttpError 产生 1 条 $error', async (ctx) => {
+    const { app, client, track } = await setup()
+    // TODO(TRACK_REF)：本地 ../mugsun-track 在 main 时 SDK 默认 skipHandledErrors=true，这条跑不通，先跳过。
+    // ci.yml 的 TRACK_REF 改到 mugsun-track#19 的合并提交（默认 false）之后，删掉这个跳过。
+    // CI 现固定的 e5bb24d 没有这个选项（options 里是 undefined），照常执行。
+    if ((client.options as { skipHandledErrors?: unknown }).skipHandledErrors === true) {
+      ctx.skip()
+    }
+    app.config.errorHandler!(handled(), null, 'setup')
+    expect(errorCalls(track)).toBe(1)
+  })
+
+  it('取消的请求不上报 $error（显式 false 也不报）', async (ctx) => {
+    const { app, client, track } = await setup(false)
+    // 旧版 SDK（CI 固定的 e5bb24d）没有 ignoreErrors，过滤不了
+    if (typeof (client as { isIgnoredError?: unknown }).isIgnoredError !== 'function') {
+      ctx.skip()
+    }
+    app.config.errorHandler!(new HttpError('请求已取消', 400, { canceled: true }), null, 'setup')
+    app.config.errorHandler!(
+      Object.assign(new Error('canceled'), { name: 'CanceledError' }),
+      null,
+      'setup'
+    )
     expect(errorCalls(track)).toBe(0)
     app.config.errorHandler!(new Error('real'), null, 'setup')
     expect(errorCalls(track)).toBe(1)

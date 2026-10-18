@@ -46,6 +46,8 @@ import { router } from '@/router'
 import { useUserStore } from '@/store/modules/user'
 import { setApiErrorReporter } from '@/utils/http/api-error-report'
 import { hasTrackApiError } from './error-filter'
+import type { TrackSetupOptions } from '@/plugins/track'
+import { isCanceledError } from '@/utils/sys/error-handle'
 
 /** 默认应用种子 app_key（与后端 track 库 T2 迁移种子一致；VITE_TRACK_APP_KEY 可覆盖） */
 const DEFAULT_TRACK_APP_KEY = 'ak_000000000000000000000001'
@@ -80,23 +82,27 @@ function replayBridgePlugin(): TrackPlugin {
   }
 }
 
-/** setupTrack 的可选项（透传给 SDK） */
-export interface SetupTrackOptions {
-  /**
-   * 是否跳过已处理错误（HttpError、handled===true / expected===true）的 $error 上报。
-   * 不传时不带这个键，由 SDK 按自己的默认值处理；传 true 跳过，传 false 全部上报。
-   */
-  skipHandledErrors?: boolean
-}
-
 /**
  * 初始化埋点（router 就绪后、mount 前调用）。
  * endpoint 缺省 /api：dev 下 /api/track/collect 经 vite 代理到后端；release 取构建版本号。
  * plugins 显式给定（与 SDK vue 适配层 router 模式同一序列，外加回放桥接）——
  * 不传则适配层内部默认序列不含回放。
- * 已处理错误不在管理台拦截，是否跳过由 SDK 的 skipHandledErrors 决定（options 可透传）。
+ * 已处理错误不在管理台拦截，是否跳过由 SDK 的 skipHandledErrors 决定（options 可透传）；
+ * 主动取消的请求不是错误，经 SDK 的 ignoreErrors 谓词丢弃。
  */
-export function setupTrack(app: App, options: SetupTrackOptions = {}): void {
+export function setupTrack(app: App, options: TrackSetupOptions = {}): void {
+  // 单独成对象再展开：CI 固定的旧版 SDK 类型里没有这两个键，展开变量不触发多余属性检查
+  const errorOptions: {
+    ignoreErrors: (error: unknown, message: string) => boolean
+    skipHandledErrors?: boolean
+  } = {
+    // 取消的请求（路由切换、重复提交去重等）不进错误监控
+    ignoreErrors: (error: unknown) => isCanceledError(error),
+    // 只在显式传入时带上，未传让 SDK 用默认值
+    ...(options.skipHandledErrors === undefined
+      ? {}
+      : { skipHandledErrors: options.skipHandledErrors })
+  }
   app.use(MugsunTrack, {
     endpoint: import.meta.env.VITE_TRACK_ENDPOINT || '/api',
     appKey: import.meta.env.VITE_TRACK_APP_KEY || DEFAULT_TRACK_APP_KEY,
@@ -119,10 +125,7 @@ export function setupTrack(app: App, options: SetupTrackOptions = {}): void {
       const token = useUserStore().accessToken
       return token ? { Authorization: token } : {}
     },
-    // 只在显式传入时带上，未传让 SDK 用默认值
-    ...(options.skipHandledErrors === undefined
-      ? {}
-      : { skipHandledErrors: options.skipHandledErrors })
+    ...errorOptions
   })
   tracker = app.config.globalProperties.$track as TrackClient
   // HTTP 200 业务失败上报：仅当 SDK 提供 trackApiError 时接入（旧版 SDK 跳过）

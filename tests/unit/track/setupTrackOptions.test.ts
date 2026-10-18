@@ -57,6 +57,21 @@ describe('setupTrack 的 skipHandledErrors 透传', () => {
   })
 })
 
+describe('setupTrack 的 ignoreErrors：取消的请求不算错误', () => {
+  it('透传谓词：取消的请求返回 true，其它错误返回 false', () => {
+    setupTrack(createApp({}))
+    const ignore = sdk.options?.ignoreErrors as (error: unknown, message: string) => boolean
+    expect(typeof ignore).toBe('function')
+    expect(ignore(new HttpError('请求已取消', 400, { canceled: true }), '')).toBe(true)
+    expect(ignore(Object.assign(new Error('canceled'), { name: 'CanceledError' }), '')).toBe(true)
+    expect(ignore(Object.assign(new Error('canceled'), { code: 'ERR_CANCELED' }), '')).toBe(true)
+    expect(ignore(Object.assign(new Error('x'), { __CANCEL__: true }), '')).toBe(true)
+    expect(ignore(new HttpError('请填写应用名称', 400), '')).toBe(false)
+    expect(ignore(new Error('boom'), 'boom')).toBe(false)
+    expect(ignore('str', 'str')).toBe(false)
+  })
+})
+
 describe('管理台不再拦截已处理错误', () => {
   it('Vue errorHandler 保持为 SDK 的处理器，HttpError 照样交给它', () => {
     const app = createApp({})
