@@ -75,6 +75,7 @@
     "@wangeditor/editor-for-vue": "next",
     "axios": "^1.12.2",
     "cesium": "^1.144.0",
+    "compare-versions": "^6.1.1",
     "crypto-js": "^4.2.0",
     "diff": "^9.0.0",
     "diff2html": "^3.4.56",
