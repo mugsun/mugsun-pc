@@ -256,6 +256,7 @@ describe('工作台更新日志：文案与页面', () => {
     'noChangelog',
     'currentVersion',
     'viewChangelog',
+    'viewChangelogAria',
     'changelogLoadFailed',
     'changelogIdSep',
     'changelogIdPart',
@@ -272,6 +273,27 @@ describe('工作台更新日志：文案与页面', () => {
       }
       expect(get(pack, 'pages.dashboard.console.changelogIdPart')).toContain('{id}')
     }
+  })
+
+  it('空态文案与外链读屏文案；英文菜单统一为 Workbench', () => {
+    expect(get(zh, 'pages.dashboard.console.noChangelog')).toBe(
+      '暂无更新记录，新版本发布后将在此显示。'
+    )
+    expect(get(en, 'pages.dashboard.console.noChangelog')).toBe(
+      'No release notes yet. New releases will appear here.'
+    )
+    expect(get(zh, 'pages.dashboard.console.viewChangelogAria')).toBe(
+      '查看更新日志（在新标签页打开）'
+    )
+    expect(get(en, 'pages.dashboard.console.viewChangelogAria')).toBe(
+      'View changelog (opens in a new tab)'
+    )
+    expect(get(en, 'menus.dashboard.console')).toBe('Workbench')
+    expect(get(en, 'menus.dashboard.workbench')).toBe('Workbench')
+    const card = read('src/views/dashboard/console/ChangelogCard.vue')
+    expect(card).toContain('target="_blank"')
+    expect(card).toContain('<span class="changelog-link__icon" aria-hidden="true">↗</span>')
+    expect(card).toContain(':aria-label="$t(\'pages.dashboard.console.viewChangelogAria\')"')
   })
 
   it('工作台挂 ChangelogCard；卡片保留「当前版本」、带 live region 与重试', () => {

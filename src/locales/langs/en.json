@@ -734,7 +734,7 @@
     },
     "dashboard": {
       "title": "Dashboard",
-      "console": "Console",
+      "console": "Workbench",
       "analysis": "Analysis",
       "ecommerce": "Ecommerce",
       "workbench": "Workbench"
@@ -1233,9 +1233,10 @@
         "noNotice": "No announcements",
         "topTag": "Top",
         "changelog": "Changelog",
-        "noChangelog": "No updates yet. New releases will appear here.",
+        "noChangelog": "No release notes yet. New releases will appear here.",
         "currentVersion": "Current version",
         "viewChangelog": "View changelog",
+        "viewChangelogAria": "View changelog (opens in a new tab)",
         "changelogLoadFailed": "Failed to load the changelog. Try again later",
         "changelogIdSep": " ",
         "changelogIdPart": "(Error ID: {id}).",

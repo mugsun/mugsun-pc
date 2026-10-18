@@ -9,8 +9,11 @@
         target="_blank"
         rel="noopener noreferrer"
         class="changelog-link"
+        data-test="changelog-link"
+        :aria-label="$t('pages.dashboard.console.viewChangelogAria')"
       >
-        {{ $t('pages.dashboard.console.viewChangelog') }}
+        {{ $t('pages.dashboard.console.viewChangelog')
+        }}<span class="changelog-link__icon" aria-hidden="true">↗</span>
       </ElLink>
     </div>
 
@@ -136,6 +139,10 @@
   .changelog-link {
     flex-shrink: 0;
     font-size: 13px;
+  }
+
+  .changelog-link__icon {
+    margin-left: 2px;
   }
 
   .changelog-version {
