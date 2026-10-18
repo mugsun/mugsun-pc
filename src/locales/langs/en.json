@@ -1245,6 +1245,8 @@
         "changelogTypeOptimize": "Improved",
         "changelogTypeFix": "Fixed",
         "changelogTypeOther": "Other",
+        "changelogNotInstalled": "Not installed",
+        "changelogUpdateAvailable": "{version} available",
         "shortcuts": "Shortcuts",
         "edit": "Edit",
         "shortcutsEmpty": "No shortcuts yet. Click Edit at the top right and pick the pages you use",

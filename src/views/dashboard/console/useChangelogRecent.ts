@@ -1,3 +1,4 @@
+import { compareVersions, validate } from 'compare-versions'
 import { computed, ref } from 'vue'
 import { isCanceledError } from '@/utils/sys/error-handle'
 import { newTraceId } from '@/utils/http/traceId'
@@ -30,6 +31,46 @@ export function toChangelogItem(row: any, index: number): ChangelogItem {
   }
 }
 
+export interface ChangelogEntry extends ChangelogItem {
+  /** 版本比当前版本新（前端构建落后于后台记录）：显示「未升级」 */
+  notInstalled: boolean
+}
+
+/** 去掉 v/V 前缀后交给 compare-versions 校验；不合法返回 null（不加标签、不报错） */
+function normalizeVersion(v: string | null | undefined): string | null {
+  const s = String(v ?? '')
+    .trim()
+    .replace(/^v/i, '')
+  return s && validate(s) ? s : null
+}
+
+/** 条目版本是否比当前版本新；任一方版本号不合法时返回 false */
+export function isNewerThan(version: string, current: string): boolean {
+  const a = normalizeVersion(version)
+  const b = normalizeVersion(current)
+  return !!a && !!b && compareVersions(a, b) > 0
+}
+
+/**
+ * 给条目标上「未升级」，并找出比当前版本新的最高版本（显示「有新版本 vX」）。
+ * 当前版本或条目版本号不合法时不加标签；没有更新的版本时 available 为 null。
+ */
+export function markVersions(
+  items: ChangelogItem[],
+  current: string
+): { entries: ChangelogEntry[]; available: string | null } {
+  let latest: string | null = null
+  const entries = items.map((item) => {
+    const notInstalled = isNewerThan(item.version, current)
+    if (notInstalled) {
+      const v = normalizeVersion(item.version)!
+      if (!latest || compareVersions(v, latest) > 0) latest = v
+    }
+    return { ...item, notInstalled }
+  })
+  return { entries, available: latest ? `v${latest}` : null }
+}
+
 /**
  * 工作台「更新日志」卡片的数据：
  * - 失败时不弹 toast（请求带 showErrorMessage:false），卡片显示错误态和重试按钮，
@@ -38,13 +79,16 @@ export function toChangelogItem(row: any, index: number): ChangelogItem {
  * - 只认最后一次请求的结果：连点重试、卸载后返回的旧响应都会被丢弃。
  * - liveText 给 polite live region：每次失败写入一次，开始加载时清空。
  * - 后端假数据已清掉（boot#15），空列表是常态，走空态而不是错误态。
+ * - currentVersion 是前端构建版本（package.json，经 vite define 注入 __PKG_VERSION__）；
+ *   后台记录由管理员维护，版本可能比前端构建新，比它新的条目标「未升级」。
  */
 export function useChangelogRecent(deps: {
   fetchRecent: FetchRecent
   t: (key: string, named?: Record<string, unknown>) => string
   limit?: number
+  currentVersion?: string
 }) {
-  const { fetchRecent, t, limit = 6 } = deps
+  const { fetchRecent, t, limit = 6, currentVersion = '' } = deps
   const items = ref<ChangelogItem[]>([])
   const loading = ref(false)
   /** 错误编号；null 表示没有错误 */
@@ -64,6 +108,10 @@ export function useChangelogRecent(deps: {
     t('pages.dashboard.console.changelogIdPart', { id: loadError.value ?? '' })
   )
   const loadErrorText = computed(() => loadErrorLead.value + loadErrorIdPart.value)
+  const versions = computed(() => markVersions(items.value, currentVersion))
+  const entries = computed(() => versions.value.entries)
+  /** 比当前版本新的最高版本（如 v0.2.0）；没有时为 null */
+  const availableVersion = computed(() => versions.value.available)
 
   /** 作废在途请求（组件卸载时调用）：之后返回的结果一律丢弃 */
   function invalidate(): void {
@@ -95,6 +143,8 @@ export function useChangelogRecent(deps: {
 
   return {
     items,
+    entries,
+    availableVersion,
     loading,
     loadError,
     loadErrorLead,

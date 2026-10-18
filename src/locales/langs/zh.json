@@ -1245,6 +1245,8 @@
         "changelogTypeOptimize": "优化",
         "changelogTypeFix": "修复",
         "changelogTypeOther": "其他",
+        "changelogNotInstalled": "未升级",
+        "changelogUpdateAvailable": "有新版本 {version}",
         "shortcuts": "快捷入口",
         "edit": "编辑",
         "shortcutsEmpty": "还没有快捷入口。点右上角编辑，勾选常用页面",

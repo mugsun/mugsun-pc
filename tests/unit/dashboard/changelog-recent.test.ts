@@ -12,7 +12,12 @@ vi.mock('@/utils/http', () => ({ default: { get: (...a: unknown[]) => httpGet(..
 import { HttpError } from '@/utils/http/error'
 import { fetchChangelogRecent } from '@/api/feedback'
 import { TRACE_HEADER, newTraceId } from '@/utils/http/traceId'
-import { toChangelogItem, useChangelogRecent } from '@/views/dashboard/console/useChangelogRecent'
+import {
+  isNewerThan,
+  markVersions,
+  toChangelogItem,
+  useChangelogRecent
+} from '@/views/dashboard/console/useChangelogRecent'
 
 const root = resolve(__dirname, '../../../')
 const read = (f: string) => readFileSync(resolve(root, f), 'utf-8')
@@ -32,9 +37,9 @@ function deferred<T>() {
   return { promise, resolve: resolveFn, reject: rejectFn }
 }
 
-function setup(fetchRecent: any, pack: any = zh) {
+function setup(fetchRecent: any, pack: any = zh, currentVersion = '0.2.0') {
   const { result, app } = withSetup(() =>
-    useChangelogRecent({ fetchRecent, t: tOf(pack), limit: 6 })
+    useChangelogRecent({ fetchRecent, t: tOf(pack), limit: 6, currentVersion })
   )
   return { ...result, app }
 }
@@ -133,7 +138,7 @@ describe('工作台更新日志：状态', () => {
     expect(fetchRecent).toHaveBeenCalledTimes(1)
     expect(fetchRecent.mock.calls[0][0]).toBe(6)
     app.unmount()
-    expect(read('src/views/dashboard/console/ChangelogCard.vue')).toMatch(/limit: 6\b/)
+    expect(read('src/views/dashboard/console/ChangelogCard.vue')).toMatch(/limit: 6,/)
   })
 
   it('空：后端返回空数组或 null 都是空列表，不算错误', async () => {
@@ -260,6 +265,65 @@ describe('工作台更新日志：状态', () => {
   })
 })
 
+describe('工作台更新日志：当前版本与「未升级」', () => {
+  const rowsOf = (...versions: (string | null)[]) =>
+    versions.map((version, i) => ({ ...ROW, id: i + 1, version }))
+
+  it('版本对齐：当前版本等于最新条目，不加「未升级」，不提示新版本', async () => {
+    const s = setup(vi.fn().mockResolvedValue(rowsOf('v0.2.0', 'v0.1.3', 'v0.1.0')), zh, '0.2.0')
+    await s.reload()
+    expect(s.entries.value.map((e) => e.notInstalled)).toEqual([false, false, false])
+    expect(s.availableVersion.value).toBeNull()
+    s.app.unmount()
+  })
+
+  it('落后：比当前版本新的条目标「未升级」，提示列表里最高的新版本（容忍 v 前缀，乱序也取最高）', async () => {
+    const s = setup(
+      vi.fn().mockResolvedValue(rowsOf('v0.1.3', 'v0.2.0', '0.1.0', 'V0.1.2')),
+      zh,
+      '0.1.0'
+    )
+    await s.reload()
+    expect(s.entries.value.map((e) => [e.version, e.notInstalled])).toEqual([
+      ['v0.1.3', true],
+      ['v0.2.0', true],
+      ['0.1.0', false],
+      ['V0.1.2', true]
+    ])
+    expect(s.availableVersion.value).toBe('v0.2.0')
+    expect(
+      tOf(zh)('pages.dashboard.console.changelogUpdateAvailable', {
+        version: s.availableVersion.value
+      })
+    ).toBe('有新版本 v0.2.0')
+    expect(
+      tOf(en)('pages.dashboard.console.changelogUpdateAvailable', {
+        version: s.availableVersion.value
+      })
+    ).toBe('v0.2.0 available')
+    s.app.unmount()
+  })
+
+  it('版本号不合法：该条不加标签、不报错；当前版本不合法时一律不加', () => {
+    const items = rowsOf('下一版', '', null, 'v1.x.y', 'v0.3.0').map(toChangelogItem)
+    const r = markVersions(items, '0.2.0')
+    expect(r.entries.map((e) => e.notInstalled)).toEqual([false, false, false, false, true])
+    expect(r.available).toBe('v0.3.0')
+    expect(markVersions(items, 'dev').entries.every((e) => !e.notInstalled)).toBe(true)
+    expect(markVersions(items, 'dev').available).toBeNull()
+    expect(markVersions(items, '').available).toBeNull()
+    expect(() => isNewerThan('not-a-version', '0.1.0')).not.toThrow()
+    expect(isNewerThan('not-a-version', '0.1.0')).toBe(false)
+  })
+
+  it('比当前版本旧或相同的不算未升级；预发布版本按 semver 规则比较', () => {
+    expect(isNewerThan('v0.1.0', '0.1.0')).toBe(false)
+    expect(isNewerThan('v0.0.9', '0.1.0')).toBe(false)
+    expect(isNewerThan('v0.2.0-beta.1', '0.1.0')).toBe(true)
+    expect(isNewerThan('v0.2.0-beta.1', '0.2.0')).toBe(false)
+  })
+})
+
 describe('工作台更新日志：文案与页面', () => {
   const KEYS = [
     'changelog',
@@ -274,7 +338,9 @@ describe('工作台更新日志：文案与页面', () => {
     'changelogTypeFeature',
     'changelogTypeOptimize',
     'changelogTypeFix',
-    'changelogTypeOther'
+    'changelogTypeOther',
+    'changelogNotInstalled',
+    'changelogUpdateAvailable'
   ]
   it('中英文 key 齐全；编号段带 {id} 占位', () => {
     for (const pack of [zh, en]) {

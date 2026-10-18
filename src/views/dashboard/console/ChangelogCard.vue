@@ -23,6 +23,9 @@
         $t('pages.dashboard.console.currentVersion')
       }}</span>
       <span class="changelog-version__value">v{{ appVersion }}</span>
+      <span v-if="availableVersion" class="changelog-version__update" data-test="changelog-update">
+        {{ $t('pages.dashboard.console.changelogUpdateAvailable', { version: availableVersion }) }}
+      </span>
     </div>
 
     <div class="changelog-body" :aria-busy="loading">
@@ -41,14 +44,14 @@
         </ElButton>
       </div>
       <ElEmpty
-        v-else-if="!items.length"
+        v-else-if="!entries.length"
         :description="$t('pages.dashboard.console.noChangelog')"
         :image-size="60"
         data-test="changelog-empty"
       />
       <ElTimeline v-else class="changelog-timeline" data-test="changelog-list">
         <ElTimelineItem
-          v-for="item in items"
+          v-for="item in entries"
           :key="item.id"
           :timestamp="item.date"
           :type="TYPE_META[item.type].dot"
@@ -59,6 +62,16 @@
               {{ $t(TYPE_META[item.type].label) }}
             </ElTag>
             <span v-if="item.version" class="changelog-item__version">{{ item.version }}</span>
+            <ElTag
+              v-if="item.notInstalled"
+              size="small"
+              type="info"
+              effect="plain"
+              disable-transitions
+              data-test="changelog-not-installed"
+            >
+              {{ $t('pages.dashboard.console.changelogNotInstalled') }}
+            </ElTag>
           </div>
           <div class="changelog-item__title">{{ item.title }}</div>
         </ElTimelineItem>
@@ -100,7 +113,8 @@
   }
 
   const {
-    items,
+    entries,
+    availableVersion,
     loading,
     loadError,
     loadErrorLead,
@@ -108,7 +122,12 @@
     liveText,
     reload,
     invalidate
-  } = useChangelogRecent({ fetchRecent: fetchChangelogRecent, t, limit: 6 })
+  } = useChangelogRecent({
+    fetchRecent: fetchChangelogRecent,
+    t,
+    limit: 6,
+    currentVersion: appVersion
+  })
 
   onMounted(reload)
   onUnmounted(invalidate)
@@ -172,6 +191,14 @@
       font-weight: 500;
       color: var(--el-text-color-primary);
       overflow-wrap: anywhere;
+    }
+
+    /* 「有新版本 vX」靠右小字；窄屏放不下时整段换到下一行 */
+    &__update {
+      margin-left: auto;
+      font-size: 12px;
+      color: var(--el-color-warning);
+      white-space: nowrap;
     }
   }
 
