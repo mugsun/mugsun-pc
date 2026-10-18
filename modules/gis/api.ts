@@ -1,4 +1,6 @@
 import request from '@/utils/http'
+import { HttpError, showError } from '@/utils/http/error'
+import { ApiStatus } from '@/utils/http/status'
 import { rememberAttributions } from './lib/attribution'
 
 export type GisId = string | number
@@ -63,12 +65,46 @@ export interface GisScene {
   remark?: string
 }
 
-/** silent：静默探测，失败不弹 toast（由调用方展示页内错误态） */
+/** GIS 模块未启用时的空状态（与 enabled:false 的响应等价） */
+function gisDisabledStatus(): GisStatus {
+  return { enabled: false, providers: [], terrainUrl: '', tilesets: [] }
+}
+
+/** HTTP 404，或 HTTP 200 + 信封 code 404 */
+function isNotFound(err: unknown): boolean {
+  return (
+    err instanceof HttpError &&
+    (err.code === ApiStatus.notFound || err.bizCode === ApiStatus.notFound)
+  )
+}
+
+/**
+ * silent：静默探测，失败不弹 toast（由调用方展示页内错误态）
+ *
+ * 后端只用系统参数关闭 GIS 时，/system/gis/status 返回 404（boot#87），
+ * 这里按「模块未启用」处理，不弹错，页面显示已有的「模块未开启」空态。
+ * 其余错误保持原行为：非 silent 弹 toast；401 由拦截器登出；取消不提示。
+ */
 export function fetchGisStatus(opts: { silent?: boolean } = {}) {
   return request
     .get<GisStatus>({
       url: '/api/system/gis/status',
-      ...(opts.silent ? { showErrorMessage: false } : {})
+      // 先统一静默，404 之外的错误下面按 silent 自行提示
+      showErrorMessage: false
+    })
+    .catch((err: unknown): GisStatus => {
+      if (isNotFound(err)) {
+        return gisDisabledStatus()
+      }
+      if (
+        !opts.silent &&
+        err instanceof HttpError &&
+        !err.canceled &&
+        err.code !== ApiStatus.unauthorized
+      ) {
+        showError(err, true)
+      }
+      throw err
     })
     .then((status) => {
       rememberAttributions(status?.providers)
