@@ -24,11 +24,12 @@ describe('geoHeatState：概览访问热力卡片状态', () => {
     expect(geoHeatState({ gisEnabled: true }, 0, true)).toBe('noData')
   })
 
-  it('「精确坐标 N 条」只在 noData 时隐藏', () => {
-    expect(showGeoCount('noData')).toBe(false)
-    expect(showGeoCount('ready')).toBe(true)
-    expect(showGeoCount('noBuild')).toBe(true)
-    expect(showGeoCount('serviceOff')).toBe(true)
+  it('「精确坐标 N 条」N=0 时一律隐藏，N>0 时显示', () => {
+    expect(showGeoCount(0)).toBe(false)
+    expect(showGeoCount(null)).toBe(false)
+    expect(showGeoCount(undefined)).toBe(false)
+    expect(showGeoCount(1)).toBe(true)
+    expect(showGeoCount(48)).toBe(true)
   })
 
   it('三种空态文案中英都有，且按约定取值', () => {
@@ -43,6 +44,7 @@ describe('geoHeatState：概览访问热力卡片状态', () => {
     expect(pick(zh, GEO_HEAT_EMPTY_KEY.noData)).toBe(
       '暂无地域数据。开通 IP 属地后按省份统计；开启精确位置后可看热力。'
     )
+    expect(pick(en, 'pages.track.overview.geoHeat')).toBe('Visit Heatmap')
     expect(pick(en, GEO_HEAT_EMPTY_KEY.noBuild)).toBe(
       'This build does not include the map module, so the visit heatmap is unavailable.'
     )

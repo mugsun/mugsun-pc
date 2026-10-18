@@ -163,7 +163,7 @@
         <div class="art-card track-chart-card">
           <p class="track-card-title">
             {{ $t('pages.track.overview.geoHeat') }}
-            <span v-if="showGeoCount(heatState)" class="track-geo-count">{{
+            <span v-if="showGeoCount(geoCount)" class="track-geo-count">{{
               $t('pages.track.overview.geoCount', { n: geoCount })
             }}</span>
           </p>

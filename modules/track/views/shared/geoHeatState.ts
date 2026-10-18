@@ -26,7 +26,7 @@ export const GEO_HEAT_EMPTY_KEY: Record<Exclude<GeoHeatState, 'ready'>, string> 
   noData: 'pages.track.overview.geoEmpty'
 }
 
-/** 标题旁「精确坐标 N 条」：GIS 可用但没有坐标（noData）时隐藏，其余照常显示 */
-export function showGeoCount(state: GeoHeatState): boolean {
-  return state !== 'noData'
+/** 标题旁「精确坐标 N 条」：N=0 时一律隐藏（不论卡片处于哪种状态） */
+export function showGeoCount(geoCount: number | null | undefined): boolean {
+  return Number(geoCount) > 0
 }
