@@ -61,6 +61,10 @@ describe('MCP 工具列表：错误态', () => {
     expect(s.records.value).toEqual([])
     expect(s.loading.value).toBe(false)
     expect(s.loadErrorText.value).toBe(`MCP 工具列表加载失败，请稍后重试（错误编号：${sentId}）`)
+    // 页面上分两段渲染：编号段整段不断开
+    expect(s.loadErrorLead.value).toBe('MCP 工具列表加载失败，请稍后重试')
+    expect(s.loadErrorIdPart.value).toBe(`（错误编号：${sentId}）`)
+    expect(s.loadErrorLead.value + s.loadErrorIdPart.value).toBe(s.loadErrorText.value)
     expect(s.loadErrorText.value).not.toContain('NullPointerException')
     expect(consoleError).toHaveBeenCalledWith('[AiMcp] list failed', {
       traceId: sentId,
@@ -129,6 +133,44 @@ describe('MCP 工具列表：错误态', () => {
     s.app.unmount()
   })
 
+  it('旧请求成功但比新请求晚返回：不覆盖 records；新请求未完成时 loading 仍为 true', async () => {
+    const oldReq = deferred<any>()
+    const newReq = deferred<any>()
+    const fetchPage = vi
+      .fn()
+      .mockReturnValueOnce(oldReq.promise)
+      .mockReturnValueOnce(newReq.promise)
+    const s = setup(fetchPage)
+    const p1 = s.reload()
+    s.category.value = 'map'
+    const p2 = s.reload()
+    oldReq.resolve({ records: [{ id: 1, name: 'old-all' }] })
+    await p1
+    expect(s.records.value).toEqual([])
+    expect(s.loading.value).toBe(true)
+    expect(s.loadError.value).toBeNull()
+    newReq.resolve({ records: [{ id: 2, name: 'new-map' }] })
+    await p2
+    expect(s.records.value).toEqual([{ id: 2, name: 'new-map' }])
+    expect(s.loading.value).toBe(false)
+    s.app.unmount()
+  })
+
+  it('invalidate()：丢弃在途请求的结果并结束加载态（切到「对外暴露」tab 时用）', async () => {
+    const pending = deferred<any>()
+    const fetchPage = vi.fn().mockReturnValueOnce(pending.promise)
+    const s = setup(fetchPage)
+    const p = s.reload()
+    expect(s.loading.value).toBe(true)
+    s.invalidate()
+    expect(s.loading.value).toBe(false)
+    pending.resolve({ records: [{ id: 9, name: 'stale' }] })
+    await p
+    expect(s.records.value).toEqual([])
+    expect(s.loading.value).toBe(false)
+    s.app.unmount()
+  })
+
   it('请求被取消（路由切换）不算错误', async () => {
     const fetchPage = vi.fn().mockRejectedValue(new HttpError('canceled', -1, { canceled: true }))
     const s = setup(fetchPage)
@@ -176,12 +218,16 @@ describe('MCP 工具列表：空态', () => {
     expect(get(zh, 'aiMcpList.empty')).toContain(`「${get(zh, 'aiMcpList.add')}」`)
     expect(get(zh, 'aiMcpList.emptySearched')).toBe('没有符合条件的 MCP 工具')
     expect(get(en, 'aiMcpList.emptySearched')).toBe('No MCP tools match your search.')
-    expect(get(zh, 'aiMcpList.loadFailed')).toBe(
-      'MCP 工具列表加载失败，请稍后重试（错误编号：{id}）'
-    )
-    expect(get(en, 'aiMcpList.loadFailed')).toBe(
-      'Failed to load MCP tools. Try again later (Error ID: {id}).'
-    )
+    // 错误文案拆成「消息 + 分隔符」和「编号段」，拼起来与原文案一致
+    const full = (pack: any) =>
+      get(pack, 'aiMcpList.loadFailedMsg') +
+      get(pack, 'aiMcpList.idSep') +
+      get(pack, 'aiMcpList.idPart')
+    expect(full(zh)).toBe('MCP 工具列表加载失败，请稍后重试（错误编号：{id}）')
+    expect(full(en)).toBe('Failed to load MCP tools. Try again later (Error ID: {id}).')
+    expect(get(zh, 'aiMcpList.idPart')).toBe('（错误编号：{id}）')
+    expect(get(en, 'aiMcpList.idPart')).toBe('(Error ID: {id}).')
+    expect(get(zh, 'aiMcpList.loadFailed')).toBeUndefined()
     expect(get(zh, 'aiMcpList.retry')).toBe('重试')
     expect(get(en, 'aiMcpList.retry')).toBe('Retry')
   })
@@ -194,6 +240,12 @@ describe('MCP 页模板', () => {
     expect(src.match(/aria-live="polite"/g)).toHaveLength(1)
     expect(src).not.toMatch(/role="alert"/)
     expect(src).toMatch(/<ElEmpty v-if="loadError"/)
+    // 编号段单独一个 span，不用 v-html
+    expect(src).toMatch(/<span class="mcp-load-error__id" data-test="mcp-load-error-id">/)
+    expect(src).not.toMatch(/v-html/)
+    expect(src).toMatch(
+      /\.mcp-load-error__id \{\s*display: inline-block;\s*max-width: 100%;\s*overflow-wrap: anywhere;/
+    )
     expect(src).toMatch(/<ElButton :loading="loading" data-test="mcp-retry" @click="reload">/)
     // 添加按钮不受加载 / 错误状态影响
     expect(src).toMatch(/<ElButton type="primary" @click="openEdit\(\)">/)
@@ -212,8 +264,8 @@ describe('MCP 页模板', () => {
     // 操作按钮「锁定」仍用原 key，不受标签改名影响
     expect(get(zh, 'aiMcpList.lock')).toBe('锁定')
     expect(get(en, 'aiMcpList.lock')).toBe('Lock')
-    expect(get(zh, 'aiMcpList.lockedHint')).toBe('已锁定，解锁后可编辑或删除')
-    expect(get(en, 'aiMcpList.lockedHint')).toBe('Locked. Unlock to edit or delete.')
+    expect(get(zh, 'aiMcpList.lockedHint')).toBe('解锁后可编辑或删除')
+    expect(get(en, 'aiMcpList.lockedHint')).toBe('Unlock to edit or delete.')
   })
 })
 

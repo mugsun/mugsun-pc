@@ -61,7 +61,12 @@
               <ElIcon class="mcp-load-error__icon"><CircleCloseFilled /></ElIcon>
             </template>
             <template #description>
-              <p>{{ loadErrorText }}</p>
+              <p data-test="mcp-load-error-text">
+                {{ loadErrorLead
+                }}<span class="mcp-load-error__id" data-test="mcp-load-error-id">{{
+                  loadErrorIdPart
+                }}</span>
+              </p>
             </template>
             <ElButton :loading="loading" data-test="mcp-retry" @click="reload">{{
               $t('aiMcpList.retry')
@@ -91,6 +96,7 @@
       class="ai-mcp-dialog"
       :title="form.id ? $t('aiForm.editMcp') : $t('aiForm.addMcp')"
       width="640px"
+      :top="narrowDialog ? '12px' : '15vh'"
     >
       <!-- 768 以下标签放上面，输入框占满宽度；≤640 时弹窗宽度由全局样式改为 100% - 24px -->
       <ElForm
@@ -240,10 +246,12 @@
     records,
     loading,
     loadError,
-    loadErrorText,
+    loadErrorLead,
+    loadErrorIdPart,
     liveText,
     filtered,
-    reload: reloadList
+    reload: reloadList,
+    invalidate: invalidateList
   } = useMcpList({
     fetchPage: fetchAiMcpPage,
     category,
@@ -254,6 +262,8 @@
   const { width: viewportWidth } = useWindowSize()
   /** 768 以下添加 / 编辑弹窗的标签放到输入框上方 */
   const narrowForm = computed(() => viewportWidth.value < 768)
+  /** ≤640：弹窗贴近顶部（12px），高度限制在视口内，只让弹窗内容区滚动 */
+  const narrowDialog = computed(() => viewportWidth.value <= 640)
   const visible = ref(false)
   const saving = ref(false)
   const form = reactive<Record<string, any>>({})
@@ -290,6 +300,7 @@
 
   async function reload() {
     if (category.value === 'server') {
+      invalidateList()
       serverLoading.value = true
       try {
         servers.value = (await fetchAiMcpServerList()) || []
@@ -436,6 +447,18 @@
     color: var(--el-color-danger);
   }
 
+  /*
+   * 编号段是一个 inline-block：在父行里不可拆，放不下就整段换到下一行；
+   * 宽度按内容收缩（最多 100%），整段放得进一行时内部不断开。
+   * 不用 white-space: nowrap：错误态在卡片网格的一列里，641–1440 宽时列宽可低到 280px 左右，
+   * 32 位编号整段放不进时 nowrap 会横向溢出；这里放不进才在段内折行（overflow-wrap 兜底）。
+   */
+  .mcp-load-error__id {
+    display: inline-block;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
   .visually-hidden {
     position: absolute;
     width: 1px;
@@ -483,5 +506,16 @@
     flex: 1;
     min-height: 0;
     overflow: auto;
+  }
+
+  /*
+   * 窄屏：默认 margin-top 15vh 加上 max-height，弹窗底部会超出视口，外层遮罩也跟着滚，变成双层滚动。
+   * 这里配合 top="12px" 把弹窗限制在视口内（上下各 12px），头部和页脚固定，只有内容区一层滚动。
+   */
+  @media (width <= 640px) {
+    .ai-mcp-dialog.el-dialog {
+      max-height: calc(100vh - 24px);
+      margin-bottom: 0;
+    }
   }
 </style>

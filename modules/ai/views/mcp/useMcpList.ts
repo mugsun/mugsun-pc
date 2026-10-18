@@ -26,9 +26,25 @@ export function useMcpList(deps: {
   const liveText = ref('')
   let seq = 0
 
-  const loadErrorText = computed(() => t('aiMcpList.loadFailed', { id: loadError.value ?? '' }))
+  /**
+   * 错误文案拆成两段渲染：「消息 + 分隔符」和「编号段」，编号段在页面上整段换行，
+   * 不在「（错误编号：」和编号之间断开。两段拼起来就是完整文案（读屏也用完整文案）。
+   */
+  const loadErrorLead = computed(() => t('aiMcpList.loadFailedMsg') + t('aiMcpList.idSep'))
+  const loadErrorIdPart = computed(() => t('aiMcpList.idPart', { id: loadError.value ?? '' }))
+  const loadErrorText = computed(() => loadErrorLead.value + loadErrorIdPart.value)
   /** 有搜索词或分类筛选：空结果显示「没有符合条件」，和真正没有数据区分 */
   const filtered = computed(() => !!keyword.value.trim() || !!category.value)
+
+  /**
+   * 作废在途请求：之后返回的结果一律丢弃，并结束加载态。
+   * 切到不走这个列表的 tab（「对外暴露」）时调用，避免切回来时旧结果闪一下。
+   */
+  function invalidate(): void {
+    seq++
+    loading.value = false
+    liveText.value = ''
+  }
 
   async function reload(): Promise<void> {
     const mine = ++seq
@@ -59,5 +75,16 @@ export function useMcpList(deps: {
     }
   }
 
-  return { records, loading, loadError, loadErrorText, liveText, filtered, reload }
+  return {
+    records,
+    loading,
+    loadError,
+    loadErrorLead,
+    loadErrorIdPart,
+    loadErrorText,
+    liveText,
+    filtered,
+    reload,
+    invalidate
+  }
 }
