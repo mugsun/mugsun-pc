@@ -126,6 +126,16 @@ describe('工作台更新日志：状态', () => {
     s.app.unmount()
   })
 
+  it('limit：默认请求 6 条（卡片最多展示 6 条），工作台卡片也显式传 6', async () => {
+    const fetchRecent = vi.fn().mockResolvedValue([])
+    const { result, app } = withSetup(() => useChangelogRecent({ fetchRecent, t: tOf(zh) }))
+    await result.reload()
+    expect(fetchRecent).toHaveBeenCalledTimes(1)
+    expect(fetchRecent.mock.calls[0][0]).toBe(6)
+    app.unmount()
+    expect(read('src/views/dashboard/console/ChangelogCard.vue')).toMatch(/limit: 6\b/)
+  })
+
   it('空：后端返回空数组或 null 都是空列表，不算错误', async () => {
     for (const v of [[], null, undefined]) {
       const s = setup(vi.fn().mockResolvedValue(v))

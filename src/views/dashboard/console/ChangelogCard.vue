@@ -145,6 +145,13 @@
     margin-left: 2px;
   }
 
+  /* ElLink 默认 outline:none，键盘聚焦时看不出焦点，这里补一圈主色描边 */
+  .changelog-link:focus-visible {
+    border-radius: 2px;
+    outline: 2px solid var(--el-color-primary);
+    outline-offset: 2px;
+  }
+
   .changelog-version {
     display: flex;
     flex-wrap: wrap;
