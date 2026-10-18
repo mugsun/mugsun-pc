@@ -91,7 +91,7 @@ function replayBridgePlugin(): TrackPlugin {
  * 主动取消的请求不是错误，经 SDK 的 ignoreErrors 谓词丢弃。
  */
 export function setupTrack(app: App, options: TrackSetupOptions = {}): void {
-  // 单独成对象再展开：CI 固定的旧版 SDK 类型里没有这两个键，展开变量不触发多余属性检查
+  // 错误过滤相关选项（需 SDK ≥ mugsun-track#19）；skipHandledErrors 未传时不带这个键
   const errorOptions: {
     ignoreErrors: (error: unknown, message: string) => boolean
     skipHandledErrors?: boolean

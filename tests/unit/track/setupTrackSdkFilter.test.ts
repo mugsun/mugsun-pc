@@ -1,7 +1,9 @@
 /**
- * 用真实 SDK（Vue 适配层 + errorPlugin）跑一遍过滤路径：显式 false 上报、显式 true 跳过。
- * 不依赖 SDK 默认值。CI 固定的旧版 SDK 没有 skipHandledErrors（没有 isIgnoredError），
- * 显式 true 一项在那种 SDK 上跳过。
+ * 护栏：用真实 SDK（Vue 适配层 + errorPlugin）跑过滤路径，SDK 需 ≥ mugsun-track#19（5d2dbf3，
+ * CI 的 TRACK_REF 即此提交）。三条必须都在：
+ * - 取消的请求（isCanceledError）不上报；
+ * - 不传参数时，已处理的 HttpError 上报 1 条 $error（SDK 默认 skipHandledErrors=false）；
+ * - 显式 skipHandledErrors=true 时不上报。
  */
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 import { createApp } from 'vue'
@@ -58,48 +60,45 @@ const handled = () => Object.assign(new HttpError('请填写应用名称', 400),
 const errorCalls = (track: { mock: { calls: unknown[][] } }) =>
   track.mock.calls.filter(([name]) => name === '$error').length
 
+function rejection(reason: unknown): Event {
+  const e = new Event('unhandledrejection')
+  Object.defineProperty(e, 'reason', { value: reason })
+  return e
+}
+
 describe('真实 SDK 过滤路径', () => {
-  it('显式 false：Vue errorHandler 里的已处理 HttpError 上报 $error', async () => {
-    const { app, track } = await setup(false)
+  it('不传参：一个已处理的 HttpError 上报 1 条 $error', async () => {
+    const { app, client, track } = await setup()
+    expect(Object.prototype.hasOwnProperty.call(client.options, 'skipHandledErrors')).toBe(true)
+    expect((client.options as { skipHandledErrors?: unknown }).skipHandledErrors).toBe(false)
     app.config.errorHandler!(handled(), null, 'setup')
     expect(errorCalls(track)).toBe(1)
   })
 
-  it('显式 true：已处理 HttpError 不上报，普通错误照常上报', async (ctx) => {
-    const { app, client, track } = await setup(true)
-    if (typeof (client as { isIgnoredError?: unknown }).isIgnoredError !== 'function') {
-      ctx.skip()
-    }
+  it('显式 true：已处理 HttpError 不上报，普通错误照常上报', async () => {
+    const { app, track } = await setup(true)
     app.config.errorHandler!(handled(), null, 'setup')
     expect(errorCalls(track)).toBe(0)
     app.config.errorHandler!(new Error('real'), null, 'setup')
     expect(errorCalls(track)).toBe(1)
   })
 
-  it('不传参：一个已处理的 HttpError 产生 1 条 $error', async (ctx) => {
-    const { app, client, track } = await setup()
-    // TODO(TRACK_REF)：本地 ../mugsun-track 在 main 时 SDK 默认 skipHandledErrors=true，这条跑不通，先跳过。
-    // ci.yml 的 TRACK_REF 改到 mugsun-track#19 的合并提交（默认 false）之后，删掉这个跳过。
-    // CI 现固定的 e5bb24d 没有这个选项（options 里是 undefined），照常执行。
-    if ((client.options as { skipHandledErrors?: unknown }).skipHandledErrors === true) {
-      ctx.skip()
-    }
+  it('显式 false：已处理 HttpError 上报 $error', async () => {
+    const { app, track } = await setup(false)
     app.config.errorHandler!(handled(), null, 'setup')
     expect(errorCalls(track)).toBe(1)
   })
 
-  it('取消的请求不上报 $error（显式 false 也不报）', async (ctx) => {
-    const { app, client, track } = await setup(false)
-    // 旧版 SDK（CI 固定的 e5bb24d）没有 ignoreErrors，过滤不了
-    if (typeof (client as { isIgnoredError?: unknown }).isIgnoredError !== 'function') {
-      ctx.skip()
-    }
+  it('取消的请求（isCanceledError）不上报 $error，Vue errorHandler 与 unhandledrejection 都是', async () => {
+    const { app, track } = await setup()
     app.config.errorHandler!(new HttpError('请求已取消', 400, { canceled: true }), null, 'setup')
     app.config.errorHandler!(
       Object.assign(new Error('canceled'), { name: 'CanceledError' }),
       null,
       'setup'
     )
+    window.dispatchEvent(rejection(new HttpError('请求已取消', 400, { canceled: true })))
+    window.dispatchEvent(rejection(Object.assign(new Error('x'), { code: 'ERR_CANCELED' })))
     expect(errorCalls(track)).toBe(0)
     app.config.errorHandler!(new Error('real'), null, 'setup')
     expect(errorCalls(track)).toBe(1)
