@@ -184,7 +184,8 @@
     fetchTrackTrend
   } from '@/api/track'
   import GisHeatMap from '@/components/gis/GisHeatMap.vue'
-  import { enableGis } from '@/modules/flags'
+  import { isGisRuntimeOn } from '@/modules/flags'
+  import { useUserStore } from '@/store/modules/user'
   import { useI18n } from 'vue-i18n'
   import { fmtTrackClock, fmtTrackDuration, useTrackApp } from '@/views/track/shared/useTrackApp'
   import { fmtAvgSessionDuration, fmtBounceRate } from '@/views/track/shared/settledCards'
@@ -201,7 +202,9 @@
 
   defineOptions({ name: 'TrackOverview' })
 
-  const gisModuleOn = enableGis
+  const userStore = useUserStore()
+  // 构建期开关 && 后端 /auth/info 的 gisEnabled（运行期用系统参数关闭 GIS 时不显示热力图）
+  const gisModuleOn = computed(() => isGisRuntimeOn(userStore.info))
   const { t } = useI18n()
 
   const { appOptions, appKey, days, appsLoading } = useTrackApp()
