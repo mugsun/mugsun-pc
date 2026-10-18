@@ -1,5 +1,5 @@
 <template>
-  <GenLayout type="marketing" title="营销文案" />
+  <GenLayout type="marketing" :title="$t('aiGen.pageMarketing')" />
 </template>
 <script setup lang="ts">
   import GenLayout from './GenLayout.vue'

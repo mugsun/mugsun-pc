@@ -163,12 +163,12 @@
         <div class="art-card track-chart-card">
           <p class="track-card-title">
             {{ $t('pages.track.overview.geoHeat') }}
-            <span class="track-geo-count">{{
+            <span v-if="showGeoCount(geoCount)" class="track-geo-count">{{
               $t('pages.track.overview.geoCount', { n: geoCount })
             }}</span>
           </p>
-          <GisHeatMap v-if="gisModuleOn && geoPoints.length" :points="geoPoints" />
-          <ElEmpty v-else :description="$t('pages.track.overview.geoEmpty')" :image-size="72" />
+          <GisHeatMap v-if="heatState === 'ready'" :points="geoPoints" />
+          <ElEmpty v-else :description="$t(GEO_HEAT_EMPTY_KEY[heatState])" :image-size="72" />
         </div>
       </ElCol>
     </ElRow>
@@ -184,7 +184,8 @@
     fetchTrackTrend
   } from '@/api/track'
   import GisHeatMap from '@/components/gis/GisHeatMap.vue'
-  import { enableGis } from '@/modules/flags'
+  import { GEO_HEAT_EMPTY_KEY, geoHeatState, showGeoCount } from '@/views/track/shared/geoHeatState'
+  import { useUserStore } from '@/store/modules/user'
   import { useI18n } from 'vue-i18n'
   import { fmtTrackClock, fmtTrackDuration, useTrackApp } from '@/views/track/shared/useTrackApp'
   import { fmtAvgSessionDuration, fmtBounceRate } from '@/views/track/shared/settledCards'
@@ -201,7 +202,7 @@
 
   defineOptions({ name: 'TrackOverview' })
 
-  const gisModuleOn = enableGis
+  const userStore = useUserStore()
   const { t } = useI18n()
 
   const { appOptions, appKey, days, appsLoading } = useTrackApp()
@@ -231,6 +232,8 @@
   const regions = ref<{ region: string; pv: number; uv: number; eventCount: number }[]>([])
   const geoPoints = ref<{ lon: number; lat: number }[]>([])
   const geoCount = ref(0)
+  // 构建期开关 && 后端 /auth/info 的 gisEnabled && 有精确坐标，才显示热力图
+  const heatState = computed(() => geoHeatState(userStore.info, geoPoints.value.length))
   const regionLabels = computed(() => regions.value.map((r) => r.region))
   const regionValues = computed(() => regions.value.map((r) => Number(r.eventCount) || 0))
 

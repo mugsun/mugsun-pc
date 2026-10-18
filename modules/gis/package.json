@@ -1,6 +1,7 @@
 {
   "name": "@mugsun/pc-gis",
   "version": "0.0.1",
+  "license": "MIT",
   "private": true,
   "description": "Mugsun PC 地理信息可选模块（删除本目录即可去掉 GIS 源码）"
 }

@@ -1,9 +1,9 @@
 <!--
-  结果提示：后端跳过了极区或跨 180° 的要素（响应 skipped > 0）时显示数量，并链到文档的限制说明。
+  结果提示：后端跳过了缓冲包住极点或跨 180° 的要素（响应 skipped > 0）时显示数量，并链到文档的限制说明。
 -->
 <template>
   <p v-if="count > 0" class="gis-skipped-hint" role="status" data-test="gis-skipped-hint">
-    <span>{{ $t('pages.gis.skippedHint', { n: count }) }}</span>
+    <span>{{ $t('pages.gis.skippedHint', { n: count }, count) }}</span>
     <a :href="docUrl" target="_blank" rel="noopener noreferrer" data-test="gis-skipped-doc">
       {{ $t('pages.gis.skippedHintDoc') }}
     </a>

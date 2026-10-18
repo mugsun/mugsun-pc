@@ -57,6 +57,18 @@
     )
   }
 
+  // Vite 把小 SVG 内联成 data: URL；直接解码，不走 fetch（CSP connect-src 不放行 data:）
+  const decodeDataUrl = (url: string): string => {
+    const comma = url.indexOf(',')
+    const meta = url.slice(5, comma)
+    const data = url.slice(comma + 1)
+    if (meta.endsWith(';base64')) {
+      const bytes = Uint8Array.from(atob(data), (c) => c.charCodeAt(0))
+      return new TextDecoder().decode(bytes)
+    }
+    return decodeURIComponent(data)
+  }
+
   // 加载 SVG 文件内容
   const loadSvgContent = async () => {
     if (!props.src) {
@@ -65,6 +77,10 @@
     }
 
     try {
+      if (props.src.startsWith('data:')) {
+        svgContent.value = applyThemeToSvg(decodeDataUrl(props.src))
+        return
+      }
       const response = await fetch(props.src)
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`)

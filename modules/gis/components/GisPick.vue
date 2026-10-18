@@ -126,7 +126,8 @@
       return
     }
     try {
-      const status = await fetchGisStatus()
+      // 静默探测：失败时下面退回默认底图，不弹 toast
+      const status = await fetchGisStatus({ silent: true })
       provider = firstProvider(status.providers || [])
     } catch {
       provider = DEFAULT_SCENE.baseMap.provider

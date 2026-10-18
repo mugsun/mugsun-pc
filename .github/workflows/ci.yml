@@ -55,3 +55,59 @@ jobs:
 
       - name: Lint
         run: pnpm run lint
+
+      # 单测（vitest，jsdom）：tests/unit/**/*.test.ts
+      - name: Unit tests (vitest)
+        run: pnpm test
+
+  ui-check:
+    name: UI self-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - name: Checkout analytics SDK (mugsun-track)
+        # 固定到 mugsun-track 的具体提交，避免上游分支漂移带入未审代码
+        env:
+          TRACK_REF: e5bb24db4ec904db8f8666ea326d29fc47c6402e
+        run: |
+          git init -q ../mugsun-track
+          git -C ../mugsun-track fetch -q --depth 1 https://github.com/mugsun/mugsun-track.git "$TRACK_REF"
+          git -C ../mugsun-track checkout -q FETCH_HEAD
+
+      # 版本取自 package.json 的 packageManager（pnpm@11.28.2，与 mugsun-track 一致）
+      - name: Set up pnpm
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Build analytics SDK
+        run: pnpm --dir ../mugsun-track install --frozen-lockfile && pnpm --dir ../mugsun-track build
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        run: pnpm exec playwright install --with-deps chromium
+
+      # 中文字形与本地一致，否则中文 label/提示用回退字体，宽度不同会影响溢出判断
+      - name: Install CJK fonts
+        run: sudo apt-get update -q && sudo apt-get install -y -q fonts-noto-cjk
+
+      # 空提交所有新增/编辑弹窗与表单页，中/英 × 亮/暗 四组合断言校验提示与标签完整可见
+      - name: UI self-check (form layout + standalone apps)
+        run: pnpm test:ui-check
+
+      - name: Upload report on failure
+        if: failure()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: ui-check-report
+          path: e2e-ui-report/
+          retention-days: 7
