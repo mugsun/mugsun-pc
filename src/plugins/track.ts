@@ -3,8 +3,14 @@
  */
 import type { App } from 'vue'
 
+/** setupTrack 可选项，透传给埋点 SDK；不传的键由 SDK 用自己的默认值 */
+export interface TrackSetupOptions {
+  /** 是否跳过已处理错误（HttpError、handled / expected 标记）的 $error 上报 */
+  skipHandledErrors?: boolean
+}
+
 type TrackApi = {
-  setupTrack: (app: App) => void
+  setupTrack: (app: App, options?: TrackSetupOptions) => void
   trackIdentify: (userId: string | number) => void
   trackReset: () => void
 }
@@ -22,8 +28,8 @@ export function installTrackApi(next: TrackApi): void {
   api = next
 }
 
-export function setupTrack(app: App): void {
-  api.setupTrack(app)
+export function setupTrack(app: App, options?: TrackSetupOptions): void {
+  api.setupTrack(app, options)
 }
 
 export function trackIdentify(userId: string | number): void {
