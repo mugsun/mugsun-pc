@@ -23,8 +23,8 @@
           <ElButton @click="reload">{{ $t('aiMcpList.search') }}</ElButton>
           <ElButton type="primary" @click="openEdit()">{{ $t('aiMcpList.add') }}</ElButton>
         </div>
-        <div v-loading="loading" class="card-grid">
-          <ElCard v-for="row in records" :key="row.id" shadow="hover">
+        <div v-loading="loading && !loadError" class="card-grid">
+          <ElCard v-for="row in records" :key="row.id" shadow="hover" data-test="mcp-card">
             <div class="title"
               >{{ row.name }}
               <ElTag size="small">{{ row.protocolType }}</ElTag>
@@ -32,14 +32,17 @@
                 $t('aiMcpList.default')
               }}</ElTag>
               <ElTag v-if="row.lockFlag === 1" size="small" type="warning">{{
-                $t('aiMcpList.lock')
+                $t('aiMcpList.locked')
               }}</ElTag>
             </div>
             <div class="meta">
               {{ $t('aiMcpList.toolCount', { n: toolCount(row) }) }} · {{ row.description }}
             </div>
+            <div v-if="row.lockFlag === 1" class="locked-hint" data-test="mcp-locked-hint">
+              {{ $t('aiMcpList.lockedHint') }}
+            </div>
             <div class="ops">
-              <ElButton link type="primary" :disabled="row.lockFlag === 1" @click="openEdit(row)">{{
+              <ElButton v-if="row.lockFlag !== 1" link type="primary" @click="openEdit(row)">{{
                 $t('aiMcpList.edit')
               }}</ElButton>
               <ElButton link @click="debug(row)">{{ $t('aiMcpList.debug') }}</ElButton>
@@ -47,16 +50,30 @@
               <ElButton link @click="toggleLock(row)">{{
                 row.lockFlag === 1 ? $t('aiMcpList.unlock') : $t('aiMcpList.lock')
               }}</ElButton>
-              <ElButton link type="danger" :disabled="row.lockFlag === 1" @click="remove(row)">{{
+              <ElButton v-if="row.lockFlag !== 1" link type="danger" @click="remove(row)">{{
                 $t('aiMcpList.delete')
               }}</ElButton>
             </div>
           </ElCard>
+          <!-- 加载失败：沿用空态的位置和尺寸，换错误图标；后端原文只进 console -->
+          <ElEmpty v-if="loadError" class="mcp-load-error" data-test="mcp-load-error">
+            <template #image>
+              <ElIcon class="mcp-load-error__icon"><CircleCloseFilled /></ElIcon>
+            </template>
+            <template #description>
+              <p>{{ loadErrorText }}</p>
+            </template>
+            <ElButton :loading="loading" data-test="mcp-retry" @click="reload">{{
+              $t('aiMcpList.retry')
+            }}</ElButton>
+          </ElEmpty>
           <ElEmpty
-            v-if="!loading && !records.length"
-            :description="searched ? $t('aiMcpList.emptySearched') : $t('aiMcpList.empty')"
+            v-else-if="!loading && !records.length"
+            :description="filtered ? $t('aiMcpList.emptySearched') : $t('aiMcpList.empty')"
           />
         </div>
+        <!-- 读屏：错误出现时 polite 读一次（不用 role=alert） -->
+        <div class="visually-hidden" aria-live="polite" data-test="mcp-live">{{ liveText }}</div>
       </template>
       <template v-else>
         <ArtTable
@@ -193,6 +210,8 @@
   import type { ColumnOption } from '@/types/component'
   import { h, onMounted, reactive, ref, nextTick } from 'vue'
   import { ElButton, ElMessage, ElMessageBox, ElSwitch } from 'element-plus'
+  import { CircleCloseFilled } from '@element-plus/icons-vue'
+  import { useMcpList } from './useMcpList'
   import {
     fetchAiMcpPage,
     fetchAiMcpServerList,
@@ -209,9 +228,20 @@
   const formRef = ref<FormInstance>()
   const category = ref('')
   const keyword = ref('')
-  const searched = ref(false)
-  const loading = ref(false)
-  const records = ref<any[]>([])
+  const {
+    records,
+    loading,
+    loadError,
+    loadErrorText,
+    liveText,
+    filtered,
+    reload: reloadList
+  } = useMcpList({
+    fetchPage: fetchAiMcpPage,
+    category,
+    keyword,
+    t
+  })
 
   const toolCount = (row: any): string | number => {
     if (row.toolCount != null) {
@@ -271,19 +301,7 @@
       }
       return
     }
-    loading.value = true
-    searched.value = !!keyword.value.trim()
-    try {
-      const res = await fetchAiMcpPage({
-        pageNum: 1,
-        pageSize: 50,
-        name: keyword.value || undefined,
-        category: category.value || undefined
-      })
-      records.value = res?.records ?? []
-    } finally {
-      loading.value = false
-    }
+    return reloadList()
   }
   function openEdit(row?: any) {
     Object.keys(form).forEach((k) => delete form[k])
@@ -403,6 +421,41 @@
     margin-top: 8px;
     font-size: 12px;
     color: var(--el-text-color-secondary);
+  }
+
+  .locked-hint {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+  }
+
+  .mcp-load-error__icon {
+    font-size: 64px;
+    color: var(--el-color-danger);
+  }
+
+  /* ElEmpty 给 .el-empty__image svg 设了灰色，这里让错误图标保持红色 */
+  .mcp-load-error__icon :deep(svg) {
+    color: var(--el-color-danger);
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* 窄屏下「添加 MCP 工具」换行后不留左侧缩进，与搜索框左对齐（间距由 gap 负责） */
+  @media (width <= 640px) {
+    .toolbar .el-button + .el-button {
+      margin-left: 0;
+    }
   }
 
   .ops {
