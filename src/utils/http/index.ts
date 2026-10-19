@@ -139,7 +139,7 @@ axiosInstance.interceptors.response.use(
     if (response.config.responseType === 'blob') return response
     // 信封旁路：裸 JSON 端点（actuator/metrics 等无 R 信封）原样放行
     if ((response.config as ExtendedAxiosRequestConfig).skipEnvelope) return response
-    const { code, msg } = response.data
+    const { code, msg, data } = response.data
     if (code === ApiStatus.success) return response
     if (code === ApiStatus.unauthorized) handleUnauthorizedError(msg)
     const message = msg || $t('httpMsg.requestFailed')
@@ -147,7 +147,9 @@ axiosInstance.interceptors.response.use(
     const method = response.config.method?.toUpperCase()
     // HTTP 200 业务失败：axios 视为成功，接口监控记不到，单独上报一次（带 biz_code）
     reportApiError({ url, method, status: response.status, bizCode: code, message })
+    // data 为 R.data（如验证码限流 retryAfter），供调用方按 code 分支
     throw new HttpError(message, code, {
+      data,
       url,
       method,
       errorKind: 'business',
@@ -161,8 +163,8 @@ axiosInstance.interceptors.response.use(
 )
 
 /** 统一创建HttpError */
-function createHttpError(message: string, code: number) {
-  return new HttpError(message, code)
+function createHttpError(message: string, code: number, data?: unknown) {
+  return new HttpError(message, code, data === undefined ? undefined : { data })
 }
 
 /** 处理401错误（带防抖） */
