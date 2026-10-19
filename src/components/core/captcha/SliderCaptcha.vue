@@ -26,8 +26,8 @@
   import {
     fetchCaptchaChallenge,
     fetchCaptchaVerify,
-    type CaptchaChallenge,
-    type CaptchaScene
+    type CaptchaScene,
+    type SliderChallenge
   } from '@/api/captcha'
   import {
     TrackRecorder,
@@ -69,7 +69,7 @@
 
   type Status = 'loading' | 'ready' | 'verifying' | 'success' | 'failed' | 'limited' | 'error'
   const status = ref<Status>('loading')
-  const challenge = ref<CaptchaChallenge | null>(null)
+  const challenge = ref<SliderChallenge | null>(null)
   const offset = ref(0)
   const dragging = ref(false)
   const shaking = ref(false)
@@ -137,6 +137,12 @@
           inputMode: mode
         })
         if (!alive) return
+        if (data.type !== 'SLIDER') {
+          challenge.value = null
+          status.value = 'error'
+          announce.value = t('pages.auth.slider.unavailable')
+          return
+        }
         challenge.value = data
         declaredMode.value = data.inputMode || mode
         wantedMode = declaredMode.value

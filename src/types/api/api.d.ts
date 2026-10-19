@@ -68,18 +68,8 @@ declare namespace Api {
       password: string
       /** 租户编号（多租户登录；缺省平台租户） */
       tenantId?: string
-      captchaUuid?: string
-      captchaCode?: string
-      /** 滑块验证码一次性令牌 */
+      /** 行为验证码一次性令牌（config.enabled 时必带） */
       captchaToken?: string
-    }
-
-    /** 图形验证码 */
-    interface Captcha {
-      captchaUuid: string
-      captchaImage: string
-      expireSeconds: number
-      captchaCode?: string
     }
 
     /** 登录响应 */

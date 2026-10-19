@@ -25,16 +25,6 @@ export function fetchTwoFactor(params: { twoFactorToken: string; code: string })
   })
 }
 
-/**
- * 获取图形验证码
- * @returns 验证码唯一标识 + Base64 图片
- */
-export function fetchCaptcha() {
-  return request.get<Api.Auth.Captcha>({
-    url: '/api/auth/captcha'
-  })
-}
-
 /** SM2 传输公钥（登录/改密/注册前取，用于前端加密密码；gmEnabled=false 时明文传输） */
 export function fetchSm2PublicKey() {
   return request.get<{ gmEnabled: boolean; publicKey: string | null }>({
@@ -52,16 +42,13 @@ export function fetchGetUserInfo() {
   })
 }
 
-/** 自助注册（密码 SM2 传输，图形验证码防批量注册） */
+/** 自助注册（密码 SM2 传输，行为验证码防批量注册） */
 export function fetchRegister(data: {
   username: string
   password: string
   nickname?: string
   phone?: string
-  /** 旧数字码（config.type 非 SLIDER 时，过渡一个版本） */
-  captchaUuid?: string
-  captchaCode?: string
-  /** 滑块验证码一次性令牌（config.enabled && type=SLIDER） */
+  /** 行为验证码一次性令牌（config.enabled 时必带） */
   captchaToken?: string
 }) {
   return request.post<null>({ url: '/api/auth/register', data })
@@ -75,16 +62,8 @@ export function fetchSmsCode(phone: string, captchaToken?: string) {
   })
 }
 
-/** 短信登录：校验验证码换 token（图形验证码前置，与账号登录同口径） */
-export function fetchSmsLogin(data: {
-  phone: string
-  code: string
-  /** 旧数字码（config.type 非 SLIDER 时，过渡一个版本） */
-  captchaUuid?: string
-  captchaCode?: string
-  /** 滑块验证码一次性令牌（config.enabled && type=SLIDER） */
-  captchaToken?: string
-}) {
+/** 短信登录：校验短信验证码换 token（行为验证码在发短信那一步，sms-code 场景） */
+export function fetchSmsLogin(data: { phone: string; code: string }) {
   return request.post<Api.Auth.LoginResponse>({ url: '/api/auth/sms-login', data })
 }
 
@@ -100,14 +79,11 @@ export function fetchSocialSources() {
   })
 }
 
-/** 忘记密码：发送邮箱重置验证码（图形验证码防爆破；账号不存在也返回成功防枚举） */
+/** 忘记密码：发送邮箱重置验证码（行为验证码防爆破；账号不存在也返回成功防枚举） */
 export function fetchForgetCode(data: {
   username: string
   tenantId?: string
-  /** 旧数字码（config.type 非 SLIDER 时，过渡一个版本） */
-  captchaUuid?: string
-  captchaCode?: string
-  /** 滑块验证码一次性令牌（config.enabled && type=SLIDER） */
+  /** 行为验证码一次性令牌（config.enabled 时必带） */
   captchaToken?: string
 }) {
   return request.post<null>({ url: '/api/auth/forget-code', data })

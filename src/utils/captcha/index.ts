@@ -28,7 +28,11 @@ export const CaptchaCode = {
   FAILED: 40011,
   RATE_LIMITED: 40012,
   REQUIRED: 40013,
-  DISABLED: 40014
+  DISABLED: 40014,
+  /** v0.6.1：keyboard 取题时租户未启用 SLIDER/ROTATE（不自动重试，提示改用鼠标/触屏） */
+  NO_ACCESSIBLE: 40015,
+  /** v0.6.3：租户启用题型因素材不可用全部被剔除（仅 pointer challenge），不自动重试 */
+  UNAVAILABLE: 40016
 } as const
 
 export interface TrackPoint {
@@ -159,6 +163,13 @@ export class TrackRecorder {
   }
 }
 
+/** 各题型答案（契约 v0.6.1 §3） */
+export type CaptchaAnswer =
+  | { x: number }
+  | { angle: number }
+  | { points: { x: number; y: number }[] }
+  | { order: number[] }
+
 export interface VerifyPayload {
   captchaId: string
   bgDisplayWidth: number
@@ -166,7 +177,7 @@ export interface VerifyPayload {
   endTime: number
   inputMode: InputMode
   track: TrackPoint[]
-  answer: { x: number }
+  answer: CaptchaAnswer
   /** keyboard 模式必填：按键次数；pointer 模式为 null */
   keyPresses: number | null
 }
@@ -198,6 +209,8 @@ export type CaptchaErrorKind =
   | 'rateLimited'
   | 'required'
   | 'disabled'
+  | 'noAccessible'
+  | 'unavailable'
   | 'network'
   | 'other'
 
@@ -231,7 +244,7 @@ export function classifyCaptchaError(err: unknown): CaptchaErrorInfo {
     payload &&
     typeof payload.code === 'number' &&
     payload.code >= 40010 &&
-    payload.code <= 40014
+    payload.code <= 40016
   ) {
     code = payload.code
     payload = (payload.data && typeof payload.data === 'object' ? payload.data : undefined) as
@@ -252,6 +265,10 @@ export function classifyCaptchaError(err: unknown): CaptchaErrorInfo {
       return { ...base, kind: 'required' }
     case CaptchaCode.DISABLED:
       return { ...base, kind: 'disabled' }
+    case CaptchaCode.NO_ACCESSIBLE:
+      return { ...base, kind: 'noAccessible' }
+    case CaptchaCode.UNAVAILABLE:
+      return { ...base, kind: 'unavailable' }
   }
   const isNetwork =
     (err instanceof HttpError &&
@@ -265,3 +282,5 @@ export function classifyCaptchaError(err: unknown): CaptchaErrorInfo {
 export function isCaptchaRequired(err: unknown): boolean {
   return classifyCaptchaError(err).kind === 'required'
 }
+
+export * from './multi'

@@ -86,11 +86,19 @@
               }}
             </template>
           </ElTableColumn>
-          <ElTableColumn :label="$t('pages.system.tenant.actions')" width="150" fixed="right">
+          <ElTableColumn :label="$t('pages.system.tenant.actions')" width="210" fixed="right">
             <template #default="{ row }">
               <ElButton v-perm="'sys:tenant:save'" link type="primary" @click="openEdit(row)">{{
                 $t('pages.system.tenant.edit')
               }}</ElButton>
+              <ElButton
+                v-perm="'sys:tenant:save'"
+                link
+                type="primary"
+                data-testid="tenant-captcha"
+                @click="openCaptcha(row)"
+                >{{ $t('pages.system.tenant.captcha') }}</ElButton
+              >
               <ElButton
                 v-if="row.tenantCode !== '000000'"
                 v-perm="'sys:tenant:remove'"
@@ -111,6 +119,7 @@
         :saving="dialogSaving"
         @submit="handleSubmit"
       />
+      <TenantCaptchaDialog v-model:visible="captchaVisible" :row="captchaRow" @saved="loadData()" />
     </ElCard>
   </div>
 </template>
@@ -128,6 +137,7 @@
     fetchTenantPackageList
   } from '@/api/system-manage'
   import TenantDialog from './modules/tenant-dialog.vue'
+  import TenantCaptchaDialog from './modules/tenant-captcha-dialog.vue'
   import { formatTableTime } from '@/utils/date'
   import { ElMessageBox, ElMessage } from 'element-plus'
 
@@ -248,6 +258,13 @@
 
   const openEdit = (row: any): void => {
     void openDialog({ ...row })
+  }
+
+  const captchaVisible = ref(false)
+  const captchaRow = ref<Record<string, any> | null>(null)
+  const openCaptcha = (row: any): void => {
+    captchaRow.value = { ...row }
+    captchaVisible.value = true
   }
 
   const handleSubmit = async (form: Record<string, any>): Promise<void> => {
