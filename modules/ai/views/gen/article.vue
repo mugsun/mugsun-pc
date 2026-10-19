@@ -1,5 +1,5 @@
 <template>
-  <GenLayout type="article" title="文章生成" />
+  <GenLayout type="article" :title="$t('aiGen.pageArticle')" />
 </template>
 <script setup lang="ts">
   import GenLayout from './GenLayout.vue'

@@ -1,5 +1,5 @@
 <template>
-  <GenLayout type="poster" title="海报生成" />
+  <GenLayout type="poster" :title="$t('aiGen.pagePoster')" />
 </template>
 <script setup lang="ts">
   import GenLayout from './GenLayout.vue'

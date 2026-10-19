@@ -19,23 +19,8 @@
       }
     </style>
 
-    <script>
-      // 初始化 html class 主题属性
-      ;(function () {
-        try {
-          if (typeof Storage === 'undefined' || !window.localStorage) {
-            return
-          }
-
-          const themeType = localStorage.getItem('sys-theme')
-          if (themeType === 'dark') {
-            document.documentElement.classList.add('dark')
-          }
-        } catch (e) {
-          console.warn('Failed to apply initial theme:', e)
-        }
-      })()
-    </script>
+    <!-- 初始化 html 主题 class（外置脚本：CSP script-src 'self' 不允许内联脚本） -->
+    <script src="/theme-init.js"></script>
   </head>
 
   <body>

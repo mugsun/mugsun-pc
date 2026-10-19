@@ -1,7 +1,9 @@
 <!-- 空间分析：全幅地图 + 左侧 HUD 运算表单。 -->
 <template>
   <div class="gis-shell art-full-height">
-    <div class="gis-map-shell">
+    <div class="gis-map-shell gis-map-shell--panel">
+      <GisBasemapEmpty />
+      <GisTileErrorHint :host="mapHost" />
       <div ref="mapHost" class="gis-map"></div>
       <aside class="gis-hud gis-hud-panel gis-hud-panel-wide">
         <p class="gis-panel-lead">{{ $t('pages.gis.analyzeHint') }}</p>
@@ -82,16 +84,22 @@
             $t('pages.gis.overlay')
           }}</ElButton>
         </div>
+        <GisSkippedHint :count="skipped" />
         <dl v-if="metricsText.length" class="gis-metrics">
           <div v-for="item in metricsText" :key="item">{{ item }}</div>
         </dl>
       </aside>
-      <p class="gis-hud gis-hud-status">{{ $t('pages.gis.analyzeCoach') }}</p>
+      <GisCoach>{{ $t('pages.gis.analyzeCoach') }}</GisCoach>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+  import GisBasemapEmpty from '../../components/GisBasemapEmpty.vue'
+  import GisTileErrorHint from '../../components/GisTileErrorHint.vue'
+  import GisCoach from '../../components/GisCoach.vue'
+  import GisSkippedHint from '../../components/GisSkippedHint.vue'
+  import { metricsSkippedCount, skippedCount } from '@/gis/skippedHint'
   import { computed, nextTick, onActivated, onBeforeUnmount, onMounted, ref } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { useRouter } from 'vue-router'
@@ -137,6 +145,7 @@
   const running = ref(false)
   const saving = ref(false)
   const result = ref<GisAnalyzeResult | null>(null)
+  const skipped = computed(() => skippedCount(result.value))
   const savedId = ref<string | number | undefined>()
   const mapHost = ref<HTMLElement>()
   const ops = OPS
@@ -169,7 +178,7 @@
     }
     const out: string[] = []
     if (m.count != null) {
-      out.push(t('pages.gis.metricsCount', { n: m.count }))
+      out.push(t('pages.gis.metricsCount', { n: m.count }, Number(m.count)))
     }
     if (typeof m.areaSqMeters === 'number') {
       out.push(t('pages.gis.metricsArea', { n: Math.round(m.areaSqMeters) }))
@@ -179,6 +188,10 @@
     }
     if (typeof m.distanceMeters === 'number') {
       out.push(t('pages.gis.metricsDistance', { n: Math.round(m.distanceMeters) }))
+    }
+    const notCounted = metricsSkippedCount(result.value)
+    if (notCounted > 0) {
+      out.push(t('pages.gis.metricsSkipped', { n: notCounted }, notCounted))
     }
     if (m.intersects != null) {
       out.push(`${t('pages.gis.opIntersects')}: ${m.intersects}`)

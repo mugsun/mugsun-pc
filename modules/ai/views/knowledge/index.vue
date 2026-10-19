@@ -5,12 +5,12 @@
         <ElInput
           v-model="keyword"
           clearable
-          placeholder="搜索知识库"
+          :placeholder="$t('aiKbList.searchPlaceholder')"
           style="width: 200px"
           @keyup.enter="reload"
         />
-        <ElButton @click="reload">搜索</ElButton>
-        <ElButton type="primary" @click="openEdit()">新建知识库</ElButton>
+        <ElButton @click="reload">{{ $t('aiKbList.search') }}</ElButton>
+        <ElButton type="primary" @click="openEdit()">{{ $t('aiKbList.add') }}</ElButton>
       </div>
       <div v-loading="loading" class="card-grid">
         <ElCard
@@ -23,43 +23,49 @@
           <div class="title">
             {{ row.name }}
             <ElTag :type="row.status === 1 ? 'success' : 'info'" size="small">{{
-              row.status === 1 ? '启用' : '停用'
+              row.status === 1 ? $t('aiKbList.enabled') : $t('aiKbList.disabled')
             }}</ElTag>
           </div>
           <div class="meta"
-            >文档 {{ row.docCount ?? 0 }} · 分段 {{ row.segmentCount ?? 0 }} ·
+            >{{ $t('aiKbList.meta', { docs: row.docCount ?? 0, segs: row.segmentCount ?? 0 }) }}
             {{ modeLabel(row.retrievalMode) }}</div
           >
-          <div class="desc">{{ row.description || '暂无描述' }}</div>
+          <div class="desc">{{ row.description || $t('aiKbList.noDescription') }}</div>
           <div class="ops" @click.stop>
-            <ElButton link type="primary" @click="openEdit(row)">编辑</ElButton>
-            <ElButton link @click="copy(row)">复制</ElButton>
-            <ElButton link @click="test(row)">测试</ElButton>
-            <ElButton link type="danger" @click="remove(row)">删除</ElButton>
+            <ElButton link type="primary" @click="openEdit(row)">{{
+              $t('aiKbList.edit')
+            }}</ElButton>
+            <ElButton link @click="copy(row)">{{ $t('aiKbList.copy') }}</ElButton>
+            <ElButton link @click="test(row)">{{ $t('aiKbList.test') }}</ElButton>
+            <ElButton link type="danger" @click="remove(row)">{{ $t('aiKbList.delete') }}</ElButton>
           </div>
         </ElCard>
         <ElEmpty v-if="!loading && !records.length" :description="emptyText" />
       </div>
     </ElCard>
 
-    <ElDialog v-model="visible" :title="form.id ? '编辑知识库' : '新建知识库'" width="560px">
-      <ElForm :model="form" label-width="110px">
-        <ElFormItem label="名称" required
-          ><ElInput v-model="form.name" placeholder="如：客户支持知识库"
+    <ElDialog
+      v-model="visible"
+      :title="form.id ? $t('aiForm.editKnowledge') : $t('aiForm.newKnowledge')"
+      width="560px"
+    >
+      <ElForm ref="formRef" :model="form" label-width="auto">
+        <ElFormItem :label="$t('aiForm.name')" prop="name" :rules="requiredRule($t('aiForm.name'))"
+          ><ElInput v-model="form.name" :placeholder="$t('aiForm.phKnowledgeName')"
         /></ElFormItem>
-        <ElFormItem label="描述"
+        <ElFormItem :label="$t('aiForm.description')"
           ><ElInput
             v-model="form.description"
             type="textarea"
             :rows="3"
-            placeholder="用途说明，便于团队识别"
+            :placeholder="$t('aiForm.phKnowledgeDesc')"
         /></ElFormItem>
         <ElFormItem label="Embedding">
           <ElSelect
             v-model="form.embeddingModelId"
             clearable
             filterable
-            placeholder="选择向量模型"
+            :placeholder="$t('aiForm.phEmbeddingModel')"
             style="width: 100%"
           >
             <ElOption
@@ -70,43 +76,56 @@
             />
           </ElSelect>
         </ElFormItem>
-        <ElFormItem label="检索模式">
+        <ElFormItem :label="$t('aiForm.retrievalMode')">
           <ElSelect v-model="form.retrievalMode" style="width: 100%">
-            <ElOption label="混合检索 (hybrid)" value="hybrid" />
-            <ElOption label="向量检索 (vector)" value="vector" />
-            <ElOption label="关键词 (keyword)" value="keyword" />
+            <ElOption :label="$t('aiForm.optHybrid')" value="hybrid" />
+            <ElOption :label="$t('aiForm.optVector')" value="vector" />
+            <ElOption :label="$t('aiForm.optKeyword')" value="keyword" />
           </ElSelect>
         </ElFormItem>
         <ElFormItem label="TopK"
           ><ElInputNumber v-model="form.topK" :min="1" :max="20"
         /></ElFormItem>
-        <ElFormItem label="最低分"
+        <ElFormItem :label="$t('aiForm.minScore')"
           ><ElInputNumber v-model="form.minScore" :min="0" :max="1" :step="0.05" :precision="2"
         /></ElFormItem>
-        <ElFormItem label="状态"
+        <ElFormItem :label="$t('aiForm.status')"
           ><ElSwitch v-model="form.status" :active-value="1" :inactive-value="0"
         /></ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="visible = false">取消</ElButton>
-        <ElButton type="primary" :loading="saving" @click="save">保存</ElButton>
+        <ElButton @click="visible = false">{{ $t('aiForm.cancel') }}</ElButton>
+        <ElButton type="primary" :loading="saving" @click="save">{{ $t('aiForm.save') }}</ElButton>
       </template>
     </ElDialog>
 
-    <ElDialog v-model="testVisible" title="知识库命中测试" width="720px">
-      <div class="test-q">问题：{{ testQuery }}</div>
-      <ElTable :data="testHits" max-height="400" empty-text="未命中">
-        <ElTableColumn label="分数" width="100">
+    <ElDialog v-model="testVisible" :title="$t('aiForm.knowledgeHitTest')" width="720px">
+      <div class="test-q">{{ $t('aiForm.questionPrefix') }}{{ testQuery }}</div>
+      <ElTable :data="testHits" max-height="400" :empty-text="$t('aiForm.noHits')">
+        <ElTableColumn :label="$t('aiForm.score')" width="100">
           <template #default="{ row }">{{ Number(row.score ?? 0).toFixed(3) }}</template>
         </ElTableColumn>
-        <ElTableColumn prop="source" label="来源" width="140" show-overflow-tooltip />
-        <ElTableColumn prop="content" label="内容" min-width="360" show-overflow-tooltip />
+        <ElTableColumn
+          prop="source"
+          :label="$t('aiForm.source')"
+          width="140"
+          show-overflow-tooltip
+        />
+        <ElTableColumn
+          prop="content"
+          :label="$t('aiForm.content')"
+          min-width="360"
+          show-overflow-tooltip
+        />
       </ElTable>
     </ElDialog>
   </div>
 </template>
 <script setup lang="ts">
-  import { computed, onMounted, reactive, ref } from 'vue'
+  import { useI18n } from 'vue-i18n'
+  import type { FormInstance } from 'element-plus'
+  import { requiredRule } from '../shared/formRules'
+  import { computed, onMounted, reactive, ref, nextTick } from 'vue'
   import { useRouter } from 'vue-router'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import {
@@ -118,6 +137,8 @@
     fetchTestAiKnowledge
   } from '../../api'
   defineOptions({ name: 'AiKnowledge' })
+  const { t } = useI18n()
+  const formRef = ref<FormInstance>()
   const router = useRouter()
   const keyword = ref('')
   const loading = ref(false)
@@ -127,12 +148,12 @@
   const form = reactive<Record<string, any>>({})
   const searching = ref(false)
   const emptyText = computed(() =>
-    searching.value ? '没有符合条件的知识库。换个名称再查' : '还没有知识库。点新建知识库开始配置'
+    searching.value ? t('aiKbList.emptySearched') : t('aiKbList.empty')
   )
   function modeLabel(mode?: string) {
-    if (mode === 'vector') return '向量检索'
-    if (mode === 'keyword') return '关键词'
-    return '混合检索'
+    if (mode === 'vector') return t('aiKbList.modeVector')
+    if (mode === 'keyword') return t('aiKbList.modeKeyword')
+    return t('aiKbList.modeHybrid')
   }
   const embedModels = ref<any[]>([])
   const testVisible = ref(false)
@@ -180,8 +201,10 @@
           }
     )
     visible.value = true
+    nextTick(() => formRef.value?.clearValidate())
   }
   async function save() {
+    if (!(await formRef.value?.validate().catch(() => false))) return
     saving.value = true
     try {
       await fetchSaveAiKnowledge({ ...form })
@@ -202,23 +225,28 @@
     }
   }
   async function test(row: any) {
-    const { value } = await ElMessageBox.prompt('输入要检索的问题', `测试 · ${row.name}`, {
-      inputValue: '如何创建知识库？',
-      confirmButtonText: '测试'
-    }).catch(() => ({ value: '' }))
+    const { value } = await ElMessageBox.prompt(
+      t('aiKbList.testPrompt'),
+      t('aiKbList.testTitle', { name: row.name }),
+      {
+        inputValue: t('aiKbList.testDefault'),
+        confirmButtonText: t('aiKbList.test')
+      }
+    ).catch(() => ({ value: '' }))
     if (!value) return
     const r = await fetchTestAiKnowledge({ id: row.id, query: value })
     testQuery.value = value
     testHits.value = Array.isArray(r?.hits) ? r.hits : []
     testVisible.value = true
-    const message = r?.message || (testHits.value.length ? `命中 ${testHits.value.length} 条` : '')
+    const message =
+      r?.message || (testHits.value.length ? t('aiKbList.hits', { n: testHits.value.length }) : '')
     if (testHits.value.length) ElMessage.success(message)
-    else ElMessage.warning(message || '没有命中资料。请先上传内容，或换一个更接近原文的问题再测')
+    else ElMessage.warning(message || t('aiKbList.noHits'))
   }
   async function remove(row: any) {
     await ElMessageBox.confirm(
-      `删除「${row.name}」后，列表里不会再出现。资料和分段也会一起清掉`,
-      '确认'
+      t('aiKbList.removeConfirm', { name: row.name }),
+      t('aiKbList.confirmTitle')
     )
     await fetchRemoveAiKnowledge(row.id)
     await reload()

@@ -2,57 +2,83 @@
   <div class="ai-mcp-page art-full-height">
     <ElCard class="art-table-card" shadow="never">
       <ElTabs v-model="category" @tab-change="reload">
-        <ElTabPane label="全部" name="" />
-        <ElTabPane label="地图工具" name="map" />
-        <ElTabPane label="聊天工具" name="chat" />
-        <ElTabPane label="浏览器工具" name="browser" />
-        <ElTabPane label="文件工具" name="file" />
-        <ElTabPane label="自定义" name="custom" />
-        <ElTabPane label="对外暴露" name="server" />
+        <ElTabPane :label="$t('aiMcpList.tabAll')" name="" />
+        <ElTabPane :label="$t('aiMcpList.tabMap')" name="map" />
+        <ElTabPane :label="$t('aiMcpList.tabChat')" name="chat" />
+        <ElTabPane :label="$t('aiMcpList.tabBrowser')" name="browser" />
+        <ElTabPane :label="$t('aiMcpList.tabFile')" name="file" />
+        <ElTabPane :label="$t('aiMcpList.tabCustom')" name="custom" />
+        <ElTabPane :label="$t('aiMcpList.tabServer')" name="server" />
       </ElTabs>
       <template v-if="category !== 'server'">
         <div class="toolbar">
           <ElInput
             v-model="keyword"
             clearable
-            placeholder="搜索 MCP"
+            :placeholder="$t('aiMcpList.searchPlaceholder')"
             style="width: 200px"
             @keyup.enter="reload"
             @clear="reload"
           />
-          <ElButton @click="reload">搜索</ElButton>
-          <ElButton type="primary" @click="openEdit()">添加 MCP 工具</ElButton>
+          <ElButton @click="reload">{{ $t('aiMcpList.search') }}</ElButton>
+          <ElButton type="primary" @click="openEdit()">{{ $t('aiMcpList.add') }}</ElButton>
         </div>
-        <div v-loading="loading" class="card-grid">
-          <ElCard v-for="row in records" :key="row.id" shadow="hover">
+        <div v-loading="loading && !loadError" class="card-grid">
+          <ElCard v-for="row in records" :key="row.id" shadow="hover" data-test="mcp-card">
             <div class="title"
               >{{ row.name }}
               <ElTag size="small">{{ row.protocolType }}</ElTag>
-              <ElTag v-if="row.defaultFlag === 1" size="small" type="success">默认</ElTag>
-              <ElTag v-if="row.lockFlag === 1" size="small" type="warning">锁定</ElTag>
+              <ElTag v-if="row.defaultFlag === 1" size="small" type="success">{{
+                $t('aiMcpList.default')
+              }}</ElTag>
+              <ElTag v-if="row.lockFlag === 1" size="small" type="warning">{{
+                $t('aiMcpList.locked')
+              }}</ElTag>
             </div>
-            <div class="meta">工具数 {{ toolCount(row) }} · {{ row.description }}</div>
+            <div v-if="cardMetaOf(row, t)" class="meta" data-test="mcp-card-meta">
+              {{ cardMetaOf(row, t) }}
+            </div>
+            <div v-if="row.lockFlag === 1" class="locked-hint" data-test="mcp-locked-hint">
+              {{ $t('aiMcpList.lockedHint') }}
+            </div>
             <div class="ops">
-              <ElButton link type="primary" :disabled="row.lockFlag === 1" @click="openEdit(row)"
-                >编辑</ElButton
-              >
-              <ElButton link @click="debug(row)">调试</ElButton>
-              <ElButton link @click="setDefault(row)">设为默认</ElButton>
-              <ElButton link @click="toggleLock(row)">{{
-                row.lockFlag === 1 ? '解锁' : '锁定'
+              <ElButton v-if="row.lockFlag !== 1" link type="primary" @click="openEdit(row)">{{
+                $t('aiMcpList.edit')
               }}</ElButton>
-              <ElButton link type="danger" :disabled="row.lockFlag === 1" @click="remove(row)"
-                >删除</ElButton
-              >
+              <ElButton link @click="debug(row)">{{ $t('aiMcpList.debug') }}</ElButton>
+              <ElButton link @click="setDefault(row)">{{ $t('aiMcpList.setDefault') }}</ElButton>
+              <ElButton link @click="toggleLock(row)">{{
+                row.lockFlag === 1 ? $t('aiMcpList.unlock') : $t('aiMcpList.lock')
+              }}</ElButton>
+              <ElButton v-if="row.lockFlag !== 1" link type="danger" @click="remove(row)">{{
+                $t('aiMcpList.delete')
+              }}</ElButton>
             </div>
           </ElCard>
+          <!-- 加载失败：沿用空态的位置和尺寸，换错误图标；后端原文只进 console -->
+          <ElEmpty v-if="loadError" class="mcp-load-error" data-test="mcp-load-error">
+            <template #image>
+              <ElIcon class="mcp-load-error__icon"><CircleCloseFilled /></ElIcon>
+            </template>
+            <template #description>
+              <p data-test="mcp-load-error-text">
+                {{ loadErrorLead
+                }}<span class="mcp-load-error__id" data-test="mcp-load-error-id">{{
+                  loadErrorIdPart
+                }}</span>
+              </p>
+            </template>
+            <ElButton :loading="loading" data-test="mcp-retry" @click="reload">{{
+              $t('aiMcpList.retry')
+            }}</ElButton>
+          </ElEmpty>
           <ElEmpty
-            v-if="!loading && !records.length"
-            :description="
-              searched ? '没有符合条件的 MCP。换个名称再查' : '还没有 MCP。点添加 MCP 工具开始配置'
-            "
+            v-else-if="!loading && !records.length"
+            :description="filtered ? $t('aiMcpList.emptySearched') : $t('aiMcpList.empty')"
           />
         </div>
+        <!-- 读屏：错误出现时 polite 读一次（不用 role=alert） -->
+        <div class="visually-hidden" aria-live="polite" data-test="mcp-live">{{ liveText }}</div>
       </template>
       <template v-else>
         <ArtTable
@@ -61,100 +87,145 @@
           :data="servers"
           :columns="serverColumns"
         />
-        <ElEmpty v-else description="还没有对外暴露的工具。添加 HTTP 或 SSE 并启用后会出现在这里" />
+        <ElEmpty v-else :description="$t('aiMcpList.emptyServer')" />
       </template>
     </ElCard>
 
     <ElDialog
       v-model="visible"
       class="ai-mcp-dialog"
-      :title="form.id ? '编辑 MCP' : '添加 MCP'"
+      :title="form.id ? $t('aiForm.editMcp') : $t('aiForm.addMcp')"
       width="640px"
+      :top="narrowDialog ? '12px' : '15vh'"
     >
-      <ElForm :model="form" label-width="110px">
-        <ElFormItem label="协议名称" required>
+      <!-- 768 以下标签放上面，输入框占满宽度；≤640 时弹窗宽度由全局样式改为 100% - 24px -->
+      <ElForm
+        ref="formRef"
+        :model="form"
+        :label-position="narrowForm ? 'top' : 'right'"
+        label-width="auto"
+      >
+        <ElFormItem
+          :label="$t('aiForm.protocolName')"
+          prop="name"
+          :rules="mcpRequired('aiMcpList.requiredName')"
+        >
           <ElInput
             v-model="form.name"
             maxlength="64"
             show-word-limit
-            placeholder="用来在列表里区分"
+            :placeholder="$t('aiForm.phListName')"
           />
         </ElFormItem>
-        <ElFormItem label="协议描述" required>
+        <ElFormItem
+          :label="$t('aiForm.protocolDesc')"
+          prop="description"
+          :rules="mcpRequired('aiMcpList.requiredDesc')"
+        >
           <ElInput
             v-model="form.description"
             maxlength="255"
             show-word-limit
-            placeholder="用来说明这个工具做什么"
+            :placeholder="$t('aiForm.phProtocolDesc')"
           />
         </ElFormItem>
-        <ElFormItem label="分类" required>
+        <ElFormItem
+          :label="$t('aiForm.category')"
+          prop="category"
+          :rules="requiredRule($t('aiForm.category'), true)"
+        >
           <ElSelect v-model="form.category" style="width: 100%">
-            <ElOption label="地图工具" value="map" /><ElOption label="聊天工具" value="chat" />
-            <ElOption label="浏览器工具" value="browser" /><ElOption
-              label="文件工具"
+            <ElOption :label="$t('aiForm.optMapTool')" value="map" /><ElOption
+              :label="$t('aiForm.optChatTool')"
+              value="chat"
+            />
+            <ElOption :label="$t('aiForm.optBrowserTool')" value="browser" /><ElOption
+              :label="$t('aiForm.optFileTool')"
               value="file"
             />
-            <ElOption label="自定义" value="custom" />
+            <ElOption :label="$t('aiForm.optCustom')" value="custom" />
           </ElSelect>
         </ElFormItem>
-        <ElFormItem label="协议类型" required>
+        <ElFormItem
+          :label="$t('aiForm.protocolType')"
+          prop="protocolType"
+          :rules="requiredRule($t('aiForm.protocolType'), true)"
+        >
           <ElRadioGroup v-model="form.protocolType">
             <ElRadio label="SSE">SSE</ElRadio>
             <ElRadio label="STDIO">STDIO</ElRadio>
             <ElRadio label="HTTP">Streamable HTTP</ElRadio>
           </ElRadioGroup>
         </ElFormItem>
-        <ElFormItem v-if="form.protocolType !== 'STDIO'" label="SSE 地址" required>
+        <ElFormItem
+          v-if="form.protocolType !== 'STDIO'"
+          :label="$t('aiForm.sseUrl')"
+          prop="sseUrl"
+          :rules="mcpRequired('aiMcpList.requiredSseUrl')"
+        >
           <ElInput v-model="form.sseUrl" placeholder="https://" />
         </ElFormItem>
-        <ElFormItem v-if="form.protocolType === 'STDIO'" label="命令行" required>
+        <ElFormItem
+          v-if="form.protocolType === 'STDIO'"
+          :label="$t('aiForm.command')"
+          prop="command"
+          :rules="mcpRequired('aiMcpList.requiredCommand')"
+        >
           <ElInput v-model="form.command" type="textarea" :rows="3" />
         </ElFormItem>
         <ElFormItem label="API Key"
           ><ElInput v-model="form.apiKey" type="password" show-password
         /></ElFormItem>
-        <ElFormItem label="环境变量"
+        <ElFormItem :label="$t('aiForm.envVars')"
           ><ElInput
             v-model="form.envJson"
             type="textarea"
             :rows="2"
-            placeholder="JSON，留空表示不额外传"
+            :placeholder="$t('aiForm.phEnvVars')"
         /></ElFormItem>
-        <ElFormItem label="状态"
+        <ElFormItem :label="$t('aiForm.status')"
           ><ElSwitch v-model="form.status" :active-value="1" :inactive-value="0"
         /></ElFormItem>
         <ElFormItem>
-          <ElButton @click="parseTools">解析工具清单</ElButton>
+          <ElButton @click="parseTools">{{ $t('aiForm.parseTools') }}</ElButton>
         </ElFormItem>
-        <ElFormItem v-if="parsedTools.length" label="工具清单">
+        <ElFormItem v-if="parsedTools.length" :label="$t('aiForm.toolList')">
           <ElTable :data="parsedTools" size="small" max-height="200">
-            <ElTableColumn prop="name" label="名称" />
-            <ElTableColumn prop="description" label="描述" />
+            <ElTableColumn prop="name" :label="$t('aiForm.name')" />
+            <ElTableColumn prop="description" :label="$t('aiForm.description')" />
           </ElTable>
         </ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="visible = false">取消</ElButton>
-        <ElButton type="primary" :loading="saving" @click="save">保存</ElButton>
+        <ElButton @click="visible = false">{{ $t('aiForm.cancel') }}</ElButton>
+        <ElButton type="primary" :loading="saving" @click="save">{{ $t('aiForm.save') }}</ElButton>
       </template>
     </ElDialog>
 
-    <ElDialog v-model="debugVisible" title="MCP 调试" width="640px">
-      <ElForm label-width="88px">
-        <ElFormItem label="测试提示词"
+    <ElDialog v-model="debugVisible" :title="$t('aiForm.mcpDebug')" width="640px">
+      <ElForm label-width="auto">
+        <ElFormItem :label="$t('aiForm.testPrompt')"
           ><ElInput v-model="debugPrompt" type="textarea" :rows="4"
         /></ElFormItem>
       </ElForm>
-      <ElButton type="primary" :loading="debugging" @click="runDebug">调试</ElButton>
+      <ElButton type="primary" :loading="debugging" @click="runDebug">{{
+        $t('aiForm.debug')
+      }}</ElButton>
       <pre class="debug-out">{{ debugResult }}</pre>
     </ElDialog>
   </div>
 </template>
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
+  import type { FormInstance } from 'element-plus'
+  import { requiredRule } from '../shared/formRules'
   import type { ColumnOption } from '@/types/component'
-  import { h, onMounted, reactive, ref } from 'vue'
+  import { h, onMounted, reactive, ref, nextTick } from 'vue'
   import { ElButton, ElMessage, ElMessageBox, ElSwitch } from 'element-plus'
+  import { CircleCloseFilled } from '@element-plus/icons-vue'
+  import { useMcpList } from './useMcpList'
+  import { cardMetaOf, mcpRequired } from './mcpCard'
+  import { useWindowSize } from '@vueuse/core'
   import {
     fetchAiMcpPage,
     fetchAiMcpServerList,
@@ -167,26 +238,32 @@
     fetchToggleAiMcpServer
   } from '../../api'
   defineOptions({ name: 'AiMcp' })
+  const { t } = useI18n()
+  const formRef = ref<FormInstance>()
   const category = ref('')
   const keyword = ref('')
-  const searched = ref(false)
-  const loading = ref(false)
-  const records = ref<any[]>([])
+  const {
+    records,
+    loading,
+    loadError,
+    loadErrorLead,
+    loadErrorIdPart,
+    liveText,
+    filtered,
+    reload: reloadList,
+    invalidate: invalidateList
+  } = useMcpList({
+    fetchPage: fetchAiMcpPage,
+    category,
+    keyword,
+    t
+  })
 
-  const toolCount = (row: any): string | number => {
-    if (row.toolCount != null) {
-      return row.toolCount
-    }
-    if (!row.toolsJson) {
-      return '-'
-    }
-    try {
-      const parsed = JSON.parse(row.toolsJson)
-      return Array.isArray(parsed) ? parsed.length : '-'
-    } catch {
-      return '-'
-    }
-  }
+  const { width: viewportWidth } = useWindowSize()
+  /** 768 以下添加 / 编辑弹窗的标签放到输入框上方 */
+  const narrowForm = computed(() => viewportWidth.value < 768)
+  /** ≤640：弹窗贴近顶部（12px），高度限制在视口内，只让弹窗内容区滚动 */
+  const narrowDialog = computed(() => viewportWidth.value <= 640)
   const visible = ref(false)
   const saving = ref(false)
   const form = reactive<Record<string, any>>({})
@@ -198,12 +275,12 @@
   const debugRow = ref<any>(null)
   const serverLoading = ref(false)
   const servers = ref<any[]>([])
-  const serverColumns: ColumnOption[] = [
-    { prop: 'name', label: '工具', minWidth: 160 },
-    { prop: 'description', label: '说明', minWidth: 200 },
+  const serverColumns = computed<ColumnOption[]>(() => [
+    { prop: 'name', label: t('aiMcpList.colTool'), minWidth: 160 },
+    { prop: 'description', label: t('aiMcpList.colDescription'), minWidth: 200 },
     {
       prop: 'enabled',
-      label: '启用',
+      label: t('aiMcpList.colEnabled'),
       width: 100,
       formatter: (row: any) =>
         h(ElSwitch, {
@@ -219,10 +296,11 @@
           }
         })
     }
-  ]
+  ])
 
   async function reload() {
     if (category.value === 'server') {
+      invalidateList()
       serverLoading.value = true
       try {
         servers.value = (await fetchAiMcpServerList()) || []
@@ -231,19 +309,7 @@
       }
       return
     }
-    loading.value = true
-    searched.value = !!keyword.value.trim()
-    try {
-      const res = await fetchAiMcpPage({
-        pageNum: 1,
-        pageSize: 50,
-        name: keyword.value || undefined,
-        category: category.value || undefined
-      })
-      records.value = res?.records ?? []
-    } finally {
-      loading.value = false
-    }
+    return reloadList()
   }
   function openEdit(row?: any) {
     Object.keys(form).forEach((k) => delete form[k])
@@ -253,10 +319,11 @@
     )
     parsedTools.value = []
     visible.value = true
+    nextTick(() => formRef.value?.clearValidate())
   }
   async function parseTools() {
     if (!form.id) {
-      ElMessage.error('请先保存这个工具，再解析清单')
+      ElMessage.error(t('aiMcpList.saveFirst'))
       return
     }
     try {
@@ -276,6 +343,7 @@
     }
   }
   async function save() {
+    if (!(await formRef.value?.validate().catch(() => false))) return
     saving.value = true
     try {
       const payload: Record<string, any> = {
@@ -309,9 +377,9 @@
     debugging.value = true
     try {
       const r = await fetchDebugAiMcp({ id: debugRow.value.id, prompt: debugPrompt.value })
-      debugResult.value = r?.message || '已回显。这是本地调试，没有调用外部工具'
+      debugResult.value = r?.message || t('aiMcpList.debugEcho')
     } catch (e: any) {
-      debugResult.value = e?.message || '这次没有调通。请检查地址能不能从本机访问，再试一次'
+      debugResult.value = e?.message || t('aiMcpList.debugFailed')
     } finally {
       debugging.value = false
     }
@@ -325,7 +393,10 @@
     await reload()
   }
   async function remove(row: any) {
-    await ElMessageBox.confirm(`删除「${row.name}」后，列表里不会再出现，也不能再调试`, '确认')
+    await ElMessageBox.confirm(
+      t('aiMcpList.removeConfirm', { name: row.name }),
+      t('aiMcpList.confirmTitle')
+    )
     await fetchRemoveAiMcp(row.id)
     await reload()
   }
@@ -360,6 +431,53 @@
     color: var(--el-text-color-secondary);
   }
 
+  .locked-hint {
+    margin-top: 6px;
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+  }
+
+  .mcp-load-error__icon {
+    font-size: 64px;
+    color: var(--el-color-danger);
+  }
+
+  /* ElEmpty 给 .el-empty__image svg 设了灰色，这里让错误图标保持红色 */
+  .mcp-load-error__icon :deep(svg) {
+    color: var(--el-color-danger);
+  }
+
+  /*
+   * 编号段是一个 inline-block：在父行里不可拆，放不下就整段换到下一行；
+   * 宽度按内容收缩（最多 100%），整段放得进一行时内部不断开。
+   * 不用 white-space: nowrap：错误态在卡片网格的一列里，641–1440 宽时列宽可低到 280px 左右，
+   * 32 位编号整段放不进时 nowrap 会横向溢出；这里放不进才在段内折行（overflow-wrap 兜底）。
+   */
+  .mcp-load-error__id {
+    display: inline-block;
+    max-width: 100%;
+    overflow-wrap: anywhere;
+  }
+
+  .visually-hidden {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0 0 0 0);
+    white-space: nowrap;
+    border: 0;
+  }
+
+  /* 窄屏下「添加 MCP 工具」换行后不留左侧缩进，与搜索框左对齐（间距由 gap 负责） */
+  @media (width <= 640px) {
+    .toolbar .el-button + .el-button {
+      margin-left: 0;
+    }
+  }
+
   .ops {
     display: flex;
     flex-wrap: wrap;
@@ -388,5 +506,16 @@
     flex: 1;
     min-height: 0;
     overflow: auto;
+  }
+
+  /*
+   * 窄屏：默认 margin-top 15vh 加上 max-height，弹窗底部会超出视口，外层遮罩也跟着滚，变成双层滚动。
+   * 这里配合 top="12px" 把弹窗限制在视口内（上下各 12px），头部和页脚固定，只有内容区一层滚动。
+   */
+  @media (width <= 640px) {
+    .ai-mcp-dialog.el-dialog {
+      max-height: calc(100vh - 24px);
+      margin-bottom: 0;
+    }
   }
 </style>

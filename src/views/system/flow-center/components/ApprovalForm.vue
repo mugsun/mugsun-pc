@@ -7,6 +7,7 @@
 <script setup lang="ts">
   import { ref, shallowRef, watch, nextTick } from 'vue'
   import formCreate from '@form-create/element-ui'
+  import { useFormCreate } from '@/plugins/form-create'
 
   type Perm = 'READ' | 'WRITE' | 'NONE'
 
@@ -17,6 +18,9 @@
     perms?: Record<string, Perm> // 字段级权限
     readonly?: boolean // 整表单只读（查看态）
   }>()
+
+  // 按需注册 form-create 运行时（随本路由懒加载）
+  useFormCreate()
 
   const fApi = shallowRef<any>()
   const rule = ref<any[]>([])

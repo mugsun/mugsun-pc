@@ -2,22 +2,22 @@
   <div class="ai-prompt-page art-full-height">
     <ElCard class="art-table-card" shadow="never">
       <ElTabs v-model="category" @tab-change="reload">
-        <ElTabPane label="全部" name="" />
-        <ElTabPane label="对话类" name="chat" />
-        <ElTabPane label="内容生成类" name="content" />
-        <ElTabPane label="分析处理类" name="analyze" />
-        <ElTabPane label="创意设计类" name="creative" />
+        <ElTabPane :label="$t('aiPromptList.tabAll')" name="" />
+        <ElTabPane :label="$t('aiPromptList.catChat')" name="chat" />
+        <ElTabPane :label="$t('aiPromptList.catContent')" name="content" />
+        <ElTabPane :label="$t('aiPromptList.catAnalyze')" name="analyze" />
+        <ElTabPane :label="$t('aiPromptList.catCreative')" name="creative" />
       </ElTabs>
       <div class="toolbar">
         <ElInput
           v-model="keyword"
           clearable
-          placeholder="按名称搜索"
+          :placeholder="$t('aiPromptList.searchPlaceholder')"
           style="width: 200px"
           @keyup.enter="reload"
         />
-        <ElButton @click="reload">搜索</ElButton>
-        <ElButton type="primary" @click="openEdit()">添加提示词</ElButton>
+        <ElButton @click="reload">{{ $t('aiPromptList.search') }}</ElButton>
+        <ElButton type="primary" @click="openEdit()">{{ $t('aiPromptList.add') }}</ElButton>
       </div>
       <div v-loading="loading" class="card-grid">
         <ElCard v-for="row in records" :key="row.id" shadow="hover">
@@ -32,10 +32,14 @@
             }}{{ (row.content || '').length > 80 ? '…' : '' }}</div
           >
           <div class="ops">
-            <ElButton link type="primary" @click="openEdit(row)">编辑</ElButton>
-            <ElButton link @click="optimize(row)">优化</ElButton>
-            <ElButton link @click="copyContent(row)">复制内容</ElButton>
-            <ElButton link type="danger" @click="remove(row)">删除</ElButton>
+            <ElButton link type="primary" @click="openEdit(row)">{{
+              $t('aiPromptList.edit')
+            }}</ElButton>
+            <ElButton link @click="optimize(row)">{{ $t('aiPromptList.optimize') }}</ElButton>
+            <ElButton link @click="copyContent(row)">{{ $t('aiPromptList.copyContent') }}</ElButton>
+            <ElButton link type="danger" @click="remove(row)">{{
+              $t('aiPromptList.delete')
+            }}</ElButton>
           </div>
         </ElCard>
         <ElEmpty v-if="!loading && !records.length" :description="emptyText" />
@@ -52,22 +56,32 @@
 
     <ElDialog
       v-model="visible"
-      :title="form.id ? '编辑提示词' : '添加提示词'"
+      :title="form.id ? $t('aiForm.editPrompt') : $t('aiForm.addPrompt')"
       width="720px"
       destroy-on-close
     >
-      <ElForm :model="form" label-width="88px">
-        <ElFormItem label="名称" required><ElInput v-model="form.name" /></ElFormItem>
-        <ElFormItem label="分类" required>
+      <ElForm ref="formRef" :model="form" label-width="auto">
+        <ElFormItem :label="$t('aiForm.name')" prop="name" :rules="requiredRule($t('aiForm.name'))"
+          ><ElInput v-model="form.name"
+        /></ElFormItem>
+        <ElFormItem
+          :label="$t('aiForm.category')"
+          prop="category"
+          :rules="requiredRule($t('aiForm.category'), true)"
+        >
           <ElSelect v-model="form.category" style="width: 100%">
-            <ElOption label="对话类" value="chat" />
-            <ElOption label="内容生成类" value="content" />
-            <ElOption label="分析处理类" value="analyze" />
-            <ElOption label="创意设计类" value="creative" />
+            <ElOption :label="$t('aiForm.optCatChat')" value="chat" />
+            <ElOption :label="$t('aiForm.optCatContent')" value="content" />
+            <ElOption :label="$t('aiForm.optCatAnalyze')" value="analyze" />
+            <ElOption :label="$t('aiForm.optCatCreative')" value="creative" />
           </ElSelect>
         </ElFormItem>
-        <ElFormItem label="场景"><ElInput v-model="form.scene" /></ElFormItem>
-        <ElFormItem label="内容" required>
+        <ElFormItem :label="$t('aiForm.scene')"><ElInput v-model="form.scene" /></ElFormItem>
+        <ElFormItem
+          :label="$t('aiForm.content')"
+          prop="content"
+          :rules="requiredRule($t('aiForm.content'))"
+        >
           <ElInput
             v-model="form.content"
             type="textarea"
@@ -76,36 +90,42 @@
             show-word-limit
           />
         </ElFormItem>
-        <ElFormItem label="状态"
+        <ElFormItem :label="$t('aiForm.status')"
           ><ElSwitch v-model="form.status" :active-value="1" :inactive-value="0"
         /></ElFormItem>
-        <ElFormItem label="备注"><ElInput v-model="form.remark" /></ElFormItem>
+        <ElFormItem :label="$t('aiForm.remark')"><ElInput v-model="form.remark" /></ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="visible = false">取消</ElButton>
-        <ElButton type="primary" :loading="saving" @click="save">保存</ElButton>
+        <ElButton @click="visible = false">{{ $t('aiForm.cancel') }}</ElButton>
+        <ElButton type="primary" :loading="saving" @click="save">{{ $t('aiForm.save') }}</ElButton>
       </template>
     </ElDialog>
 
-    <ElDialog v-model="optVisible" title="优化提示词" width="800px">
+    <ElDialog v-model="optVisible" :title="$t('aiForm.optimizePrompt')" width="800px">
       <div class="opt-grid">
         <div
-          ><div class="lab">原文</div
+          ><div class="lab">{{ $t('aiForm.original') }}</div
           ><ElInput :model-value="optOrigin" type="textarea" :rows="12" readonly
         /></div>
         <div
-          ><div class="lab">优化结果</div><ElInput v-model="optResult" type="textarea" :rows="12"
+          ><div class="lab">{{ $t('aiForm.optimized') }}</div
+          ><ElInput v-model="optResult" type="textarea" :rows="12"
         /></div>
       </div>
       <template #footer>
-        <ElButton @click="optVisible = false">关闭</ElButton>
-        <ElButton type="primary" :disabled="!optResult" @click="adoptOptimize">采纳并保存</ElButton>
+        <ElButton @click="optVisible = false">{{ $t('aiForm.close') }}</ElButton>
+        <ElButton type="primary" :disabled="!optResult" @click="adoptOptimize">{{
+          $t('aiForm.adoptAndSave')
+        }}</ElButton>
       </template>
     </ElDialog>
   </div>
 </template>
 <script setup lang="ts">
-  import { computed, onMounted, reactive, ref } from 'vue'
+  import { useI18n } from 'vue-i18n'
+  import type { FormInstance } from 'element-plus'
+  import { requiredRule } from '../shared/formRules'
+  import { computed, onMounted, reactive, ref, nextTick } from 'vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import {
     fetchAiPromptPage,
@@ -114,6 +134,8 @@
     fetchSaveAiPrompt
   } from '../../api'
   defineOptions({ name: 'AiPrompt' })
+  const { t } = useI18n()
+  const formRef = ref<FormInstance>()
   const category = ref('')
   const keyword = ref('')
   const searching = ref(false)
@@ -131,16 +153,16 @@
   const optRow = ref<any>(null)
 
   const emptyText = computed(() =>
-    searching.value ? '没有符合条件的提示词。换个名称再查' : '还没有提示词。点添加提示词开始写'
+    searching.value ? t('aiPromptList.emptySearched') : t('aiPromptList.empty')
   )
   function categoryLabel(value: string) {
     return (
       (
         {
-          chat: '对话类',
-          content: '内容生成类',
-          analyze: '分析处理类',
-          creative: '创意设计类'
+          chat: t('aiPromptList.catChat'),
+          content: t('aiPromptList.catContent'),
+          analyze: t('aiPromptList.catAnalyze'),
+          creative: t('aiPromptList.catCreative')
         } as any
       )[value] || value
     )
@@ -165,13 +187,17 @@
     Object.keys(form).forEach((k) => delete form[k])
     Object.assign(form, row ? { ...row } : { category: category.value || 'chat', status: 1 })
     visible.value = true
+    nextTick(() => formRef.value?.clearValidate())
   }
   async function save() {
+    if (!(await formRef.value?.validate().catch(() => false))) return
     saving.value = true
     try {
       await fetchSaveAiPrompt({ ...form })
       visible.value = false
       await reload()
+    } catch {
+      /* 失败提示由请求层展示，弹窗留着方便改完再存 */
     } finally {
       saving.value = false
     }
@@ -192,10 +218,13 @@
   }
   async function copyContent(row: any) {
     await navigator.clipboard.writeText(row.content || '')
-    ElMessage.success('已复制')
+    ElMessage.success(t('aiPromptList.copied'))
   }
   async function remove(row: any) {
-    await ElMessageBox.confirm(`删除「${row.name}」后，列表里不会再出现。正文也会一起清掉`, '确认')
+    await ElMessageBox.confirm(
+      t('aiPromptList.removeConfirm', { name: row.name }),
+      t('aiPromptList.confirmTitle')
+    )
     await fetchRemoveAiPrompt(row.id)
     await reload()
   }

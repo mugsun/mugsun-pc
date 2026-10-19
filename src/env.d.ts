@@ -41,6 +41,8 @@ interface ImportMetaEnv {
   readonly VITE_ENABLE_AI?: string
   readonly VITE_TRACK_ENDPOINT?: string
   readonly VITE_TRACK_APP_KEY?: string
+  /** 埋点是否跳过已处理错误：true / false（不区分大小写）；不设则用 SDK 默认值 */
+  readonly VITE_TRACK_SKIP_HANDLED_ERRORS?: string
   readonly VITE_VERSION?: string
   /** 开发期滑块验证码 mock（仅 dev 生效，默认关闭） */
   readonly VITE_CAPTCHA_MOCK?: string

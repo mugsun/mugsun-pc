@@ -35,7 +35,7 @@ import { ref, computed } from 'vue'
 import { MenuThemeType } from '@/types/store'
 import AppConfig from '@/config'
 import { SystemThemeEnum, MenuThemeEnum, MenuTypeEnum, ContainerWidthEnum } from '@/enums/appEnum'
-import { setElementThemeColor } from '@/utils/ui'
+import { setElementThemeColor, resolveBrandTextColor } from '@/utils/ui'
 import { useCeremony } from '@/hooks/core/useCeremony'
 import { StorageConfig } from '@/utils'
 import { SETTING_DEFAULT_CONFIG } from '@/config/setting'
@@ -129,6 +129,13 @@ export const useSettingStore = defineStore(
         return list[0]
       }
     })
+
+    /**
+     * 品牌字标颜色（顶部栏、登录页等非侧栏位置），来自主题配置的 systemNameColor
+     */
+    const getBrandTextColor = computed(() =>
+      resolveBrandTextColor(isDark.value, AppConfig.themeList, AppConfig.darkMenuStyles)
+    )
 
     /**
      * 判断是否为暗色模式
@@ -406,6 +413,7 @@ export const useSettingStore = defineStore(
       dualMenuShowText,
       containerWidth,
       getMenuTheme,
+      getBrandTextColor,
       isDark,
       getMenuOpenWidth,
       getCustomRadius,

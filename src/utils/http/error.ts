@@ -53,6 +53,9 @@ export interface ErrorLogData {
   stack?: string
 }
 
+/** 错误种类：network 无响应；http 非 2xx；business HTTP 200 但业务码失败 */
+export type HttpErrorKind = 'network' | 'http' | 'business'
+
 // 自定义 HttpError 类
 export class HttpError extends Error {
   public readonly code: number
@@ -62,6 +65,15 @@ export class HttpError extends Error {
   public readonly method?: string
   /** 是否为请求取消（路由切换中断 / 重复提交去重），取消不弹错误提示 */
   public readonly canceled: boolean
+  /** 错误种类（UX-009：网络异常为 network，code 为 ApiStatus.network=0，不再当成 400） */
+  public readonly errorKind: HttpErrorKind
+  /** 业务码（R.code）；HTTP 200 业务失败或非 2xx 响应体里带 code 时有值 */
+  public readonly bizCode?: number
+  /**
+   * 已向用户提示过（toast）。埋点 SDK 在 skipHandledErrors 为 true 时据此（及 name==='HttpError'）
+   * 跳过 $error 上报；管理台本身不再拦截，是否跳过由 SDK 开关决定。
+   */
+  public handled = false
 
   constructor(
     message: string,
@@ -71,6 +83,8 @@ export class HttpError extends Error {
       url?: string
       method?: string
       canceled?: boolean
+      errorKind?: HttpErrorKind
+      bizCode?: number
     }
   ) {
     super(message)
@@ -81,11 +95,20 @@ export class HttpError extends Error {
     this.url = options?.url
     this.method = options?.method
     this.canceled = options?.canceled ?? false
+    this.errorKind = options?.errorKind ?? 'http'
+    this.bizCode = options?.bizCode
   }
 
-  public toLogData(): ErrorLogData {
+  /** 是否网络异常（无响应） */
+  public get isNetworkError(): boolean {
+    return this.errorKind === 'network'
+  }
+
+  public toLogData(): ErrorLogData & { error_kind: HttpErrorKind; biz_code?: number } {
     return {
       code: this.code,
+      error_kind: this.errorKind,
+      biz_code: this.bizCode,
       message: this.message,
       data: this.data,
       timestamp: this.timestamp,
@@ -137,9 +160,10 @@ export function handleError(error: AxiosError<ErrorResponse>): never {
 
   // 处理网络错误
   if (!error.response) {
-    throw new HttpError($t('httpMsg.networkError'), ApiStatus.error, {
+    throw new HttpError($t('httpMsg.networkError'), ApiStatus.network, {
       url: requestConfig?.url,
-      method: requestConfig?.method?.toUpperCase()
+      method: requestConfig?.method?.toUpperCase(),
+      errorKind: 'network'
     })
   }
 
@@ -148,8 +172,10 @@ export function handleError(error: AxiosError<ErrorResponse>): never {
   const message =
     businessMsg ||
     (statusCode ? getErrorMessage(statusCode) : error.message || $t('httpMsg.requestFailed'))
+  const rawCode = (error.response.data as { code?: unknown } | undefined)?.code
   throw new HttpError(message, statusCode || ApiStatus.error, {
     data: error.response.data,
+    bizCode: typeof rawCode === 'number' ? rawCode : undefined,
     url: requestConfig?.url,
     method: requestConfig?.method?.toUpperCase()
   })
@@ -165,6 +191,8 @@ export function showError(error: HttpError, showMessage: boolean = true): void {
     return
   }
   ElMessage.error(error.message)
+  // 已提示给用户：SDK 在 skipHandledErrors=true 时据此跳过
+  error.handled = true
   // 记录错误日志
   console.error('[HTTP Error]', error.toLogData())
 }
@@ -188,3 +216,7 @@ export function showSuccess(message: string, showMessage: boolean = true): void 
 export const isHttpError = (error: unknown): error is HttpError => {
   return error instanceof HttpError
 }
+
+/** 是否网络异常（无响应）的 HttpError */
+export const isNetworkError = (error: unknown): error is HttpError =>
+  error instanceof HttpError && error.errorKind === 'network'

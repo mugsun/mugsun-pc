@@ -17,8 +17,14 @@
       <div class="flex-c flex-1 min-w-0 leading-15" style="display: flex">
         <!-- 系统信息  -->
         <div class="flex-c c-p" @click="toHome" v-if="isTopMenu">
-          <ArtLogo class="pl-4.5" />
-          <p v-if="width >= 1400" class="my-0 mx-2 ml-2 text-lg">{{ AppConfig.systemInfo.name }}</p>
+          <ArtLogo
+            class="pl-4.5"
+            :size="28"
+            wordmark
+            :word-size="16"
+            :word-color="getBrandTextColor"
+            :on-dark="isDark"
+          />
         </div>
 
         <ArtLogo
@@ -139,10 +145,10 @@
         <!-- 设置按钮 -->
         <div v-if="shouldShowSettings">
           <ElPopover
-            :visible="showSettingGuide"
-            placement="bottom-start"
+            :visible="guideVisible"
+            placement="bottom-end"
             :width="200"
-            :offset="0"
+            :offset="10"
             popper-class="setting-guide-popper"
           >
             <template #reference>
@@ -151,12 +157,15 @@
               </div>
             </template>
             <template #default>
-              <p
-                >{{ $t('topBar.guide.title')
-                }}<span :style="{ color: systemThemeColor }"> {{ $t('topBar.guide.theme') }} </span
-                >、 <span :style="{ color: systemThemeColor }"> {{ $t('topBar.guide.menu') }} </span
-                >{{ $t('topBar.guide.description') }}
-              </p>
+              <!-- 整句一个 key + 具名插槽，避免模板里拼接文案和写死中文顿号 -->
+              <i18n-t keypath="topBar.guide.text" tag="p" scope="global">
+                <template #theme>
+                  <span :style="{ color: systemThemeColor }">{{ $t('topBar.guide.theme') }}</span>
+                </template>
+                <template #menu>
+                  <span :style="{ color: systemThemeColor }">{{ $t('topBar.guide.menu') }}</span>
+                </template>
+              </i18n-t>
               <!-- 受控 visible 时点空白不关；提供显式关闭，避免气泡常驻挡视线 -->
               <div class="mt-2 flex justify-end">
                 <ElButton link type="primary" size="small" @click="dismissSettingGuide">
@@ -194,7 +203,6 @@
   import { useMenuStore } from '@/store/modules/menu'
   import { useTopMenuStore } from '@/store/modules/topMenu'
   import { filterMenusByScheme } from '@/utils/topMenuFilter'
-  import AppConfig from '@/config'
   import { languageOptions } from '@/locales'
   import { mittBus } from '@/utils/sys'
   import { themeAnimation } from '@/utils/ui/animation'
@@ -232,8 +240,15 @@
     fastEnterMinWidth: headerBarFastEnterMinWidth
   } = useHeaderBar()
 
-  const { menuOpen, systemThemeColor, showSettingGuide, menuType, isDark, tabStyle } =
-    storeToRefs(settingStore)
+  const {
+    menuOpen,
+    systemThemeColor,
+    showSettingGuide,
+    menuType,
+    isDark,
+    tabStyle,
+    getBrandTextColor
+  } = storeToRefs(settingStore)
 
   const { language } = storeToRefs(userStore)
   const { menuList } = storeToRefs(menuStore)
@@ -260,6 +275,22 @@
 
   const { isFullscreen, toggle: toggleFullscreen } = useFullscreen()
 
+  /**
+   * 引导气泡（UX-018）：窄屏不弹（顶栏图标挤在一起，气泡必然压住）；
+   * 宽屏右对齐设置图标、与顶栏留 10px，不再压住通知/设置；无人理会 8 秒后自动收起并记住。
+   */
+  const GUIDE_AUTO_HIDE_MS = 8000
+  const guideVisible = computed(() => showSettingGuide.value && width.value > 640)
+  let guideTimer: ReturnType<typeof setTimeout> | undefined
+  watch(
+    guideVisible,
+    (v) => {
+      clearTimeout(guideTimer)
+      if (v) guideTimer = setTimeout(() => settingStore.hideSettingGuide(), GUIDE_AUTO_HIDE_MS)
+    },
+    { immediate: true }
+  )
+
   onMounted(() => {
     initLanguage()
     document.addEventListener('pointerdown', dismissGuideOnInteraction, true)
@@ -267,6 +298,7 @@
   })
 
   onBeforeUnmount(() => {
+    clearTimeout(guideTimer)
     document.removeEventListener('pointerdown', dismissGuideOnInteraction, true)
   })
 

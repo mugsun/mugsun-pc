@@ -37,6 +37,8 @@ export default ({ mode }: { mode: string }) => {
 
   return defineConfig({
     define: {
+      // vue-i18n 消息走 JIT（AST 求值），不再用 new Function 编译，CSP 无需 'unsafe-eval'
+      __INTLIFY_JIT_COMPILATION__: true,
       __APP_VERSION__: JSON.stringify(VITE_VERSION),
       __PKG_VERSION__: JSON.stringify(pkgVersion),
       CESIUM_BASE_URL: JSON.stringify(
@@ -148,7 +150,8 @@ export default ({ mode }: { mode: string }) => {
         threshold: 10240, // 只有大小大于该值的资源会被处理 10240B = 10KB
         deleteOriginFile: false // 压缩后是否删除原文件
       }),
-      vueDevTools(),
+      // UI 自检（pnpm test:ui-check）关掉 devtools：它注入的脚本偶发报错，会污染控制台断言
+      process.env.UI_CHECK ? null : vueDevTools(),
       ...(hasCesium
         ? [
             serveCesiumStatic(cesiumSource, cesiumBaseUrl),
@@ -184,6 +187,12 @@ export default ({ mode }: { mode: string }) => {
         'element-plus/es',
         'element-plus/es/components/*/style/css',
         'element-plus/es/components/*/style/index',
+        // 运行时才被发现的依赖会触发 Vite 二次预构建并整页重载，重载前后两份 deps 混用会让
+        // vue-draggable-plus / vuedraggable 拿到另一份 Vue：回放页列设置报
+        // 「Sortable: `el` must be an HTMLElement」，表单设计器组件面板错位、拖不进（UX-008，仅开发环境）
+        'vue-draggable-plus',
+        '@form-create/element-ui',
+        '@form-create/designer',
         ...(hasCesium ? (['cesium'] as const) : []),
         'mersenne-twister'
       ]

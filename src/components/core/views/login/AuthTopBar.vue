@@ -4,8 +4,7 @@
     class="absolute w-full flex-cb top-4.5 z-10 flex-c !justify-end max-[1180px]:!justify-between"
   >
     <div class="flex-cc !hidden max-[1180px]:!flex ml-2 max-sm:ml-6">
-      <ArtLogo class="icon" size="46" />
-      <h1 class="text-xl font-semibold ml-2">{{ AppConfig.systemInfo.name }}</h1>
+      <ArtLogo class="icon" :size="36" :on-dark="isDark" />
     </div>
 
     <div class="flex-cc gap-1.5 mr-2 max-sm:mr-5">

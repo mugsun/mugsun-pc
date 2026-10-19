@@ -163,12 +163,12 @@
         <div class="art-card track-chart-card">
           <p class="track-card-title">
             {{ $t('pages.track.overview.geoHeat') }}
-            <span class="track-geo-count">{{
+            <span v-if="showGeoCount(geoCount)" class="track-geo-count">{{
               $t('pages.track.overview.geoCount', { n: geoCount })
             }}</span>
           </p>
-          <GisHeatMap v-if="gisModuleOn && geoPoints.length" :points="geoPoints" />
-          <ElEmpty v-else :description="$t('pages.track.overview.geoEmpty')" :image-size="72" />
+          <GisHeatMap v-if="heatState === 'ready'" :points="geoPoints" />
+          <ElEmpty v-else :description="$t(GEO_HEAT_EMPTY_KEY[heatState])" :image-size="72" />
         </div>
       </ElCol>
     </ElRow>
@@ -184,9 +184,11 @@
     fetchTrackTrend
   } from '@/api/track'
   import GisHeatMap from '@/components/gis/GisHeatMap.vue'
-  import { enableGis } from '@/modules/flags'
+  import { GEO_HEAT_EMPTY_KEY, geoHeatState, showGeoCount } from '@/views/track/shared/geoHeatState'
+  import { useUserStore } from '@/store/modules/user'
   import { useI18n } from 'vue-i18n'
   import { fmtTrackClock, fmtTrackDuration, useTrackApp } from '@/views/track/shared/useTrackApp'
+  import { fmtAvgSessionDuration, fmtBounceRate } from '@/views/track/shared/settledCards'
   import { useChartOps } from '@/hooks/core/useChart'
   import type { LineDataItem, PieDataItem } from '@/types/component/chart'
   import {
@@ -200,7 +202,7 @@
 
   defineOptions({ name: 'TrackOverview' })
 
-  const gisModuleOn = enableGis
+  const userStore = useUserStore()
   const { t } = useI18n()
 
   const { appOptions, appKey, days, appsLoading } = useTrackApp()
@@ -221,7 +223,8 @@
     sessionCount: 0,
     eventCount: 0,
     avgSessionDurationMs: 0,
-    bounceRate: 0
+    bounceRate: 0,
+    settledSessionCount: null as number | null
   })
   const referrerDist = ref<PieDataItem[]>([])
   const deviceDist = ref<PieDataItem[]>([])
@@ -229,6 +232,8 @@
   const regions = ref<{ region: string; pv: number; uv: number; eventCount: number }[]>([])
   const geoPoints = ref<{ lon: number; lat: number }[]>([])
   const geoCount = ref(0)
+  // 构建期开关 && 后端 /auth/info 的 gisEnabled && 有精确坐标，才显示热力图
+  const heatState = computed(() => geoHeatState(userStore.info, geoPoints.value.length))
   const regionLabels = computed(() => regions.value.map((r) => r.region))
   const regionValues = computed(() => regions.value.map((r) => Number(r.eventCount) || 0))
 
@@ -268,7 +273,7 @@
     {
       key: 'avgSessionDurationMs',
       label: t('pages.track.overview.avgSessionDuration'),
-      value: fmtTrackDuration(cards.avgSessionDurationMs),
+      value: fmtAvgSessionDuration(cards, fmtTrackDuration),
       icon: 'ri:time-line',
       bg: 'var(--el-color-info-light-9)',
       color: 'var(--el-color-info)'
@@ -276,7 +281,7 @@
     {
       key: 'bounceRate',
       label: t('pages.track.overview.bounceRate'),
-      value: `${(Number(cards.bounceRate || 0) * 100).toFixed(1)}%`,
+      value: fmtBounceRate(cards),
       icon: 'ri:logout-box-line',
       bg: 'var(--el-color-error-light-9)',
       color: 'var(--el-color-error)'
@@ -358,7 +363,8 @@
         sessionCount: ov?.cards?.sessionCount ?? 0,
         eventCount: ov?.cards?.eventCount ?? 0,
         avgSessionDurationMs: ov?.cards?.avgSessionDurationMs ?? 0,
-        bounceRate: ov?.cards?.bounceRate ?? 0
+        bounceRate: ov?.cards?.bounceRate ?? 0,
+        settledSessionCount: ov?.cards?.settledSessionCount ?? null
       })
       referrerDist.value = ov?.referrerDist ?? []
       deviceDist.value = ov?.deviceDist ?? []

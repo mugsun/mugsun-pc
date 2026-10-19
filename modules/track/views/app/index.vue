@@ -202,6 +202,11 @@
           >
           </ArtTable>
         </ElTabPane>
+
+        <!-- ===== 接入健康（自检） ===== -->
+        <ElTabPane :label="$t('pages.track.app.tabHealth')" name="health" lazy>
+          <AppHealth />
+        </ElTabPane>
       </ElTabs>
 
       <AppDialog
@@ -289,6 +294,7 @@
   import { hasPerm } from '@/utils/permission'
   import ArtSvgIcon from '@/components/core/base/art-svg-icon/index.vue'
   import AppDialog from './modules/app-dialog.vue'
+  import AppHealth from './modules/app-health.vue'
   import EventDefDialog from './modules/event-def-dialog.vue'
   import SourcemapUploadDialog from './modules/sourcemap-upload-dialog.vue'
   import VisualRuleDialog from './modules/visual-rule-dialog.vue'

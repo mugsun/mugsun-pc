@@ -1,10 +1,16 @@
 <template>
-  <div ref="host" class="gis-heat" data-testid="gis-heat-map"></div>
+  <div class="gis-heat-wrap">
+    <div ref="host" class="gis-heat" data-testid="gis-heat-map"></div>
+    <GisTileErrorHint :host="host" />
+  </div>
 </template>
 
 <script setup lang="ts">
   import { onBeforeUnmount, onMounted, ref, watch } from 'vue'
+  import GisTileErrorHint from './GisTileErrorHint.vue'
   import type Map from 'ol/Map'
+  // 控件（比例尺、版权归属）的样式；此前只在 GIS 页面和 GisPick 里引入，直接打开概览时缺失
+  import 'ol/ol.css'
   import { fetchGisStatus, type GisProviderStatus } from '@/api/gis'
   import { rememberedOrFirst } from '@/gis/preferProvider'
   import { applyOlBasemap, createOlMap } from '@/gis/olMap'
@@ -47,12 +53,14 @@
       return
     }
     try {
-      const status = await fetchGisStatus()
+      // 静默探测：失败时下面退回默认底图，不弹 toast
+      const status = await fetchGisStatus({ silent: true })
       provider = firstProvider(status.providers || [])
     } catch {
       provider = DEFAULT_SCENE.baseMap.provider
     }
-    map = createOlMap(host.value, DEFAULT_SCENE.view2d, provider)
+    // 卡片高度有限：不放缩放控件，只保留比例尺（样式里移到右下角）
+    map = createOlMap(host.value, DEFAULT_SCENE.view2d, provider, { zoomControl: false })
     applyOlBasemap(map, provider, 'img_label')
     overlays = attachOlOverlays(map)
     paint()
@@ -71,10 +79,21 @@
 </script>
 
 <style scoped>
+  .gis-heat-wrap {
+    position: relative;
+  }
+
   .gis-heat {
     width: 100%;
     height: 280px;
     overflow: hidden;
     border-radius: 8px;
+  }
+
+  /* 比例尺放右下角，叠在版权归属上方 */
+  .gis-heat :deep(.ol-scale-line) {
+    right: 8px;
+    bottom: 28px;
+    left: auto;
   }
 </style>

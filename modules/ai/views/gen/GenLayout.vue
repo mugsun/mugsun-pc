@@ -5,82 +5,96 @@
         <h3>{{ title }}</h3>
         <ElSelect
           v-model="modelId"
-          placeholder="选择模型"
+          :placeholder="$t('aiGen.selectModel')"
           clearable
           filterable
           style="width: 220px"
         >
           <ElOption v-for="m in models" :key="m.id" :label="m.modelName" :value="m.id" />
         </ElSelect>
-        <ElButton @click="fillDemo">生成测试数据</ElButton>
-        <ElButton @click="reset">重置</ElButton>
-        <ElButton type="primary" :loading="streaming" @click="generate">生成</ElButton>
-        <ElButton :disabled="!output" @click="doExport">导出</ElButton>
+        <ElButton @click="fillDemo">{{ $t('aiGen.fillDemo') }}</ElButton>
+        <ElButton @click="reset">{{ $t('aiGen.reset') }}</ElButton>
+        <ElButton type="primary" :loading="streaming" @click="generate">{{
+          $t('aiGen.generate')
+        }}</ElButton>
+        <ElButton :disabled="!output" @click="doExport">{{ $t('aiGen.export') }}</ElButton>
       </div>
       <div class="ai-gen-body" :class="{ stacked: type === 'layout' }">
         <div class="ai-gen-settings">
-          <ElForm label-width="96px">
-            <ElFormItem v-if="type === 'poster'" label="标题" required>
+          <ElForm label-width="auto">
+            <ElFormItem v-if="type === 'poster'" :label="$t('aiGen.title')" required>
               <ElInput
                 v-model="form.title"
                 maxlength="15"
                 show-word-limit
-                placeholder="建议 15 字内"
+                :placeholder="$t('aiGen.titlePlaceholder')"
               />
             </ElFormItem>
-            <ElFormItem v-else label="主题" required>
-              <ElInput v-model="form.topic" placeholder="输入主题或需求" />
+            <ElFormItem v-else :label="$t('aiGen.topic')" required>
+              <ElInput v-model="form.topic" :placeholder="$t('aiGen.topicPlaceholder')" />
             </ElFormItem>
-            <ElFormItem v-if="type === 'poster'" label="副标题">
+            <ElFormItem v-if="type === 'poster'" :label="$t('aiGen.subtitle')">
               <ElInput v-model="form.subtitle" />
             </ElFormItem>
-            <ElFormItem v-if="type === 'product'" label="产品类别">
+            <ElFormItem v-if="type === 'product'" :label="$t('aiGen.category')">
               <ElSelect v-model="form.category" style="width: 100%">
-                <ElOption v-for="c in productCategories" :key="c" :label="c" :value="c" />
+                <ElOption
+                  v-for="c in productCategories"
+                  :key="c.key"
+                  :label="$t(c.i18n)"
+                  :value="c.key"
+                />
               </ElSelect>
             </ElFormItem>
-            <ElFormItem label="风格">
+            <ElFormItem :label="$t('aiGen.style')">
               <ElSelect
                 v-if="type === 'poster'"
                 v-model="form.style"
                 filterable
                 style="width: 100%"
               >
-                <ElOption v-for="s in posterStyles" :key="s" :label="s" :value="s" />
+                <ElOption
+                  v-for="s in posterStyles"
+                  :key="s.key"
+                  :label="$t(s.i18n)"
+                  :value="s.key"
+                />
               </ElSelect>
-              <ElInput v-else v-model="form.style" placeholder="可选风格描述" />
+              <ElInput v-else v-model="form.style" :placeholder="$t('aiGen.stylePlaceholder')" />
             </ElFormItem>
-            <ElFormItem v-if="type === 'layout'" label="预设尺寸">
+            <ElFormItem v-if="type === 'layout'" :label="$t('aiGen.preset')">
               <ElSelect v-model="form.preset" style="width: 100%" @change="onPreset">
                 <ElOption label="A4 794×1123" value="a4" />
-                <ElOption label="社交媒体 756×567" value="social" />
-                <ElOption label="宣传横幅 1134×302" value="banner" />
-                <ElOption label="手机屏幕 378×680" value="phone" />
-                <ElOption label="方形 945×945" value="square" />
-                <ElOption label="海报 1890×945" value="poster" />
-                <ElOption label="自定义" value="custom" />
+                <ElOption :label="$t('aiGen.sizeSocial')" value="social" />
+                <ElOption :label="$t('aiGen.sizeBanner')" value="banner" />
+                <ElOption :label="$t('aiGen.sizePhone')" value="phone" />
+                <ElOption :label="$t('aiGen.sizeSquare')" value="square" />
+                <ElOption :label="$t('aiGen.sizePoster')" value="poster" />
+                <ElOption :label="$t('aiGen.sizeCustom')" value="custom" />
               </ElSelect>
             </ElFormItem>
-            <ElFormItem v-if="type === 'layout'" label="宽×高">
+            <ElFormItem v-if="type === 'layout'" :label="$t('aiGen.size')">
               <div style="display: flex; gap: 8px; width: 100%">
                 <ElInputNumber v-model="form.width" :min="100" :max="2000" />
                 <ElInputNumber v-model="form.height" :min="100" :max="2000" />
               </div>
             </ElFormItem>
-            <ElFormItem label="补充">
+            <ElFormItem :label="$t('aiGen.extra')">
               <ElInput
                 v-model="form.extra"
                 type="textarea"
                 :rows="4"
-                placeholder="补充约束 / 正文 / 参数"
+                :placeholder="$t('aiGen.extraPlaceholder')"
               />
             </ElFormItem>
           </ElForm>
         </div>
         <div class="ai-gen-preview">
-          <div class="ai-gen-preview__label">预览</div>
+          <div class="ai-gen-preview__label">{{ $t('aiGen.preview') }}</div>
           <div v-if="type === 'svg' && svgSafe" class="ai-gen-preview__svg" v-html="svgSafe" />
-          <pre v-else class="ai-gen-preview__body">{{ output || '生成结果将显示在这里' }}</pre>
+          <pre v-else class="ai-gen-preview__body">{{
+            output || $t('aiGen.outputPlaceholder')
+          }}</pre>
         </div>
       </div>
     </ElCard>
@@ -88,47 +102,24 @@
 </template>
 
 <script setup lang="ts">
+  import { useI18n } from 'vue-i18n'
   import { computed, onMounted, reactive, ref } from 'vue'
   import { ElMessage } from 'element-plus'
   import DOMPurify from 'dompurify'
   import { fetchAiGenExport, fetchAiGenStream, fetchAiModelPage } from '../../api'
+  import {
+    buildGenPrompt,
+    categoryForModel,
+    POSTER_STYLES,
+    PRODUCT_CATEGORIES,
+    styleForModel
+  } from './genPrompt'
 
   const props = defineProps<{ type: string; title: string }>()
+  const { t, locale } = useI18n()
 
-  const posterStyles = [
-    '红色党政风',
-    '淡雅政务风',
-    '新表现主义',
-    '波普艺术',
-    '超现实主义数字拼贴',
-    '极简主义',
-    '大胆现代',
-    '瑞士国际主义解构',
-    '日式极简',
-    '斯堪的纳维亚',
-    '优雅复古',
-    '赛博朋克',
-    '新未来主义',
-    '未来科技',
-    '国潮东方'
-  ]
-  const productCategories = [
-    '电子产品',
-    '家居用品',
-    '服装鞋帽',
-    '美妆护肤',
-    '食品饮料',
-    '母婴用品',
-    '运动户外',
-    '数码配件',
-    '办公用品',
-    '健康保健',
-    '汽车用品',
-    '图书音像',
-    '宠物用品',
-    '玩具游戏',
-    '软件服务'
-  ]
+  const posterStyles = POSTER_STYLES
+  const productCategories = PRODUCT_CATEGORIES
 
   const modelId = ref<string | number | null>(null)
   const models = ref<any[]>([])
@@ -181,12 +172,12 @@
   }
 
   function fillDemo() {
-    form.topic = props.title + '示例主题'
-    form.title = '示例海报标题'
-    form.subtitle = '副标题示意'
-    form.style = props.type === 'poster' ? posterStyles[0] : '专业、简洁'
-    form.category = productCategories[0]
-    form.extra = '面向企业内部场景'
+    form.topic = t('aiGen.demoTopic', { title: props.title })
+    form.title = t('aiGen.demoTitle')
+    form.subtitle = t('aiGen.demoSubtitle')
+    form.style = props.type === 'poster' ? posterStyles[0].key : t('aiGen.demoStyle')
+    form.category = productCategories[0].key
+    form.extra = t('aiGen.demoExtra')
   }
 
   function reset() {
@@ -204,44 +195,37 @@
   async function generate() {
     const topic = props.type === 'poster' ? form.title : form.topic
     if (!topic.trim()) {
-      ElMessage.warning(props.type === 'poster' ? '请填写标题' : '请填写主题')
+      ElMessage.warning(props.type === 'poster' ? t('aiGen.enterTitle') : t('aiGen.enterTopic'))
       return
     }
     output.value = ''
     streaming.value = true
-    const promptParts = [
-      props.type === 'poster' ? `标题: ${form.title}` : `主题: ${form.topic}`,
-      form.subtitle ? `副标题: ${form.subtitle}` : '',
-      form.style ? `风格: ${form.style}` : '',
-      form.category ? `类目: ${form.category}` : '',
-      form.extra ? `补充: ${form.extra}` : '',
-      form.width || form.height ? `尺寸: ${form.width}x${form.height}` : '',
-      `请按 ${props.type} 类型输出可用结果。`
-    ].filter(Boolean)
+    // 发给模型的内容固定中文，只有「输出语言」随界面语言
+    const prompt = buildGenPrompt(props.type, form, locale.value)
     abort = await fetchAiGenStream(
       props.type,
       {
         modelId: modelId.value,
-        prompt: promptParts.join('\n'),
+        prompt,
         topic,
         title: form.title,
         subtitle: form.subtitle,
-        style: form.style,
-        category: form.category,
+        style: styleForModel(props.type, form.style),
+        category: categoryForModel(form.category),
         extra: form.extra,
         width: form.width,
         height: form.height
       },
       {
-        onChunk: (t) => {
-          output.value += t
+        onChunk: (chunk) => {
+          output.value += chunk
         },
         onError: (m) => {
           const raw = String(m || '')
           const refused = /ECONNREFUSED|Connection refused|finishConnect|connect timed out/i.test(
             raw
           )
-          ElMessage.error(refused ? '模型服务连不上，请确认地址和端口后再试' : raw)
+          ElMessage.error(refused ? t('aiGen.modelUnreachable') : raw)
           streaming.value = false
         },
         onDone: () => {
@@ -252,8 +236,13 @@
   }
 
   async function doExport() {
-    await fetchAiGenExport(props.type, { content: output.value, ...form })
-    ElMessage.success('已导出')
+    await fetchAiGenExport(props.type, {
+      content: output.value,
+      ...form,
+      style: styleForModel(props.type, form.style),
+      category: categoryForModel(form.category)
+    })
+    ElMessage.success(t('aiGen.exported'))
   }
 
   onMounted(loadModels)

@@ -66,8 +66,19 @@
       destroy-on-close
     >
       <p class="hint">{{ $t('pages.system.apiScope.hint') }}</p>
-      <ElForm label-width="88px">
-        <ElFormItem :label="$t('pages.system.apiScope.name')">
+      <ElForm ref="formRef" :model="form" label-width="88px">
+        <ElFormItem
+          :label="$t('pages.system.apiScope.name')"
+          prop="scopeName"
+          :rules="[
+            {
+              required: true,
+              whitespace: true,
+              message: t('pages.system.apiScope.nameRequired'),
+              trigger: 'blur'
+            }
+          ]"
+        >
           <ElInput
             v-model="form.scopeName"
             maxlength="64"
@@ -75,14 +86,36 @@
             :placeholder="$t('pages.system.apiScope.namePlaceholder')"
           />
         </ElFormItem>
-        <ElFormItem :label="$t('pages.system.apiScope.code')">
+        <ElFormItem
+          :label="$t('pages.system.apiScope.code')"
+          prop="resourceCode"
+          :rules="[
+            {
+              required: true,
+              whitespace: true,
+              message: t('pages.system.apiScope.codeRequired'),
+              trigger: 'blur'
+            }
+          ]"
+        >
           <ElInput
             v-model="form.resourceCode"
             maxlength="64"
             :placeholder="$t('pages.system.apiScope.codePlaceholder')"
           />
         </ElFormItem>
-        <ElFormItem :label="$t('pages.system.apiScope.path')">
+        <ElFormItem
+          :label="$t('pages.system.apiScope.path')"
+          prop="scopePath"
+          :rules="[
+            {
+              required: true,
+              whitespace: true,
+              message: t('pages.system.apiScope.pathRequired'),
+              trigger: 'blur'
+            }
+          ]"
+        >
           <ElInput
             v-model="form.scopePath"
             :placeholder="$t('pages.system.apiScope.pathPlaceholder')"
@@ -137,9 +170,10 @@
 </template>
 
 <script setup lang="ts">
-  import { computed, onMounted, reactive, ref } from 'vue'
+  import type { FormInstance } from 'element-plus'
+  import { computed, onMounted, reactive, ref, nextTick } from 'vue'
   import { useI18n } from 'vue-i18n'
-  import { ElMessage, ElMessageBox } from 'element-plus'
+  import { ElMessageBox } from 'element-plus'
   import {
     fetchApiScopePage,
     fetchApiScopeRoles,
@@ -160,6 +194,7 @@
   const roleOptions = ref<Array<{ id: string; roleName: string; roleCode: string }>>([])
   const checkedRoles = ref<string[]>([])
   const searchForm = reactive({ name: '' })
+  const formRef = ref<FormInstance>()
   const form = reactive({
     id: '' as string | number | '',
     scopeName: '',
@@ -207,21 +242,11 @@
     form.status = row?.status ?? 1
     form.remark = row?.remark ?? ''
     editVisible.value = true
+    nextTick(() => formRef.value?.clearValidate())
   }
 
   async function save() {
-    if (!form.scopeName.trim()) {
-      ElMessage.warning(t('pages.system.apiScope.nameRequired'))
-      return
-    }
-    if (!form.resourceCode.trim()) {
-      ElMessage.warning(t('pages.system.apiScope.codeRequired'))
-      return
-    }
-    if (!form.scopePath.trim()) {
-      ElMessage.warning(t('pages.system.apiScope.pathRequired'))
-      return
-    }
+    if (!(await formRef.value?.validate().catch(() => false))) return
     if (saving.value) return
     saving.value = true
     try {

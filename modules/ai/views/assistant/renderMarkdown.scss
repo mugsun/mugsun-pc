@@ -1,0 +1,56 @@
+// renderMarkdown 产出的代码块（v-html，不受 scoped 影响），抽屉和完整页共用
+.ai-code {
+  margin: 8px 0;
+  overflow: hidden;
+  background: var(--el-fill-color-light);
+  border: 1px solid var(--el-border-color-lighter);
+  border-radius: 8px;
+}
+
+.ai-code__hd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  height: 28px;
+  padding: 0 4px 0 12px;
+  font-size: 12px;
+  line-height: 28px;
+  color: var(--el-text-color-secondary);
+  border-bottom: 1px solid var(--el-border-color-lighter);
+}
+
+.ai-code__lang {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.ai-code__copy {
+  height: 24px;
+  padding: 0 8px;
+  font-size: 12px;
+  color: var(--el-text-color-secondary);
+  cursor: pointer;
+  background: transparent;
+  border: none;
+  border-radius: 4px;
+
+  &:hover,
+  &:focus-visible {
+    color: var(--el-text-color-primary);
+    background: var(--el-fill-color);
+  }
+
+  &.is-copied {
+    color: var(--el-color-success);
+  }
+}
+
+.ai-code .ai-code__body {
+  padding: 12px;
+  margin: 0;
+  overflow-x: auto;
+  white-space: pre;
+  background: transparent;
+  border-radius: 0;
+}

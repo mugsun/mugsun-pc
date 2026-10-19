@@ -1,0 +1,158 @@
+# mugsun 一条命令起全套（pc + boot + PostgreSQL/PostGIS + Redis）
+#
+# 目录布局（与各仓 CI 一致，平级克隆）：
+#   mugsun/
+#   ├── mugsun-core/  mugsun-boot/  mugsun-track/
+#   └── mugsun-pc/    ← 本文件在 mugsun-pc/docker/
+#
+# 用法（在 mugsun-pc 目录）：
+#   1) 准备口令（没有默认值，缺少时 compose 拒绝启动；只用字母数字，Redis 口令会拼进连接 URI）：
+#        cat > docker/.env <<EOF2
+#        MUGSUN_DB_PASSWORD=$(openssl rand -hex 16)
+#        MUGSUN_POSTGRES_SUPER_PASSWORD=$(openssl rand -hex 16)
+#        MUGSUN_REDIS_PASSWORD=$(openssl rand -hex 16)
+#        MUGSUN_INIT_PASSWORD=<初始管理员口令，满足后端口令复杂度>
+#        MUGSUN_SM4_KEY=$(openssl rand -hex 8)
+#        MUGSUN_API_KEY=$(openssl rand -hex 8)
+#        # 另需 MUGSUN_SM2_PRIVATE_KEY/PUBLIC_KEY、MUGSUN_SIGN_PRIVATE_KEY/PUBLIC_KEY（两对 SM2 hex 密钥）
+#        EOF2
+#      （docker/.env 已在 .gitignore / .dockerignore 中排除，切勿提交）
+#   2) docker compose -f docker/compose.pc.yml --env-file docker/.env up -d --build
+#   打开 http://localhost:8088
+#
+# 后端镜像沿用 mugsun-boot/Dockerfile（上下文为父目录）。后端的生产配置、
+# 环境变量名以 mugsun-boot 为准，这里只做最小对接，改动请在 mugsun-boot 侧维护。
+name: mugsun
+
+services:
+  pc:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      additional_contexts:
+        track: ../../mugsun-track
+    image: mugsun/pc:local
+    environment:
+      MUGSUN_API_UPSTREAM: http://boot:8080
+      # 前置网关（TLS 终端/负载均衡）网段，逗号分隔；只有它们传来的 X-Forwarded-For/Proto 才被采信
+      MUGSUN_GATEWAY_CIDRS: ${MUGSUN_GATEWAY_CIDRS:-}
+      # CSP 模式：report-only（默认）| enforce（演示站用 enforce）；报告地址为空时不输出 report-uri
+      MUGSUN_CSP_MODE: ${MUGSUN_CSP_MODE:-report-only}
+      MUGSUN_CSP_REPORT_URI: ${MUGSUN_CSP_REPORT_URI:-}
+      # CSP 额外放行的瓦片域 / 埋点上报域，空格分隔，如 'https://tile.example.com'
+      MUGSUN_CSP_TILE_HOSTS: ${MUGSUN_CSP_TILE_HOSTS:-}
+      MUGSUN_CSP_TRACK_HOSTS: ${MUGSUN_CSP_TRACK_HOSTS:-}
+    ports:
+      # 容器内 nginx 以非 root 监听 8080，宿主机默认映射 8088
+      - '${MUGSUN_PC_PORT:-8088}:8080'
+    networks:
+      mugsun:
+        # 固定 IP：后端只信任这一个地址传来的 X-Forwarded-For（见 boot 的 MUGSUN_OPENAPI_TRUSTED_PROXIES）
+        ipv4_address: ${MUGSUN_PC_IP:-172.30.88.10}
+    depends_on:
+      - boot
+    restart: unless-stopped
+
+  boot:
+    build:
+      context: ../..
+      dockerfile: mugsun-boot/Dockerfile
+    image: mugsun/boot:local
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      # 变量名取自 mugsun-boot application-prod.yml（以后端为准）
+      JDBC_URL: jdbc:postgresql://postgres:5432/mugsun
+      JDBC_USERNAME: mugsun
+      JDBC_PASSWORD: ${MUGSUN_DB_PASSWORD:?请设置 MUGSUN_DB_PASSWORD（见文件头）}
+      # 埋点库（mugsun-boot-track 独立数据源，默认指向 localhost，容器内必须显式指定）
+      TRACK_JDBC_URL: jdbc:postgresql://postgres:5432/mugsun_track
+      TRACK_JDBC_USERNAME: mugsun
+      TRACK_JDBC_PASSWORD: ${MUGSUN_DB_PASSWORD:?请设置 MUGSUN_DB_PASSWORD（见文件头）}
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${MUGSUN_REDIS_PASSWORD:?请设置 MUGSUN_REDIS_PASSWORD（见文件头）}
+      # 初始管理员口令：prod 缺失即拒绝启动（不再使用内置默认口令）
+      MUGSUN_INIT_PASSWORD: ${MUGSUN_INIT_PASSWORD:?请设置 MUGSUN_INIT_PASSWORD（初始管理员口令）}
+      # 国密密钥：prod 为 strict-keys，缺失即拒绝启动；必须固定注入（重启后换密钥会导致历史密文/签名失效）
+      MUGSUN_SM2_PRIVATE_KEY: ${MUGSUN_SM2_PRIVATE_KEY:?请设置 MUGSUN_SM2_PRIVATE_KEY（见 mugsun-boot 部署文档）}
+      MUGSUN_SM2_PUBLIC_KEY: ${MUGSUN_SM2_PUBLIC_KEY:?请设置 MUGSUN_SM2_PUBLIC_KEY（见 mugsun-boot 部署文档）}
+      MUGSUN_SIGN_PRIVATE_KEY: ${MUGSUN_SIGN_PRIVATE_KEY:?请设置 MUGSUN_SIGN_PRIVATE_KEY（见 mugsun-boot 部署文档）}
+      MUGSUN_SIGN_PUBLIC_KEY: ${MUGSUN_SIGN_PUBLIC_KEY:?请设置 MUGSUN_SIGN_PUBLIC_KEY（见 mugsun-boot 部署文档）}
+      MUGSUN_SM4_KEY: ${MUGSUN_SM4_KEY:?请设置 MUGSUN_SM4_KEY（见 mugsun-boot 部署文档）}
+      MUGSUN_API_KEY: ${MUGSUN_API_KEY:?请设置 MUGSUN_API_KEY（见 mugsun-boot 部署文档）}
+      # 可信代理：只信任 pc（nginx）容器的固定 IP + 部署方追加的前置网关网段（为空时不产生尾部逗号）。
+      # nginx 已用 $remote_addr 覆盖 X-Forwarded-For，后端据此按真实客户端 IP 限流/审计。
+      # 不要把不可信的容器加入 mugsun 网络。
+      MUGSUN_OPENAPI_TRUSTED_PROXIES: ${MUGSUN_PC_IP:-172.30.88.10}${MUGSUN_GATEWAY_CIDRS:+,${MUGSUN_GATEWAY_CIDRS}}
+      MUGSUN_FRONT_URL: ${MUGSUN_FRONT_URL:-http://localhost:8088}
+      FILE_DOMAIN: ${MUGSUN_FRONT_URL:-http://localhost:8088}/api/
+      # 邮件 / 短信无默认值，演示环境给占位，正式部署改成真实值
+      SMTP_HOST: ${SMTP_HOST:-localhost}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMS_AK: ${SMS_AK:-}
+      SMS_SK: ${SMS_SK:-}
+      SMS_SIGNATURE: ${SMS_SIGNATURE:-}
+      SMS_TEMPLATE_ID: ${SMS_TEMPLATE_ID:-}
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - mugsun
+
+  postgres:
+    build:
+      context: ../../mugsun-boot/docker/postgres
+    image: mugsun-postgis-pgvector:16-3.4
+    platform: linux/amd64
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${MUGSUN_POSTGRES_SUPER_PASSWORD:?请设置 MUGSUN_POSTGRES_SUPER_PASSWORD（见文件头）}
+      MUGSUN_DB_PASSWORD: ${MUGSUN_DB_PASSWORD:?请设置 MUGSUN_DB_PASSWORD（见文件头）}
+    volumes:
+      - pg-data:/var/lib/postgresql/data
+      - ../../mugsun-boot/scripts/init-db.sql:/initdb/init-db.sql:ro
+      - ../../mugsun-boot/docker/postgres/00-init-db.sh:/docker-entrypoint-initdb.d/00-init-db.sh:ro
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+    networks:
+      - mugsun
+
+  redis:
+    image: redis:7-alpine@sha256:858f009f9709ce576febc734aa78b8f6d624b82571f9ddb6bda4377c833b3499
+    environment:
+      REDISCLI_AUTH: ${MUGSUN_REDIS_PASSWORD:?请设置 MUGSUN_REDIS_PASSWORD（见文件头）}
+    # 启动时生成仅 redis 用户可读的 redis.conf，口令不出现在进程参数里
+    command:
+      - sh
+      - -c
+      - |
+        umask 077
+        printf 'requirepass "%s"\n' "$$REDISCLI_AUTH" > /tmp/redis.conf
+        chown redis:redis /tmp/redis.conf
+        exec docker-entrypoint.sh redis-server /tmp/redis.conf
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - mugsun
+
+networks:
+  mugsun:
+    ipam:
+      config:
+        # 固定子网（pc 容器固定 IP 在其中）；与宿主机网段冲突时同时改 MUGSUN_COMPOSE_SUBNET 与 MUGSUN_PC_IP。
+        # 网络内容器可直连 boot：不要把不可信的容器加入 mugsun 网络
+        - subnet: ${MUGSUN_COMPOSE_SUBNET:-172.30.88.0/24}
+          # 其他容器从后半段动态分配，避免与 pc 的固定 IP 冲突
+          ip_range: ${MUGSUN_COMPOSE_IP_RANGE:-172.30.88.128/25}
+
+volumes:
+  pg-data:

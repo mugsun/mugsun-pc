@@ -7,7 +7,9 @@ import { ScaleLine, defaults as defaultControls } from 'ol/control'
 import type ImageTile from 'ol/ImageTile'
 import type { GisProviderCode, GisStyleCode, GisView2d } from './types'
 import { layersForStyle, tileUrl } from './types'
-import { loadAuthedTileBlob } from './authTile'
+import { loadAuthedTileBlob, TileEmptyError, TileHttpError } from './authTile'
+import { isNeutralTileReason, tileHealthFor } from './tileHealth'
+import { attributionOf, escapeAttribution } from './attribution'
 
 import { fromDisplayLonLat, toDisplayLonLat } from './coord'
 
@@ -15,7 +17,17 @@ export const OL_ROLE_BASEMAP = 'basemap'
 export const OL_ROLE_SKETCH = 'sketch'
 export const OL_ROLE_OVERLAY = 'overlay'
 
-export function createOlMap(target: HTMLElement, view: GisView2d, provider: GisProviderCode): Map {
+export interface OlMapOptions {
+  /** 缩放控件（+/−），默认开；小尺寸嵌入卡片可关掉 */
+  zoomControl?: boolean
+}
+
+export function createOlMap(
+  target: HTMLElement,
+  view: GisView2d,
+  provider: GisProviderCode,
+  options: OlMapOptions = {}
+): Map {
   const map = new Map({
     target,
     view: new View({
@@ -23,9 +35,13 @@ export function createOlMap(target: HTMLElement, view: GisView2d, provider: GisP
       zoom: view.zoom,
       rotation: view.rotation ?? 0
     }),
-    controls: defaultControls({ rotate: false, attribution: false, zoom: true }).extend([
-      new ScaleLine({ units: 'metric' })
-    ])
+    // 打开版权归属控件：OSM / CARTO 等条款要求在地图上署名
+    controls: defaultControls({
+      rotate: false,
+      attribution: true,
+      attributionOptions: { collapsible: false },
+      zoom: options.zoomControl ?? true
+    }).extend([new ScaleLine({ units: 'metric' })])
   })
   map.getViewport().setAttribute('tabindex', '0')
   if (import.meta.env.DEV) {
@@ -35,6 +51,13 @@ export function createOlMap(target: HTMLElement, view: GisView2d, provider: GisP
   return map
 }
 
+/** 失败原因码：后端原因头 > 旧版空白瓦片 > 网络错误 */
+export function tileFailReason(e: unknown): string {
+  if (e instanceof TileHttpError) return e.reason
+  if (e instanceof TileEmptyError) return 'empty-tile'
+  return 'network'
+}
+
 export function applyOlBasemap(map: Map, provider: GisProviderCode, style: GisStyleCode): void {
   map
     .getLayers()
@@ -42,21 +65,41 @@ export function applyOlBasemap(map: Map, provider: GisProviderCode, style: GisSt
     .filter((layer) => layer.get('mugsunRole') === OL_ROLE_BASEMAP)
     .forEach((layer) => map.removeLayer(layer))
   let z = 0
+  const credit = attributionOf(provider)
+  const target = map.getTargetElement()
+  const health = target ? tileHealthFor(target) : undefined
+  health?.reset()
+  const sources: XYZ[] = []
   for (const layer of layersForStyle(style, provider)) {
     const tile = new TileLayer({
       zIndex: z++,
       source: new XYZ({
+        // 叠层只署名一次（注记层与底图同一家）
+        attributions: credit && z === 1 ? escapeAttribution(credit) : undefined,
         url: tileUrl(provider, layer, '{z}', '{x}', '{y}'),
         tileLoadFunction: (tileItem, src) => {
           const imageTile = tileItem as ImageTile
+          health?.start()
           loadAuthedTileBlob(src)
             .then((objectUrl) => {
+              health?.success()
               const img = imageTile.getImage() as HTMLImageElement
               img.onload = () => URL.revokeObjectURL(objectUrl)
               img.src = objectUrl
             })
-            .catch(() => {
-              ;(imageTile.getImage() as HTMLImageElement).src = ''
+            .catch((e: unknown) => {
+              const img = imageTile.getImage() as HTMLImageElement
+              if (e instanceof TileHttpError && isNeutralTileReason(e.reason)) {
+                health?.neutral()
+              } else {
+                health?.fail(tileFailReason(e))
+              }
+              if (e instanceof TileEmptyError) {
+                img.onload = () => URL.revokeObjectURL(e.objectUrl)
+                img.src = e.objectUrl
+              } else {
+                img.src = ''
+              }
             })
         },
         wrapX: true,
@@ -64,8 +107,11 @@ export function applyOlBasemap(map: Map, provider: GisProviderCode, style: GisSt
       })
     })
     tile.set('mugsunRole', OL_ROLE_BASEMAP)
+    sources.push(tile.getSource() as XYZ)
     map.addLayer(tile)
   }
+  // 重试：刷新底图图层源，重新请求全部瓦片
+  health?.setRetry(() => sources.forEach((src) => src.refresh()))
 }
 
 export function setOlView(map: Map, view: GisView2d, provider: GisProviderCode): void {

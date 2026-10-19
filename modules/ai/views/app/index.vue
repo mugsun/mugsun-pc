@@ -2,22 +2,22 @@
   <div class="art-full-height">
     <ElCard class="art-table-card" shadow="never">
       <ElTabs v-model="appType" @tab-change="reload">
-        <ElTabPane label="全部" name="" />
-        <ElTabPane label="工作流" name="workflow" />
-        <ElTabPane label="文本生成" name="text" />
-        <ElTabPane label="对话助手" name="chat" />
-        <ElTabPane label="对话流程" name="chatflow" />
+        <ElTabPane :label="$t('aiAppList.tabAll')" name="" />
+        <ElTabPane :label="$t('aiAppList.typeWorkflow')" name="workflow" />
+        <ElTabPane :label="$t('aiAppList.typeText')" name="text" />
+        <ElTabPane :label="$t('aiAppList.typeChat')" name="chat" />
+        <ElTabPane :label="$t('aiAppList.typeChatflow')" name="chatflow" />
       </ElTabs>
       <div class="toolbar">
         <ElInput
           v-model="keyword"
           clearable
-          placeholder="搜索应用"
+          :placeholder="$t('aiAppList.searchPlaceholder')"
           style="width: 200px"
           @keyup.enter="reload"
         />
-        <ElButton @click="reload">搜索</ElButton>
-        <ElButton type="primary" @click="openEdit()">新建应用</ElButton>
+        <ElButton @click="reload">{{ $t('aiAppList.search') }}</ElButton>
+        <ElButton type="primary" @click="openEdit()">{{ $t('aiAppList.add') }}</ElButton>
       </div>
       <div v-loading="loading" class="card-grid">
         <ElCard v-for="row in records" :key="row.id" shadow="hover">
@@ -25,28 +25,48 @@
             >{{ row.name }}
             <ElTag size="small">{{ typeLabel(row.appType) }}</ElTag>
           </div>
-          <div class="desc">{{ row.description || '暂无描述' }}</div>
+          <div class="desc">{{ row.description || $t('aiAppList.noDescription') }}</div>
           <div class="ops">
-            <ElButton link type="primary" @click="design(row)">编排</ElButton>
-            <ElButton link @click="openEdit(row)">编辑</ElButton>
-            <ElButton link @click="copy(row)">复制</ElButton>
-            <ElButton link @click="doExport(row)">导出</ElButton>
-            <ElButton link type="danger" @click="remove(row)">删除</ElButton>
+            <ElButton link type="primary" @click="design(row)">{{
+              $t('aiAppList.design')
+            }}</ElButton>
+            <ElButton link @click="openEdit(row)">{{ $t('aiAppList.edit') }}</ElButton>
+            <ElButton link @click="copy(row)">{{ $t('aiAppList.copy') }}</ElButton>
+            <ElButton link @click="doExport(row)">{{ $t('aiAppList.export') }}</ElButton>
+            <ElButton link type="danger" @click="remove(row)">{{
+              $t('aiAppList.delete')
+            }}</ElButton>
           </div>
         </ElCard>
         <ElEmpty v-if="!loading && !records.length" :description="emptyText" />
       </div>
     </ElCard>
-    <ElDialog v-model="visible" :title="form.id ? '编辑应用' : '新建应用'" width="560px">
-      <ElForm :model="form" label-width="88px">
-        <ElFormItem label="名称" required><ElInput v-model="form.name" /></ElFormItem>
-        <ElFormItem label="类型" required>
+    <ElDialog
+      v-model="visible"
+      :title="form.id ? $t('aiForm.editApp') : $t('aiForm.newApp')"
+      width="560px"
+    >
+      <ElForm ref="formRef" :model="form" label-width="auto">
+        <ElFormItem :label="$t('aiForm.name')" prop="name" :rules="requiredRule($t('aiForm.name'))"
+          ><ElInput v-model="form.name"
+        /></ElFormItem>
+        <ElFormItem
+          :label="$t('aiForm.type')"
+          prop="appType"
+          :rules="requiredRule($t('aiForm.type'), true)"
+        >
           <ElSelect v-model="form.appType" style="width: 100%">
-            <ElOption label="工作流" value="workflow" /><ElOption label="文本生成" value="text" />
-            <ElOption label="对话助手" value="chat" /><ElOption label="对话流程" value="chatflow" />
+            <ElOption :label="$t('aiForm.optWorkflow')" value="workflow" /><ElOption
+              :label="$t('aiForm.optTextGen')"
+              value="text"
+            />
+            <ElOption :label="$t('aiForm.optChatAssistant')" value="chat" /><ElOption
+              :label="$t('aiForm.optChatflow')"
+              value="chatflow"
+            />
           </ElSelect>
         </ElFormItem>
-        <ElFormItem label="描述"
+        <ElFormItem :label="$t('aiForm.description')"
           ><ElInput
             v-model="form.description"
             type="textarea"
@@ -56,14 +76,17 @@
         /></ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="visible = false">取消</ElButton>
-        <ElButton type="primary" :loading="saving" @click="save">保存</ElButton>
+        <ElButton @click="visible = false">{{ $t('aiForm.cancel') }}</ElButton>
+        <ElButton type="primary" :loading="saving" @click="save">{{ $t('aiForm.save') }}</ElButton>
       </template>
     </ElDialog>
   </div>
 </template>
 <script setup lang="ts">
-  import { computed, onMounted, reactive, ref } from 'vue'
+  import { useI18n } from 'vue-i18n'
+  import type { FormInstance } from 'element-plus'
+  import { requiredRule } from '../shared/formRules'
+  import { computed, onMounted, reactive, ref, nextTick } from 'vue'
   import { useRouter } from 'vue-router'
   import { ElMessageBox } from 'element-plus'
   import {
@@ -74,6 +97,8 @@
     fetchSaveAiApp
   } from '../../api'
   defineOptions({ name: 'AiApp' })
+  const { t } = useI18n()
+  const formRef = ref<FormInstance>()
   const router = useRouter()
   const appType = ref('')
   const keyword = ref('')
@@ -83,15 +108,20 @@
   const visible = ref(false)
   const saving = ref(false)
   const form = reactive<Record<string, any>>({})
-  function typeLabel(t: string) {
+  function typeLabel(type: string) {
     return (
-      ({ workflow: '工作流', text: '文本生成', chat: '对话助手', chatflow: '对话流程' } as any)[
-        t
-      ] || t
+      (
+        {
+          workflow: t('aiAppList.typeWorkflow'),
+          text: t('aiAppList.typeText'),
+          chat: t('aiAppList.typeChat'),
+          chatflow: t('aiAppList.typeChatflow')
+        } as any
+      )[type] || type
     )
   }
   const emptyText = computed(() =>
-    searching.value ? '没有符合条件的应用。换个名称再查' : '还没有应用。点新建应用开始设计'
+    searching.value ? t('aiAppList.emptySearched') : t('aiAppList.empty')
   )
   async function reload() {
     loading.value = true
@@ -115,13 +145,17 @@
     Object.keys(form).forEach((k) => delete form[k])
     Object.assign(form, row ? { ...row } : { appType: appType.value || 'workflow' })
     visible.value = true
+    nextTick(() => formRef.value?.clearValidate())
   }
   async function save() {
+    if (!(await formRef.value?.validate().catch(() => false))) return
     saving.value = true
     try {
       await fetchSaveAiApp({ ...form })
       visible.value = false
       await reload()
+    } catch {
+      /* 失败提示由请求层展示，弹窗留着方便改完再存 */
     } finally {
       saving.value = false
     }
@@ -135,8 +169,8 @@
   }
   async function remove(row: any) {
     await ElMessageBox.confirm(
-      `删除「${row.name}」后，列表里不会再出现。编排内容也会一起清掉`,
-      '确认'
+      t('aiAppList.removeConfirm', { name: row.name }),
+      t('aiAppList.confirmTitle')
     )
     await fetchRemoveAiApp(row.id)
     await reload()

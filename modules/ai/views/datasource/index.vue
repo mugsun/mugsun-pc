@@ -5,13 +5,13 @@
         <ElInput
           v-model="keyword"
           clearable
-          placeholder="按名称搜索"
+          :placeholder="$t('aiDatasourceList.searchPh')"
           style="width: 200px"
           @keyup.enter="reload"
           @clear="reload"
         />
-        <ElButton @click="reload">搜索</ElButton>
-        <ElButton type="primary" @click="openEdit()">新增数据源</ElButton>
+        <ElButton @click="reload">{{ $t('aiDatasourceList.search') }}</ElButton>
+        <ElButton type="primary" @click="openEdit()">{{ $t('aiDatasourceList.add') }}</ElButton>
       </div>
       <ArtTable
         :loading="loading"
@@ -26,46 +26,57 @@
     <ElDialog
       v-model="visible"
       class="ai-datasource-dialog"
-      :title="form.id ? '编辑数据源' : '新增数据源'"
+      :title="form.id ? $t('aiForm.editDatasource') : $t('aiForm.newDatasource')"
       width="600px"
     >
-      <ElForm :model="form" label-width="100px">
-        <ElFormItem label="名称" required>
-          <ElInput v-model="form.name" maxlength="64" placeholder="用来在列表里区分" />
+      <ElForm ref="formRef" :model="form" label-width="auto">
+        <ElFormItem :label="$t('aiForm.name')" prop="name" :rules="requiredRule($t('aiForm.name'))">
+          <ElInput v-model="form.name" maxlength="64" :placeholder="$t('aiForm.phListName')" />
         </ElFormItem>
-        <ElFormItem label="类型" required>
+        <ElFormItem
+          :label="$t('aiForm.type')"
+          prop="dbType"
+          :rules="requiredRule($t('aiForm.type'), true)"
+        >
           <ElSelect v-model="form.dbType" style="width: 100%">
             <ElOption label="PostgreSQL" value="postgresql" />
             <ElOption label="MySQL" value="mysql" />
-            <ElOption label="金仓" value="kingbase" />
-            <ElOption label="达梦" value="dm" />
+            <ElOption :label="$t('aiForm.optKingbase')" value="kingbase" />
+            <ElOption :label="$t('aiForm.optDm')" value="dm" />
             <ElOption label="MariaDB" value="mariadb" />
             <ElOption label="StarRocks" value="starrocks" />
           </ElSelect>
         </ElFormItem>
-        <ElFormItem label="JDBC 地址" required>
-          <ElInput v-model="form.jdbcUrl" placeholder="例如 jdbc:postgresql://主机:端口/库名" />
+        <ElFormItem
+          :label="$t('aiForm.jdbcUrl')"
+          prop="jdbcUrl"
+          :rules="requiredRule($t('aiForm.jdbcUrl'))"
+        >
+          <ElInput v-model="form.jdbcUrl" :placeholder="$t('aiForm.phJdbcExample')" />
         </ElFormItem>
-        <ElFormItem label="用户名"><ElInput v-model="form.username" /></ElFormItem>
-        <ElFormItem label="密码"
+        <ElFormItem :label="$t('aiForm.username')"><ElInput v-model="form.username" /></ElFormItem>
+        <ElFormItem :label="$t('aiForm.password')"
           ><ElInput
             v-model="form.password"
             type="password"
             show-password
-            placeholder="编辑留空不修改"
+            :placeholder="$t('aiForm.phKeepUnchanged')"
         /></ElFormItem>
-        <ElFormItem label="备注"><ElInput v-model="form.remark" /></ElFormItem>
+        <ElFormItem :label="$t('aiForm.remark')"><ElInput v-model="form.remark" /></ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="visible = false">取消</ElButton>
-        <ElButton type="primary" :loading="saving" @click="save">保存</ElButton>
+        <ElButton @click="visible = false">{{ $t('aiForm.cancel') }}</ElButton>
+        <ElButton type="primary" :loading="saving" @click="save">{{ $t('aiForm.save') }}</ElButton>
       </template>
     </ElDialog>
   </div>
 </template>
 <script setup lang="ts">
+  import type { FormInstance } from 'element-plus'
+  import { useI18n } from 'vue-i18n'
+  import { requiredRule } from '../shared/formRules'
   import type { ColumnOption } from '@/types/component'
-  import { computed, h, onMounted, reactive, ref } from 'vue'
+  import { computed, h, onMounted, reactive, ref, nextTick } from 'vue'
   import { ElButton, ElMessageBox } from 'element-plus'
   import {
     fetchAiDatasourcePage,
@@ -74,13 +85,20 @@
     fetchTestAiDatasource
   } from '../../api'
   defineOptions({ name: 'AiDatasource' })
+  const { t } = useI18n()
+  const formRef = ref<FormInstance>()
   const TYPE_LABEL: Record<string, string> = {
     postgresql: 'PostgreSQL',
     mysql: 'MySQL',
-    kingbase: '金仓',
-    dm: '达梦',
+    kingbase: 'Kingbase',
+    dm: 'DM',
     mariadb: 'MariaDB',
     starrocks: 'StarRocks'
+  }
+  /** 国产库在中文界面显示中文名，英文界面显示 Kingbase / DM */
+  const DB_LABEL_KEYS: Record<string, string> = {
+    kingbase: 'aiDatasourceList.dbKingbase',
+    dm: 'aiDatasourceList.dbDm'
   }
   const keyword = ref('')
   const searched = ref(false)
@@ -98,21 +116,24 @@
     total: total.value
   }))
   const emptyText = computed(() =>
-    searched.value ? '没有符合条件的数据源。换个名称再查' : '还没有数据源。点新增数据源开始配置'
+    searched.value ? t('aiDatasourceList.emptySearched') : t('aiDatasourceList.empty')
   )
-  const columns: ColumnOption[] = [
+  const columns = computed<ColumnOption[]>(() => [
     { type: 'index', width: 60, label: '#' },
-    { prop: 'name', label: '名称', minWidth: 140 },
+    { prop: 'name', label: t('aiDatasourceList.colName'), minWidth: 140 },
     {
       prop: 'dbType',
-      label: '类型',
+      label: t('aiDatasourceList.colType'),
       width: 120,
-      formatter: (row: any) => TYPE_LABEL[row.dbType] || row.dbType || ''
+      formatter: (row: any) =>
+        DB_LABEL_KEYS[row.dbType]
+          ? t(DB_LABEL_KEYS[row.dbType])
+          : TYPE_LABEL[row.dbType] || row.dbType || ''
     },
     { prop: 'jdbcUrl', label: 'JDBC', minWidth: 220, showOverflowTooltip: true },
     {
       prop: 'operation',
-      label: '操作',
+      label: t('aiDatasourceList.colOps'),
       width: 220,
       fixed: 'right',
       formatter: (row: any) =>
@@ -120,17 +141,19 @@
           h(
             ElButton,
             { link: true, type: 'primary', size: 'small', onClick: () => openEdit(row) },
-            () => '编辑'
+            () => t('aiDatasourceList.edit')
           ),
-          h(ElButton, { link: true, size: 'small', onClick: () => test(row) }, () => '测试连接'),
+          h(ElButton, { link: true, size: 'small', onClick: () => test(row) }, () =>
+            t('aiDatasourceList.test')
+          ),
           h(
             ElButton,
             { link: true, type: 'danger', size: 'small', onClick: () => remove(row) },
-            () => '删除'
+            () => t('aiDatasourceList.remove')
           )
         ])
     }
-  ]
+  ])
   async function reload() {
     loading.value = true
     const name = keyword.value.trim()
@@ -159,8 +182,10 @@
     Object.keys(form).forEach((k) => delete form[k])
     Object.assign(form, row ? { ...row, password: '' } : { dbType: 'postgresql' })
     visible.value = true
+    nextTick(() => formRef.value?.clearValidate())
   }
   async function save() {
+    if (!(await formRef.value?.validate().catch(() => false))) return
     saving.value = true
     try {
       const payload = { ...form }
@@ -183,8 +208,8 @@
   }
   async function remove(row: any) {
     await ElMessageBox.confirm(
-      `删除「${row.name || '这个数据源'}」后，列表里不会再出现，问数里也不能再选`,
-      '确认'
+      t('aiDatasourceList.removeConfirm', { name: row.name || t('aiDatasourceList.thisOne') }),
+      t('aiDatasourceList.confirm')
     )
     await fetchRemoveAiDatasource(row.id)
     await reload()

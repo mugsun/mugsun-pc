@@ -1,4 +1,4 @@
-<!-- 工作台：登录落地页——概览统计 + echarts 图表 + 我的待办/通知/更新日志卡 + 可配置快捷入口 -->
+<!-- 工作台：登录落地页——概览统计 + echarts 图表 + 我的待办/通知/更新日志卡（ChangelogCard）+ 可配置快捷入口 -->
 <template>
   <div class="console-page">
     <!-- 概览统计瓦片 -->
@@ -103,19 +103,7 @@
       </ElCol>
 
       <ElCol :xs="24" :lg="8" class="mt-4 mt-lg-0">
-        <!-- 只展示 package.json 当前版本，历史变更以仓库 CHANGELOG 为准，不在此编造 -->
-        <div class="art-card list-card">
-          <div class="card-head">
-            <span class="card-title">{{ $t('pages.dashboard.console.changelog') }}</span>
-          </div>
-          <div class="p-5">
-            <div class="text-sm text-g-500">{{ $t('pages.dashboard.console.currentVersion') }}</div>
-            <div class="mt-1 text-2xl font-medium">v{{ appVersion }}</div>
-            <ElLink class="mt-4" type="primary" :href="CHANGELOG_URL" target="_blank">
-              {{ $t('pages.dashboard.console.viewChangelog') }}
-            </ElLink>
-          </div>
-        </div>
+        <ChangelogCard />
       </ElCol>
     </ElRow>
 
@@ -164,7 +152,7 @@
 
 <script setup lang="ts">
   import { echarts } from '@/plugins/echarts'
-  import { fetchFlowMyTodo, fetchMyNoticePage } from '@/api/system-manage'
+  import { fetchFlowMyTodo, fetchMyNoticePage, fetchTenantList } from '@/api/system-manage'
   import {
     fetchWorkbenchOverview,
     fetchWorkbenchShortcuts,
@@ -172,6 +160,7 @@
   } from '@/api/workbench'
   import { useSettingStore } from '@/store/modules/setting'
   import { useI18n } from 'vue-i18n'
+  import ChangelogCard from './ChangelogCard.vue'
 
   defineOptions({ name: 'Console' })
 
@@ -322,9 +311,36 @@
   const todoLoading = ref(false)
   const noticeList = ref<any[]>([])
   const noticeLoading = ref(false)
-  const appVersion = __PKG_VERSION__
-  const CHANGELOG_URL = 'https://github.com/mugsun/mugsun-pc/blob/main/CHANGELOG.md'
   const overviewLoading = ref(false)
+
+  /**
+   * 租户图表横轴显示租户名（UX-013）。boot#42 起接口直接在 name 里返回租户名称（没有名称的租户仍是编号），
+   * 此时直接用；只有 name 仍是编号（纯数字，如 000000）的行才用租户列表反查，兼容 #42 合并前的接口。
+   * 取租户列表失败或没对上时保留编号，不影响图表。
+   */
+  const isTenantCode = (v: unknown) => /^\d+$/.test(String(v ?? ''))
+  const withTenantNames = async (rows: any[]) => {
+    if (!rows.length) return rows
+    // 平台租户 000000 在 #42 前没有 sys_tenant 行，单独给名字
+    const platform = (r: any) =>
+      String(r.name) === '000000' ? { ...r, name: t('pages.dashboard.console.platformTenant') } : r
+    // 接口已给名称：不再请求租户列表
+    if (!rows.some((r) => isTenantCode(r.name))) return rows
+    try {
+      const tenants = (await fetchTenantList()) || []
+      const names = new Map<string, string>()
+      for (const t of tenants) {
+        if (!t?.tenantName) continue
+        for (const k of [t.tenantId, t.tenantCode])
+          if (k != null) names.set(String(k), t.tenantName)
+      }
+      return rows.map((r) =>
+        isTenantCode(r.name) ? platform({ ...r, name: names.get(String(r.name)) ?? r.name }) : r
+      )
+    } catch {
+      return rows.map(platform)
+    }
+  }
 
   const loadOverview = async () => {
     overviewLoading.value = true
@@ -340,7 +356,7 @@
       pieData = d.charts?.userStatus || []
       // 键缺失=无权限看平台分布；键存在但空数组才走空态
       showTenantChart.value = Object.prototype.hasOwnProperty.call(d.charts || {}, 'tenantUser')
-      barData = showTenantChart.value ? d.charts.tenantUser || [] : []
+      barData = showTenantChart.value ? await withTenantNames(d.charts.tenantUser || []) : []
       pieEmpty.value = pieData.length === 0
       barEmpty.value = showTenantChart.value && barData.length === 0
       await nextTick()

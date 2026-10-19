@@ -5,30 +5,33 @@
         <ElInput
           v-model="keyword"
           clearable
-          placeholder="按名称搜索"
+          :placeholder="$t('aiVector.searchPlaceholder')"
           style="width: 200px"
           @keyup.enter="reload"
           @clear="reload"
         />
-        <ElButton @click="reload">搜索</ElButton>
-        <ElButton type="primary" @click="openEdit()">创建向量库</ElButton>
+        <ElButton @click="reload">{{ $t('aiVector.search') }}</ElButton>
+        <ElButton type="primary" @click="openEdit()">{{ $t('aiVector.create') }}</ElButton>
       </div>
       <div v-loading="loading" class="card-grid">
         <ElCard v-for="row in records" :key="row.id" shadow="hover">
           <div class="title"
             >{{ row.name }}
-            <ElTag v-if="row.builtinFlag === 1" size="small">内置</ElTag>
+            <ElTag v-if="row.builtinFlag === 1" size="small">{{ $t('aiVector.builtin') }}</ElTag>
             <ElTag size="small" effect="plain">{{ typeLabel(row.storeType || row.type) }}</ElTag>
           </div>
           <div class="meta"
-            >{{ row.host || row.url || '-' }} · 维度 {{ row.dimensions || '-' }}</div
+            >{{ row.host || row.url || '-' }} · {{ $t('aiVector.dimensions') }}
+            {{ row.dimensions || '-' }}</div
           >
           <div class="ops">
-            <ElButton link type="primary" @click="openEdit(row)">编辑</ElButton>
-            <ElButton link @click="test(row)">测试连接</ElButton>
-            <ElButton link type="danger" :disabled="row.builtinFlag === 1" @click="remove(row)"
-              >删除</ElButton
-            >
+            <ElButton link type="primary" @click="openEdit(row)">{{
+              $t('aiVector.edit')
+            }}</ElButton>
+            <ElButton link @click="test(row)">{{ $t('aiVector.testConnection') }}</ElButton>
+            <ElButton link type="danger" :disabled="row.builtinFlag === 1" @click="remove(row)">{{
+              $t('aiVector.delete')
+            }}</ElButton>
           </div>
         </ElCard>
         <ElEmpty v-if="!loading && !records.length" :description="emptyText" />
@@ -45,35 +48,48 @@
     <ElDialog
       v-model="visible"
       class="ai-vector-dialog"
-      :title="form.id ? '编辑向量库' : '创建向量库'"
+      :title="form.id ? $t('aiForm.editVector') : $t('aiForm.newVector')"
       width="560px"
     >
-      <ElForm :model="form" label-width="100px">
-        <ElFormItem label="名称" required>
-          <ElInput v-model="form.name" maxlength="64" placeholder="用来在列表里区分" />
+      <ElForm ref="formRef" :model="form" label-width="auto">
+        <ElFormItem :label="$t('aiForm.name')" prop="name" :rules="requiredRule($t('aiForm.name'))">
+          <ElInput v-model="form.name" maxlength="64" :placeholder="$t('aiForm.phListName')" />
         </ElFormItem>
-        <ElFormItem label="类型" required>
+        <ElFormItem
+          :label="$t('aiForm.type')"
+          prop="storeType"
+          :rules="requiredRule($t('aiForm.type'), true)"
+        >
           <ElSelect v-model="form.storeType" style="width: 100%">
             <ElOption label="PgVector" value="pgvector" />
             <ElOption label="Milvus" value="milvus" />
-            <ElOption label="自定义" value="custom" />
+            <ElOption :label="$t('aiForm.optCustom')" value="custom" />
           </ElSelect>
         </ElFormItem>
-        <ElFormItem label="连接地址" required>
-          <ElInput v-model="form.url" placeholder="jdbc:postgresql://主机:端口/库名" />
+        <ElFormItem
+          :label="$t('aiForm.connUrl')"
+          prop="url"
+          :rules="requiredRule($t('aiForm.connUrl'))"
+        >
+          <ElInput v-model="form.url" :placeholder="$t('aiForm.phJdbc')" />
         </ElFormItem>
-        <ElFormItem label="维度"><ElInputNumber v-model="form.dimensions" :min="1" /></ElFormItem>
-        <ElFormItem label="备注"><ElInput v-model="form.remark" /></ElFormItem>
+        <ElFormItem :label="$t('aiForm.dim')"
+          ><ElInputNumber v-model="form.dimensions" :min="1"
+        /></ElFormItem>
+        <ElFormItem :label="$t('aiForm.remark')"><ElInput v-model="form.remark" /></ElFormItem>
       </ElForm>
       <template #footer>
-        <ElButton @click="visible = false">取消</ElButton>
-        <ElButton type="primary" :loading="saving" @click="save">保存</ElButton>
+        <ElButton @click="visible = false">{{ $t('aiForm.cancel') }}</ElButton>
+        <ElButton type="primary" :loading="saving" @click="save">{{ $t('aiForm.save') }}</ElButton>
       </template>
     </ElDialog>
   </div>
 </template>
 <script setup lang="ts">
-  import { computed, onMounted, reactive, ref } from 'vue'
+  import { useI18n } from 'vue-i18n'
+  import type { FormInstance } from 'element-plus'
+  import { requiredRule } from '../shared/formRules'
+  import { computed, onMounted, reactive, ref, nextTick } from 'vue'
   import { ElMessageBox } from 'element-plus'
   import {
     fetchAiVectorPage,
@@ -82,10 +98,12 @@
     fetchTestAiVector
   } from '../../api'
   defineOptions({ name: 'AiVector' })
+  const { t } = useI18n()
+  const formRef = ref<FormInstance>()
   const TYPE_LABEL: Record<string, string> = {
     pgvector: 'PgVector',
     milvus: 'Milvus',
-    custom: '自定义'
+    custom: ''
   }
   const keyword = ref('')
   const searched = ref(false)
@@ -98,9 +116,10 @@
   const saving = ref(false)
   const form = reactive<Record<string, any>>({})
   const emptyText = computed(() =>
-    searched.value ? '没有符合条件的向量库。换个名称再查' : '还没有向量库。点创建向量库开始配置'
+    searched.value ? t('aiVector.emptySearched') : t('aiVector.empty')
   )
   function typeLabel(type?: string) {
+    if (type === 'custom') return t('aiVector.typeCustom')
     return TYPE_LABEL[type || ''] || type || ''
   }
   async function reload() {
@@ -123,8 +142,10 @@
     Object.keys(form).forEach((k) => delete form[k])
     Object.assign(form, row ? { ...row } : { storeType: 'pgvector', dimensions: 1536 })
     visible.value = true
+    nextTick(() => formRef.value?.clearValidate())
   }
   async function save() {
+    if (!(await formRef.value?.validate().catch(() => false))) return
     saving.value = true
     try {
       await fetchSaveAiVector({
@@ -152,8 +173,8 @@
   }
   async function remove(row: any) {
     await ElMessageBox.confirm(
-      `删除「${row.name || '这个向量库'}」后，列表里不会再出现，知识库检索也不会再用它`,
-      '确认'
+      t('aiVector.removeConfirm', { name: row.name || t('aiVector.thisStore') }),
+      t('aiVector.confirmTitle')
     )
     await fetchRemoveAiVector(row.id)
     await reload()

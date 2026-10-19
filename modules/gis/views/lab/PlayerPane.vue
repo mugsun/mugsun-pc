@@ -1,6 +1,8 @@
 <template>
   <div class="gis-lab-play">
     <div class="gis-lab-stage">
+      <GisBasemapEmpty />
+      <GisTileErrorHint :host="is3d ? cesiumHost : mapHost" />
       <div v-show="!is3d" ref="mapHost" class="gis-map"></div>
       <div v-if="is3d" ref="cesiumHost" class="gis-map">
         <div v-if="loading3d" class="gis-loading">{{ $t('pages.gis.load3d') }}</div>
@@ -133,6 +135,8 @@
 </template>
 
 <script setup lang="ts">
+  import GisBasemapEmpty from '../../components/GisBasemapEmpty.vue'
+  import GisTileErrorHint from '../../components/GisTileErrorHint.vue'
   import {
     computed,
     nextTick,
@@ -333,7 +337,7 @@
     }
     const got = analyzed.collection?.count
     if (!parts.length && typeof got === 'number') {
-      parts.push(t('pages.gis.metricsCount', { n: got }))
+      parts.push(t('pages.gis.metricsCount', { n: got }, got))
     }
     lines.value = parts
     opsText.value = parts.join(' · ') || t('pages.gis.labOpsNoMetrics')
@@ -400,7 +404,11 @@
       })
       bag.overlays.fit('lab-ingest')
       bag.map.updateSize()
-      ingestText.value = t('pages.gis.metricsCount', { n: parsed.count ?? feats.length })
+      ingestText.value = t(
+        'pages.gis.metricsCount',
+        { n: parsed.count ?? feats.length },
+        parsed.count ?? feats.length
+      )
     } catch {
       ingestText.value = t('pages.gis.labIngestFailed')
     } finally {
