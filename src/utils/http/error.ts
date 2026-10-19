@@ -70,8 +70,8 @@ export class HttpError extends Error {
   /** 业务码（R.code）；HTTP 200 业务失败或非 2xx 响应体里带 code 时有值 */
   public readonly bizCode?: number
   /**
-   * 已向用户提示过（toast）。埋点 SDK 的 ignoreErrors 默认跳过 handled===true 的错误，
-   * 管理台 error-filter 也认这个标记。
+   * 已向用户提示过（toast）。埋点 SDK 在 skipHandledErrors 为 true 时据此（及 name==='HttpError'）
+   * 跳过 $error 上报；管理台本身不再拦截，是否跳过由 SDK 开关决定。
    */
   public handled = false
 
@@ -191,7 +191,7 @@ export function showError(error: HttpError, showMessage: boolean = true): void {
     return
   }
   ElMessage.error(error.message)
-  // 已提示给用户：埋点错误监控据此跳过（UX-007）
+  // 已提示给用户：SDK 在 skipHandledErrors=true 时据此跳过
   error.handled = true
   // 记录错误日志
   console.error('[HTTP Error]', error.toLogData())

@@ -12,7 +12,12 @@ import '@utils/sys/console.ts'
 import '@utils/ui/iconify-loader'
 import { setupGlobDirectives } from './directives'
 import { setupErrorHandle } from './utils/sys/error-handle'
-import { installTrackApi, setupTrack } from './plugins/track'
+import {
+  installTrackApi,
+  setupTrack,
+  trackSetupOptionsFromEnv,
+  type TrackSetupOptions
+} from './plugins/track'
 import { enableAi, enableTrack } from '@/modules/flags'
 import { useUserStore } from './store/modules/user'
 
@@ -25,7 +30,7 @@ function elementLocale(lang: string) {
 }
 
 const trackPluginMods = import.meta.glob<{
-  setupTrack: (app: ReturnType<typeof createApp>) => void
+  setupTrack: (app: ReturnType<typeof createApp>, options?: TrackSetupOptions) => void
   trackIdentify: (...args: unknown[]) => void
   trackReset: () => void
 }>('../modules/track/plugin.ts')
@@ -52,7 +57,7 @@ async function bootstrap() {
         trackIdentify: track.trackIdentify,
         trackReset: track.trackReset
       })
-      setupTrack(app)
+      setupTrack(app, trackSetupOptionsFromEnv(import.meta.env))
     }
   }
 
