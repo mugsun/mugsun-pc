@@ -316,6 +316,21 @@ describe('工作台更新日志：当前版本与「未升级」', () => {
     expect(isNewerThan('not-a-version', '0.1.0')).toBe(false)
   })
 
+  it('含 x/* 通配或不完整的版本当作不合法：不打标签、不报错（validateStrict）', () => {
+    for (const v of ['1.x', '1.*', '0.2.x', 'v0.3.x', '1.X', '1', 'v1.2']) {
+      expect(() => isNewerThan(v, '0.1.0'), v).not.toThrow()
+      expect(isNewerThan(v, '0.1.0'), v).toBe(false)
+    }
+    const items = ['0.2.x', '1.*', 'v0.3.0'].map((version, i) =>
+      toChangelogItem({ ...ROW, id: i, version }, i)
+    )
+    const r = markVersions(items, '0.1.0')
+    expect(r.entries.map((e) => e.notInstalled)).toEqual([false, false, true])
+    expect(r.available).toBe('v0.3.0')
+    // 当前版本是通配写法时也一律不加
+    expect(markVersions(items, '0.x').available).toBeNull()
+  })
+
   it('比当前版本旧或相同的不算未升级；预发布版本按 semver 规则比较', () => {
     expect(isNewerThan('v0.1.0', '0.1.0')).toBe(false)
     expect(isNewerThan('v0.0.9', '0.1.0')).toBe(false)
