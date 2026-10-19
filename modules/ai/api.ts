@@ -1,6 +1,7 @@
 import request from '@/utils/http'
 import { useUserStore } from '@/store/modules/user'
 import { $t } from '@/locales'
+import { TRACE_HEADER } from './views/shared/traceId'
 
 export type AiId = string | number
 
@@ -213,8 +214,17 @@ export function fetchTryAiPrompt(data: Record<string, any>) {
 }
 
 // ===== MCP =====
-export function fetchAiMcpPage(params: Record<string, any>) {
-  return request.get<any>({ url: '/api/system/ai/mcp/page', params })
+/**
+ * MCP 工具列表。页面自己展示错误态（含错误编号），所以不弹全局 toast；
+ * traceId 放进 X-Trace-Id 头，后端沿用它作为本次请求的链路编号。
+ */
+export function fetchAiMcpPage(params: Record<string, any>, opts: { traceId?: string } = {}) {
+  return request.get<any>({
+    url: '/api/system/ai/mcp/page',
+    params,
+    showErrorMessage: false,
+    headers: opts.traceId ? { [TRACE_HEADER]: opts.traceId } : undefined
+  })
 }
 export function fetchSaveAiMcp(data: Record<string, any>) {
   return request.post<any>({

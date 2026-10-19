@@ -1,26 +1,222 @@
 <template>
   <div class="ai-drawer-host">
-    <button class="ai-fab" type="button" :title="$t('aiShared.assistant')" @click="$emit('open')">
+    <button
+      ref="fabRef"
+      class="ai-fab"
+      type="button"
+      :title="$t('aiShared.assistant')"
+      :aria-label="$t('aiShared.assistant')"
+      @click="$emit('open')"
+    >
       <span>AI</span>
     </button>
     <ElDrawer
       :model-value="visible"
-      :title="$t('aiShared.assistant')"
       direction="rtl"
-      size="420px"
+      :size="drawerSize"
+      :with-header="false"
       append-to-body
+      class="ai-drawer"
+      :class="{ 'is-resizing': resizing }"
       @update:model-value="$emit('update:visible', $event)"
+      @closed="fabRef?.focus()"
     >
-      <ChatPanel v-if="visible" compact />
+      <div class="ai-drawer__wrap">
+        <div
+          v-if="resizable"
+          class="ai-drawer__resizer"
+          role="separator"
+          aria-orientation="vertical"
+          :aria-label="$t('aiDrawer.resize')"
+          :aria-valuenow="width"
+          :aria-valuemin="DRAWER_WIDTH_MIN"
+          :aria-valuemax="DRAWER_WIDTH_MAX"
+          @pointerdown.prevent="startResize"
+        />
+        <component
+          :is="AiDrawerChat"
+          v-if="visible"
+          :key="chatKey"
+          :fullscreen="isFullscreen"
+          :can-fullscreen="!forcedFullscreen"
+          @toggle-fullscreen="fullscreen = !fullscreen"
+          @close="$emit('update:visible', false)"
+        />
+      </div>
     </ElDrawer>
   </div>
 </template>
 
 <script setup lang="ts">
-  import ChatPanel from '../assistant/ChatPanel.vue'
+  import {
+    computed,
+    defineAsyncComponent,
+    defineComponent,
+    h,
+    onBeforeUnmount,
+    onMounted,
+    ref,
+    shallowRef,
+    watch
+  } from 'vue'
+  import { ElButton, ElIcon } from 'element-plus'
+  import { Loading, WarningFilled } from '@element-plus/icons-vue'
+  import { useI18n } from 'vue-i18n'
+  import { useEventListener, useStorage, useWindowSize } from '@vueuse/core'
+  import {
+    DRAWER_FULLSCREEN_BREAKPOINT,
+    DRAWER_WIDTH_DEFAULT,
+    DRAWER_WIDTH_MAX,
+    DRAWER_WIDTH_MIN,
+    DRAWER_WIDTH_STORAGE_KEY,
+    clampDrawerWidth
+  } from '../assistant/drawer/drawerLayout'
+  import { CHAT_LOAD_TIMEOUT, createChatLoader } from '../assistant/drawer/chatChunkRetry'
+  import AiDrawerHeaderShell from '../assistant/drawer/AiDrawerHeaderShell.vue'
 
-  defineProps<{ visible: boolean }>()
-  defineEmits<{ 'update:visible': [boolean]; open: [] }>()
+  /** 内容区加载提示的延迟（顶栏不延迟） */
+  const SPINNER_DELAY = 200
+
+  const props = defineProps<{ visible: boolean }>()
+  const emit = defineEmits<{ 'update:visible': [boolean]; open: [] }>()
+  const closeDrawer = () => emit('update:visible', false)
+
+  /**
+   * 加载中 / 加载失败也保留 48px 顶栏（体验设计官 pc#71 规格）：
+   * 状态只替换顶栏下面的内容区，关闭按钮始终在同一位置可用。
+   */
+  const ChatLoading = defineComponent({
+    name: 'AiDrawerChatLoading',
+    setup() {
+      const { t } = useI18n()
+      // 顶栏立即显示；内容区的加载提示延迟出现，加载很快时不闪
+      const showSpinner = ref(false)
+      let timer: ReturnType<typeof setTimeout> | undefined
+      onMounted(() => {
+        timer = setTimeout(() => (showSpinner.value = true), SPINNER_DELAY)
+      })
+      onBeforeUnmount(() => clearTimeout(timer))
+      return () =>
+        h('div', { class: 'ai-drawer__shell' }, [
+          h(AiDrawerHeaderShell, {
+            state: 'loading',
+            canFullscreen: !forcedFullscreen.value,
+            onClose: closeDrawer
+          }),
+          showSpinner.value
+            ? h('div', { class: 'ai-drawer__state', role: 'status', 'aria-live': 'polite' }, [
+                h(ElIcon, { class: 'is-loading', size: 20 }, () => h(Loading)),
+                h('span', t('aiDrawer.loading'))
+              ])
+            : h('div', { class: 'ai-drawer__state' })
+        ])
+    }
+  })
+
+  const ChatError = defineComponent({
+    name: 'AiDrawerChatError',
+    setup() {
+      const { t } = useI18n()
+      return () =>
+        h('div', { class: 'ai-drawer__shell' }, [
+          h(AiDrawerHeaderShell, { state: 'error', onClose: closeDrawer }),
+          h('div', { class: 'ai-drawer__state is-error', role: 'alert' }, [
+            h(ElIcon, { size: 20 }, () => h(WarningFilled)),
+            h('span', t('aiDrawer.loadFailed')),
+            h(ElButton, { type: 'primary', size: 'small', onClick: reloadChat }, () =>
+              t('aiDrawer.retry')
+            )
+          ])
+        ])
+    }
+  })
+
+  /**
+   * 抽屉内容（含 vue-element-plus-x）按需加载：首屏和插件 chunk 都不带它。
+   * 浏览器会缓存失败的动态 import（同一 URL 再 import 直接复用失败结果），
+   * 所以入口 .js 失败时从报错里取出 URL，重试时加 ?retry=N 重新请求。
+   * CSS、嵌套 chunk 失败或连续失败 MAX_CHAT_LOAD_FAILURES 次，改用整页刷新兜底，
+   * 同一会话只自动刷新一次（见 chatChunkRetry.ts）。
+   */
+  function sessionStore(): Storage | null {
+    try {
+      return window.sessionStorage
+    } catch {
+      return null
+    }
+  }
+  // 超时 / 失败计数 / 刷新兜底见 createChatLoader；抽屉不可见时旧加载作废，不会刷新页面
+  const chatLoader = createChatLoader({
+    importer: (retryUrl) =>
+      retryUrl
+        ? import(/* @vite-ignore */ retryUrl)
+        : import('../assistant/drawer/AiDrawerChat.vue'),
+    isActive: () => props.visible,
+    storage: sessionStore,
+    reload: () => window.location.reload(),
+    timeout: CHAT_LOAD_TIMEOUT
+  })
+  const loadChat = () => chatLoader.load()
+
+  function createChat() {
+    return defineAsyncComponent({
+      loader: loadChat,
+      loadingComponent: ChatLoading,
+      errorComponent: ChatError,
+      // 不延迟：一打开就显示顶栏（含关闭按钮）；内容区提示另有 SPINNER_DELAY
+      delay: 0
+    })
+  }
+  const AiDrawerChat = shallowRef(createChat())
+  const chatKey = ref(0)
+  /**
+   * 抽屉关闭或卸载：作废进行中的加载（超时不再刷新页面、不计失败）。
+   * 还没加载成功时换一个新的异步组件，下次打开重新加载。
+   */
+  function abandonLoad() {
+    chatLoader.invalidate()
+    if (!chatLoader.loaded) {
+      AiDrawerChat.value = createChat()
+      chatKey.value++
+    }
+  }
+  watch(
+    () => props.visible,
+    (v) => {
+      if (!v) abandonLoad()
+    }
+  )
+  onBeforeUnmount(() => chatLoader.invalidate())
+
+  function reloadChat() {
+    chatLoader.retry()
+    AiDrawerChat.value = createChat()
+    chatKey.value++
+  }
+
+  const { width: viewportWidth } = useWindowSize()
+  const stored = useStorage(DRAWER_WIDTH_STORAGE_KEY, DRAWER_WIDTH_DEFAULT)
+  const width = computed(() => clampDrawerWidth(stored.value, viewportWidth.value))
+  const fullscreen = ref(false)
+  const forcedFullscreen = computed(() => viewportWidth.value <= DRAWER_FULLSCREEN_BREAKPOINT)
+  const isFullscreen = computed(() => forcedFullscreen.value || fullscreen.value)
+  const resizable = computed(() => !isFullscreen.value)
+  const drawerSize = computed(() => (isFullscreen.value ? '100%' : `${width.value}px`))
+
+  /** 关闭（含 Esc）后焦点回到触发按钮 */
+  const fabRef = ref<HTMLButtonElement | null>(null)
+
+  const resizing = ref(false)
+  function startResize() {
+    resizing.value = true
+  }
+  useEventListener(window, 'pointermove', (e: PointerEvent) => {
+    if (!resizing.value) return
+    stored.value = clampDrawerWidth(viewportWidth.value - e.clientX, viewportWidth.value)
+  })
+  useEventListener(window, 'pointerup', () => {
+    resizing.value = false
+  })
 </script>
 
 <style scoped>
@@ -62,5 +258,81 @@
       font-size: 11px;
       opacity: 0.6;
     }
+  }
+
+  .ai-drawer__wrap {
+    position: relative;
+    height: 100%;
+  }
+
+  /* 左缘 6px 拖拽热区，悬停/拖动时显示 2px 品牌色竖线 */
+  .ai-drawer__resizer {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    z-index: 10;
+    width: 6px;
+    touch-action: none;
+    cursor: col-resize;
+  }
+
+  .ai-drawer__resizer::after {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 0;
+    width: 2px;
+    content: '';
+    background: var(--el-color-primary);
+    opacity: 0;
+  }
+
+  .ai-drawer__resizer:hover::after,
+  .is-resizing .ai-drawer__resizer::after {
+    opacity: 1;
+  }
+</style>
+
+<style>
+  /* 抽屉 append-to-body，scoped 选不到 */
+  .ai-drawer.el-drawer .el-drawer__body {
+    padding: 0;
+    overflow: hidden;
+  }
+
+  /* 加载中 / 失败状态由 h() 渲染，不带 scoped 属性，样式放这里 */
+  .ai-drawer .ai-drawer__shell {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    background: var(--el-bg-color);
+  }
+
+  .ai-drawer .ai-drawer__state {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+    gap: 12px;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    padding: 24px;
+    font-size: 14px;
+    color: var(--el-text-color-secondary);
+    text-align: center;
+  }
+
+  .ai-drawer .ai-drawer__state.is-error .el-icon {
+    color: var(--el-color-danger);
+  }
+
+  /* 加载中标题占位条：浅色提高对比度，暗色沿用 fill-color */
+  html.dark .ai-drawer .ai-dshell__skeleton {
+    background: var(--el-fill-color);
+  }
+
+  .ai-drawer.is-resizing {
+    user-select: none;
   }
 </style>

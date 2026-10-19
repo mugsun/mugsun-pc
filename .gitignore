@@ -25,3 +25,5 @@ dev.log
 
 # compose 口令文件（docker/compose.pc.yml）
 docker/.env
+
+e2e-ui-report/

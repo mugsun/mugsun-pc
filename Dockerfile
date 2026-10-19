@@ -49,10 +49,13 @@ LABEL org.opencontainers.image.title="mugsun-pc" \
 # MUGSUN_GATEWAY_CIDRS：前置网关（TLS 终端/负载均衡）所在网段，逗号或空格分隔；
 #   只有来自这些地址的 X-Forwarded-For / X-Forwarded-Proto 才被采信，默认空 = 不信任任何前置代理。
 # MUGSUN_CSP_TILE_HOSTS / MUGSUN_CSP_TRACK_HOSTS：CSP 额外放行的地图瓦片域 / 埋点上报域（空格分隔）。
+# MUGSUN_CSP_MODE：report-only（默认）| enforce；MUGSUN_CSP_REPORT_URI：违规报告地址，空 = 不输出 report-uri/report-to。
 ENV MUGSUN_API_UPSTREAM=http://mugsun-boot:8080 \
     MUGSUN_GATEWAY_CIDRS= \
     MUGSUN_CSP_TILE_HOSTS= \
     MUGSUN_CSP_TRACK_HOSTS= \
+    MUGSUN_CSP_MODE=report-only \
+    MUGSUN_CSP_REPORT_URI= \
     NGINX_ENVSUBST_FILTER=^MUGSUN_
 
 USER root

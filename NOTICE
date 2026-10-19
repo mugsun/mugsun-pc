@@ -6,3 +6,44 @@ Mugsun-pc
 完整许可条款见同目录 LICENSE 文件。
 
 本仓库在上述基座之上的修改与新增部分：Copyright (c) 2026 北京定旭晨信息科技工作室 (mugsun)。
+
+----------------------------------------------------------------------
+离线图标数据（src/assets/icons/offline-icons.json）
+
+由 scripts/gen-offline-icons.mjs 从以下 Iconify 图标集包中抽取本项目实际用到的图标（未修改图形），
+来源包版本已钉死：
+
+- Remix Icon — Remix Design，Apache-2.0（@iconify-json/ri@1.2.10）
+- Fluent UI System Icons — Microsoft Corporation，MIT（@iconify-json/fluent@1.2.60）
+- IconPark Outline — ByteDance，Apache-2.0（@iconify-json/icon-park-outline@1.2.4）
+- Vaadin Icons — Vaadin，Apache-2.0（@iconify-json/vaadin@1.2.1）
+- Siemens Industrial Experience Icons — Siemens AG，MIT（@iconify-json/ix@1.2.13）
+- Solar — 480 Design（https://www.figma.com/community/file/1166831539721848736），
+  CC BY 4.0（https://creativecommons.org/licenses/by/4.0/）（@iconify-json/solar@1.2.13）
+  使用的图标：solar:double-alt-arrow-right-linear
+- IconaMoon — Dariush Habibpour（https://github.com/dariushhpg1/IconaMoon），
+  CC BY 4.0（https://creativecommons.org/licenses/by/4.0/）（@iconify-json/iconamoon@1.2.2）
+  使用的图标：iconamoon:arrow-down-2-thin
+
+----------------------------------------------------------------------
+第三方组件（npm 依赖）
+
+- vue-element-plus-x（https://github.com/HeJiaYue520/Element-Plus-X），MIT License。
+  用于 AI 助手抽屉（Conversations、BubbleList、XSender、Welcome、Prompts），按需异步加载。
+  版权归原作者所有，完整许可条款见上述仓库的 LICENSE 文件。
+
+  vue-element-plus-x 的运行时依赖（随 AI 助手抽屉 chunk 一起打包），均为 MIT License：
+- radash 12.1.1（https://github.com/rayepps/radash），Copyright (c) 2022 radash。
+- virtua 0.49.3（https://github.com/inokawa/virtua），Copyright (c) 2022 inokawa。
+- x-sender 1.4.6（https://github.com/WengJianFei/x-sender），Copyright (c) 2025-present, jianfv。
+- ts-md5 2.0.1（https://github.com/cotag/ts-md5），Copyright (c) 2020 Place Technology。
+- deepmerge 4.3.1（https://github.com/TehShrike/deepmerge），
+  Copyright (c) 2012 James Halliday, Josh Duff, and other contributors。
+
+----------------------------------------------------------------------
+字体（src/assets/brand/fonts/mugsun-saira-600.woff2）
+
+- Saira — Copyright 2020 The Saira Project Authors（https://github.com/Omnibus-Type/Saira），
+  SIL Open Font License 1.1（OFL-1.1），完整条款见 src/assets/brand/fonts/LICENSE-Saira-OFL.txt。
+  本仓库使用的是修改版：固定为 wght 600 / wdth 100 实例，并子集化为仅含 M、U、G、S、N 五个字形，
+  用于渲染字标「MUGSUN」。按 OFL 保留字体名条款，修改版内部字体名改为「Mugsun Saira」。

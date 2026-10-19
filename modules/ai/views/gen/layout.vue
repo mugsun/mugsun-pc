@@ -1,5 +1,5 @@
 <template>
-  <GenLayout type="layout" title="自动排版" />
+  <GenLayout type="layout" :title="$t('aiGen.pageLayout')" />
 </template>
 <script setup lang="ts">
   import GenLayout from './GenLayout.vue'

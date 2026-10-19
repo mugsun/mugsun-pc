@@ -36,7 +36,10 @@ services:
       MUGSUN_API_UPSTREAM: http://boot:8080
       # 前置网关（TLS 终端/负载均衡）网段，逗号分隔；只有它们传来的 X-Forwarded-For/Proto 才被采信
       MUGSUN_GATEWAY_CIDRS: ${MUGSUN_GATEWAY_CIDRS:-}
-      # CSP（Report-Only）额外放行的瓦片域 / 埋点上报域，空格分隔，如 'https://tile.example.com'
+      # CSP 模式：report-only（默认）| enforce（演示站用 enforce）；报告地址为空时不输出 report-uri
+      MUGSUN_CSP_MODE: ${MUGSUN_CSP_MODE:-report-only}
+      MUGSUN_CSP_REPORT_URI: ${MUGSUN_CSP_REPORT_URI:-}
+      # CSP 额外放行的瓦片域 / 埋点上报域，空格分隔，如 'https://tile.example.com'
       MUGSUN_CSP_TILE_HOSTS: ${MUGSUN_CSP_TILE_HOSTS:-}
       MUGSUN_CSP_TRACK_HOSTS: ${MUGSUN_CSP_TRACK_HOSTS:-}
     ports:

@@ -17,7 +17,17 @@ export const OL_ROLE_BASEMAP = 'basemap'
 export const OL_ROLE_SKETCH = 'sketch'
 export const OL_ROLE_OVERLAY = 'overlay'
 
-export function createOlMap(target: HTMLElement, view: GisView2d, provider: GisProviderCode): Map {
+export interface OlMapOptions {
+  /** 缩放控件（+/−），默认开；小尺寸嵌入卡片可关掉 */
+  zoomControl?: boolean
+}
+
+export function createOlMap(
+  target: HTMLElement,
+  view: GisView2d,
+  provider: GisProviderCode,
+  options: OlMapOptions = {}
+): Map {
   const map = new Map({
     target,
     view: new View({
@@ -30,7 +40,7 @@ export function createOlMap(target: HTMLElement, view: GisView2d, provider: GisP
       rotate: false,
       attribution: true,
       attributionOptions: { collapsible: false },
-      zoom: true
+      zoom: options.zoomControl ?? true
     }).extend([new ScaleLine({ units: 'metric' })])
   })
   map.getViewport().setAttribute('tabindex', '0')

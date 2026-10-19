@@ -11,7 +11,12 @@
       class="dual-menu-left"
       :style="{ width: dualMenuShowText ? '80px' : '64px', background: getMenuTheme.background }"
     >
-      <ArtLogo class="logo" @click="navigateToHome" />
+      <ArtLogo
+        class="logo"
+        :size="32"
+        :on-dark="getMenuTheme.theme === MenuThemeEnum.DARK"
+        @click="navigateToHome"
+      />
 
       <ElScrollbar style="height: calc(100% - 135px)">
         <ul>
@@ -77,17 +82,24 @@
           background: getMenuTheme.background
         }"
       >
-        <ArtLogo v-if="!isDualMenu" class="logo" />
+        <ArtLogo
+          v-if="!isDualMenu"
+          class="logo"
+          :size="32"
+          :wordmark="menuOpen"
+          :word-size="18"
+          :word-color="getMenuTheme.systemNameColor"
+          :on-dark="getMenuTheme.theme === MenuThemeEnum.DARK"
+        />
 
-        <p
-          :class="{ 'is-dual-menu-name': isDualMenu }"
-          :style="{
-            color: getMenuTheme.systemNameColor,
-            opacity: !menuOpen ? 0 : 1
-          }"
-        >
-          {{ AppConfig.systemInfo.name }}
-        </p>
+        <ArtLogo
+          v-else
+          class="logo"
+          :mark="false"
+          :wordmark="menuOpen"
+          :word-size="18"
+          :word-color="getMenuTheme.systemNameColor"
+        />
       </div>
       <ElScrollbar :style="scrollbarStyle">
         <ElMenu
@@ -132,9 +144,8 @@
 </template>
 
 <script setup lang="ts">
-  import AppConfig from '@/config'
   import { useSettingStore } from '@/store/modules/setting'
-  import { MenuTypeEnum, MenuWidth } from '@/enums/appEnum'
+  import { MenuThemeEnum, MenuTypeEnum, MenuWidth } from '@/enums/appEnum'
   import { useMenuStore } from '@/store/modules/menu'
   import { useTopMenuStore } from '@/store/modules/topMenu'
   import { filterMenusByScheme } from '@/utils/topMenuFilter'
