@@ -162,7 +162,7 @@ axiosInstance.interceptors.response.use(
     const method = response.config.method?.toUpperCase()
     // HTTP 200 业务失败：axios 视为成功，接口监控记不到，单独上报一次（带 biz_code）
     reportApiError({ url, method, status: response.status, bizCode: code, message })
-    // 业务错误携带 R.data（如验证码限流 data.retryAfter），供调用方按 code 分支
+    // data 为 R.data（如验证码限流 retryAfter），供调用方按 code 分支
     throw new HttpError(message, code, {
       data,
       url,

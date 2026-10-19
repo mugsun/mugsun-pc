@@ -1,31 +1,25 @@
 import App from './App.vue'
-import { createApp, watch } from 'vue'
+import { createApp } from 'vue'
 import { initStore } from './store'
 import { initRouter } from './router'
 import language from './locales'
-import { provideGlobalConfig } from 'element-plus'
-import zhCn from 'element-plus/es/locale/lang/zh-cn'
-import en from 'element-plus/es/locale/lang/en'
+import { bindElementLocale } from './locales/element'
 import '@styles/core/tailwind.css'
 import '@styles/index.scss'
 import '@utils/sys/console.ts'
 import '@utils/ui/iconify-loader'
 import { setupGlobDirectives } from './directives'
 import { setupErrorHandle } from './utils/sys/error-handle'
-import { installTrackApi, setupTrack } from './plugins/track'
+import {
+  installTrackApi,
+  setupTrack,
+  trackSetupOptionsFromEnv,
+  type TrackSetupOptions
+} from './plugins/track'
 import { enableAi, enableTrack } from '@/modules/flags'
-import { useUserStore } from './store/modules/user'
-
-/**
- * MessageBox 渲染在组件树外，不读 App.vue 的 ConfigProvider，
- * 因此通过 provideGlobalConfig 写入 app 级全局 locale（组件与样式由 unplugin 按需引入）。
- */
-function elementLocale(lang: string) {
-  return lang === 'en' ? en : zhCn
-}
 
 const trackPluginMods = import.meta.glob<{
-  setupTrack: (app: ReturnType<typeof createApp>) => void
+  setupTrack: (app: ReturnType<typeof createApp>, options?: TrackSetupOptions) => void
   trackIdentify: (...args: unknown[]) => void
   trackReset: () => void
 }>('../modules/track/plugin.ts')
@@ -52,18 +46,12 @@ async function bootstrap() {
         trackIdentify: track.trackIdentify,
         trackReset: track.trackReset
       })
-      setupTrack(app)
+      setupTrack(app, trackSetupOptionsFromEnv(import.meta.env))
     }
   }
 
-  const userStore = useUserStore()
-  provideGlobalConfig({ locale: elementLocale(userStore.language) }, app, true)
-  watch(
-    () => userStore.language,
-    (lang) => {
-      provideGlobalConfig({ locale: elementLocale(lang) }, app, true)
-    }
-  )
+  // Element Plus 自带文案（MessageBox 等组件树外的也算）跟随界面语言
+  bindElementLocale(app)
 
   if (enableAi) {
     const loaders = Object.values(aiPluginMods)

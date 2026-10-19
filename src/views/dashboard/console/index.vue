@@ -1,4 +1,4 @@
-<!-- 工作台：登录落地页——概览统计 + echarts 图表 + 我的待办/通知/更新日志卡 + 可配置快捷入口 -->
+<!-- 工作台：登录落地页——概览统计 + echarts 图表 + 我的待办/通知/更新日志卡（ChangelogCard）+ 可配置快捷入口 -->
 <template>
   <div class="console-page">
     <!-- 概览统计瓦片 -->
@@ -103,19 +103,7 @@
       </ElCol>
 
       <ElCol :xs="24" :lg="8" class="mt-4 mt-lg-0">
-        <!-- 只展示 package.json 当前版本，历史变更以仓库 CHANGELOG 为准，不在此编造 -->
-        <div class="art-card list-card">
-          <div class="card-head">
-            <span class="card-title">{{ $t('pages.dashboard.console.changelog') }}</span>
-          </div>
-          <div class="p-5">
-            <div class="text-sm text-g-500">{{ $t('pages.dashboard.console.currentVersion') }}</div>
-            <div class="mt-1 text-2xl font-medium">v{{ appVersion }}</div>
-            <ElLink class="mt-4" type="primary" :href="CHANGELOG_URL" target="_blank">
-              {{ $t('pages.dashboard.console.viewChangelog') }}
-            </ElLink>
-          </div>
-        </div>
+        <ChangelogCard />
       </ElCol>
     </ElRow>
 
@@ -172,6 +160,7 @@
   } from '@/api/workbench'
   import { useSettingStore } from '@/store/modules/setting'
   import { useI18n } from 'vue-i18n'
+  import ChangelogCard from './ChangelogCard.vue'
 
   defineOptions({ name: 'Console' })
 
@@ -322,8 +311,6 @@
   const todoLoading = ref(false)
   const noticeList = ref<any[]>([])
   const noticeLoading = ref(false)
-  const appVersion = __PKG_VERSION__
-  const CHANGELOG_URL = 'https://github.com/mugsun/mugsun-pc/blob/main/CHANGELOG.md'
   const overviewLoading = ref(false)
 
   /**

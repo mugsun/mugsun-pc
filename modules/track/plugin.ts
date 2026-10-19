@@ -45,11 +45,9 @@ import {
 import { router } from '@/router'
 import { useUserStore } from '@/store/modules/user'
 import { setApiErrorReporter } from '@/utils/http/api-error-report'
-import {
-  bypassHandledErrorsInVueHandler,
-  filterHandledErrors,
-  hasTrackApiError
-} from './error-filter'
+import { hasTrackApiError } from './error-filter'
+import type { TrackSetupOptions } from '@/plugins/track'
+import { isCanceledError } from '@/utils/sys/error-handle'
 
 /** 默认应用种子 app_key（与后端 track 库 T2 迁移种子一致；VITE_TRACK_APP_KEY 可覆盖） */
 const DEFAULT_TRACK_APP_KEY = 'ak_000000000000000000000001'
@@ -89,9 +87,22 @@ function replayBridgePlugin(): TrackPlugin {
  * endpoint 缺省 /api：dev 下 /api/track/collect 经 vite 代理到后端；release 取构建版本号。
  * plugins 显式给定（与 SDK vue 适配层 router 模式同一序列，外加回放桥接）——
  * 不传则适配层内部默认序列不含回放。
+ * 已处理错误不在管理台拦截，是否跳过由 SDK 的 skipHandledErrors 决定（options 可透传）；
+ * 主动取消的请求不是错误，经 SDK 的 ignoreErrors 谓词丢弃。
  */
-export function setupTrack(app: App): void {
-  const previousErrorHandler = app.config.errorHandler
+export function setupTrack(app: App, options: TrackSetupOptions = {}): void {
+  // 错误过滤相关选项（需 SDK ≥ mugsun-track#19）；skipHandledErrors 未传时不带这个键
+  const errorOptions: {
+    ignoreErrors: (error: unknown, message: string) => boolean
+    skipHandledErrors?: boolean
+  } = {
+    // 取消的请求（路由切换、重复提交去重等）不进错误监控
+    ignoreErrors: (error: unknown) => isCanceledError(error),
+    // 只在显式传入时带上，未传让 SDK 用默认值
+    ...(options.skipHandledErrors === undefined
+      ? {}
+      : { skipHandledErrors: options.skipHandledErrors })
+  }
   app.use(MugsunTrack, {
     endpoint: import.meta.env.VITE_TRACK_ENDPOINT || '/api',
     appKey: import.meta.env.VITE_TRACK_APP_KEY || DEFAULT_TRACK_APP_KEY,
@@ -103,7 +114,7 @@ export function setupTrack(app: App): void {
       autocapturePlugin(),
       exposurePlugin(),
       webVitalsPlugin(),
-      filterHandledErrors(errorPlugin()),
+      errorPlugin(),
       apiMonitorPlugin(),
       visualTrack(),
       geoPlugin(),
@@ -113,10 +124,9 @@ export function setupTrack(app: App): void {
     headers: (): Record<string, string> => {
       const token = useUserStore().accessToken
       return token ? { Authorization: token } : {}
-    }
+    },
+    ...errorOptions
   })
-  // 已处理的 HttpError（业务 400、网络失败等）不进错误监控（UX-007）
-  bypassHandledErrorsInVueHandler(app, previousErrorHandler)
   tracker = app.config.globalProperties.$track as TrackClient
   // HTTP 200 业务失败上报：仅当 SDK 提供 trackApiError 时接入（旧版 SDK 跳过）
   const client: unknown = tracker
