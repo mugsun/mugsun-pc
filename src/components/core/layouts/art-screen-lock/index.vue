@@ -123,19 +123,19 @@
   import { Lock, Unlock } from '@element-plus/icons-vue'
   import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
   import { useI18n } from 'vue-i18n'
-  import CryptoJS from 'crypto-js'
+  import { setLockSecret, verifyAndClearLockSecret } from '@/utils/lock/lockSecret'
   import { useUserStore } from '@/store/modules/user'
   import { mittBus } from '@/utils/sys'
 
   // 国际化
   const { t } = useI18n()
 
-  // 环境变量
-  const ENCRYPT_KEY = import.meta.env.VITE_LOCK_ENCRYPT_KEY
+  // 锁屏只是遮挡界面，不是安全边界：解锁是纯前端比对，刷新页面就会解锁。
+  // 密码只以加盐 SHA-256 hash 存在内存里（见 utils/lock/lockSecret），不落任何存储。
 
   // Store
   const userStore = useUserStore()
-  const { info: userInfo, lockPassword, isLock } = storeToRefs(userStore)
+  const { info: userInfo, isLock } = storeToRefs(userStore)
   const avatarSrc = computed(() => resolveAvatarUrl(userInfo.value?.avatar, defaultAvatar))
 
   // 响应式数据
@@ -335,19 +335,6 @@
     }
   }
 
-  // 工具函数
-  const verifyPassword = (inputPassword: string, storedPassword: string): boolean => {
-    try {
-      const decryptedPassword = CryptoJS.AES.decrypt(storedPassword, ENCRYPT_KEY).toString(
-        CryptoJS.enc.Utf8
-      )
-      return inputPassword === decryptedPassword
-    } catch (error) {
-      console.error('密码解密失败:', error)
-      return false
-    }
-  }
-
   // 事件处理函数
   const handleKeydown = (event: KeyboardEvent) => {
     if (event.altKey && event.key.toLowerCase() === '¬') {
@@ -365,13 +352,14 @@
   const handleLock = async () => {
     if (!formRef.value) return
 
-    await formRef.value.validate((valid, fields) => {
+    await formRef.value.validate(async (valid, fields) => {
       if (valid) {
-        const encryptedPassword = CryptoJS.AES.encrypt(formData.password, ENCRYPT_KEY).toString()
-        userStore.setLockStatus(true)
-        userStore.setLockPassword(encryptedPassword)
-        visible.value = false
+        const password = formData.password
+        // 算完 hash 立即丢弃明文
         formData.password = ''
+        await setLockSecret(password)
+        userStore.setLockStatus(true)
+        visible.value = false
       } else {
         console.error('表单验证失败:', fields)
       }
@@ -381,15 +369,15 @@
   const handleUnlock = async () => {
     if (!unlockFormRef.value) return
 
-    await unlockFormRef.value.validate((valid, fields) => {
+    await unlockFormRef.value.validate(async (valid, fields) => {
       if (valid) {
-        const isValid = verifyPassword(unlockForm.password, lockPassword.value)
+        const password = unlockForm.password
+        unlockForm.password = ''
+        const isValid = await verifyAndClearLockSecret(password)
 
         if (isValid) {
           try {
             userStore.setLockStatus(false)
-            userStore.setLockPassword('')
-            unlockForm.password = ''
             visible.value = false
             showDevToolsWarning.value = false
           } catch (error) {
@@ -405,7 +393,6 @@
             }, 300)
           }
           ElMessage.error(t('lockScreen.pwdError'))
-          unlockForm.password = ''
         }
       } else {
         console.error('表单验证失败:', fields)
