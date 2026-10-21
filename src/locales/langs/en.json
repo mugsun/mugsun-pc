@@ -3330,7 +3330,7 @@
         "captchaTitle": "Captcha settings · {name}",
         "captchaEnabled": "Enable captcha",
         "captchaTypes": "Enabled types",
-        "captchaTypesHint": "Leave all unchecked to use the platform default: all five types on, picked at random",
+        "captchaTypesHint": "Leave all unchecked to use the platform default types (all types out of the box, picked at random)",
         "captchaTypeSLIDER": "Slider puzzle",
         "captchaTypeWORD_CLICK": "Word click",
         "captchaTypeICON_CLICK": "Icon click",

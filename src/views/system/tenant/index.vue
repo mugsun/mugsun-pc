@@ -32,21 +32,21 @@
           <template #empty>
             <span>{{ emptyText }}</span>
           </template>
-          <ElTableColumn type="selection" width="48" :selectable="canSelect" />
-          <ElTableColumn type="index" :label="$t('table.column.index')" min-width="70" />
+          <ElTableColumn type="selection" width="44" :selectable="canSelect" />
+          <ElTableColumn type="index" :label="$t('table.column.index')" width="54" />
           <ElTableColumn
             prop="tenantCode"
             :label="$t('pages.system.tenant.tenantCode')"
-            min-width="130"
+            min-width="101"
             show-overflow-tooltip
           />
           <ElTableColumn
             prop="tenantName"
             :label="$t('pages.system.tenant.tenantName')"
-            min-width="140"
+            min-width="110"
             show-overflow-tooltip
           />
-          <ElTableColumn :label="$t('pages.system.tenant.package')" min-width="110">
+          <ElTableColumn :label="$t('pages.system.tenant.package')" min-width="146">
             <template #default="{ row }">
               <ElTag v-if="row.packageId" type="success">{{ packageName(row.packageId) }}</ElTag>
               <ElTag v-else type="info">{{ $t('pages.system.tenant.noLimitFeature') }}</ElTag>
@@ -54,17 +54,21 @@
           </ElTableColumn>
           <ElTableColumn
             :label="$t('pages.system.tenant.contactUser')"
-            min-width="100"
+            min-width="76"
             show-overflow-tooltip
           >
             <template #default="{ row }">{{ row.contactUser || '—' }}</template>
           </ElTableColumn>
-          <ElTableColumn :label="$t('pages.system.tenant.contactPhone')" min-width="140">
+          <ElTableColumn
+            :label="$t('pages.system.tenant.contactPhone')"
+            min-width="116"
+            show-overflow-tooltip
+          >
             <template #default="{ row }">{{ row.contactPhone || '—' }}</template>
           </ElTableColumn>
           <ElTableColumn
             :label="$t('pages.system.tenant.accountLimit')"
-            min-width="130"
+            min-width="109"
             align="center"
             header-align="center"
           >
@@ -78,7 +82,7 @@
           </ElTableColumn>
           <ElTableColumn
             :label="$t('pages.system.tenant.status')"
-            min-width="90"
+            min-width="78"
             align="center"
             header-align="center"
           >
@@ -89,7 +93,11 @@
               <ElTag v-else type="success">{{ $t('pages.system.tenant.normal') }}</ElTag>
             </template>
           </ElTableColumn>
-          <ElTableColumn :label="$t('pages.system.tenant.expireTime')" min-width="180">
+          <ElTableColumn
+            :label="$t('pages.system.tenant.expireTime')"
+            min-width="100"
+            show-overflow-tooltip
+          >
             <template #default="{ row }">
               {{
                 row.expireTime
@@ -98,7 +106,7 @@
               }}
             </template>
           </ElTableColumn>
-          <ElTableColumn :label="$t('pages.system.tenant.actions')" width="210" fixed="right">
+          <ElTableColumn :label="$t('pages.system.tenant.actions')" width="180" fixed="right">
             <template #default="{ row }">
               <ElButton v-perm="'sys:tenant:save'" link type="primary" @click="openEdit(row)">{{
                 $t('pages.system.tenant.edit')
@@ -343,6 +351,11 @@
   /* 表头不折行：列宽已按英文表头留足 min-width，窄屏横向滚动 */
   .tenant-table :deep(.el-table__header .cell) {
     white-space: nowrap;
+  }
+
+  /* 列多：单元格左右内边距收到 8px，1440 下全部列不横滚 */
+  .tenant-table :deep(.cell) {
+    padding: 0 8px;
   }
 
   /* 卡片体改为纵向 flex，表格滚动区占满剩余高度（滚动区见模板注释） */
