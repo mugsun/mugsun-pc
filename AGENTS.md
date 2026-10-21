@@ -126,6 +126,9 @@ pre-commit：`.husky/pre-commit` 使用 `pnpm exec lint-staged --no-stash`（**�
   - 推送一律写全 refspec：`git push origin <sha>:refs/heads/<分支>`，不用裸 `git push`，也不依赖 upstream 跟踪。
   - 还没审的本地提交，不放在跟踪 main（upstream 为 `origin/main`）的分支上。
   - 改动 `.github/` 下任何文件的提交，必须先有安全官签字，才能进 main。
+  - 一个 worktree 只给一条工作线用，另开的工作线一律新建自己的 worktree。
+  - 推送前用 `git rev-parse HEAD` 对照审过的完整 SHA；推送时不推 `HEAD`，写明 SHA，例如 `git push origin <sha>:refs/heads/main`。
+  - push 被打断时，先用 `git ls-remote` 和 `ps` 确认它没有在后台跑完，再做下一步。
 - 合入后作者自行删除远端分支。
 - 提交的作者和提交者一律是 `mugsun <bydongxin@gmail.com>`：用 `git -c user.name=mugsun -c user.email=bydongxin@gmail.com commit` 或仓库级 config，不改全局配置。已推送的历史（含 main 上以 noreply 等旧身份提交的）一律不改写、不 force push。
 - 登录 / 验证码 / 加解密 / 新依赖 / CI workflow 属于敏感改动，需安全审查。
