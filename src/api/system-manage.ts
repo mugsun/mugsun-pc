@@ -1,4 +1,5 @@
 import request from '@/utils/http'
+import { TRACE_HEADER } from '@/utils/http/traceId'
 import { AppRouteRecord } from '@/types/router'
 
 // 用户域 → @/api/user，角色域 → @/api/role，字典域 → @/api/dict（均 openapi 生成类型，无 any）
@@ -147,12 +148,21 @@ export function fetchUpdateTenant(data: Record<string, any>) {
 }
 
 /** 租户验证码开关与启用题型（仅平台超管）；types 缺省不改，[] 恢复平台默认。响应 data.warning 为后端提示文案 */
-export function fetchTenantCaptcha(data: {
-  id: number | string
-  enabled: boolean
-  types?: string[] | null
-}) {
-  return request.post<{ warning?: string } | null>({ url: '/api/system/tenant/captcha', data })
+export function fetchTenantCaptcha(
+  data: {
+    id: number | string
+    enabled: boolean
+    types?: string[] | null
+  },
+  opts: { traceId?: string } = {}
+) {
+  // 失败不弹 toast，弹窗内显示错误提示；traceId 进 X-Trace-Id 头，即提示里的错误编号
+  return request.post<{ warning?: string } | null>({
+    url: '/api/system/tenant/captcha',
+    data,
+    showErrorMessage: false,
+    headers: opts.traceId ? { [TRACE_HEADER]: opts.traceId } : undefined
+  })
 }
 
 // ===== 租户套餐 =====

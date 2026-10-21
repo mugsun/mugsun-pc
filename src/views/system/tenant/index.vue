@@ -37,13 +37,13 @@
           <ElTableColumn
             prop="tenantCode"
             :label="$t('pages.system.tenant.tenantCode')"
-            min-width="101"
+            min-width="104"
             show-overflow-tooltip
           />
           <ElTableColumn
             prop="tenantName"
             :label="$t('pages.system.tenant.tenantName')"
-            min-width="110"
+            min-width="112"
             show-overflow-tooltip
           />
           <ElTableColumn :label="$t('pages.system.tenant.package')" min-width="146">
@@ -61,14 +61,14 @@
           </ElTableColumn>
           <ElTableColumn
             :label="$t('pages.system.tenant.contactPhone')"
-            min-width="116"
+            min-width="118"
             show-overflow-tooltip
           >
             <template #default="{ row }">{{ row.contactPhone || '—' }}</template>
           </ElTableColumn>
           <ElTableColumn
             :label="$t('pages.system.tenant.accountLimit')"
-            min-width="109"
+            min-width="112"
             align="center"
             header-align="center"
           >
@@ -82,7 +82,7 @@
           </ElTableColumn>
           <ElTableColumn
             :label="$t('pages.system.tenant.status')"
-            min-width="78"
+            min-width="84"
             align="center"
             header-align="center"
           >
@@ -95,8 +95,8 @@
           </ElTableColumn>
           <ElTableColumn
             :label="$t('pages.system.tenant.expireTime')"
-            min-width="100"
-            show-overflow-tooltip
+            min-width="164"
+            class-name="tenant-expire-col"
           >
             <template #default="{ row }">
               {{
@@ -353,9 +353,14 @@
     white-space: nowrap;
   }
 
-  /* 列多：单元格左右内边距收到 8px，1440 下全部列不横滚 */
-  .tenant-table :deep(.cell) {
+  /* 列多：表头与单元格左右内边距统一 8px；英文 1440 下到期时间完整显示放不下时表格横滚 */
+  .tenant-table :deep(.el-table__cell .cell) {
     padding: 0 8px;
+  }
+
+  /* 到期时间完整显示，不截断 */
+  .tenant-table :deep(.tenant-expire-col .cell) {
+    white-space: nowrap;
   }
 
   /* 卡片体改为纵向 flex，表格滚动区占满剩余高度（滚动区见模板注释） */
