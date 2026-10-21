@@ -32,21 +32,21 @@
           <template #empty>
             <span>{{ emptyText }}</span>
           </template>
-          <ElTableColumn type="selection" width="44" :selectable="canSelect" />
+          <ElTableColumn type="selection" width="40" :selectable="canSelect" />
           <ElTableColumn type="index" :label="$t('table.column.index')" width="54" />
           <ElTableColumn
             prop="tenantCode"
             :label="$t('pages.system.tenant.tenantCode')"
-            min-width="104"
+            min-width="102"
             show-overflow-tooltip
           />
           <ElTableColumn
             prop="tenantName"
             :label="$t('pages.system.tenant.tenantName')"
-            min-width="112"
+            min-width="106"
             show-overflow-tooltip
           />
-          <ElTableColumn :label="$t('pages.system.tenant.package')" min-width="146">
+          <ElTableColumn :label="$t('pages.system.tenant.package')" min-width="144">
             <template #default="{ row }">
               <ElTag v-if="row.packageId" type="success">{{ packageName(row.packageId) }}</ElTag>
               <ElTag v-else type="info">{{ $t('pages.system.tenant.noLimitFeature') }}</ElTag>
@@ -54,7 +54,7 @@
           </ElTableColumn>
           <ElTableColumn
             :label="$t('pages.system.tenant.contactUser')"
-            min-width="76"
+            min-width="72"
             show-overflow-tooltip
           >
             <template #default="{ row }">{{ row.contactUser || '—' }}</template>
@@ -68,7 +68,7 @@
           </ElTableColumn>
           <ElTableColumn
             :label="$t('pages.system.tenant.accountLimit')"
-            min-width="112"
+            min-width="110"
             align="center"
             header-align="center"
           >
@@ -82,7 +82,7 @@
           </ElTableColumn>
           <ElTableColumn
             :label="$t('pages.system.tenant.status')"
-            min-width="84"
+            min-width="80"
             align="center"
             header-align="center"
           >
@@ -95,13 +95,13 @@
           </ElTableColumn>
           <ElTableColumn
             :label="$t('pages.system.tenant.expireTime')"
-            min-width="164"
+            min-width="112"
             class-name="tenant-expire-col"
           >
             <template #default="{ row }">
               {{
                 row.expireTime
-                  ? formatTableTime(row.expireTime)
+                  ? formatTableDate(row.expireTime)
                   : $t('pages.system.tenant.neverExpire')
               }}
             </template>
@@ -158,7 +158,7 @@
   } from '@/api/system-manage'
   import TenantDialog from './modules/tenant-dialog.vue'
   import TenantCaptchaDialog from './modules/tenant-captcha-dialog.vue'
-  import { formatTableTime } from '@/utils/date'
+  import { formatTableDate } from '@/utils/date'
   import { ElMessageBox, ElMessage } from 'element-plus'
 
   defineOptions({ name: 'Tenant' })
@@ -353,7 +353,7 @@
     white-space: nowrap;
   }
 
-  /* 列多：表头与单元格左右内边距统一 8px；英文 1440 下到期时间完整显示放不下时表格横滚 */
+  /* 列多：表头与单元格左右内边距统一 8px；列宽按英文实测，1440 下不横滚 */
   .tenant-table :deep(.el-table__cell .cell) {
     padding: 0 8px;
   }

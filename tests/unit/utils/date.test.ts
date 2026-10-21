@@ -5,7 +5,7 @@ vi.mock('@/locales', () => ({
   $t: (key: string, named?: Record<string, unknown>) => `${key}:${named?.value ?? ''}`
 }))
 
-const { formatTableTime, formatSecondsDuration } = await import('@/utils/date')
+const { formatTableTime, formatTableDate, formatSecondsDuration } = await import('@/utils/date')
 
 describe('formatTableTime', () => {
   it('空值与非法输入统一返回 -', () => {
@@ -64,5 +64,22 @@ describe('formatSecondsDuration', () => {
   it('不足 1 小时走分钟档，且至少显示 1 分钟', () => {
     expect(formatSecondsDuration(600)).toBe('utils.date.minute:10')
     expect(formatSecondsDuration(1)).toBe('utils.date.minute:1')
+  })
+})
+
+describe('formatTableDate', () => {
+  it('只取日期 YYYY-MM-DD，解析口径同 formatTableTime（微秒 ISO / epoch 毫秒）', () => {
+    expect(formatTableDate('2027-01-01T00:00:00.123456')).toBe('2027-01-01')
+    expect(formatTableDate('2027-01-01 23:59:59')).toBe('2027-01-01')
+    const ms = new Date(2026, 1, 3, 4, 5, 6).getTime()
+    expect(formatTableDate(ms)).toBe('2026-02-03')
+    expect(formatTableDate(String(ms))).toBe('2026-02-03')
+  })
+
+  it('空值与非法输入返回 -', () => {
+    expect(formatTableDate(undefined)).toBe('-')
+    expect(formatTableDate(null)).toBe('-')
+    expect(formatTableDate('')).toBe('-')
+    expect(formatTableDate('not-a-date')).toBe('-')
   })
 })

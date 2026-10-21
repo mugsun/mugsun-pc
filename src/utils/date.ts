@@ -24,6 +24,12 @@ export function formatTableTime(v?: string | number | null): string {
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`
 }
 
+/** 表格日期列：同 formatTableTime 的解析口径，只取 'YYYY-MM-DD'；空/非法 → '-' */
+export function formatTableDate(v?: string | number | null): string {
+  const full = formatTableTime(v)
+  return full === '-' ? full : full.slice(0, 10)
+}
+
 /** 秒数 → 可读有效期（2592000 → 30 天；86400 → 1 天；不足 1 天按小时；再不足按分钟）；空/非法 → '-' */
 export function formatSecondsDuration(v?: number | null): string {
   if (v === undefined || v === null || Number.isNaN(Number(v)) || Number(v) <= 0) return '-'
