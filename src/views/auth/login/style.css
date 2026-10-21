@@ -26,6 +26,11 @@
   .custom-height {
     @apply !h-[40px];
   }
+
+  /* 「第三方登录」分隔线文字底色与页面背景一致（默认 --el-bg-color 在暗色/窄屏下会露出色块） */
+  :deep(.social-login .el-divider__text) {
+    background-color: var(--default-bg-color);
+  }
 }
 
 /* 矮视口：压缩间距使表单一屏可达，避免 auth-right-wrap 出现多余滚动条 */
