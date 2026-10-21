@@ -557,8 +557,8 @@
       "confirmPassword": "Please enter your password again"
     },
     "rule": {
-      "usernameRequired": "Enter a username",
-      "passwordRequired": "Enter a password",
+      "usernameRequired": "Please enter your account",
+      "passwordRequired": "Please enter your password",
       "confirmPasswordRequired": "Please enter your password again",
       "passwordMismatch": "The two passwords are inconsistent!",
       "usernameLength": "The length is 3 to 20 characters",

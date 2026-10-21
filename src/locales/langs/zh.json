@@ -557,7 +557,7 @@
       "confirmPassword": "请再次输入密码"
     },
     "rule": {
-      "usernameRequired": "请输入用户名",
+      "usernameRequired": "请输入账号",
       "passwordRequired": "请输入密码",
       "confirmPasswordRequired": "请再次输入密码",
       "passwordMismatch": "两次输入密码不一致!",

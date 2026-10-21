@@ -1,4 +1,5 @@
-import { execSync } from 'node:child_process'
+import { execFileSync } from 'node:child_process'
+import { Socket } from 'node:net'
 
 /**
  * e2e 主套前置：PowerJob Server(7700) 须可达（W4-3 要走「建任务 → 立即执行 → Worker 真清 Redis 键」全链路）。
@@ -14,7 +15,7 @@ const PRECONDITION =
   '或设 E2E_START_POWERJOB=1（容器名可用 E2E_POWERJOB_CONTAINERS 指定）让 e2e 代为 docker start。'
 
 export default async function globalSetup(): Promise<void> {
-  if (portOpen(7700)) {
+  if (await portOpen(7700)) {
     console.log('[e2e] PowerJob Server 7700 已就绪')
     return
   }
@@ -28,13 +29,13 @@ export default async function globalSetup(): Promise<void> {
   console.log(`[e2e] E2E_START_POWERJOB=1：docker start ${names.join(' ')} …`)
   for (const name of names) {
     try {
-      execSync(`docker start ${name}`, { stdio: 'inherit' })
+      execFileSync('docker', ['start', name], { stdio: 'inherit' })
     } catch {
       console.warn(`[e2e] 容器 ${name} 不存在或启动失败`)
     }
   }
   for (let i = 0; i < 30; i++) {
-    if (portOpen(7700)) {
+    if (await portOpen(7700)) {
       console.log('[e2e] PowerJob Server 7700 已就绪')
       return
     }
@@ -43,13 +44,20 @@ export default async function globalSetup(): Promise<void> {
   throw new Error(PRECONDITION)
 }
 
-function portOpen(port: number): boolean {
-  try {
-    execSync(`curl -sf -o /dev/null http://127.0.0.1:${port}/`, { stdio: 'ignore' })
-    return true
-  } catch {
-    return false
-  }
+/** TCP 连通性检查（不依赖 HTTP 状态码：PowerJob 根路径返回什么都算可达） */
+function portOpen(port: number, host = '127.0.0.1', timeoutMs = 1000): Promise<boolean> {
+  return new Promise((resolve) => {
+    const socket = new Socket()
+    const done = (ok: boolean) => {
+      socket.destroy()
+      resolve(ok)
+    }
+    socket.setTimeout(timeoutMs)
+    socket.once('connect', () => done(true))
+    socket.once('timeout', () => done(false))
+    socket.once('error', () => done(false))
+    socket.connect(port, host)
+  })
 }
 
 function sleep(ms: number): Promise<void> {
