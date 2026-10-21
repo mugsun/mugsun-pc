@@ -19,6 +19,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:e2e": "playwright test",
+    "test:e2e:captcha-on": "playwright test -c playwright.captcha-on.config.ts",
     "test:ui-check": "playwright test -c playwright.ui.config.ts",
     "lint": "eslint",
     "fix": "eslint --fix",

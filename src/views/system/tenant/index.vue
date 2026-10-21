@@ -6,6 +6,7 @@
       v-model="searchForm"
       :items="searchItems"
       :span="6"
+      label-width="auto"
       @search="handleSearch"
       @reset="handleResetSearch"
     />
@@ -22,37 +23,52 @@
       <!-- 表格为自由增长内容：art-table-card 卡片体是 height:100%+overflow:hidden 裁剪，
            内部须自备滚动，否则矮视口下底部行被切断且不可达（同 track/user 修法） -->
       <div v-loading="loading" class="tenant-table-wrap">
-        <ElTable :data="tableData" border @selection-change="onSelectionChange">
+        <ElTable
+          :data="tableData"
+          border
+          class="tenant-table"
+          @selection-change="onSelectionChange"
+        >
           <template #empty>
             <span>{{ emptyText }}</span>
           </template>
-          <ElTableColumn type="selection" width="48" :selectable="canSelect" />
-          <ElTableColumn type="index" :label="$t('table.column.index')" width="60" />
+          <ElTableColumn type="selection" width="40" :selectable="canSelect" />
+          <ElTableColumn type="index" :label="$t('table.column.index')" width="54" />
           <ElTableColumn
             prop="tenantCode"
             :label="$t('pages.system.tenant.tenantCode')"
-            width="120"
+            min-width="102"
+            show-overflow-tooltip
           />
           <ElTableColumn
             prop="tenantName"
             :label="$t('pages.system.tenant.tenantName')"
-            min-width="140"
+            min-width="106"
+            show-overflow-tooltip
           />
-          <ElTableColumn :label="$t('pages.system.tenant.package')" min-width="100">
+          <ElTableColumn :label="$t('pages.system.tenant.package')" min-width="150">
             <template #default="{ row }">
               <ElTag v-if="row.packageId" type="success">{{ packageName(row.packageId) }}</ElTag>
               <ElTag v-else type="info">{{ $t('pages.system.tenant.noLimitFeature') }}</ElTag>
             </template>
           </ElTableColumn>
-          <ElTableColumn :label="$t('pages.system.tenant.contactUser')" min-width="100">
+          <ElTableColumn
+            :label="$t('pages.system.tenant.contactUser')"
+            min-width="72"
+            show-overflow-tooltip
+          >
             <template #default="{ row }">{{ row.contactUser || '—' }}</template>
           </ElTableColumn>
-          <ElTableColumn :label="$t('pages.system.tenant.contactPhone')" min-width="110">
+          <ElTableColumn
+            :label="$t('pages.system.tenant.contactPhone')"
+            min-width="118"
+            show-overflow-tooltip
+          >
             <template #default="{ row }">{{ row.contactPhone || '—' }}</template>
           </ElTableColumn>
           <ElTableColumn
             :label="$t('pages.system.tenant.accountLimit')"
-            width="90"
+            min-width="110"
             align="center"
             header-align="center"
           >
@@ -66,7 +82,7 @@
           </ElTableColumn>
           <ElTableColumn
             :label="$t('pages.system.tenant.status')"
-            width="90"
+            min-width="80"
             align="center"
             header-align="center"
           >
@@ -77,16 +93,24 @@
               <ElTag v-else type="success">{{ $t('pages.system.tenant.normal') }}</ElTag>
             </template>
           </ElTableColumn>
-          <ElTableColumn :label="$t('pages.system.tenant.expireTime')" min-width="180">
+          <ElTableColumn
+            :label="$t('pages.system.tenant.expireTime')"
+            min-width="112"
+            class-name="tenant-expire-col"
+          >
             <template #default="{ row }">
               {{
                 row.expireTime
-                  ? formatTableTime(row.expireTime)
+                  ? formatTableDate(row.expireTime)
                   : $t('pages.system.tenant.neverExpire')
               }}
             </template>
           </ElTableColumn>
-          <ElTableColumn :label="$t('pages.system.tenant.actions')" width="210" fixed="right">
+          <ElTableColumn
+            :label="$t('pages.system.tenant.actions')"
+            width="180"
+            :fixed="narrow ? false : 'right'"
+          >
             <template #default="{ row }">
               <ElButton v-perm="'sys:tenant:save'" link type="primary" @click="openEdit(row)">{{
                 $t('pages.system.tenant.edit')
@@ -125,7 +149,8 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onDeactivated, onBeforeUnmount } from 'vue'
+  import { computed, ref, onMounted, onDeactivated, onBeforeUnmount } from 'vue'
+  import { useWindowSize } from '@vueuse/core'
   import { useI18n } from 'vue-i18n'
   import { onBeforeRouteLeave } from 'vue-router'
   import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
@@ -138,12 +163,15 @@
   } from '@/api/system-manage'
   import TenantDialog from './modules/tenant-dialog.vue'
   import TenantCaptchaDialog from './modules/tenant-captcha-dialog.vue'
-  import { formatTableTime } from '@/utils/date'
+  import { formatTableDate } from '@/utils/date'
   import { ElMessageBox, ElMessage } from 'element-plus'
 
   defineOptions({ name: 'Tenant' })
 
   const { t } = useI18n()
+  // 窄屏（≤768px，同验证码弹窗）操作列不固定，避免盖住前面的列
+  const { width: winWidth } = useWindowSize()
+  const narrow = computed(() => winWidth.value <= 768)
 
   // ===== 查询栏 =====
   const searchForm = ref({
@@ -328,6 +356,21 @@
 </script>
 
 <style scoped>
+  /* 表头不折行：列宽已按英文表头留足 min-width，窄屏横向滚动 */
+  .tenant-table :deep(.el-table__header .cell) {
+    white-space: nowrap;
+  }
+
+  /* 列多：表头与单元格左右内边距统一 8px；列宽按英文实测，1440 下不横滚 */
+  .tenant-table :deep(.el-table__cell .cell) {
+    padding: 0 8px;
+  }
+
+  /* 到期时间完整显示，不截断 */
+  .tenant-table :deep(.tenant-expire-col .cell) {
+    white-space: nowrap;
+  }
+
   /* 卡片体改为纵向 flex，表格滚动区占满剩余高度（滚动区见模板注释） */
   .tenant-page :deep(.art-table-card > .el-card__body) {
     display: flex;

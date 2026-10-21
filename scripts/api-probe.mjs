@@ -10,17 +10,14 @@
  *   node scripts/api-probe.mjs track-feed [batches] [size]   # collect 灌注（默认 100 批×100 事件，p50/p95/max + 落库核对）
  *
  * 环境：PROBE_BASE（默认 http://localhost:8080，直连后端，不经 vite 代理）
- *       PROBE_REDIS（默认 mugsun-redis）、PROBE_REDIS_DB（默认 3）
  *       PROBE_TRACK_APP_KEY（默认 T2 种子 ak_000000000000000000000001）
- * 登录复刻集成测试链路：取验证码 → Redis 读答案 → SM2 公钥加密（开启时）→ 登录换 token。
+ * 登录链路：确认后端已关闭验证码 → SM2 公钥加密（开启时）→ 登录换 token。
  */
 import { execSync } from 'node:child_process'
 import { performance } from 'node:perf_hooks'
 import smCrypto from 'sm-crypto'
 
 const BASE = process.env.PROBE_BASE || 'http://localhost:8080'
-const REDIS = process.env.PROBE_REDIS || 'mugsun-redis'
-const REDIS_DB = process.env.PROBE_REDIS_DB || '3'
 const TENANT = '000000'
 /** 埋点默认应用种子 app_key（与后端 track 库 T2 迁移种子一致） */
 const TRACK_APP_KEY = process.env.PROBE_TRACK_APP_KEY || 'ak_000000000000000000000001'
@@ -29,14 +26,6 @@ const PG_CONTAINER = process.env.PROBE_PG_CONTAINER || 'mugsun-pg'
 const PG_DB_TRACK = process.env.PROBE_PG_TRACK_DB || 'mugsun_track'
 
 // ---------- 基础 ----------
-
-function readCaptcha(uuid) {
-  const out = execSync(`docker exec ${REDIS} redis-cli -n ${REDIS_DB} GET mugsun:captcha:${uuid}`, {
-    encoding: 'utf-8'
-  }).trim()
-  if (!out) throw new Error(`验证码不存在或已过期: ${uuid}`)
-  return out
-}
 
 async function api(method, path, { token, body, headers = {} } = {}) {
   const h = { ...headers }
@@ -64,10 +53,13 @@ async function api(method, path, { token, body, headers = {} } = {}) {
 }
 
 async function login(username = 'admin', password = '123456') {
-  const cap = await api('GET', '/auth/captcha')
-  const uuid = cap.data?.captchaUuid
-  if (!uuid) throw new Error('取验证码失败: ' + cap.raw)
-  const code = readCaptcha(uuid)
+  // 数字验证码已移除；探针不解行为验证码，要求后端关闭验证码（mugsun.captcha.enabled=false 或平台租户开关）
+  const cfg = await api('GET', `/auth/captcha/config?scene=login&clientId=web&tenantId=${TENANT}`)
+  if (cfg.data?.enabled !== false) {
+    throw new Error(
+      `探针要求后端关闭验证码：/auth/captcha/config HTTP ${cfg.http} 返回 ${cfg.raw.slice(0, 200)}`
+    )
+  }
   const key = await api('GET', '/auth/sm2-public-key')
   let finalPassword = password
   if (key.data?.gmEnabled) {
@@ -78,8 +70,6 @@ async function login(username = 'admin', password = '123456') {
       tenantId: TENANT,
       username,
       password: finalPassword,
-      captchaUuid: uuid,
-      captchaCode: code,
       clientId: 'web'
     }
   })

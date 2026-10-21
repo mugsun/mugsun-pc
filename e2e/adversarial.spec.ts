@@ -61,14 +61,8 @@ test('ADV-1 搜索栏 SQL 注入与畸形输入（全平台新查询参数）', 
   expect((await check.json()).data.records.length).toBeGreaterThan(0)
 })
 
-test('ADV-2 忘记密码端点滥用（无码/错码/限频）', async () => {
-  // 无图形码直接发码 → 400
-  const noCaptcha = await page.request.fetch('/api/auth/forget-code', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: { username: 'admin' }
-  })
-  expect((await noCaptcha.json()).code, '无图形码发码须被拒').toBe(400)
+test('ADV-2 忘记密码端点滥用（错码）', async () => {
+  // 不带验证码令牌发码被拒：主套后端关闭验证码，此项移到 e2e/captcha-on/captcha-required.spec.ts（pnpm test:e2e:captcha-on）
 
   // 错码重置 → 400（且不计入真实码）
   const badCode = await page.request.fetch('/api/auth/forget-reset', {

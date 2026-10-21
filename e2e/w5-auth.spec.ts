@@ -2,12 +2,12 @@ import { execSync } from 'node:child_process'
 import type { Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
 import { sm2 } from 'sm-crypto'
-import { login } from './fixtures/auth'
+import { assertCaptchaDisabled, login } from './fixtures/auth'
 import { PG_CONTAINER, REDIS_CONTAINER, REDIS_DB } from './helpers/docker'
 
 /**
  * W5 登录体验增强端到端：
- * 1) 忘记密码全链路——发码（图形验证码前置）→ Redis 取码 → 重置 → 旧密码失败/新密码成功。
+ * 1) 忘记密码全链路——发码（前置：后端已关闭验证码）→ Redis 取码 → 重置 → 旧密码失败/新密码成功。
  *    邮件通道未配置（默认 dev 占位 SMTP）时，显式错误「邮件通道未配置」单独成测，全链路自动跳过；
  *    配置真实 SMTP 后全链路自动执行。
  * 2) 登录页第三方登录区与 /auth/social/sources 一致（无源整区不可见，mock 按钮仅 DEV+后端允许）。
@@ -26,16 +26,6 @@ function redisGet(key: string): string {
   }).trim()
 }
 
-/** 取一对图形验证码（API 级，不干扰页面内展示的那张） */
-async function newCaptcha(page: Page): Promise<{ uuid: string; code: string }> {
-  const resp = await page.request.fetch('/api/auth/captcha')
-  const json = await resp.json()
-  const uuid = json.data.captchaUuid as string
-  const code = redisGet(`mugsun:captcha:${uuid}`)
-  expect(code, '图形验证码答案须已写入 Redis').not.toBe('')
-  return { uuid, code }
-}
-
 /** SM2 传输加密（对齐前端 @/utils/gm：C1C3C2、密文不带 04 前缀；gm 关闭时明文） */
 async function encryptPassword(page: Page, raw: string): Promise<string> {
   const resp = await page.request.fetch('/api/auth/sm2-public-key')
@@ -46,7 +36,7 @@ async function encryptPassword(page: Page, raw: string): Promise<string> {
 
 /** API 级登录尝试，返回 R 信封（成败均由调用方断言） */
 async function apiLogin(page: Page, username: string, rawPassword: string) {
-  const captcha = await newCaptcha(page)
+  await assertCaptchaDisabled(page, 'login')
   const resp = await page.request.fetch('/api/auth/login', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -54,9 +44,7 @@ async function apiLogin(page: Page, username: string, rawPassword: string) {
       username,
       password: await encryptPassword(page, rawPassword),
       tenantId: '000000',
-      clientId: 'web',
-      captchaUuid: captcha.uuid,
-      captchaCode: captcha.code
+      clientId: 'web'
     }
   })
   return resp.json()
@@ -64,56 +52,31 @@ async function apiLogin(page: Page, username: string, rawPassword: string) {
 
 /** 探测忘记密码发码通道：返回 R 信封（随机不存在账号探测——避开同账号 60s 节流，重跑互不干扰） */
 async function probeForgetCode(page: Page) {
-  const captcha = await newCaptcha(page)
+  await assertCaptchaDisabled(page, 'forget')
   const resp = await page.request.fetch('/api/auth/forget-code', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     data: {
-      username: `e2e_probe_${Date.now() % 1000000}_${Math.floor(Math.random() * 1000)}`,
-      captchaUuid: captcha.uuid,
-      captchaCode: captcha.code
+      username: `e2e_probe_${Date.now() % 1000000}_${Math.floor(Math.random() * 1000)}`
     }
   })
   return resp.json()
 }
 
-/** 注册独立测试账号（图形验证码 + SM2，与前端注册页同链路） */
+/** 注册独立测试账号（SM2，与前端注册页同链路） */
 async function registerUser(page: Page, username: string, rawPassword: string) {
-  const captcha = await newCaptcha(page)
+  await assertCaptchaDisabled(page, 'register')
   const resp = await page.request.fetch('/api/auth/register', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     data: {
       username,
       nickname: username,
-      password: await encryptPassword(page, rawPassword),
-      captchaUuid: captcha.uuid,
-      captchaCode: captcha.code
+      password: await encryptPassword(page, rawPassword)
     }
   })
   const json = await resp.json()
   expect(json.code, `注册 ${username} 须成功：${json.msg || ''}`).toBe(200)
-}
-
-/** 拦截页面图形验证码响应提取 captchaUuid（参照 fixtures/auth.ts armCaptchaCapture） */
-async function armCaptchaCapture(page: Page): Promise<() => Promise<string>> {
-  let captured = ''
-  await page.route('**/api/auth/captcha', async (route) => {
-    const resp = await route.fetch()
-    try {
-      const json = await resp.json()
-      if (json?.data?.captchaUuid) captured = json.data.captchaUuid
-    } catch {
-      /* 非 JSON 不捕获 */
-    }
-    await route.fulfill({ response: resp })
-  })
-  return async () => {
-    await expect
-      .poll(() => captured, { timeout: 10_000, message: '等待页面 captchaUuid 捕获' })
-      .not.toBe('')
-    return captured
-  }
 }
 
 const SOCIAL_LABELS: Record<string, string> = {
@@ -160,13 +123,9 @@ test('W5-1b 忘记密码全链路：发码→Redis取码→重置→旧密码失
   psql(`UPDATE sys_user SET email='w5-forget@test.com' WHERE id=${userId};`)
 
   try {
-    // 页面链路：填账号+图形验证码 → 发码
-    const waitUuid = await armCaptchaCapture(page)
+    // 页面链路：填账号 → 发码（验证码已关闭，不弹验证）
     await page.goto('/#/auth/forget-password')
-    const uuid = await waitUuid()
-    const captchaCode = redisGet(`mugsun:captcha:${uuid}`)
     await page.getByPlaceholder('请输入账号').fill(username)
-    await page.getByPlaceholder('请输入图形验证码').fill(captchaCode)
     await page.getByRole('button', { name: '发送验证码' }).click()
     // 防枚举统一话术：成功即开始倒计时
     await expect(page.getByRole('button', { name: /^\d+s$/ })).toBeVisible({ timeout: 10_000 })
@@ -188,7 +147,6 @@ test('W5-1b 忘记密码全链路：发码→Redis取码→重置→旧密码失
     expect(newAttempt.code, `新密码须登录成功：${newAttempt.msg || ''}`).toBe(200)
     expect(newAttempt.data.token).not.toBe('')
   } finally {
-    await page.unroute('**/api/auth/captcha')
     psql(
       `DELETE FROM sys_user_role WHERE user_id=${userId}; DELETE FROM sys_user WHERE id=${userId};`
     )

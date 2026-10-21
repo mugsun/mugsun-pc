@@ -557,6 +557,8 @@
       "confirmPassword": "请再次输入密码"
     },
     "rule": {
+      "usernameRequired": "请输入账号",
+      "passwordRequired": "请输入密码",
       "confirmPasswordRequired": "请再次输入密码",
       "passwordMismatch": "两次输入密码不一致!",
       "usernameLength": "长度在 3 到 20 个字符",
@@ -1186,7 +1188,6 @@
       "register": {
         "phonePlaceholder": "请输入手机号（选填，可用于短信登录）",
         "phoneInvalid": "手机号格式不正确。请改成 11 位、以 1 开头的手机号后再注册",
-        "credentialsRequired": "用户名和密码不能为空。请填上用户名和密码后再注册",
         "successMessage": "注册成功，请登录"
       },
       "forgetPassword": {
@@ -3329,15 +3330,19 @@
         "captchaTitle": "验证码设置 · {name}",
         "captchaEnabled": "启用验证",
         "captchaTypes": "启用题型",
-        "captchaTypesHint": "不勾选任何题型即使用平台默认题型",
+        "captchaTypesHint": "不勾选任何题型即使用平台默认题型（出厂为全部题型，随机出题）",
         "captchaTypeSLIDER": "滑块拼图",
         "captchaTypeWORD_CLICK": "文字点选",
         "captchaTypeICON_CLICK": "图标点选",
         "captchaTypeJIGSAW": "拼图还原",
         "captchaTypeROTATE": "旋转（辅助）",
-        "captchaRotateNote": "旋转题是辅助题型，默认关闭：它只能部分抵御自动求解，不要单独启用，请和滑块拼图等题型一起使用",
+        "captchaRotateNote": "旋转题是辅助题型：它只能部分抵御自动求解，不要单独启用，请和滑块拼图等题型一起使用",
         "captchaLangNote": "英文界面不出文字点选；只启用文字点选时，英文用户会改用其他已启用的题型",
         "captchaSaved": "验证码设置已保存",
+        "captchaSaveFailed": "验证码设置保存失败，请稍后重试。",
+        "captchaSaveNetworkError": "网络异常，验证码设置未保存，请检查网络后重试。",
+        "captchaSaveFailedSep": "",
+        "captchaSaveFailedId": "（错误编号：{id}）",
         "captchaWarningTitle": "已保存，但请注意",
         "create": "新增租户",
         "tenantCode": "租户编号",

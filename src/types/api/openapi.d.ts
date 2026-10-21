@@ -4,6 +4,86 @@
  */
 
 export interface paths {
+  '/v1/chat/completions': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['chatCompletions']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/track/visual/draft': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['visualDraft']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/track/replay': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['replay']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/track/collect': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['collect']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/track/api-body': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['apiBody']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/system/workbench/shortcuts': {
     parameters: {
       query?: never
@@ -14,6 +94,22 @@ export interface paths {
     get: operations['shortcuts']
     put?: never
     post: operations['saveShortcuts']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/user/unlock': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['unlockAccount']
     delete?: never
     options?: never
     head?: never
@@ -52,6 +148,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/system/user/set-leader': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['setLeader']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/system/user/reset-password': {
     parameters: {
       query?: never
@@ -78,6 +190,22 @@ export interface paths {
     get?: never
     put?: never
     post: operations['remove']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/user/lock': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['lock']
     delete?: never
     options?: never
     head?: never
@@ -116,6 +244,230 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/system/track/visual/token': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['token']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/visual/rule/submit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['ruleSubmit']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/visual/rule/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['ruleRemove']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/visual/drafts/discard': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['discard']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/visual/drafts/confirm': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['confirm']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/sourcemap/upload': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['upload']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/sourcemap/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['remove_1']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/event-def/submit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['eventDefSubmit']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/app/submit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['appSubmit']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/app/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['appRemove']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/top-menu/submit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['submit_1']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/top-menu/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['remove_2']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/top-menu/home': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['home']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/top-menu/grant': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['grant_1']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/system/tenant/update': {
     parameters: {
       query?: never
@@ -141,7 +493,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_1']
+    post: operations['remove_3']
     delete?: never
     options?: never
     head?: never
@@ -164,39 +516,23 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/system/tenant/captcha': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['captchaSwitch']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/system/tenant-package/submit': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    post: operations['submit_1']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/system/tenant-package/remove': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    post: operations['remove_2']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/system/tenant-datasource/submit': {
     parameters: {
       query?: never
       header?: never
@@ -212,6 +548,38 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/system/tenant-package/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['remove_4']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/tenant-datasource/submit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['submit_3']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/system/tenant-datasource/remove': {
     parameters: {
       query?: never
@@ -221,7 +589,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_3']
+    post: operations['remove_5']
     delete?: never
     options?: never
     head?: never
@@ -269,7 +637,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['submit_3']
+    post: operations['submit_4']
     delete?: never
     options?: never
     head?: never
@@ -285,7 +653,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_4']
+    post: operations['remove_6']
     delete?: never
     options?: never
     head?: never
@@ -308,6 +676,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/system/sms/debug': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['debug']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/system/serial-number/submit': {
     parameters: {
       query?: never
@@ -317,7 +701,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['submit_4']
+    post: operations['submit_5']
     delete?: never
     options?: never
     head?: never
@@ -333,7 +717,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_5']
+    post: operations['remove_7']
     delete?: never
     options?: never
     head?: never
@@ -381,7 +765,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['submit_5']
+    post: operations['submit_6']
     delete?: never
     options?: never
     head?: never
@@ -397,7 +781,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_6']
+    post: operations['remove_8']
     delete?: never
     options?: never
     head?: never
@@ -413,7 +797,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['grant_1']
+    post: operations['grant_2']
     delete?: never
     options?: never
     head?: never
@@ -429,7 +813,23 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['submit_6']
+    post: operations['submit_7']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/report/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['removeBatch']
     delete?: never
     options?: never
     head?: never
@@ -445,7 +845,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_7']
+    post: operations['remove_9']
     delete?: never
     options?: never
     head?: never
@@ -461,7 +861,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['submit_7']
+    post: operations['submit_8']
     delete?: never
     options?: never
     head?: never
@@ -477,7 +877,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_8']
+    post: operations['remove_10']
     delete?: never
     options?: never
     head?: never
@@ -509,7 +909,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['submit_8']
+    post: operations['submit_9']
     delete?: never
     options?: never
     head?: never
@@ -525,7 +925,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_9']
+    post: operations['remove_11']
     delete?: never
     options?: never
     head?: never
@@ -541,7 +941,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['submit_9']
+    post: operations['submit_10']
     delete?: never
     options?: never
     head?: never
@@ -557,7 +957,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_10']
+    post: operations['remove_12']
     delete?: never
     options?: never
     head?: never
@@ -573,7 +973,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['submit_10']
+    post: operations['submit_11']
     delete?: never
     options?: never
     head?: never
@@ -589,7 +989,23 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_11']
+    post: operations['remove_13']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/oss/probe/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['probe']
     delete?: never
     options?: never
     head?: never
@@ -628,6 +1044,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/system/online/cleanup-stale': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['cleanupStale']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/system/online-form/save': {
     parameters: {
       query?: never
@@ -653,7 +1085,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_12']
+    post: operations['remove_14']
     delete?: never
     options?: never
     head?: never
@@ -701,7 +1133,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_13']
+    post: operations['remove_15']
     delete?: never
     options?: never
     head?: never
@@ -749,7 +1181,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['submit_11']
+    post: operations['submit_12']
     delete?: never
     options?: never
     head?: never
@@ -765,7 +1197,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_14']
+    post: operations['remove_16']
     delete?: never
     options?: never
     head?: never
@@ -781,7 +1213,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['submit_12']
+    post: operations['submit_13']
     delete?: never
     options?: never
     head?: never
@@ -797,7 +1229,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_15']
+    post: operations['remove_17']
     delete?: never
     options?: never
     head?: never
@@ -813,7 +1245,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['submit_13']
+    post: operations['submit_14']
     delete?: never
     options?: never
     head?: never
@@ -829,7 +1261,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_16']
+    post: operations['remove_18']
     delete?: never
     options?: never
     head?: never
@@ -877,7 +1309,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_17']
+    post: operations['remove_19']
     delete?: never
     options?: never
     head?: never
@@ -925,7 +1357,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['submit_14']
+    post: operations['submit_15']
     delete?: never
     options?: never
     head?: never
@@ -941,7 +1373,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_18']
+    post: operations['remove_20']
     delete?: never
     options?: never
     head?: never
@@ -957,7 +1389,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['submit_15']
+    post: operations['submit_16']
     delete?: never
     options?: never
     head?: never
@@ -973,7 +1405,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_19']
+    post: operations['remove_21']
     delete?: never
     options?: never
     head?: never
@@ -989,7 +1421,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['submit_16']
+    post: operations['submit_17']
     delete?: never
     options?: never
     head?: never
@@ -1021,7 +1453,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_20']
+    post: operations['remove_22']
     delete?: never
     options?: never
     head?: never
@@ -1118,6 +1550,54 @@ export interface paths {
     get?: never
     put?: never
     post: operations['delete']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/job-server/sync': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['sync']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/job-server/save': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['save_4']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/job-server/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['remove_23']
     delete?: never
     options?: never
     head?: never
@@ -1236,6 +1716,198 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/system/gis/spatial/intersects': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['intersects']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/spatial/contains': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['contains']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/spatial/buffer': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['buffer']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/scene/submit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['submit_18']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/scene/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['remove_24']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/provider/test': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['test']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/provider/submit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['submit_19']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/provider/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['remove_25']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/layer/submit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['submit_20']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/layer/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['remove_26']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/layer/ingest': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['ingestText']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/geo/analyze': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['analyze']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/system/gen/sync': {
     parameters: {
       query?: never
@@ -1245,7 +1917,23 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['sync']
+    post: operations['sync_1']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gen/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['remove_27']
     delete?: never
     options?: never
     head?: never
@@ -1348,6 +2036,102 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/system/gen-scheme/save': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['save_5']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gen-scheme/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['remove_28']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gen-scheme/enable': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['enable_4']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gen-datasource/test': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['test_1']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gen-datasource/save': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['save_6']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gen-datasource/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['remove_29']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/system/form/submit': {
     parameters: {
       query?: never
@@ -1357,7 +2141,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['submit_17']
+    post: operations['submit_21']
     delete?: never
     options?: never
     head?: never
@@ -1389,7 +2173,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_21']
+    post: operations['remove_30']
     delete?: never
     options?: never
     head?: never
@@ -1540,6 +2324,70 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/system/flow/running/terminate': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['terminateRunning']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/flow/running/suspend': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['suspendRunning']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/flow/running/resume': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['resumeRunning']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/flow/leave/start': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['startLeave']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/system/flow/design': {
     parameters: {
       query?: never
@@ -1684,6 +2532,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/system/flow/claim/{taskId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['claim']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/system/file/upload': {
     parameters: {
       query?: never
@@ -1693,7 +2557,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['upload']
+    post: operations['upload_1']
     delete?: never
     options?: never
     head?: never
@@ -1709,7 +2573,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_22']
+    post: operations['remove_31']
     delete?: never
     options?: never
     head?: never
@@ -1757,7 +2621,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['submit_18']
+    post: operations['submit_22']
     delete?: never
     options?: never
     head?: never
@@ -1789,7 +2653,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_23']
+    post: operations['remove_32']
     delete?: never
     options?: never
     head?: never
@@ -1821,7 +2685,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['submit_19']
+    post: operations['submit_23']
     delete?: never
     options?: never
     head?: never
@@ -1837,7 +2701,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_24']
+    post: operations['remove_33']
     delete?: never
     options?: never
     head?: never
@@ -1869,7 +2733,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['submit_20']
+    post: operations['submit_24']
     delete?: never
     options?: never
     head?: never
@@ -1885,7 +2749,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_25']
+    post: operations['remove_34']
     delete?: never
     options?: never
     head?: never
@@ -1901,7 +2765,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['submit_21']
+    post: operations['submit_25']
     delete?: never
     options?: never
     head?: never
@@ -1917,7 +2781,39 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_26']
+    post: operations['remove_35']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/data-scope/submit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['submit_26']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/data-scope/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['remove_36']
     delete?: never
     options?: never
     head?: never
@@ -1933,7 +2829,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['submit_22']
+    post: operations['submit_27']
     delete?: never
     options?: never
     head?: never
@@ -1949,7 +2845,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_27']
+    post: operations['remove_37']
     delete?: never
     options?: never
     head?: never
@@ -1981,7 +2877,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['save_4']
+    post: operations['save_7']
     delete?: never
     options?: never
     head?: never
@@ -1997,7 +2893,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_28']
+    post: operations['remove_38']
     delete?: never
     options?: never
     head?: never
@@ -2013,7 +2909,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['enable_4']
+    post: operations['enable_5']
     delete?: never
     options?: never
     head?: never
@@ -2045,7 +2941,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['submit_23']
+    post: operations['submit_28']
     delete?: never
     options?: never
     head?: never
@@ -2061,7 +2957,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_29']
+    post: operations['remove_39']
     delete?: never
     options?: never
     head?: never
@@ -2077,7 +2973,55 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_30']
+    post: operations['remove_40']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/api-scope/submit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['submit_29']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/api-scope/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['remove_41']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/api-scope/grant': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['grant_3']
     delete?: never
     options?: never
     head?: never
@@ -2100,6 +3044,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/system/api-key/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['removeBatch_1']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/system/api-key/remove/{id}': {
     parameters: {
       query?: never
@@ -2109,7 +3069,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['remove_31']
+    post: operations['remove_42']
     delete?: never
     options?: never
     head?: never
@@ -2141,7 +3101,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['enable_5']
+    post: operations['enable_6']
     delete?: never
     options?: never
     head?: never
@@ -2158,6 +3118,1206 @@ export interface paths {
     get?: never
     put?: never
     post: operations['disable_3']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/weave/trackInsight': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['trackInsight']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/weave/reportCharts': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['reportCharts']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/weave/gisAsk': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['gisAsk']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/weave/genDraft': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['genDraft']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/weave/approvalSummary': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['approvalSummary']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/vector/test': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['test_2']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/vector/submit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['submit_30']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/vector/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['remove_43']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/session/submit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['submit_31']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/session/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['remove_44']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/session/clear': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['clear']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/secret/submit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['submit_32']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/secret/status': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['status_2']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/secret/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['remove_45']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/quota/submit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['submit_33']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/prompt/submit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['submit_34']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/prompt/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['remove_46']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/prompt/optimize': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['optimize']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/model/test': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['test_3']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/model/submit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['submit_35']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/model/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['remove_47']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/model/default': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['setDefault']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/mcp/submit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['submit_36']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/mcp/server/toggle': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['toggle']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/mcp/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['remove_48']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/mcp/parse': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['parse']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/mcp/lock': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['lock_1']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/mcp/default': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['setDefault_1']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/mcp/debug': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['debug_1']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/knowledge/vectorize': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['vectorize']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/knowledge/test': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['test_4']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/knowledge/submit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['submit_37']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/knowledge/status': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['status_3']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/knowledge/segment/submit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['saveSegment']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/knowledge/segment/status': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['segmentStatus']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/knowledge/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['remove_49']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/knowledge/hit-test': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['hitTest']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/knowledge/copy': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['copy_1']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/knowledge/asset/upload': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['upload_2']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/knowledge/asset/resegment': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['resegment']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/knowledge/asset/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['removeAsset']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/gen/{type}/stream': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['stream']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/gen/{type}/export': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['export']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/datasource/test': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['test_5']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/datasource/submit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['submit_38']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/datasource/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['remove_50']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/dataset/term/save': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['saveTerm']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/dataset/term/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['removeTerm']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/dataset/term/bind': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['bindTerm']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/dataset/table/save': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['saveTable']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/dataset/submit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['submit_39']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/dataset/sql/rerun': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['rerun']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/dataset/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['remove_51']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/dataset/predict': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['predict']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/dataset/copy': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['copy_2']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/dataset/config/tables': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['config']
+    put?: never
+    post: operations['saveConfig']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/dataset/ask': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['ask']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/dataset/analyze': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['analyze_1']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/dashboard/submit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['submit_40']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/dashboard/share': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['share']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/dashboard/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['remove_52']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/dashboard/dsl/save': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['saveDsl']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/chat/stream': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['stream_1']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/chat/stop': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['stop']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/chat/receive': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['receive']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/channel/submit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['submit_41']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/channel/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['remove_53']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/channel/debug': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['debug_2']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/app/submit': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['submit_42']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/app/share': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['share_1']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/app/run': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['run_1']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/app/remove': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['remove_54']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/app/import': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['importApp']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/app/dsl/save': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['saveDsl_1']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/app/copy': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['copy_3']
     delete?: never
     options?: never
     head?: never
@@ -2189,7 +4349,7 @@ export interface paths {
     }
     get?: never
     put?: never
-    post: operations['token']
+    post: operations['token_1']
     delete?: never
     options?: never
     head?: never
@@ -2500,6 +4660,166 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/auth/captcha/verify': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['verify_1']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/auth/captcha/challenge': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['challenge']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/auth/avatar/upload': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['upload_3']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/app/todos/{taskId}/handle': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['handle_2']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/app/inbox/notices/{id}/read': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['readNotice']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/app/inbox/messages/{messageId}/read': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['readMessage']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/app/captcha/check': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['check']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/app/auth/two-factor': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['twoFactor_1']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/app/auth/logout': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['logout_1']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/app/auth/login': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['login_1']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/v3/system/menus': {
     parameters: {
       query?: never
@@ -2516,6 +4836,38 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/v1/models': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['models']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/track/config': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['config_1']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/system/workbench/overview': {
     parameters: {
       query?: never
@@ -2524,6 +4876,38 @@ export interface paths {
       cookie?: never
     }
     get: operations['overview']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/usual-log/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['page']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/usual-log/detail': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['detail']
     put?: never
     post?: never
     delete?: never
@@ -2571,7 +4955,55 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page']
+    get: operations['page_1']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/user/locks': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['locks']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/user/leader-list': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['leaderList']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/user/leader-info': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['leaderInfo']
     put?: never
     post?: never
     delete?: never
@@ -2603,7 +5035,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['export']
+    get: operations['export_1']
     put?: never
     post?: never
     delete?: never
@@ -2619,7 +5051,487 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['detail']
+    get: operations['detail_1']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/vitals': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['vitals']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/visual/rule/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['rulePage']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/visual/drafts': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['drafts']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/user/timeline': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['timeline']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/user/api-body': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['apiBody_1']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/trend': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['trend']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/sourcemap/raw': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['raw']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/sourcemap/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['page_2']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/retention': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['retention']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/replay/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['page_3']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/replay/events': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['events']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/replay/detail': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['detail_2']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/replay/data': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['data']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/pages': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['pages']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/overview': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['overview_1']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/online': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['online']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/geo': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['geo']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/funnel': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['funnel']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/events/realtime': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['eventsRealtime']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/events/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['eventsPage']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/event-def/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['eventDefPage']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/errors/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['errorsPage']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/errors/detail': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['errorDetail']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/app/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['appPage']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/app/health': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['appHealth']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/track/app/health/summary': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['appHealthSummary']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/top-menu/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['page_4']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/top-menu/mine': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['mine']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/top-menu/menus': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['menus_1']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/top-menu/detail': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['detail_3']
     put?: never
     post?: never
     delete?: never
@@ -2651,7 +5563,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['detail_1']
+    get: operations['detail_4']
     put?: never
     post?: never
     delete?: never
@@ -2667,7 +5579,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page_1']
+    get: operations['page_5']
     put?: never
     post?: never
     delete?: never
@@ -2699,7 +5611,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['detail_2']
+    get: operations['detail_5']
     put?: never
     post?: never
     delete?: never
@@ -2715,7 +5627,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page_2']
+    get: operations['page_6']
     put?: never
     post?: never
     delete?: never
@@ -2747,7 +5659,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page_3']
+    get: operations['page_7']
     put?: never
     post?: never
     delete?: never
@@ -2763,7 +5675,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['detail_3']
+    get: operations['detail_6']
     put?: never
     post?: never
     delete?: never
@@ -2795,7 +5707,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page_4']
+    get: operations['page_8']
     put?: never
     post?: never
     delete?: never
@@ -2811,7 +5723,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['detail_4']
+    get: operations['detail_7']
     put?: never
     post?: never
     delete?: never
@@ -2859,7 +5771,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page_5']
+    get: operations['page_9']
     put?: never
     post?: never
     delete?: never
@@ -2891,7 +5803,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['detail_5']
+    get: operations['detail_8']
     put?: never
     post?: never
     delete?: never
@@ -2987,7 +5899,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['detail_6']
+    get: operations['detail_9']
     put?: never
     post?: never
     delete?: never
@@ -3004,6 +5916,22 @@ export interface paths {
       cookie?: never
     }
     get: operations['datasets']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/region/template': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['template']
     put?: never
     post?: never
     delete?: never
@@ -3035,7 +5963,23 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['export_1']
+    get: operations['export_2']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/region/detail': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['detail_10']
     put?: never
     post?: never
     delete?: never
@@ -3067,7 +6011,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page_6']
+    get: operations['page_10']
     put?: never
     post?: never
     delete?: never
@@ -3083,7 +6027,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['detail_7']
+    get: operations['detail_11']
     put?: never
     post?: never
     delete?: never
@@ -3100,6 +6044,22 @@ export interface paths {
       cookie?: never
     }
     get: operations['value']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/param/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['page_11']
     put?: never
     post?: never
     delete?: never
@@ -3131,7 +6091,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['detail_8']
+    get: operations['detail_12']
     put?: never
     post?: never
     delete?: never
@@ -3147,7 +6107,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page_7']
+    get: operations['page_12']
     put?: never
     post?: never
     delete?: never
@@ -3163,7 +6123,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['detail_9']
+    get: operations['detail_13']
     put?: never
     post?: never
     delete?: never
@@ -3179,7 +6139,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['verify_1']
+    get: operations['verify_2']
     put?: never
     post?: never
     delete?: never
@@ -3195,7 +6155,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page_8']
+    get: operations['page_13']
     put?: never
     post?: never
     delete?: never
@@ -3211,7 +6171,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['detail_10']
+    get: operations['detail_14']
     put?: never
     post?: never
     delete?: never
@@ -3243,7 +6203,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page_9']
+    get: operations['page_14']
     put?: never
     post?: never
     delete?: never
@@ -3291,7 +6251,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['detail_11']
+    get: operations['detail_15']
     put?: never
     post?: never
     delete?: never
@@ -3307,7 +6267,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page_10']
+    get: operations['page_15']
     put?: never
     post?: never
     delete?: never
@@ -3323,7 +6283,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page_11']
+    get: operations['page_16']
     put?: never
     post?: never
     delete?: never
@@ -3339,7 +6299,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page_12']
+    get: operations['page_17']
     put?: never
     post?: never
     delete?: never
@@ -3355,7 +6315,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['detail_12']
+    get: operations['detail_16']
     put?: never
     post?: never
     delete?: never
@@ -3371,7 +6331,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page_13']
+    get: operations['page_18']
     put?: never
     post?: never
     delete?: never
@@ -3387,7 +6347,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['detail_13']
+    get: operations['detail_17']
     put?: never
     post?: never
     delete?: never
@@ -3403,7 +6363,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page_14']
+    get: operations['page_19']
     put?: never
     post?: never
     delete?: never
@@ -3419,7 +6379,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['detail_14']
+    get: operations['detail_18']
     put?: never
     post?: never
     delete?: never
@@ -3467,7 +6427,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page_15']
+    get: operations['page_20']
     put?: never
     post?: never
     delete?: never
@@ -3515,7 +6475,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['detail_15']
+    get: operations['detail_19']
     put?: never
     post?: never
     delete?: never
@@ -3595,7 +6555,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page_16']
+    get: operations['page_21']
     put?: never
     post?: never
     delete?: never
@@ -3627,7 +6587,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['detail_16']
+    get: operations['detail_20']
     put?: never
     post?: never
     delete?: never
@@ -3659,7 +6619,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['detail_17']
+    get: operations['detail_21']
     put?: never
     post?: never
     delete?: never
@@ -3675,7 +6635,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page_17']
+    get: operations['page_22']
     put?: never
     post?: never
     delete?: never
@@ -3691,7 +6651,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['detail_18']
+    get: operations['detail_22']
     put?: never
     post?: never
     delete?: never
@@ -3707,7 +6667,23 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page_18']
+    get: operations['page_23']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/login-log/detail': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['detail_23']
     put?: never
     post?: never
     delete?: never
@@ -3723,7 +6699,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['status_2']
+    get: operations['status_4']
     put?: never
     post?: never
     delete?: never
@@ -3772,6 +6748,38 @@ export interface paths {
       cookie?: never
     }
     get: operations['instances']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/job-server/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['page_24']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/job-server/options': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['options']
     put?: never
     post?: never
     delete?: never
@@ -3860,6 +6868,342 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/system/gis/tileset/{code}/{file}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['content']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/tileset/{code}/tileset.json': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['manifest']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/tile/{provider}/{layer}/{z}/{x}/{y}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['tile']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/status': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['status_5']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/spatial/status': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['status_6']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/spatial/radius': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['radius']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/spatial/nearest': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['nearest']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/spatial/mvt/{layerId}/{z}/{x}/{y}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['mvt']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/spatial/drift': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['drift']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/spatial/bbox': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['bbox']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/search': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['search']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/scene/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['page_25']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/scene/detail/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['detail_24']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/reverse': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['reverse']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/provider/xyz': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['xyzConfig']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/provider/list': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['list_7']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/layer/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['page_26']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/layer/list': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['list_8']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/layer/detail/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['detail_25']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/demo/{code}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['detail_26']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gis/demo/list': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['list_9']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/system/gen/tables': {
     parameters: {
       query?: never
@@ -3915,7 +7259,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['list_7']
+    get: operations['list_10']
     put?: never
     post?: never
     delete?: never
@@ -3972,6 +7316,70 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/system/gen-scheme/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['page_27']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gen-scheme/enabled': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['enabled']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gen-datasource/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['page_28']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/gen-datasource/options': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['options_1']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/system/form/page': {
     parameters: {
       query?: never
@@ -3979,7 +7387,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page_19']
+    get: operations['page_29']
     put?: never
     post?: never
     delete?: never
@@ -3995,7 +7403,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['detail_19']
+    get: operations['detail_27']
     put?: never
     post?: never
     delete?: never
@@ -4011,7 +7419,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['data']
+    get: operations['data_1']
     put?: never
     post?: never
     delete?: never
@@ -4044,6 +7452,22 @@ export interface paths {
       cookie?: never
     }
     get: operations['taskButtons']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/flow/running': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['running']
     put?: never
     post?: never
     delete?: never
@@ -4244,6 +7668,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/system/flow/claim-list': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['claimList']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/system/flow/back-nodes': {
     parameters: {
       query?: never
@@ -4267,7 +7707,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page_20']
+    get: operations['page_30']
     put?: never
     post?: never
     delete?: never
@@ -4315,7 +7755,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page_21']
+    get: operations['page_31']
     put?: never
     post?: never
     delete?: never
@@ -4331,7 +7771,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page_22']
+    get: operations['page_32']
     put?: never
     post?: never
     delete?: never
@@ -4347,7 +7787,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['detail_20']
+    get: operations['detail_28']
     put?: never
     post?: never
     delete?: never
@@ -4395,7 +7835,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['detail_21']
+    get: operations['detail_29']
     put?: never
     post?: never
     delete?: never
@@ -4443,7 +7883,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['detail_22']
+    get: operations['detail_30']
     put?: never
     post?: never
     delete?: never
@@ -4484,6 +7924,38 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/system/dept/options': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['options_2']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/dept/leaders': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['leaders']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/system/dept/detail': {
     parameters: {
       query?: never
@@ -4491,7 +7963,39 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['detail_23']
+    get: operations['detail_31']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/data-scope/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['page_33']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/data-scope/effective': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['effective']
     put?: never
     post?: never
     delete?: never
@@ -4507,7 +8011,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page_23']
+    get: operations['page_34']
     put?: never
     post?: never
     delete?: never
@@ -4523,7 +8027,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['detail_24']
+    get: operations['detail_32']
     put?: never
     post?: never
     delete?: never
@@ -4539,7 +8043,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page_24']
+    get: operations['page_35']
     put?: never
     post?: never
     delete?: never
@@ -4555,7 +8059,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page_25']
+    get: operations['page_36']
     put?: never
     post?: never
     delete?: never
@@ -4587,7 +8091,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page_26']
+    get: operations['page_37']
     put?: never
     post?: never
     delete?: never
@@ -4603,7 +8107,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['detail_25']
+    get: operations['detail_33']
     put?: never
     post?: never
     delete?: never
@@ -4660,6 +8164,38 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/system/api-scope/roles': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['roles']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/api-scope/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['page_38']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/system/api-log/page': {
     parameters: {
       query?: never
@@ -4667,7 +8203,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page_27']
+    get: operations['page_39']
     put?: never
     post?: never
     delete?: never
@@ -4683,7 +8219,7 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['detail_26']
+    get: operations['detail_34']
     put?: never
     post?: never
     delete?: never
@@ -4699,7 +8235,759 @@ export interface paths {
       path?: never
       cookie?: never
     }
-    get: operations['page_28']
+    get: operations['page_40']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/api-key-log/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['page_41']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/api-key-log/detail': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['detail_35']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/vector/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['page_42']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/vector/detail/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['detail_36']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/session/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['page_43']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/session/messages': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['messages']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/session/export': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['export_3']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/secret/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['page_44']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/quota/trend': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['trend_1']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/quota/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['page_45']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/prompt/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['page_46']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/prompt/detail/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['detail_37']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/model/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['page_47']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/model/list': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['list_11']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/model/detail/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['detail_38']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/mcp/server/list': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['servers']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/mcp/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['page_48']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/knowledge/vector-stats': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['vectorStats']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/knowledge/segment/list': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['segments']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/knowledge/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['page_49']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/knowledge/detail/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['detail_39']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/knowledge/asset/list': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['assets']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/datasource/tables': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['tables_1']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/datasource/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['page_50']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/datasource/detail/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['detail_40']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/dataset/term/list': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['terms']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/dataset/table/list': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['tables_2']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/dataset/suggest': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['suggest_1']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/dataset/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['page_51']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/dataset/detail/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['detail_41']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/dashboard/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['page_52']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/dashboard/detail': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['detail_42']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/dashboard/detail/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['detailPath']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/conversation/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['page_53']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/conversation/export': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['export_4']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/conversation/detail': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['detail_43']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/chat/replay': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['replay_1']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/channel/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['page_54']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/billing/trend': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['trend_2']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/billing/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['page_55']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/billing/export': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['export_5']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/app/run/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['runPage']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/app/run/detail': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['runDetail']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/app/page': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['page_56']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/app/export': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['export_6']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/app/detail/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['detail_44']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/system/ai/app/detail': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['detail_45']
     put?: never
     post?: never
     delete?: never
@@ -4884,14 +9172,190 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/auth/captcha': {
+  '/auth/captcha/config': {
     parameters: {
       query?: never
       header?: never
       path?: never
       cookie?: never
     }
-    get: operations['captcha']
+    get: operations['config_2']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/auth/avatar/raw/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['raw_1']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/app/todos': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['list_12']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/app/todos/{taskId}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['detail_46']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/app/inbox/notices': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['notices']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/app/inbox/notices/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['notice']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/app/inbox/messages': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['messages_1']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/app/inbox/messages/{id}': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['message']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/app/home': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['home_1']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/app/captcha/generate': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['generate_2']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/app/auth/sm2-public-key': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['sm2PublicKey_1']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
+  '/app/auth/me': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['me']
     put?: never
     post?: never
     delete?: never
@@ -4910,7 +9374,7 @@ export interface paths {
     get?: never
     put?: never
     post?: never
-    delete: operations['remove_32']
+    delete: operations['remove_55']
     options?: never
     head?: never
     patch?: never
@@ -4936,6 +9400,14 @@ export interface paths {
 export type webhooks = Record<string, never>
 export interface components {
   schemas: {
+    RObject: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: unknown
+      msg?: string
+      dataType?: string
+    }
     RVoid: {
       /** Format: int32 */
       code?: number
@@ -5015,6 +9487,118 @@ export interface components {
       userId?: number
       roleIds?: number[]
     }
+    RMapStringObject: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: {
+        [key: string]: unknown
+      }
+      msg?: string
+      dataType?: string
+    }
+    RTrackVisualRule: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['TrackVisualRule']
+      msg?: string
+      dataType?: string
+    }
+    TrackVisualRule: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      appKey?: string
+      eventName?: string
+      selector?: string
+      routePath?: string
+      matchText?: string
+      /** Format: int32 */
+      status?: number
+      source?: string
+      tenantId?: string
+      remark?: string
+      /** Format: int64 */
+      createBy?: number
+      /** Format: int64 */
+      updateBy?: number
+    }
+    JsonNode: unknown
+    RTrackApp: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['TrackApp']
+      msg?: string
+      dataType?: string
+    }
+    TrackApp: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      appKey?: string
+      appName?: string
+      platform?: string
+      tenantId?: string
+      /** Format: int32 */
+      sampleRate?: number
+      /** Format: int32 */
+      enabled?: number
+      maskSelectors?: string
+      /** Format: int32 */
+      retentionDays?: number
+      /** Format: int32 */
+      replayEnabled?: number
+      /** Format: int32 */
+      replaySampleRate?: number
+      /** Format: int32 */
+      replayRetentionDays?: number
+      /** Format: int32 */
+      alertEnabled?: number
+      /** Format: int32 */
+      alertThreshold?: number
+      /** Format: int32 */
+      apiMonitorEnabled?: number
+      /** Format: int32 */
+      apiBodyEnabled?: number
+      /** Format: int32 */
+      apiBodyMaskEnabled?: number
+      /** Format: int32 */
+      apiBodyRetentionDays?: number
+      /** Format: int32 */
+      geoEnabled?: number
+      remark?: string
+    }
+    SysTopMenu: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      tenantId?: string
+      code?: string
+      name?: string
+      icon?: string
+      path?: string
+      /** Format: int32 */
+      sort?: number
+      /** Format: int32 */
+      isMain?: number
+    }
     SysTenant: {
       /** Format: int64 */
       id?: number
@@ -5036,6 +9620,9 @@ export interface components {
       status?: number
       /** Format: int32 */
       accountCount?: number
+      /** Format: int32 */
+      captchaEnabled?: number
+      captchaTypes?: string
     }
     RString: {
       /** Format: int32 */
@@ -5044,6 +9631,12 @@ export interface components {
       data?: string
       msg?: string
       dataType?: string
+    }
+    CaptchaSwitchDTO: {
+      /** Format: int64 */
+      id?: number
+      enabled?: boolean
+      types?: components['schemas']['JsonNode']
     }
     SysTenantPackage: {
       /** Format: int64 */
@@ -5113,6 +9706,11 @@ export interface components {
       /** Format: int32 */
       status?: number
       remark?: string
+    }
+    SmsDebug: {
+      /** Format: int64 */
+      id?: number
+      phone?: string
     }
     SysSerialNumber: {
       /** Format: int64 */
@@ -5222,6 +9820,7 @@ export interface components {
       isDeleted?: number
       postCode?: string
       postName?: string
+      category?: string
       /** Format: int32 */
       sort?: number
       tenantId?: string
@@ -5239,6 +9838,7 @@ export interface components {
       paramKey?: string
       paramValue?: string
       remark?: string
+      sensitive?: boolean
     }
     SysOss: {
       /** Format: int64 */
@@ -5438,15 +10038,8 @@ export interface components {
       jobParams?: string
       timeExpressionType?: string
       timeExpression?: string
-    }
-    RLong: {
-      /** Format: int32 */
-      code?: number
-      success?: boolean
       /** Format: int64 */
-      data?: number
-      msg?: string
-      dataType?: string
+      serverId?: number
     }
     HelpDoc: {
       /** Format: int64 */
@@ -5504,6 +10097,79 @@ export interface components {
       docId?: number
       /** Format: int32 */
       sort?: number
+    }
+    GisScene: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      tenantId?: string
+      name?: string
+      sceneJson?: string
+      /** Format: int32 */
+      status?: number
+      remark?: string
+    }
+    RGisScene: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['GisScene']
+      msg?: string
+      dataType?: string
+    }
+    GisMapProvider: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      tenantId?: string
+      provider?: string
+      /** Format: int32 */
+      enabled?: number
+      apiKey?: string
+      secret?: string
+      extraJson?: string
+      remark?: string
+    }
+    GisLayer: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      tenantId?: string
+      name?: string
+      kind?: string
+      crs?: string
+      dataJson?: string
+      styleJson?: string
+      /** Format: int32 */
+      featureCount?: number
+      bbox?: string
+      /** Format: int32 */
+      status?: number
+      remark?: string
+      warnings?: string[]
+    }
+    RGisLayer: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['GisLayer']
+      msg?: string
+      dataType?: string
     }
     GenColumn: {
       /** Format: int64 */
@@ -5580,18 +10246,17 @@ export interface components {
       tablePrefix?: string
       author?: string
     }
-    DraftParam: {
-      description?: string
-    }
-    RMapStringObject: {
+    RLong: {
       /** Format: int32 */
       code?: number
       success?: boolean
-      data?: {
-        [key: string]: unknown
-      }
+      /** Format: int64 */
+      data?: number
       msg?: string
       dataType?: string
+    }
+    DraftParam: {
+      description?: string
     }
     ConfirmParam: {
       table?: components['schemas']['GenTable']
@@ -5638,6 +10303,12 @@ export interface components {
       variable?: {
         [key: string]: unknown
       }
+    }
+    LeaveStart: {
+      businessId?: string
+      startTime?: string
+      endTime?: string
+      reason?: string
     }
     FlowDesign: {
       flowCode?: string
@@ -5711,6 +10382,8 @@ export interface components {
       /** Format: int64 */
       size?: number
       platform?: string
+      /** Format: int64 */
+      createUser?: number
       downloadable?: boolean
       access?: string
       basePath?: string
@@ -5829,10 +10502,37 @@ export interface components {
       /** Format: int64 */
       parentId?: number
       deptName?: string
+      fullName?: string
+      category?: string
+      /** Format: int64 */
+      leaderId?: number
       /** Format: int32 */
       sort?: number
       tenantId?: string
+      leaderName?: string
       children?: components['schemas']['SysDept'][]
+    }
+    SysDataScope: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      resourceCode?: string
+      scopeName?: string
+      /** Format: int64 */
+      menuId?: number
+      tableName?: string
+      deptColumn?: string
+      userColumn?: string
+      /** Format: int32 */
+      scopeType?: number
+      /** Format: int32 */
+      status?: number
+      remark?: string
     }
     BizCustomer: {
       /** Format: int64 */
@@ -5887,9 +10587,37 @@ export interface components {
       /** Format: int32 */
       sort?: number
     }
+    SysApiScope: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      resourceCode?: string
+      scopeName?: string
+      scopePath?: string
+      /** Format: int32 */
+      scopeType?: number
+      /** Format: int64 */
+      menuId?: number
+      /** Format: int32 */
+      status?: number
+      remark?: string
+      /** Format: int32 */
+      grantCount?: number
+    }
+    GrantBody: {
+      /** Format: int64 */
+      id?: number
+      roleIds?: number[]
+    }
     VerifyParam: {
       accessKey?: string
       secretKey?: string
+      path?: string
     }
     SysApiKey: {
       /** Format: int64 */
@@ -5900,6 +10628,7 @@ export interface components {
       updateTime?: string
       /** Format: int32 */
       isDeleted?: number
+      tenantId?: string
       name?: string
       accessKey?: string
       secretKey?: string
@@ -5907,12 +10636,609 @@ export interface components {
       /** Format: int32 */
       status?: number
       remark?: string
+      /** Format: date-time */
+      expireTime?: string
+      apiPath?: string
     }
     RSysApiKey: {
       /** Format: int32 */
       code?: number
       success?: boolean
       data?: components['schemas']['SysApiKey']
+      msg?: string
+      dataType?: string
+    }
+    AiVectorStore: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      tenantId?: string
+      name?: string
+      storeType?: string
+      host?: string
+      /** Format: int32 */
+      port?: number
+      databaseName?: string
+      tableName?: string
+      collection?: string
+      /** Format: int32 */
+      dbIndex?: number
+      username?: string
+      password?: string
+      /** Format: int32 */
+      dimensions?: number
+      metric?: string
+      indexType?: string
+      /** Format: int32 */
+      builtinFlag?: number
+      remark?: string
+      url?: string
+    }
+    RAiVectorStore: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AiVectorStore']
+      msg?: string
+      dataType?: string
+    }
+    AiSession: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      tenantId?: string
+      /** Format: int64 */
+      userId?: number
+      title?: string
+      source?: string
+      /** Format: int64 */
+      bizId?: number
+      /** Format: int64 */
+      modelId?: number
+      /** Format: int32 */
+      messageCount?: number
+      /** Format: int32 */
+      totalTokens?: number
+      /** Format: date-time */
+      lastTime?: string
+    }
+    RAiSession: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AiSession']
+      msg?: string
+      dataType?: string
+    }
+    AiSecret: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      tenantId?: string
+      secretKey?: string
+      secretPrefix?: string
+      apiKeyMask?: string
+      scope?: string
+      /** Format: int64 */
+      scopeId?: number
+      description?: string
+      /** Format: date-time */
+      expireTime?: string
+      /** Format: int32 */
+      rateLimit?: number
+      allowIps?: string
+      /** Format: date-time */
+      lastUsedTime?: string
+      /** Format: int64 */
+      usedCount?: number
+      /** Format: int32 */
+      status?: number
+      scopeType?: string
+    }
+    AiQuota: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      tenantId?: string
+      period?: string
+      /** Format: int64 */
+      tokenLimit?: number
+      amountLimit?: number
+      /** Format: int32 */
+      warnRatio?: number
+      overAction?: string
+      /** Format: int64 */
+      usedTokens?: number
+      usedAmount?: number
+      /** Format: date-time */
+      resetTime?: string
+      /** Format: int32 */
+      status?: number
+      scopeType?: string
+      /** Format: int32 */
+      warnPercent?: number
+    }
+    RAiQuota: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AiQuota']
+      msg?: string
+      dataType?: string
+    }
+    AiPrompt: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      tenantId?: string
+      name?: string
+      category?: string
+      scene?: string
+      content?: string
+      variablesJson?: string
+      /** Format: int32 */
+      version?: number
+      /** Format: int32 */
+      status?: number
+      remark?: string
+    }
+    RAiPrompt: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AiPrompt']
+      msg?: string
+      dataType?: string
+    }
+    AiModel: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      tenantId?: string
+      modelName?: string
+      modelType?: string
+      provider?: string
+      icon?: string
+      baseUrl?: string
+      modelCode?: string
+      apiKey?: string
+      secretKey?: string
+      /** Format: int32 */
+      dimensions?: number
+      priceInput?: number
+      priceOutput?: number
+      paramsJson?: string
+      /** Format: int32 */
+      visionFlag?: number
+      /** Format: int32 */
+      activateFlag?: number
+      /** Format: int32 */
+      defaultFlag?: number
+      /** Format: int32 */
+      builtinFlag?: number
+      remark?: string
+    }
+    RAiModel: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AiModel']
+      msg?: string
+      dataType?: string
+    }
+    AiMcpTool: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      tenantId?: string
+      name?: string
+      description?: string
+      category?: string
+      transport?: string
+      sseUrl?: string
+      headersJson?: string
+      command?: string
+      envJson?: string
+      toolsJson?: string
+      apiKey?: string
+      roleWhitelist?: string
+      /** Format: int32 */
+      lockFlag?: number
+      /** Format: int32 */
+      defaultFlag?: number
+      /** Format: int32 */
+      status?: number
+      protocolType?: string
+    }
+    RAiMcpTool: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AiMcpTool']
+      msg?: string
+      dataType?: string
+    }
+    AiKnowledge: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      tenantId?: string
+      icon?: string
+      name?: string
+      description?: string
+      /** Format: int64 */
+      vectorStoreId?: number
+      /** Format: int64 */
+      embeddingModelId?: number
+      /** Format: int32 */
+      dimensions?: number
+      retrievalMode?: string
+      /** Format: int32 */
+      topK?: number
+      minScore?: number
+      /** Format: int32 */
+      rerankFlag?: number
+      /** Format: int64 */
+      rerankModelId?: number
+      /** Format: int32 */
+      status?: number
+      /** Format: int32 */
+      docCount?: number
+      /** Format: int32 */
+      segmentCount?: number
+    }
+    RAiKnowledge: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AiKnowledge']
+      msg?: string
+      dataType?: string
+    }
+    AiKnowledgeSegment: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      /** Format: int64 */
+      knowledgeId?: number
+      /** Format: int64 */
+      assetId?: number
+      tenantId?: string
+      /** Format: int32 */
+      seq?: number
+      content?: string
+      auxContent?: string
+      metaJson?: string
+      /** Format: int32 */
+      tokenCount?: number
+      embeddingId?: string
+      vectorStatus?: string
+      /** Format: int32 */
+      enabled?: number
+    }
+    RAiKnowledgeSegment: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AiKnowledgeSegment']
+      msg?: string
+      dataType?: string
+    }
+    RListMapStringObject: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: {
+        [key: string]: unknown
+      }[]
+      msg?: string
+      dataType?: string
+    }
+    AiKnowledgeAsset: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      /** Format: int64 */
+      knowledgeId?: number
+      tenantId?: string
+      fileName?: string
+      fileUrl?: string
+      /** Format: int64 */
+      fileSize?: number
+      fileType?: string
+      segmentType?: string
+      /** Format: int32 */
+      segmentLength?: number
+      /** Format: int32 */
+      segmentOverlap?: number
+      segmentSymbol?: string
+      /** Format: int32 */
+      keepFormatFlag?: number
+      /** Format: int32 */
+      extractMetaFlag?: number
+      cleanRule?: string
+      /** Format: int32 */
+      segmentCount?: number
+      vectorStatus?: string
+      /** Format: int32 */
+      progress?: number
+      failReason?: string
+      vectorStrategy?: string
+      vectorPriority?: string
+      /** Format: int32 */
+      batchSize?: number
+      /** Format: int32 */
+      concurrency?: number
+      contentText?: string
+    }
+    RAiKnowledgeAsset: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AiKnowledgeAsset']
+      msg?: string
+      dataType?: string
+    }
+    SseEmitter: {
+      /** Format: int64 */
+      timeout?: number | null
+    }
+    AiDatasource: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      tenantId?: string
+      name?: string
+      dbType?: string
+      driverClass?: string
+      jdbcUrl?: string
+      username?: string
+      password?: string
+      /** Format: int32 */
+      readOnlyFlag?: number
+      tableWhitelist?: string
+      /** Format: int32 */
+      poolInitialSize?: number
+      /** Format: int32 */
+      poolMaxActive?: number
+      /** Format: int32 */
+      poolMaxWait?: number
+      poolValidationQuery?: string
+      remark?: string
+    }
+    RAiDatasource: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AiDatasource']
+      msg?: string
+      dataType?: string
+    }
+    AiTerminology: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      tenantId?: string
+      name?: string
+      termType?: string
+      content?: string
+      synonyms?: string
+      remark?: string
+    }
+    RAiTerminology: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AiTerminology']
+      msg?: string
+      dataType?: string
+    }
+    AiDatasetTable: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      /** Format: int64 */
+      datasetId?: number
+      /** Format: int64 */
+      datasourceId?: number
+      tableName?: string
+      tableAlias?: string
+      tableComment?: string
+      fieldsJson?: string
+      relationsJson?: string
+    }
+    RAiDatasetTable: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AiDatasetTable']
+      msg?: string
+      dataType?: string
+    }
+    AiDataset: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      tenantId?: string
+      icon?: string
+      name?: string
+      description?: string
+      datasetType?: string
+      /** Format: int64 */
+      modelId?: number
+      /** Format: int32 */
+      enabled?: number
+      /** Format: int32 */
+      maxRows?: number
+      /** Format: int32 */
+      timeoutMs?: number
+    }
+    RAiDataset: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AiDataset']
+      msg?: string
+      dataType?: string
+    }
+    AiDashboard: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      /** Format: int64 */
+      datasetId?: number
+      tenantId?: string
+      name?: string
+      dashboardType?: string
+      description?: string
+      dsl?: string
+      layoutMode?: string
+      /** Format: int32 */
+      enabled?: number
+      dslJson?: string
+    }
+    RAiDashboard: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AiDashboard']
+      msg?: string
+      dataType?: string
+    }
+    AiChannelBind: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      tenantId?: string
+      channelCode?: string
+      templateCode?: string
+      alias?: string
+      paramsSample?: string
+      /** Format: int32 */
+      status?: number
+    }
+    RAiChannelBind: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AiChannelBind']
+      msg?: string
+      dataType?: string
+    }
+    AiApp: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      tenantId?: string
+      icon?: string
+      name?: string
+      description?: string
+      appType?: string
+      dsl?: string
+      /** Format: int64 */
+      modelId?: number
+      paramsJson?: string
+      systemPrompt?: string
+      openingRemark?: string
+      presetQuestions?: string
+      shareToken?: string
+      /** Format: int32 */
+      shareStatus?: number
+      /** Format: int32 */
+      status?: number
+      /** Format: int32 */
+      version?: number
+    }
+    RAiApp: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AiApp']
       msg?: string
       dataType?: string
     }
@@ -5931,15 +11257,13 @@ export interface components {
       password?: string
       nickname?: string
       phone?: string
-      captchaUuid?: string
-      captchaCode?: string
+      captchaToken?: string
     }
     LoginDTO: {
       tenantId?: string
       username?: string
       password?: string
-      captchaUuid?: string
-      captchaCode?: string
+      captchaToken?: string
       clientId?: string
     }
     ForgetResetDTO: {
@@ -5951,16 +11275,191 @@ export interface components {
     ForgetCodeDTO: {
       username?: string
       tenantId?: string
-      captchaUuid?: string
-      captchaCode?: string
+      captchaToken?: string
     }
-    RListMapStringObject: {
+    Answer: {
+      /** Format: double */
+      x?: number
+      /** Format: double */
+      angle?: number
+      points?: components['schemas']['Point'][]
+      order?: number[]
+    }
+    Point: {
+      /** Format: double */
+      x?: number
+      /** Format: double */
+      y?: number
+    }
+    TrackPoint: {
+      /** Format: double */
+      x?: number
+      /** Format: double */
+      y?: number
+      /** Format: int64 */
+      t?: number
+    }
+    VerifyRequest: {
+      captchaId?: string
+      inputMode?: string
+      /** Format: int32 */
+      bgDisplayWidth?: number
+      /** Format: int64 */
+      startTime?: number
+      /** Format: int64 */
+      endTime?: number
+      track?: components['schemas']['TrackPoint'][]
+      answer?: components['schemas']['Answer']
+      /** Format: int32 */
+      keyPresses?: number
+    }
+    RTokenVO: {
       /** Format: int32 */
       code?: number
       success?: boolean
-      data?: {
-        [key: string]: unknown
-      }[]
+      data?: components['schemas']['TokenVO']
+      msg?: string
+      dataType?: string
+    }
+    TokenVO: {
+      captchaToken?: string
+      /** Format: int64 */
+      expireSeconds?: number
+    }
+    ChallengeRequest: {
+      scene?: string
+      clientId?: string
+      tenantId?: string
+      inputMode?: string
+      type?: string
+    }
+    ChallengeVO: {
+      captchaId?: string
+      type?: string
+      inputMode?: string
+      background?: string
+      piece?: string
+      /** Format: int32 */
+      bgWidth?: number
+      /** Format: int32 */
+      bgHeight?: number
+      /** Format: int32 */
+      pieceWidth?: number
+      /** Format: int32 */
+      pieceHeight?: number
+      /** Format: int32 */
+      keyboardStep?: number
+      /** Format: int64 */
+      expireSeconds?: number
+      /** Format: int32 */
+      pieceSize?: number
+      prompt?: string
+      promptNames?: string[]
+      promptImage?: string
+      /** Format: int32 */
+      count?: number
+      grid?: {
+        [key: string]: number
+      }
+      tiles?: string[]
+      /** Format: int32 */
+      tileWidth?: number
+      /** Format: int32 */
+      tileHeight?: number
+      /** Format: int32 */
+      itemSize?: number
+      hasDecoy?: boolean
+    }
+    RChallengeVO: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['ChallengeVO']
+      msg?: string
+      dataType?: string
+    }
+    AppHandleDTO: {
+      action?: string
+      comment?: string
+    }
+    AppSliderCheckDTO: {
+      captchaId?: string
+      /** Format: int32 */
+      moveX?: number
+      /** Format: int64 */
+      startTime?: number
+      /** Format: int64 */
+      endTime?: number
+      tracks?: components['schemas']['AppSliderTrackPoint'][]
+    }
+    AppSliderTrackPoint: {
+      /** Format: int32 */
+      x?: number
+      /** Format: int32 */
+      y?: number
+      /** Format: int64 */
+      t?: number
+    }
+    AppTicketVO: {
+      ticket?: string
+    }
+    RAppTicketVO: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AppTicketVO']
+      msg?: string
+      dataType?: string
+    }
+    AppLoginDTO: {
+      username?: string
+      password?: string
+      ticket?: string
+      tenantId?: string
+    }
+    PageSysUsualLog: {
+      records?: components['schemas']['SysUsualLog'][]
+      /** Format: int64 */
+      pageNumber?: number
+      /** Format: int64 */
+      pageSize?: number
+      /** Format: int64 */
+      totalPage?: number
+      /** Format: int64 */
+      totalRow?: number
+      optimizeCountQuery?: boolean
+    }
+    RPageSysUsualLog: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['PageSysUsualLog']
+      msg?: string
+      dataType?: string
+    }
+    SysUsualLog: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      tenantId?: string
+      logLevel?: string
+      logId?: string
+      logData?: string
+      requestUri?: string
+      method?: string
+      remoteIp?: string
+      userAgent?: string
+    }
+    RSysUsualLog: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['SysUsualLog']
       msg?: string
       dataType?: string
     }
@@ -5992,11 +11491,151 @@ export interface components {
       msg?: string
       dataType?: string
     }
+    RListSysUser: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['SysUser'][]
+      msg?: string
+      dataType?: string
+    }
     RSysUser: {
       /** Format: int32 */
       code?: number
       success?: boolean
       data?: components['schemas']['SysUser']
+      msg?: string
+      dataType?: string
+    }
+    PageTrackVisualRule: {
+      records?: components['schemas']['TrackVisualRule'][]
+      /** Format: int64 */
+      pageNumber?: number
+      /** Format: int64 */
+      pageSize?: number
+      /** Format: int64 */
+      totalPage?: number
+      /** Format: int64 */
+      totalRow?: number
+      optimizeCountQuery?: boolean
+    }
+    RPageTrackVisualRule: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['PageTrackVisualRule']
+      msg?: string
+      dataType?: string
+    }
+    PageMapStringObject: {
+      records?: {
+        [key: string]: unknown
+      }[]
+      /** Format: int64 */
+      pageNumber?: number
+      /** Format: int64 */
+      pageSize?: number
+      /** Format: int64 */
+      totalPage?: number
+      /** Format: int64 */
+      totalRow?: number
+      optimizeCountQuery?: boolean
+    }
+    RPageMapStringObject: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['PageMapStringObject']
+      msg?: string
+      dataType?: string
+    }
+    PageTrackEventDef: {
+      records?: components['schemas']['TrackEventDef'][]
+      /** Format: int64 */
+      pageNumber?: number
+      /** Format: int64 */
+      pageSize?: number
+      /** Format: int64 */
+      totalPage?: number
+      /** Format: int64 */
+      totalRow?: number
+      optimizeCountQuery?: boolean
+    }
+    RPageTrackEventDef: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['PageTrackEventDef']
+      msg?: string
+      dataType?: string
+    }
+    TrackEventDef: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      appKey?: string
+      eventName?: string
+      displayName?: string
+      description?: string
+      /** Format: int32 */
+      status?: number
+      owner?: string
+      /** Format: date-time */
+      firstSeenTime?: string
+      /** Format: date-time */
+      lastSeenTime?: string
+      tenantId?: string
+    }
+    PageTrackApp: {
+      records?: components['schemas']['TrackApp'][]
+      /** Format: int64 */
+      pageNumber?: number
+      /** Format: int64 */
+      pageSize?: number
+      /** Format: int64 */
+      totalPage?: number
+      /** Format: int64 */
+      totalRow?: number
+      optimizeCountQuery?: boolean
+    }
+    RPageTrackApp: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['PageTrackApp']
+      msg?: string
+      dataType?: string
+    }
+    PageSysTopMenu: {
+      records?: components['schemas']['SysTopMenu'][]
+      /** Format: int64 */
+      pageNumber?: number
+      /** Format: int64 */
+      pageSize?: number
+      /** Format: int64 */
+      totalPage?: number
+      /** Format: int64 */
+      totalRow?: number
+      optimizeCountQuery?: boolean
+    }
+    RPageSysTopMenu: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['PageSysTopMenu']
+      msg?: string
+      dataType?: string
+    }
+    RSysTopMenu: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['SysTopMenu']
       msg?: string
       dataType?: string
     }
@@ -6262,6 +11901,14 @@ export interface components {
       msg?: string
       dataType?: string
     }
+    RSysRegion: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['SysRegion']
+      msg?: string
+      dataType?: string
+    }
     PageSysPost: {
       records?: components['schemas']['SysPost'][]
       /** Format: int64 */
@@ -6287,6 +11934,26 @@ export interface components {
       code?: number
       success?: boolean
       data?: components['schemas']['SysPost']
+      msg?: string
+      dataType?: string
+    }
+    PageSysParam: {
+      records?: components['schemas']['SysParam'][]
+      /** Format: int64 */
+      pageNumber?: number
+      /** Format: int64 */
+      pageSize?: number
+      /** Format: int64 */
+      totalPage?: number
+      /** Format: int64 */
+      totalRow?: number
+      optimizeCountQuery?: boolean
+    }
+    RPageSysParam: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['PageSysParam']
       msg?: string
       dataType?: string
     }
@@ -6380,6 +12047,7 @@ export interface components {
       prevHash?: string
       recordHash?: string
       sign?: string
+      chainPrev?: string
     }
     RSysOperLog: {
       /** Format: int32 */
@@ -6853,6 +12521,16 @@ export interface components {
       os?: string
       loginLocation?: string
       device?: string
+      grantType?: string
+      locked?: boolean
+    }
+    RSysLoginLog: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['SysLoginLog']
+      msg?: string
+      dataType?: string
     }
     AlarmConfig: {
       /** Format: int32 */
@@ -7019,6 +12697,62 @@ export interface components {
       msg?: string
       dataType?: string
     }
+    PageGisScene: {
+      records?: components['schemas']['GisScene'][]
+      /** Format: int64 */
+      pageNumber?: number
+      /** Format: int64 */
+      pageSize?: number
+      /** Format: int64 */
+      totalPage?: number
+      /** Format: int64 */
+      totalRow?: number
+      optimizeCountQuery?: boolean
+    }
+    RPageGisScene: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['PageGisScene']
+      msg?: string
+      dataType?: string
+    }
+    RListGisMapProvider: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['GisMapProvider'][]
+      msg?: string
+      dataType?: string
+    }
+    PageGisLayer: {
+      records?: components['schemas']['GisLayer'][]
+      /** Format: int64 */
+      pageNumber?: number
+      /** Format: int64 */
+      pageSize?: number
+      /** Format: int64 */
+      totalPage?: number
+      /** Format: int64 */
+      totalRow?: number
+      optimizeCountQuery?: boolean
+    }
+    RPageGisLayer: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['PageGisLayer']
+      msg?: string
+      dataType?: string
+    }
+    RListGisLayer: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['GisLayer'][]
+      msg?: string
+      dataType?: string
+    }
     RMapStringString: {
       /** Format: int32 */
       code?: number
@@ -7090,32 +12824,33 @@ export interface components {
       formData?: string
       /** Format: int64 */
       submitter?: number
+      submitterName?: string
     }
     Instance: {
+      /** Format: int64 */
+      definitionId?: number
+      /** Format: int32 */
+      activityStatus?: number
       ext?: string
       /** Format: int64 */
       id?: number
       variable?: string
       /** Format: int32 */
       nodeType?: number
-      tenantId?: string
       /** Format: date-time */
       createTime?: string
-      /** Format: int64 */
-      definitionId?: number
+      tenantId?: string
+      flowStatus?: string
       createBy?: string
       nodeCode?: string
       variableMap?: {
         [key: string]: unknown
       }
-      flowStatus?: string
       nodeName?: string
       /** Format: date-time */
       updateTime?: string
-      /** Format: int32 */
-      activityStatus?: number
-      delFlag?: string
       updateBy?: string
+      delFlag?: string
       flowName?: string
       businessId?: string
       formCustom?: string
@@ -7203,6 +12938,8 @@ export interface components {
       requestUri?: string
       requestMethod?: string
       operator?: string
+      operatorName?: string
+      handleUserName?: string
       tenantId?: string
       exceptionClass?: string
       message?: string
@@ -7275,6 +13012,26 @@ export interface components {
       msg?: string
       dataType?: string
     }
+    PageSysDataScope: {
+      records?: components['schemas']['SysDataScope'][]
+      /** Format: int64 */
+      pageNumber?: number
+      /** Format: int64 */
+      pageSize?: number
+      /** Format: int64 */
+      totalPage?: number
+      /** Format: int64 */
+      totalRow?: number
+      optimizeCountQuery?: boolean
+    }
+    RPageSysDataScope: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['PageSysDataScope']
+      msg?: string
+      dataType?: string
+    }
     PageSysDataAudit: {
       records?: components['schemas']['SysDataAudit'][]
       /** Format: int64 */
@@ -7310,6 +13067,10 @@ export interface components {
       afterData?: string
       operator?: string
       changeContent?: string
+      action?: string
+      httpMethod?: string
+      requestPath?: string
+      clientIp?: string
     }
     RSysDataAudit: {
       /** Format: int32 */
@@ -7395,6 +13156,26 @@ export interface components {
       msg?: string
       dataType?: string
     }
+    PageSysApiScope: {
+      records?: components['schemas']['SysApiScope'][]
+      /** Format: int64 */
+      pageNumber?: number
+      /** Format: int64 */
+      pageSize?: number
+      /** Format: int64 */
+      totalPage?: number
+      /** Format: int64 */
+      totalRow?: number
+      optimizeCountQuery?: boolean
+    }
+    RPageSysApiScope: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['PageSysApiScope']
+      msg?: string
+      dataType?: string
+    }
     PageSysApiLog: {
       records?: components['schemas']['SysApiLog'][]
       /** Format: int64 */
@@ -7432,6 +13213,7 @@ export interface components {
       ip?: string
       userAgent?: string
       operator?: string
+      operatorName?: string
       tenantId?: string
       /** Format: int32 */
       status?: number
@@ -7470,18 +13252,681 @@ export interface components {
       msg?: string
       dataType?: string
     }
-    CaptchaVO: {
-      captchaUuid?: string
-      captchaImage?: string
+    PageSysApiKeyLog: {
+      records?: components['schemas']['SysApiKeyLog'][]
       /** Format: int64 */
-      expireSeconds?: number
-      captchaCode?: string
+      pageNumber?: number
+      /** Format: int64 */
+      pageSize?: number
+      /** Format: int64 */
+      totalPage?: number
+      /** Format: int64 */
+      totalRow?: number
+      optimizeCountQuery?: boolean
     }
-    RCaptchaVO: {
+    RPageSysApiKeyLog: {
       /** Format: int32 */
       code?: number
       success?: boolean
-      data?: components['schemas']['CaptchaVO']
+      data?: components['schemas']['PageSysApiKeyLog']
+      msg?: string
+      dataType?: string
+    }
+    SysApiKeyLog: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      tenantId?: string
+      /** Format: int64 */
+      apiKeyId?: number
+      accessKey?: string
+      keyName?: string
+      requestUri?: string
+      method?: string
+      /** Format: int32 */
+      status?: number
+      remoteIp?: string
+      userAgent?: string
+      params?: string
+      /** Format: int32 */
+      costMs?: number
+      msg?: string
+    }
+    RSysApiKeyLog: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['SysApiKeyLog']
+      msg?: string
+      dataType?: string
+    }
+    PageAiVectorStore: {
+      records?: components['schemas']['AiVectorStore'][]
+      /** Format: int64 */
+      pageNumber?: number
+      /** Format: int64 */
+      pageSize?: number
+      /** Format: int64 */
+      totalPage?: number
+      /** Format: int64 */
+      totalRow?: number
+      optimizeCountQuery?: boolean
+    }
+    RPageAiVectorStore: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['PageAiVectorStore']
+      msg?: string
+      dataType?: string
+    }
+    PageAiSession: {
+      records?: components['schemas']['AiSession'][]
+      /** Format: int64 */
+      pageNumber?: number
+      /** Format: int64 */
+      pageSize?: number
+      /** Format: int64 */
+      totalPage?: number
+      /** Format: int64 */
+      totalRow?: number
+      optimizeCountQuery?: boolean
+    }
+    RPageAiSession: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['PageAiSession']
+      msg?: string
+      dataType?: string
+    }
+    AiMessage: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      /** Format: int64 */
+      sessionId?: number
+      tenantId?: string
+      /** Format: int64 */
+      userId?: number
+      role?: string
+      content?: string
+      thinkContent?: string
+      attachmentsJson?: string
+      /** Format: int64 */
+      modelId?: number
+      /** Format: int32 */
+      promptTokens?: number
+      /** Format: int32 */
+      completionTokens?: number
+      /** Format: int32 */
+      totalTokens?: number
+      amount?: number
+      ip?: string
+      requestId?: string
+      ragRefsJson?: string
+      status?: string
+    }
+    RListAiMessage: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AiMessage'][]
+      msg?: string
+      dataType?: string
+    }
+    PageAiSecret: {
+      records?: components['schemas']['AiSecret'][]
+      /** Format: int64 */
+      pageNumber?: number
+      /** Format: int64 */
+      pageSize?: number
+      /** Format: int64 */
+      totalPage?: number
+      /** Format: int64 */
+      totalRow?: number
+      optimizeCountQuery?: boolean
+    }
+    RPageAiSecret: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['PageAiSecret']
+      msg?: string
+      dataType?: string
+    }
+    PageAiQuota: {
+      records?: components['schemas']['AiQuota'][]
+      /** Format: int64 */
+      pageNumber?: number
+      /** Format: int64 */
+      pageSize?: number
+      /** Format: int64 */
+      totalPage?: number
+      /** Format: int64 */
+      totalRow?: number
+      optimizeCountQuery?: boolean
+    }
+    RPageAiQuota: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['PageAiQuota']
+      msg?: string
+      dataType?: string
+    }
+    PageAiPrompt: {
+      records?: components['schemas']['AiPrompt'][]
+      /** Format: int64 */
+      pageNumber?: number
+      /** Format: int64 */
+      pageSize?: number
+      /** Format: int64 */
+      totalPage?: number
+      /** Format: int64 */
+      totalRow?: number
+      optimizeCountQuery?: boolean
+    }
+    RPageAiPrompt: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['PageAiPrompt']
+      msg?: string
+      dataType?: string
+    }
+    PageAiModel: {
+      records?: components['schemas']['AiModel'][]
+      /** Format: int64 */
+      pageNumber?: number
+      /** Format: int64 */
+      pageSize?: number
+      /** Format: int64 */
+      totalPage?: number
+      /** Format: int64 */
+      totalRow?: number
+      optimizeCountQuery?: boolean
+    }
+    RPageAiModel: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['PageAiModel']
+      msg?: string
+      dataType?: string
+    }
+    RListAiModel: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AiModel'][]
+      msg?: string
+      dataType?: string
+    }
+    RListAiMcpTool: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AiMcpTool'][]
+      msg?: string
+      dataType?: string
+    }
+    PageAiMcpTool: {
+      records?: components['schemas']['AiMcpTool'][]
+      /** Format: int64 */
+      pageNumber?: number
+      /** Format: int64 */
+      pageSize?: number
+      /** Format: int64 */
+      totalPage?: number
+      /** Format: int64 */
+      totalRow?: number
+      optimizeCountQuery?: boolean
+    }
+    RPageAiMcpTool: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['PageAiMcpTool']
+      msg?: string
+      dataType?: string
+    }
+    RListAiKnowledgeSegment: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AiKnowledgeSegment'][]
+      msg?: string
+      dataType?: string
+    }
+    PageAiKnowledge: {
+      records?: components['schemas']['AiKnowledge'][]
+      /** Format: int64 */
+      pageNumber?: number
+      /** Format: int64 */
+      pageSize?: number
+      /** Format: int64 */
+      totalPage?: number
+      /** Format: int64 */
+      totalRow?: number
+      optimizeCountQuery?: boolean
+    }
+    RPageAiKnowledge: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['PageAiKnowledge']
+      msg?: string
+      dataType?: string
+    }
+    RListAiKnowledgeAsset: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AiKnowledgeAsset'][]
+      msg?: string
+      dataType?: string
+    }
+    PageAiDatasource: {
+      records?: components['schemas']['AiDatasource'][]
+      /** Format: int64 */
+      pageNumber?: number
+      /** Format: int64 */
+      pageSize?: number
+      /** Format: int64 */
+      totalPage?: number
+      /** Format: int64 */
+      totalRow?: number
+      optimizeCountQuery?: boolean
+    }
+    RPageAiDatasource: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['PageAiDatasource']
+      msg?: string
+      dataType?: string
+    }
+    RListAiTerminology: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AiTerminology'][]
+      msg?: string
+      dataType?: string
+    }
+    RListAiDatasetTable: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AiDatasetTable'][]
+      msg?: string
+      dataType?: string
+    }
+    PageAiDataset: {
+      records?: components['schemas']['AiDataset'][]
+      /** Format: int64 */
+      pageNumber?: number
+      /** Format: int64 */
+      pageSize?: number
+      /** Format: int64 */
+      totalPage?: number
+      /** Format: int64 */
+      totalRow?: number
+      optimizeCountQuery?: boolean
+    }
+    RPageAiDataset: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['PageAiDataset']
+      msg?: string
+      dataType?: string
+    }
+    PageAiDashboard: {
+      records?: components['schemas']['AiDashboard'][]
+      /** Format: int64 */
+      pageNumber?: number
+      /** Format: int64 */
+      pageSize?: number
+      /** Format: int64 */
+      totalPage?: number
+      /** Format: int64 */
+      totalRow?: number
+      optimizeCountQuery?: boolean
+    }
+    RPageAiDashboard: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['PageAiDashboard']
+      msg?: string
+      dataType?: string
+    }
+    PageAiChannelBind: {
+      records?: components['schemas']['AiChannelBind'][]
+      /** Format: int64 */
+      pageNumber?: number
+      /** Format: int64 */
+      pageSize?: number
+      /** Format: int64 */
+      totalPage?: number
+      /** Format: int64 */
+      totalRow?: number
+      optimizeCountQuery?: boolean
+    }
+    RPageAiChannelBind: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['PageAiChannelBind']
+      msg?: string
+      dataType?: string
+    }
+    AiBill: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      tenantId?: string
+      /** Format: int64 */
+      messageId?: number
+      /** Format: int64 */
+      sessionId?: number
+      /** Format: int64 */
+      userId?: number
+      /** Format: int64 */
+      modelId?: number
+      modelName?: string
+      /** Format: int32 */
+      promptTokens?: number
+      /** Format: int32 */
+      completionTokens?: number
+      /** Format: int32 */
+      totalTokens?: number
+      amount?: number
+      ip?: string
+      bizType?: string
+      /** Format: date-time */
+      callTime?: string
+    }
+    PageAiBill: {
+      records?: components['schemas']['AiBill'][]
+      /** Format: int64 */
+      pageNumber?: number
+      /** Format: int64 */
+      pageSize?: number
+      /** Format: int64 */
+      totalPage?: number
+      /** Format: int64 */
+      totalRow?: number
+      optimizeCountQuery?: boolean
+    }
+    RPageAiBill: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['PageAiBill']
+      msg?: string
+      dataType?: string
+    }
+    AiAppRun: {
+      /** Format: int64 */
+      id?: number
+      /** Format: date-time */
+      createTime?: string
+      /** Format: date-time */
+      updateTime?: string
+      /** Format: int32 */
+      isDeleted?: number
+      /** Format: int64 */
+      appId?: number
+      tenantId?: string
+      /** Format: int64 */
+      userId?: number
+      traceId?: string
+      inputJson?: string
+      outputJson?: string
+      status?: string
+      errorCode?: string
+      errorMsg?: string
+      /** Format: int64 */
+      durationMs?: number
+      /** Format: int32 */
+      totalTokens?: number
+    }
+    PageAiAppRun: {
+      records?: components['schemas']['AiAppRun'][]
+      /** Format: int64 */
+      pageNumber?: number
+      /** Format: int64 */
+      pageSize?: number
+      /** Format: int64 */
+      totalPage?: number
+      /** Format: int64 */
+      totalRow?: number
+      optimizeCountQuery?: boolean
+    }
+    RPageAiAppRun: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['PageAiAppRun']
+      msg?: string
+      dataType?: string
+    }
+    PageAiApp: {
+      records?: components['schemas']['AiApp'][]
+      /** Format: int64 */
+      pageNumber?: number
+      /** Format: int64 */
+      pageSize?: number
+      /** Format: int64 */
+      totalPage?: number
+      /** Format: int64 */
+      totalRow?: number
+      optimizeCountQuery?: boolean
+    }
+    RPageAiApp: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['PageAiApp']
+      msg?: string
+      dataType?: string
+    }
+    CaptchaConfigVO: {
+      enabled?: boolean
+      type?: string
+      scene?: string
+    }
+    RCaptchaConfigVO: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['CaptchaConfigVO']
+      msg?: string
+      dataType?: string
+    }
+    AppTodoItemVO: {
+      /** Format: int64 */
+      taskId?: number
+      /** Format: int64 */
+      instanceId?: number
+      title?: string
+      flowName?: string
+      nodeName?: string
+      createTime?: string
+    }
+    RListAppTodoItemVO: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AppTodoItemVO'][]
+      msg?: string
+      dataType?: string
+    }
+    AppFieldVO: {
+      label?: string
+      value?: string
+    }
+    AppTodoDetailVO: {
+      /** Format: int64 */
+      taskId?: number
+      /** Format: int64 */
+      instanceId?: number
+      flowName?: string
+      nodeName?: string
+      createTime?: string
+      fields?: components['schemas']['AppFieldVO'][]
+    }
+    RAppTodoDetailVO: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AppTodoDetailVO']
+      msg?: string
+      dataType?: string
+    }
+    AppNoticeItemVO: {
+      /** Format: int64 */
+      id?: number
+      title?: string
+      time?: string
+      unread?: boolean
+    }
+    AppPageVOAppNoticeItemVO: {
+      records?: components['schemas']['AppNoticeItemVO'][]
+      /** Format: int64 */
+      total?: number
+    }
+    RAppPageVOAppNoticeItemVO: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AppPageVOAppNoticeItemVO']
+      msg?: string
+      dataType?: string
+    }
+    AppNoticeDetailVO: {
+      /** Format: int64 */
+      id?: number
+      title?: string
+      content?: string
+      time?: string
+      unread?: boolean
+    }
+    RAppNoticeDetailVO: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AppNoticeDetailVO']
+      msg?: string
+      dataType?: string
+    }
+    AppMessageItemVO: {
+      /** Format: int64 */
+      id?: number
+      /** Format: int64 */
+      messageId?: number
+      title?: string
+      time?: string
+      unread?: boolean
+    }
+    AppPageVOAppMessageItemVO: {
+      records?: components['schemas']['AppMessageItemVO'][]
+      /** Format: int64 */
+      total?: number
+    }
+    RAppPageVOAppMessageItemVO: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AppPageVOAppMessageItemVO']
+      msg?: string
+      dataType?: string
+    }
+    AppMessageDetailVO: {
+      /** Format: int64 */
+      id?: number
+      /** Format: int64 */
+      messageId?: number
+      title?: string
+      content?: string
+      time?: string
+      unread?: boolean
+    }
+    RAppMessageDetailVO: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AppMessageDetailVO']
+      msg?: string
+      dataType?: string
+    }
+    AppHomeVO: {
+      user?: components['schemas']['AppUserVO']
+      /** Format: int64 */
+      todoCount?: number
+      /** Format: int64 */
+      messageUnread?: number
+      /** Format: int64 */
+      noticeUnread?: number
+      todos?: components['schemas']['AppTodoItemVO'][]
+      notices?: components['schemas']['AppNoticeItemVO'][]
+    }
+    AppUserVO: {
+      /** Format: int64 */
+      userId?: number
+      userName?: string
+      nickName?: string
+    }
+    RAppHomeVO: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AppHomeVO']
+      msg?: string
+      dataType?: string
+    }
+    AppSliderGenerateVO: {
+      captchaId?: string
+      backgroundImage?: string
+      sliderImage?: string
+      /** Format: int32 */
+      width?: number
+      /** Format: int32 */
+      height?: number
+      /** Format: int32 */
+      pieceSize?: number
+    }
+    RAppSliderGenerateVO: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AppSliderGenerateVO']
+      msg?: string
+      dataType?: string
+    }
+    RAppUserVO: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: components['schemas']['AppUserVO']
       msg?: string
       dataType?: string
     }
@@ -7494,6 +13939,112 @@ export interface components {
 }
 export type $defs = Record<string, never>
 export interface operations {
+  chatCompletions: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': string
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'application/json': {
+            [key: string]: unknown
+          }
+        }
+      }
+    }
+  }
+  visualDraft: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RObject']
+        }
+      }
+    }
+  }
+  replay: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RObject']
+        }
+      }
+    }
+  }
+  collect: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RObject']
+        }
+      }
+    }
+  }
+  apiBody: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RObject']
+        }
+      }
+    }
+  }
   shortcuts: {
     parameters: {
       query?: never
@@ -7525,6 +14076,32 @@ export interface operations {
       content: {
         'application/json': {
           [key: string]: string
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  unlockAccount: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
         }
       }
     }
@@ -7588,6 +14165,28 @@ export interface operations {
       }
     }
   }
+  setLeader: {
+    parameters: {
+      query: {
+        userId: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
   resetPassword: {
     parameters: {
       query?: never
@@ -7636,6 +14235,32 @@ export interface operations {
       }
     }
   }
+  lock: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
   importUser: {
     parameters: {
       query?: {
@@ -7649,7 +14274,7 @@ export interface operations {
       content: {
         'application/json': {
           /** Format: binary */
-          file: string
+          file?: string
         }
       }
     }
@@ -7689,6 +14314,368 @@ export interface operations {
       }
     }
   }
+  token: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  ruleSubmit: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  ruleRemove: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  discard: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  confirm: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RTrackVisualRule']
+        }
+      }
+    }
+  }
+  upload: {
+    parameters: {
+      query?: {
+        appKey?: string
+        release?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          /** Format: binary */
+          file?: string
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  remove_1: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  eventDefSubmit: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  appSubmit: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['JsonNode']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RTrackApp']
+        }
+      }
+    }
+  }
+  appRemove: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  submit_1: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SysTopMenu']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  remove_2: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['JsonNode']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  home: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  grant_1: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
   update: {
     parameters: {
       query?: never
@@ -7713,7 +14700,7 @@ export interface operations {
       }
     }
   }
-  remove_1: {
+  remove_3: {
     parameters: {
       query?: never
       header?: never
@@ -7761,7 +14748,31 @@ export interface operations {
       }
     }
   }
-  submit_1: {
+  captchaSwitch: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CaptchaSwitchDTO']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  submit_2: {
     parameters: {
       query?: never
       header?: never
@@ -7785,7 +14796,7 @@ export interface operations {
       }
     }
   }
-  remove_2: {
+  remove_4: {
     parameters: {
       query?: never
       header?: never
@@ -7809,7 +14820,7 @@ export interface operations {
       }
     }
   }
-  submit_2: {
+  submit_3: {
     parameters: {
       query?: never
       header?: never
@@ -7833,7 +14844,7 @@ export interface operations {
       }
     }
   }
-  remove_3: {
+  remove_5: {
     parameters: {
       query?: never
       header?: never
@@ -7864,7 +14875,7 @@ export interface operations {
       path?: never
       cookie?: never
     }
-    requestBody: {
+    requestBody?: {
       content: {
         'application/json': components['schemas']['SysTableColumn']
       }
@@ -7903,7 +14914,7 @@ export interface operations {
       }
     }
   }
-  submit_3: {
+  submit_4: {
     parameters: {
       query?: never
       header?: never
@@ -7927,7 +14938,7 @@ export interface operations {
       }
     }
   }
-  remove_4: {
+  remove_6: {
     parameters: {
       query?: never
       header?: never
@@ -7973,7 +14984,31 @@ export interface operations {
       }
     }
   }
-  submit_4: {
+  debug: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SmsDebug']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RString']
+        }
+      }
+    }
+  }
+  submit_5: {
     parameters: {
       query?: never
       header?: never
@@ -7997,7 +15032,7 @@ export interface operations {
       }
     }
   }
-  remove_5: {
+  remove_7: {
     parameters: {
       query?: never
       header?: never
@@ -8023,8 +15058,8 @@ export interface operations {
   }
   generate: {
     parameters: {
-      query: {
-        code: string
+      query?: {
+        code?: string
         count?: number
       }
       header?: never
@@ -8064,7 +15099,7 @@ export interface operations {
       }
     }
   }
-  submit_5: {
+  submit_6: {
     parameters: {
       query?: never
       header?: never
@@ -8088,7 +15123,7 @@ export interface operations {
       }
     }
   }
-  remove_6: {
+  remove_8: {
     parameters: {
       query?: never
       header?: never
@@ -8112,7 +15147,7 @@ export interface operations {
       }
     }
   }
-  grant_1: {
+  grant_2: {
     parameters: {
       query?: never
       header?: never
@@ -8136,7 +15171,7 @@ export interface operations {
       }
     }
   }
-  submit_6: {
+  submit_7: {
     parameters: {
       query?: never
       header?: never
@@ -8160,7 +15195,33 @@ export interface operations {
       }
     }
   }
-  remove_7: {
+  removeBatch: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  remove_9: {
     parameters: {
       query?: never
       header?: never
@@ -8182,7 +15243,7 @@ export interface operations {
       }
     }
   }
-  submit_7: {
+  submit_8: {
     parameters: {
       query?: never
       header?: never
@@ -8206,7 +15267,7 @@ export interface operations {
       }
     }
   }
-  remove_8: {
+  remove_10: {
     parameters: {
       query?: never
       header?: never
@@ -8239,7 +15300,7 @@ export interface operations {
       content: {
         'application/json': {
           /** Format: binary */
-          file: string
+          file?: string
         }
       }
     }
@@ -8255,54 +15316,6 @@ export interface operations {
       }
     }
   }
-  submit_8: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['SysPost']
-      }
-    }
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          '*/*': components['schemas']['RVoid']
-        }
-      }
-    }
-  }
-  remove_9: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': number[]
-      }
-    }
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          '*/*': components['schemas']['RVoid']
-        }
-      }
-    }
-  }
   submit_9: {
     parameters: {
       query?: never
@@ -8312,55 +15325,7 @@ export interface operations {
     }
     requestBody: {
       content: {
-        'application/json': components['schemas']['SysParam']
-      }
-    }
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          '*/*': components['schemas']['RVoid']
-        }
-      }
-    }
-  }
-  remove_10: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': number[]
-      }
-    }
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          '*/*': components['schemas']['RVoid']
-        }
-      }
-    }
-  }
-  submit_10: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['SysOss']
+        'application/json': components['schemas']['SysPost']
       }
     }
     responses: {
@@ -8395,6 +15360,124 @@ export interface operations {
         }
         content: {
           '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  submit_10: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SysParam']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  remove_12: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': number[]
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  submit_11: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SysOss']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  remove_13: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': number[]
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  probe: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RString']
         }
       }
     }
@@ -8447,6 +15530,26 @@ export interface operations {
       }
     }
   }
+  cleanupStale: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RInteger']
+        }
+      }
+    }
+  }
   save_1: {
     parameters: {
       query: {
@@ -8475,7 +15578,7 @@ export interface operations {
       }
     }
   }
-  remove_12: {
+  remove_14: {
     parameters: {
       query: {
         tableId: number
@@ -8547,7 +15650,7 @@ export interface operations {
       }
     }
   }
-  remove_13: {
+  remove_15: {
     parameters: {
       query?: never
       header?: never
@@ -8613,7 +15716,7 @@ export interface operations {
       }
     }
   }
-  submit_11: {
+  submit_12: {
     parameters: {
       query?: never
       header?: never
@@ -8637,55 +15740,7 @@ export interface operations {
       }
     }
   }
-  remove_14: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': number[]
-      }
-    }
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          '*/*': components['schemas']['RVoid']
-        }
-      }
-    }
-  }
-  submit_12: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['SysNotifyChannel']
-      }
-    }
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          '*/*': components['schemas']['RVoid']
-        }
-      }
-    }
-  }
-  remove_15: {
+  remove_16: {
     parameters: {
       query?: never
       header?: never
@@ -8718,6 +15773,54 @@ export interface operations {
     }
     requestBody: {
       content: {
+        'application/json': components['schemas']['SysNotifyChannel']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  remove_17: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': number[]
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  submit_14: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
         'application/json': components['schemas']['SysNotice']
       }
     }
@@ -8733,7 +15836,7 @@ export interface operations {
       }
     }
   }
-  remove_16: {
+  remove_18: {
     parameters: {
       query?: never
       header?: never
@@ -8803,7 +15906,7 @@ export interface operations {
       }
     }
   }
-  remove_17: {
+  remove_19: {
     parameters: {
       query?: never
       header?: never
@@ -8869,7 +15972,7 @@ export interface operations {
       }
     }
   }
-  submit_14: {
+  submit_15: {
     parameters: {
       query?: never
       header?: never
@@ -8893,55 +15996,7 @@ export interface operations {
       }
     }
   }
-  remove_18: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': number[]
-      }
-    }
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          '*/*': components['schemas']['RVoid']
-        }
-      }
-    }
-  }
-  submit_15: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody: {
-      content: {
-        'application/json': components['schemas']['SysMenu']
-      }
-    }
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          '*/*': components['schemas']['RVoid']
-        }
-      }
-    }
-  }
-  remove_19: {
+  remove_20: {
     parameters: {
       query?: never
       header?: never
@@ -8966,6 +16021,54 @@ export interface operations {
     }
   }
   submit_16: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SysMenu']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  remove_21: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': number[]
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  submit_17: {
     parameters: {
       query?: never
       header?: never
@@ -9015,7 +16118,7 @@ export interface operations {
       }
     }
   }
-  remove_20: {
+  remove_22: {
     parameters: {
       query?: never
       header?: never
@@ -9084,14 +16187,16 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          '*/*': components['schemas']['RLong']
+          '*/*': components['schemas']['RVoid']
         }
       }
     }
   }
   run: {
     parameters: {
-      query?: never
+      query?: {
+        serverId?: number
+      }
       header?: never
       path: {
         jobId: number
@@ -9106,14 +16211,16 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          '*/*': components['schemas']['RLong']
+          '*/*': components['schemas']['RVoid']
         }
       }
     }
   }
   enable_3: {
     parameters: {
-      query?: never
+      query?: {
+        serverId?: number
+      }
       header?: never
       path: {
         jobId: number
@@ -9135,7 +16242,9 @@ export interface operations {
   }
   disable_1: {
     parameters: {
-      query?: never
+      query?: {
+        serverId?: number
+      }
       header?: never
       path: {
         jobId: number
@@ -9157,7 +16266,9 @@ export interface operations {
   }
   delete: {
     parameters: {
-      query?: never
+      query?: {
+        serverId?: number
+      }
       header?: never
       path: {
         jobId: number
@@ -9165,6 +16276,84 @@ export interface operations {
       cookie?: never
     }
     requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  sync: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  save_4: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  remove_23: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
     responses: {
       /** @description OK */
       200: {
@@ -9339,7 +16528,328 @@ export interface operations {
       }
     }
   }
-  sync: {
+  intersects: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  contains: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  buffer: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  submit_18: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GisScene']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RGisScene']
+        }
+      }
+    }
+  }
+  remove_24: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': number[]
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  test: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GisMapProvider']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  submit_19: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GisMapProvider']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  remove_25: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': number[]
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  submit_20: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RGisLayer']
+        }
+      }
+    }
+  }
+  remove_26: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': number[]
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  ingestText: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'text/plain': string
+        'application/json': Record<string, never>
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  analyze: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  sync_1: {
+    parameters: {
+      query: {
+        tableId: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  remove_27: {
     parameters: {
       query: {
         tableId: number
@@ -9502,7 +17012,163 @@ export interface operations {
       }
     }
   }
-  submit_17: {
+  save_5: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  remove_28: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  enable_4: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  test_1: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  save_6: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  remove_29: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  submit_21: {
     parameters: {
       query?: never
       header?: never
@@ -9552,7 +17218,7 @@ export interface operations {
       }
     }
   }
-  remove_21: {
+  remove_30: {
     parameters: {
       query?: never
       header?: never
@@ -9807,6 +17473,108 @@ export interface operations {
       }
     }
   }
+  terminateRunning: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  suspendRunning: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  resumeRunning: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  startLeave: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LeaveStart']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RLong']
+        }
+      }
+    }
+  }
   design: {
     parameters: {
       query?: never
@@ -9926,9 +17694,9 @@ export interface operations {
       path?: never
       cookie?: never
     }
-    requestBody: {
+    requestBody?: {
       content: {
-        'application/json': number[]
+        'application/json': components['schemas']['JsonNode']
       }
     }
     responses: {
@@ -10009,7 +17777,29 @@ export interface operations {
       }
     }
   }
-  upload: {
+  claim: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        taskId: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  upload_1: {
     parameters: {
       query?: {
         access?: string
@@ -10022,7 +17812,7 @@ export interface operations {
       content: {
         'application/json': {
           /** Format: binary */
-          file: string
+          file?: string
         }
       }
     }
@@ -10038,7 +17828,7 @@ export interface operations {
       }
     }
   }
-  remove_22: {
+  remove_31: {
     parameters: {
       query?: never
       header?: never
@@ -10110,7 +17900,7 @@ export interface operations {
       }
     }
   }
-  submit_18: {
+  submit_22: {
     parameters: {
       query?: never
       header?: never
@@ -10156,7 +17946,7 @@ export interface operations {
       }
     }
   }
-  remove_23: {
+  remove_32: {
     parameters: {
       query?: never
       header?: never
@@ -10187,11 +17977,9 @@ export interface operations {
       path?: never
       cookie?: never
     }
-    requestBody: {
+    requestBody?: {
       content: {
-        'application/json': {
-          [key: string]: unknown
-        }
+        'application/json': components['schemas']['JsonNode']
       }
     }
     responses: {
@@ -10206,7 +17994,7 @@ export interface operations {
       }
     }
   }
-  submit_19: {
+  submit_23: {
     parameters: {
       query?: never
       header?: never
@@ -10230,7 +18018,7 @@ export interface operations {
       }
     }
   }
-  remove_24: {
+  remove_33: {
     parameters: {
       query?: never
       header?: never
@@ -10278,7 +18066,7 @@ export interface operations {
       }
     }
   }
-  submit_20: {
+  submit_24: {
     parameters: {
       query?: never
       header?: never
@@ -10302,7 +18090,7 @@ export interface operations {
       }
     }
   }
-  remove_25: {
+  remove_34: {
     parameters: {
       query?: never
       header?: never
@@ -10326,7 +18114,7 @@ export interface operations {
       }
     }
   }
-  submit_21: {
+  submit_25: {
     parameters: {
       query?: never
       header?: never
@@ -10350,7 +18138,7 @@ export interface operations {
       }
     }
   }
-  remove_26: {
+  remove_35: {
     parameters: {
       query?: never
       header?: never
@@ -10374,7 +18162,55 @@ export interface operations {
       }
     }
   }
-  submit_22: {
+  submit_26: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SysDataScope']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  remove_36: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': number[]
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  submit_27: {
     parameters: {
       query?: never
       header?: never
@@ -10398,7 +18234,7 @@ export interface operations {
       }
     }
   }
-  remove_27: {
+  remove_37: {
     parameters: {
       query?: never
       header?: never
@@ -10448,7 +18284,7 @@ export interface operations {
       }
     }
   }
-  save_4: {
+  save_7: {
     parameters: {
       query?: never
       header?: never
@@ -10472,7 +18308,7 @@ export interface operations {
       }
     }
   }
-  remove_28: {
+  remove_38: {
     parameters: {
       query?: never
       header?: never
@@ -10496,7 +18332,7 @@ export interface operations {
       }
     }
   }
-  enable_4: {
+  enable_5: {
     parameters: {
       query?: never
       header?: never
@@ -10540,7 +18376,7 @@ export interface operations {
       }
     }
   }
-  submit_23: {
+  submit_28: {
     parameters: {
       query?: never
       header?: never
@@ -10564,7 +18400,7 @@ export interface operations {
       }
     }
   }
-  remove_29: {
+  remove_39: {
     parameters: {
       query?: never
       header?: never
@@ -10588,7 +18424,7 @@ export interface operations {
       }
     }
   }
-  remove_30: {
+  remove_40: {
     parameters: {
       query?: never
       header?: never
@@ -10612,7 +18448,7 @@ export interface operations {
       }
     }
   }
-  verify: {
+  submit_29: {
     parameters: {
       query?: never
       header?: never
@@ -10620,6 +18456,78 @@ export interface operations {
       cookie?: never
     }
     requestBody: {
+      content: {
+        'application/json': components['schemas']['SysApiScope']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  remove_41: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': number[]
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  grant_3: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['GrantBody']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  verify: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
       content: {
         'application/json': components['schemas']['VerifyParam']
       }
@@ -10636,7 +18544,31 @@ export interface operations {
       }
     }
   }
-  remove_31: {
+  removeBatch_1: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': number[]
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  remove_42: {
     parameters: {
       query?: never
       header?: never
@@ -10682,7 +18614,7 @@ export interface operations {
       }
     }
   }
-  enable_5: {
+  enable_6: {
     parameters: {
       query?: never
       header?: never
@@ -10726,6 +18658,1998 @@ export interface operations {
       }
     }
   }
+  trackInsight: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  reportCharts: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  gisAsk: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  genDraft: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: string
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  approvalSummary: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  test_2: {
+    parameters: {
+      query?: {
+        id?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  submit_30: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['AiVectorStore']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiVectorStore']
+        }
+      }
+    }
+  }
+  remove_43: {
+    parameters: {
+      query?: {
+        ids?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  submit_31: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiSession']
+        }
+      }
+    }
+  }
+  remove_44: {
+    parameters: {
+      query?: {
+        id?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  clear: {
+    parameters: {
+      query?: {
+        id?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  submit_32: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['AiSecret']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  status_2: {
+    parameters: {
+      query?: {
+        id?: string
+        status?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  remove_45: {
+    parameters: {
+      query?: {
+        ids?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  submit_33: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AiQuota']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiQuota']
+        }
+      }
+    }
+  }
+  submit_34: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['AiPrompt']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiPrompt']
+        }
+      }
+    }
+  }
+  remove_46: {
+    parameters: {
+      query?: {
+        ids?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  optimize: {
+    parameters: {
+      query?: {
+        id?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  test_3: {
+    parameters: {
+      query?: {
+        id?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  submit_35: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['AiModel']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiModel']
+        }
+      }
+    }
+  }
+  remove_47: {
+    parameters: {
+      query?: {
+        ids?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  setDefault: {
+    parameters: {
+      query?: {
+        id?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  submit_36: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['AiMcpTool']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiMcpTool']
+        }
+      }
+    }
+  }
+  toggle: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  remove_48: {
+    parameters: {
+      query?: {
+        ids?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  parse: {
+    parameters: {
+      query?: {
+        id?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  lock_1: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  setDefault_1: {
+    parameters: {
+      query?: {
+        id?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  debug_1: {
+    parameters: {
+      query?: {
+        id?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  vectorize: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  test_4: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  submit_37: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['AiKnowledge']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiKnowledge']
+        }
+      }
+    }
+  }
+  status_3: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  saveSegment: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AiKnowledgeSegment']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiKnowledgeSegment']
+        }
+      }
+    }
+  }
+  segmentStatus: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  remove_49: {
+    parameters: {
+      query?: {
+        ids?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  hitTest: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListMapStringObject']
+        }
+      }
+    }
+  }
+  copy_1: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiKnowledge']
+        }
+      }
+    }
+  }
+  upload_2: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AiKnowledgeAsset']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiKnowledgeAsset']
+        }
+      }
+    }
+  }
+  resegment: {
+    parameters: {
+      query: {
+        id: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiKnowledgeAsset']
+        }
+      }
+    }
+  }
+  removeAsset: {
+    parameters: {
+      query?: {
+        ids?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  stream: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        type: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'text/event-stream': components['schemas']['SseEmitter']
+        }
+      }
+    }
+  }
+  export: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        type: string
+      }
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  test_5: {
+    parameters: {
+      query?: {
+        id?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  submit_38: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['AiDatasource']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiDatasource']
+        }
+      }
+    }
+  }
+  remove_50: {
+    parameters: {
+      query?: {
+        ids?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  saveTerm: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['JsonNode']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiTerminology']
+        }
+      }
+    }
+  }
+  removeTerm: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  bindTerm: {
+    parameters: {
+      query?: {
+        datasetId?: string
+        terminologyId?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  saveTable: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['JsonNode']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiDatasetTable']
+        }
+      }
+    }
+  }
+  submit_39: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['AiDataset']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiDataset']
+        }
+      }
+    }
+  }
+  rerun: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  remove_51: {
+    parameters: {
+      query?: {
+        ids?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  predict: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  copy_2: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiDataset']
+        }
+      }
+    }
+  }
+  config: {
+    parameters: {
+      query?: {
+        id?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  saveConfig: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  ask: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  analyze_1: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  submit_40: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['AiDashboard']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiDashboard']
+        }
+      }
+    }
+  }
+  share: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  remove_52: {
+    parameters: {
+      query?: {
+        ids?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  saveDsl: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiDashboard']
+        }
+      }
+    }
+  }
+  stream_1: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['JsonNode']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'text/event-stream': components['schemas']['SseEmitter']
+        }
+      }
+    }
+  }
+  stop: {
+    parameters: {
+      query?: {
+        requestId?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  receive: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  submit_41: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['AiChannelBind']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiChannelBind']
+        }
+      }
+    }
+  }
+  remove_53: {
+    parameters: {
+      query?: {
+        ids?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  debug_2: {
+    parameters: {
+      query?: {
+        id?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  submit_42: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['AiApp']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiApp']
+        }
+      }
+    }
+  }
+  share_1: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  run_1: {
+    parameters: {
+      query?: {
+        id?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  remove_54: {
+    parameters: {
+      query?: {
+        ids?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  importApp: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiApp']
+        }
+      }
+    }
+  }
+  saveDsl_1: {
+    parameters: {
+      query?: {
+        id?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiApp']
+        }
+      }
+    }
+  }
+  copy_3: {
+    parameters: {
+      query?: {
+        id?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          [key: string]: unknown
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiApp']
+        }
+      }
+    }
+  }
   echo_1: {
     parameters: {
       query?: never
@@ -10752,7 +20676,7 @@ export interface operations {
       }
     }
   }
-  token: {
+  token_1: {
     parameters: {
       query?: never
       header?: {
@@ -11261,6 +21185,245 @@ export interface operations {
       }
     }
   }
+  verify_1: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['VerifyRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RTokenVO']
+        }
+      }
+    }
+  }
+  challenge: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['ChallengeRequest']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RChallengeVO']
+        }
+      }
+    }
+  }
+  upload_3: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': {
+          /** Format: binary */
+          file?: string
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RSysAttach']
+        }
+      }
+    }
+  }
+  handle_2: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        taskId: number
+      }
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['AppHandleDTO']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RString']
+        }
+      }
+    }
+  }
+  readNotice: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  readMessage: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        messageId: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  check: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AppSliderCheckDTO']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAppTicketVO']
+        }
+      }
+    }
+  }
+  twoFactor_1: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': {
+          [key: string]: string
+        }
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  logout_1: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RVoid']
+        }
+      }
+    }
+  }
+  login_1: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AppLoginDTO']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
   menus: {
     parameters: {
       query?: never
@@ -11277,6 +21440,50 @@ export interface operations {
         }
         content: {
           '*/*': components['schemas']['RListMapStringObject']
+        }
+      }
+    }
+  }
+  models: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': {
+            [key: string]: unknown
+          }
+        }
+      }
+    }
+  }
+  config_1: {
+    parameters: {
+      query: {
+        app_key: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RObject']
         }
       }
     }
@@ -11301,9 +21508,60 @@ export interface operations {
       }
     }
   }
+  page: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+        level?: string
+        logId?: string
+        uri?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageSysUsualLog']
+        }
+      }
+    }
+  }
+  detail: {
+    parameters: {
+      query?: {
+        id?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RSysUsualLog']
+        }
+      }
+    }
+  }
   select: {
     parameters: {
-      query?: never
+      query?: {
+        keyword?: string
+        ids?: number[]
+      }
       header?: never
       path?: never
       cookie?: never
@@ -11343,7 +21601,7 @@ export interface operations {
       }
     }
   }
-  page: {
+  page_1: {
     parameters: {
       query?: {
         pageNum?: number
@@ -11371,6 +21629,70 @@ export interface operations {
       }
     }
   }
+  locks: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListMapStringObject']
+        }
+      }
+    }
+  }
+  leaderList: {
+    parameters: {
+      query?: {
+        realName?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListMapStringObject']
+        }
+      }
+    }
+  }
+  leaderInfo: {
+    parameters: {
+      query: {
+        userId: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListSysUser']
+        }
+      }
+    }
+  }
   importTemplate: {
     parameters: {
       query?: never
@@ -11389,7 +21711,7 @@ export interface operations {
       }
     }
   }
-  export: {
+  export_1: {
     parameters: {
       query?: {
         username?: string
@@ -11413,7 +21735,7 @@ export interface operations {
       }
     }
   }
-  detail: {
+  detail_1: {
     parameters: {
       query: {
         id: number
@@ -11431,6 +21753,706 @@ export interface operations {
         }
         content: {
           '*/*': components['schemas']['RSysUser']
+        }
+      }
+    }
+  }
+  vitals: {
+    parameters: {
+      query?: {
+        appKey?: string
+        days?: number
+        routePath?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListMapStringObject']
+        }
+      }
+    }
+  }
+  rulePage: {
+    parameters: {
+      query?: {
+        appKey?: string
+        status?: number
+        pageNum?: number
+        pageSize?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageTrackVisualRule']
+        }
+      }
+    }
+  }
+  drafts: {
+    parameters: {
+      query?: {
+        token?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListMapStringObject']
+        }
+      }
+    }
+  }
+  timeline: {
+    parameters: {
+      query?: {
+        appKey?: string
+        userId?: number
+        distinctId?: string
+        startTs?: number
+        endTs?: number
+        cursor?: string
+        pageSize?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  apiBody_1: {
+    parameters: {
+      query?: {
+        eventId?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  trend: {
+    parameters: {
+      query?: {
+        appKey?: string
+        days?: number
+        dimType?: string
+        dimKey?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListMapStringObject']
+        }
+      }
+    }
+  }
+  raw: {
+    parameters: {
+      query: {
+        id: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  page_2: {
+    parameters: {
+      query?: {
+        appKey?: string
+        release?: string
+        pageNum?: number
+        pageSize?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageMapStringObject']
+        }
+      }
+    }
+  }
+  retention: {
+    parameters: {
+      query?: {
+        appKey?: string
+        days?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  page_3: {
+    parameters: {
+      query?: {
+        appKey?: string
+        hasError?: number
+        pageNum?: number
+        pageSize?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageMapStringObject']
+        }
+      }
+    }
+  }
+  events: {
+    parameters: {
+      query?: {
+        appKey?: string
+        sessionId?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListMapStringObject']
+        }
+      }
+    }
+  }
+  detail_2: {
+    parameters: {
+      query?: {
+        sessionId?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  data: {
+    parameters: {
+      query: {
+        sessionId?: string
+        seq: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  pages: {
+    parameters: {
+      query?: {
+        appKey?: string
+        days?: number
+        limit?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListMapStringObject']
+        }
+      }
+    }
+  }
+  overview_1: {
+    parameters: {
+      query?: {
+        appKey?: string
+        days?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  online: {
+    parameters: {
+      query?: {
+        appKey?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  geo: {
+    parameters: {
+      query?: {
+        appKey?: string
+        days?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  funnel: {
+    parameters: {
+      query?: {
+        appKey?: string
+        steps?: string
+        days?: number
+        windowHours?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  eventsRealtime: {
+    parameters: {
+      query?: {
+        appKey?: string
+        limit?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListMapStringObject']
+        }
+      }
+    }
+  }
+  eventsPage: {
+    parameters: {
+      query?: {
+        appKey?: string
+        eventName?: string
+        days?: number
+        pageNum?: number
+        pageSize?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageMapStringObject']
+        }
+      }
+    }
+  }
+  eventDefPage: {
+    parameters: {
+      query: {
+        appKey: string
+        eventName?: string
+        status?: number
+        pageNum?: number
+        pageSize?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageTrackEventDef']
+        }
+      }
+    }
+  }
+  errorsPage: {
+    parameters: {
+      query?: {
+        appKey?: string
+        days?: number
+        pageNum?: number
+        pageSize?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageMapStringObject']
+        }
+      }
+    }
+  }
+  errorDetail: {
+    parameters: {
+      query?: {
+        appKey?: string
+        fingerprint?: string
+        days?: number
+        pageNum?: number
+        pageSize?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageMapStringObject']
+        }
+      }
+    }
+  }
+  appPage: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+        appName?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageTrackApp']
+        }
+      }
+    }
+  }
+  appHealth: {
+    parameters: {
+      query: {
+        appKey: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  appHealthSummary: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListMapStringObject']
+        }
+      }
+    }
+  }
+  page_4: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+        name?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageSysTopMenu']
+        }
+      }
+    }
+  }
+  mine: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListMapStringObject']
+        }
+      }
+    }
+  }
+  menus_1: {
+    parameters: {
+      query: {
+        id: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  detail_3: {
+    parameters: {
+      query: {
+        id: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RSysTopMenu']
         }
       }
     }
@@ -11459,7 +22481,7 @@ export interface operations {
       }
     }
   }
-  detail_1: {
+  detail_4: {
     parameters: {
       query: {
         id: number
@@ -11481,7 +22503,7 @@ export interface operations {
       }
     }
   }
-  page_1: {
+  page_5: {
     parameters: {
       query?: {
         pageNum?: number
@@ -11526,7 +22548,7 @@ export interface operations {
       }
     }
   }
-  detail_2: {
+  detail_5: {
     parameters: {
       query: {
         id: number
@@ -11548,11 +22570,12 @@ export interface operations {
       }
     }
   }
-  page_2: {
+  page_6: {
     parameters: {
       query?: {
         pageNum?: number
         pageSize?: number
+        tenantCode?: string
       }
       header?: never
       path?: never
@@ -11573,8 +22596,8 @@ export interface operations {
   }
   get: {
     parameters: {
-      query: {
-        tableKey: string
+      query?: {
+        tableKey?: string
       }
       header?: never
       path?: never
@@ -11593,7 +22616,7 @@ export interface operations {
       }
     }
   }
-  page_3: {
+  page_7: {
     parameters: {
       query?: {
         pageNum?: number
@@ -11616,10 +22639,10 @@ export interface operations {
       }
     }
   }
-  detail_3: {
+  detail_6: {
     parameters: {
-      query: {
-        id: number
+      query?: {
+        id?: number
       }
       header?: never
       path?: never
@@ -11662,11 +22685,13 @@ export interface operations {
       }
     }
   }
-  page_4: {
+  page_8: {
     parameters: {
       query?: {
         pageNum?: number
         pageSize?: number
+        name?: string
+        code?: string
       }
       header?: never
       path?: never
@@ -11685,10 +22710,10 @@ export interface operations {
       }
     }
   }
-  detail_4: {
+  detail_7: {
     parameters: {
-      query: {
-        id: number
+      query?: {
+        id?: number
       }
       header?: never
       path?: never
@@ -11749,7 +22774,7 @@ export interface operations {
       }
     }
   }
-  page_5: {
+  page_9: {
     parameters: {
       query?: {
         pageNum?: number
@@ -11796,7 +22821,7 @@ export interface operations {
       }
     }
   }
-  detail_5: {
+  detail_8: {
     parameters: {
       query: {
         id: number
@@ -11906,7 +22931,9 @@ export interface operations {
   }
   list_2: {
     parameters: {
-      query?: never
+      query?: {
+        name?: string
+      }
       header?: never
       path?: never
       cookie?: never
@@ -11924,7 +22951,7 @@ export interface operations {
       }
     }
   }
-  detail_6: {
+  detail_9: {
     parameters: {
       query: {
         id: number
@@ -11966,6 +22993,24 @@ export interface operations {
       }
     }
   }
+  template: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
   lazyTree: {
     parameters: {
       query?: {
@@ -11988,7 +23033,7 @@ export interface operations {
       }
     }
   }
-  export_1: {
+  export_2: {
     parameters: {
       query?: never
       header?: never
@@ -12003,6 +23048,28 @@ export interface operations {
           [name: string]: unknown
         }
         content?: never
+      }
+    }
+  }
+  detail_10: {
+    parameters: {
+      query?: {
+        id?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RSysRegion']
+        }
       }
     }
   }
@@ -12026,13 +23093,14 @@ export interface operations {
       }
     }
   }
-  page_6: {
+  page_10: {
     parameters: {
       query?: {
         pageNum?: number
         pageSize?: number
         postName?: string
         postCode?: string
+        category?: string
       }
       header?: never
       path?: never
@@ -12051,7 +23119,7 @@ export interface operations {
       }
     }
   }
-  detail_7: {
+  detail_11: {
     parameters: {
       query: {
         id: number
@@ -12095,11 +23163,38 @@ export interface operations {
       }
     }
   }
+  page_11: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+        paramName?: string
+        paramKey?: string
+        paramValue?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageSysParam']
+        }
+      }
+    }
+  }
   list_3: {
     parameters: {
       query?: {
         paramName?: string
         paramKey?: string
+        paramValue?: string
       }
       header?: never
       path?: never
@@ -12118,7 +23213,7 @@ export interface operations {
       }
     }
   }
-  detail_8: {
+  detail_12: {
     parameters: {
       query: {
         id: number
@@ -12140,7 +23235,7 @@ export interface operations {
       }
     }
   }
-  page_7: {
+  page_12: {
     parameters: {
       query?: {
         pageNum?: number
@@ -12163,10 +23258,10 @@ export interface operations {
       }
     }
   }
-  detail_9: {
+  detail_13: {
     parameters: {
-      query: {
-        id: number
+      query?: {
+        id?: number
       }
       header?: never
       path?: never
@@ -12185,7 +23280,7 @@ export interface operations {
       }
     }
   }
-  verify_1: {
+  verify_2: {
     parameters: {
       query?: {
         limit?: number
@@ -12207,7 +23302,7 @@ export interface operations {
       }
     }
   }
-  page_8: {
+  page_13: {
     parameters: {
       query?: {
         pageNum?: number
@@ -12235,7 +23330,7 @@ export interface operations {
       }
     }
   }
-  detail_10: {
+  detail_14: {
     parameters: {
       query: {
         id: number
@@ -12277,7 +23372,7 @@ export interface operations {
       }
     }
   }
-  page_9: {
+  page_14: {
     parameters: {
       query: {
         tableId: number
@@ -12346,7 +23441,7 @@ export interface operations {
       }
     }
   }
-  detail_11: {
+  detail_15: {
     parameters: {
       query: {
         tableId: number
@@ -12369,7 +23464,7 @@ export interface operations {
       }
     }
   }
-  page_10: {
+  page_15: {
     parameters: {
       query?: {
         pageNum?: number
@@ -12394,11 +23489,12 @@ export interface operations {
       }
     }
   }
-  page_11: {
+  page_16: {
     parameters: {
       query?: {
         pageNum?: number
         pageSize?: number
+        name?: string
       }
       header?: never
       path?: never
@@ -12417,11 +23513,12 @@ export interface operations {
       }
     }
   }
-  page_12: {
+  page_17: {
     parameters: {
       query?: {
         pageNum?: number
         pageSize?: number
+        name?: string
       }
       header?: never
       path?: never
@@ -12440,10 +23537,10 @@ export interface operations {
       }
     }
   }
-  detail_12: {
+  detail_16: {
     parameters: {
-      query: {
-        id: number
+      query?: {
+        id?: number
       }
       header?: never
       path?: never
@@ -12462,7 +23559,7 @@ export interface operations {
       }
     }
   }
-  page_13: {
+  page_18: {
     parameters: {
       query?: {
         pageNum?: number
@@ -12489,7 +23586,7 @@ export interface operations {
       }
     }
   }
-  detail_13: {
+  detail_17: {
     parameters: {
       query: {
         id: number
@@ -12511,11 +23608,12 @@ export interface operations {
       }
     }
   }
-  page_14: {
+  page_19: {
     parameters: {
       query?: {
         pageNum?: number
         pageSize?: number
+        name?: string
       }
       header?: never
       path?: never
@@ -12534,10 +23632,10 @@ export interface operations {
       }
     }
   }
-  detail_14: {
+  detail_18: {
     parameters: {
-      query: {
-        id: number
+      query?: {
+        id?: number
       }
       header?: never
       path?: never
@@ -12600,12 +23698,15 @@ export interface operations {
       }
     }
   }
-  page_15: {
+  page_20: {
     parameters: {
       query?: {
         pageNum?: number
         pageSize?: number
+        title?: string
         category?: string
+        beginTime?: string
+        endTime?: string
       }
       header?: never
       path?: never
@@ -12668,7 +23769,7 @@ export interface operations {
       }
     }
   }
-  detail_15: {
+  detail_19: {
     parameters: {
       query: {
         id: number
@@ -12758,6 +23859,7 @@ export interface operations {
         pageNum?: number
         pageSize?: number
         isRead?: number
+        name?: string
       }
       header?: never
       path?: never
@@ -12776,11 +23878,13 @@ export interface operations {
       }
     }
   }
-  page_16: {
+  page_21: {
     parameters: {
       query?: {
         pageNum?: number
         pageSize?: number
+        name?: string
+        code?: string
       }
       header?: never
       path?: never
@@ -12819,10 +23923,10 @@ export interface operations {
       }
     }
   }
-  detail_16: {
+  detail_20: {
     parameters: {
-      query: {
-        id: number
+      query?: {
+        id?: number
       }
       header?: never
       path?: never
@@ -12864,7 +23968,7 @@ export interface operations {
       }
     }
   }
-  detail_17: {
+  detail_21: {
     parameters: {
       query: {
         id: number
@@ -12886,11 +23990,13 @@ export interface operations {
       }
     }
   }
-  page_17: {
+  page_22: {
     parameters: {
       query?: {
         pageNum?: number
         pageSize?: number
+        name?: string
+        code?: string
       }
       header?: never
       path?: never
@@ -12909,7 +24015,7 @@ export interface operations {
       }
     }
   }
-  detail_18: {
+  detail_22: {
     parameters: {
       query: {
         id: number
@@ -12931,7 +24037,7 @@ export interface operations {
       }
     }
   }
-  page_18: {
+  page_23: {
     parameters: {
       query?: {
         pageNum?: number
@@ -12939,6 +24045,8 @@ export interface operations {
         username?: string
         ip?: string
         status?: number
+        grantType?: string
+        exact?: boolean
       }
       header?: never
       path?: never
@@ -12957,10 +24065,33 @@ export interface operations {
       }
     }
   }
-  status_2: {
+  detail_23: {
+    parameters: {
+      query?: {
+        id?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RSysLoginLog']
+        }
+      }
+    }
+  }
+  status_4: {
     parameters: {
       query: {
         instanceId: number
+        serverId?: number
       }
       header?: never
       path?: never
@@ -13001,7 +24132,10 @@ export interface operations {
   }
   list_6: {
     parameters: {
-      query?: never
+      query?: {
+        serverId?: number
+        name?: string
+      }
       header?: never
       path?: never
       cookie?: never
@@ -13023,6 +24157,7 @@ export interface operations {
     parameters: {
       query: {
         jobId: number
+        serverId?: number
       }
       header?: never
       path?: never
@@ -13037,6 +24172,50 @@ export interface operations {
         }
         content: {
           '*/*': components['schemas']['RListInstanceInfoDTO']
+        }
+      }
+    }
+  }
+  page_24: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+        name?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  options: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListMapStringObject']
         }
       }
     }
@@ -13152,9 +24331,493 @@ export interface operations {
       }
     }
   }
-  tables: {
+  content: {
     parameters: {
       query?: never
+      header?: never
+      path: {
+        code: string
+        file: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': string
+        }
+      }
+    }
+  }
+  manifest: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        code: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': string
+        }
+      }
+    }
+  }
+  tile: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        provider: string
+        layer: string
+        z: number
+        x: number
+        y: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': string
+        }
+      }
+    }
+  }
+  status_5: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  status_6: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  radius: {
+    parameters: {
+      query: {
+        layerId: number
+        lon: number
+        lat: number
+        meters: number
+        limit?: number
+        engine?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  nearest: {
+    parameters: {
+      query: {
+        layerId: number
+        lon: number
+        lat: number
+        limit?: number
+        engine?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  mvt: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        layerId: number
+        z: number
+        x: number
+        y: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': string
+        }
+      }
+    }
+  }
+  drift: {
+    parameters: {
+      query?: {
+        limit?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  bbox: {
+    parameters: {
+      query: {
+        layerId: number
+        minLon: number
+        minLat: number
+        maxLon: number
+        maxLat: number
+        limit?: number
+        engine?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  search: {
+    parameters: {
+      query?: {
+        q?: string
+        lon?: number
+        lat?: number
+        provider?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListMapStringObject']
+        }
+      }
+    }
+  }
+  page_25: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+        name?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageGisScene']
+        }
+      }
+    }
+  }
+  detail_24: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RGisScene']
+        }
+      }
+    }
+  }
+  reverse: {
+    parameters: {
+      query: {
+        lon: number
+        lat: number
+        provider?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  xyzConfig: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  list_7: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListGisMapProvider']
+        }
+      }
+    }
+  }
+  page_26: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+        name?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageGisLayer']
+        }
+      }
+    }
+  }
+  list_8: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListGisLayer']
+        }
+      }
+    }
+  }
+  detail_25: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RGisLayer']
+        }
+      }
+    }
+  }
+  detail_26: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        code: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  list_9: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListMapStringObject']
+        }
+      }
+    }
+  }
+  tables: {
+    parameters: {
+      query?: {
+        datasourceId?: number
+      }
       header?: never
       path?: never
       cookie?: never
@@ -13216,7 +24879,7 @@ export interface operations {
       }
     }
   }
-  list_7: {
+  list_10: {
     parameters: {
       query?: never
       header?: never
@@ -13299,11 +24962,101 @@ export interface operations {
       }
     }
   }
-  page_19: {
+  page_27: {
     parameters: {
       query?: {
         pageNum?: number
         pageSize?: number
+        name?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  enabled: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  page_28: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+        name?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  options_1: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListMapStringObject']
+        }
+      }
+    }
+  }
+  page_29: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+        name?: string
+        status?: number
       }
       header?: never
       path?: never
@@ -13322,7 +25075,7 @@ export interface operations {
       }
     }
   }
-  detail_19: {
+  detail_27: {
     parameters: {
       query: {
         id: number
@@ -13344,7 +25097,7 @@ export interface operations {
       }
     }
   }
-  data: {
+  data_1: {
     parameters: {
       query?: {
         pageNum?: number
@@ -13409,6 +25162,29 @@ export interface operations {
         }
         content: {
           '*/*': components['schemas']['RListString']
+        }
+      }
+    }
+  }
+  running: {
+    parameters: {
+      query?: {
+        instanceId?: string
+        flowCode?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListRow']
         }
       }
     }
@@ -13667,6 +25443,26 @@ export interface operations {
       }
     }
   }
+  claimList: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListRow']
+        }
+      }
+    }
+  }
   backNodes: {
     parameters: {
       query: {
@@ -13689,7 +25485,7 @@ export interface operations {
       }
     }
   }
-  page_20: {
+  page_30: {
     parameters: {
       query?: {
         pageNum?: number
@@ -13756,12 +25552,13 @@ export interface operations {
       }
     }
   }
-  page_21: {
+  page_31: {
     parameters: {
       query?: {
         pageNum?: number
         pageSize?: number
         status?: number
+        name?: string
       }
       header?: never
       path?: never
@@ -13780,7 +25577,7 @@ export interface operations {
       }
     }
   }
-  page_22: {
+  page_32: {
     parameters: {
       query?: {
         pageNum?: number
@@ -13805,7 +25602,7 @@ export interface operations {
       }
     }
   }
-  detail_20: {
+  detail_28: {
     parameters: {
       query: {
         id: number
@@ -13872,7 +25669,7 @@ export interface operations {
       }
     }
   }
-  detail_21: {
+  detail_29: {
     parameters: {
       query: {
         id: number
@@ -13939,7 +25736,7 @@ export interface operations {
       }
     }
   }
-  detail_22: {
+  detail_30: {
     parameters: {
       query: {
         id: number
@@ -13965,6 +25762,7 @@ export interface operations {
     parameters: {
       query?: {
         deptName?: string
+        fullName?: string
       }
       header?: never
       path?: never
@@ -14003,7 +25801,49 @@ export interface operations {
       }
     }
   }
-  detail_23: {
+  options_2: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListSysDept']
+        }
+      }
+    }
+  }
+  leaders: {
+    parameters: {
+      query?: {
+        keyword?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListMapStringObject']
+        }
+      }
+    }
+  }
+  detail_31: {
     parameters: {
       query: {
         id: number
@@ -14025,12 +25865,58 @@ export interface operations {
       }
     }
   }
-  page_23: {
+  page_33: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+        name?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageSysDataScope']
+        }
+      }
+    }
+  }
+  effective: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListMapStringObject']
+        }
+      }
+    }
+  }
+  page_34: {
     parameters: {
       query?: {
         pageNum?: number
         pageSize?: number
         bizTable?: string
+        action?: string
+        requestPath?: string
       }
       header?: never
       path?: never
@@ -14049,10 +25935,10 @@ export interface operations {
       }
     }
   }
-  detail_24: {
+  detail_32: {
     parameters: {
-      query: {
-        id: number
+      query?: {
+        id?: number
       }
       header?: never
       path?: never
@@ -14071,11 +25957,12 @@ export interface operations {
       }
     }
   }
-  page_24: {
+  page_35: {
     parameters: {
       query?: {
         pageNum?: number
         pageSize?: number
+        name?: string
       }
       header?: never
       path?: never
@@ -14094,11 +25981,13 @@ export interface operations {
       }
     }
   }
-  page_25: {
+  page_36: {
     parameters: {
       query?: {
         pageNum?: number
         pageSize?: number
+        clientId?: string
+        clientName?: string
       }
       header?: never
       path?: never
@@ -14139,12 +26028,13 @@ export interface operations {
       }
     }
   }
-  page_26: {
+  page_37: {
     parameters: {
       query?: {
         pageNum?: number
         pageSize?: number
         type?: string
+        name?: string
       }
       header?: never
       path?: never
@@ -14163,10 +26053,10 @@ export interface operations {
       }
     }
   }
-  detail_25: {
+  detail_33: {
     parameters: {
-      query: {
-        id: number
+      query?: {
+        id?: number
       }
       header?: never
       path?: never
@@ -14249,7 +26139,53 @@ export interface operations {
       }
     }
   }
-  page_27: {
+  roles: {
+    parameters: {
+      query: {
+        id: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  page_38: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+        name?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageSysApiScope']
+        }
+      }
+    }
+  }
+  page_39: {
     parameters: {
       query?: {
         pageNum?: number
@@ -14275,7 +26211,7 @@ export interface operations {
       }
     }
   }
-  detail_26: {
+  detail_34: {
     parameters: {
       query: {
         id: number
@@ -14297,7 +26233,195 @@ export interface operations {
       }
     }
   }
-  page_28: {
+  page_40: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+        name?: string
+        accessKey?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageSysApiKey']
+        }
+      }
+    }
+  }
+  page_41: {
+    parameters: {
+      query?: {
+        apiKeyId?: number
+        pageNum?: number
+        pageSize?: number
+        status?: number
+        ip?: string
+        uri?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageSysApiKeyLog']
+        }
+      }
+    }
+  }
+  detail_35: {
+    parameters: {
+      query?: {
+        id?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RSysApiKeyLog']
+        }
+      }
+    }
+  }
+  page_42: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+        name?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageAiVectorStore']
+        }
+      }
+    }
+  }
+  detail_36: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiVectorStore']
+        }
+      }
+    }
+  }
+  page_43: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+        source?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageAiSession']
+        }
+      }
+    }
+  }
+  messages: {
+    parameters: {
+      query?: {
+        sessionId?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListAiMessage']
+        }
+      }
+    }
+  }
+  export_3: {
+    parameters: {
+      query?: {
+        id?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  page_44: {
     parameters: {
       query?: {
         pageNum?: number
@@ -14315,7 +26439,887 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          '*/*': components['schemas']['RPageSysApiKey']
+          '*/*': components['schemas']['RPageAiSecret']
+        }
+      }
+    }
+  }
+  trend_1: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListMapStringObject']
+        }
+      }
+    }
+  }
+  page_45: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageAiQuota']
+        }
+      }
+    }
+  }
+  page_46: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+        name?: string
+        category?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageAiPrompt']
+        }
+      }
+    }
+  }
+  detail_37: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiPrompt']
+        }
+      }
+    }
+  }
+  page_47: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+        modelType?: string
+        name?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageAiModel']
+        }
+      }
+    }
+  }
+  list_11: {
+    parameters: {
+      query?: {
+        modelType?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListAiModel']
+        }
+      }
+    }
+  }
+  detail_38: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiModel']
+        }
+      }
+    }
+  }
+  servers: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListAiMcpTool']
+        }
+      }
+    }
+  }
+  page_48: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+        name?: string
+        category?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageAiMcpTool']
+        }
+      }
+    }
+  }
+  vectorStats: {
+    parameters: {
+      query: {
+        knowledgeId: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  segments: {
+    parameters: {
+      query: {
+        knowledgeId: number
+        assetId?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListAiKnowledgeSegment']
+        }
+      }
+    }
+  }
+  page_49: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+        name?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageAiKnowledge']
+        }
+      }
+    }
+  }
+  detail_39: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiKnowledge']
+        }
+      }
+    }
+  }
+  assets: {
+    parameters: {
+      query: {
+        knowledgeId: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListAiKnowledgeAsset']
+        }
+      }
+    }
+  }
+  tables_1: {
+    parameters: {
+      query?: {
+        id?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListString']
+        }
+      }
+    }
+  }
+  page_50: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+        name?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageAiDatasource']
+        }
+      }
+    }
+  }
+  detail_40: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiDatasource']
+        }
+      }
+    }
+  }
+  terms: {
+    parameters: {
+      query?: {
+        datasetId?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListAiTerminology']
+        }
+      }
+    }
+  }
+  tables_2: {
+    parameters: {
+      query?: {
+        datasetId?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListAiDatasetTable']
+        }
+      }
+    }
+  }
+  suggest_1: {
+    parameters: {
+      query?: {
+        id?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListString']
+        }
+      }
+    }
+  }
+  page_51: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+        name?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageAiDataset']
+        }
+      }
+    }
+  }
+  detail_41: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiDataset']
+        }
+      }
+    }
+  }
+  page_52: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+        name?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageAiDashboard']
+        }
+      }
+    }
+  }
+  detail_42: {
+    parameters: {
+      query?: {
+        id?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiDashboard']
+        }
+      }
+    }
+  }
+  detailPath: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: string
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiDashboard']
+        }
+      }
+    }
+  }
+  page_53: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+        keyword?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageAiSession']
+        }
+      }
+    }
+  }
+  export_4: {
+    parameters: {
+      query?: {
+        keyword?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  detail_43: {
+    parameters: {
+      query?: {
+        sessionId?: number
+        id?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListAiMessage']
+        }
+      }
+    }
+  }
+  replay_1: {
+    parameters: {
+      query?: {
+        requestId?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'text/event-stream': components['schemas']['SseEmitter']
+        }
+      }
+    }
+  }
+  page_54: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+        alias?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageAiChannelBind']
+        }
+      }
+    }
+  }
+  trend_2: {
+    parameters: {
+      query?: {
+        days?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RListMapStringObject']
+        }
+      }
+    }
+  }
+  page_55: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageAiBill']
+        }
+      }
+    }
+  }
+  export_5: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  runPage: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+        appId?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageAiAppRun']
+        }
+      }
+    }
+  }
+  runDetail: {
+    parameters: {
+      query: {
+        runId: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  page_56: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+        name?: string
+        appType?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RPageAiApp']
+        }
+      }
+    }
+  }
+  export_6: {
+    parameters: {
+      query: {
+        id: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  detail_44: {
+    parameters: {
+      query?: {
+        id?: number
+      }
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiApp']
+        }
+      }
+    }
+  }
+  detail_45: {
+    parameters: {
+      query?: {
+        id?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAiApp']
         }
       }
     }
@@ -14552,7 +27556,51 @@ export interface operations {
       }
     }
   }
-  captcha: {
+  config_2: {
+    parameters: {
+      query?: {
+        scene?: string
+        clientId?: string
+        tenantId?: string
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RCaptchaConfigVO']
+        }
+      }
+    }
+  }
+  raw_1: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content?: never
+      }
+    }
+  }
+  list_12: {
     parameters: {
       query?: never
       header?: never
@@ -14567,15 +27615,207 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          '*/*': components['schemas']['RCaptchaVO']
+          '*/*': components['schemas']['RListAppTodoItemVO']
         }
       }
     }
   }
-  remove_32: {
+  detail_46: {
     parameters: {
-      query: {
+      query?: never
+      header?: never
+      path: {
+        taskId: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAppTodoDetailVO']
+        }
+      }
+    }
+  }
+  notices: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAppPageVOAppNoticeItemVO']
+        }
+      }
+    }
+  }
+  notice: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
         id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAppNoticeDetailVO']
+        }
+      }
+    }
+  }
+  messages_1: {
+    parameters: {
+      query?: {
+        pageNum?: number
+        pageSize?: number
+      }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAppPageVOAppMessageItemVO']
+        }
+      }
+    }
+  }
+  message: {
+    parameters: {
+      query?: never
+      header?: never
+      path: {
+        id: number
+      }
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAppMessageDetailVO']
+        }
+      }
+    }
+  }
+  home_1: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAppHomeVO']
+        }
+      }
+    }
+  }
+  generate_2: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAppSliderGenerateVO']
+        }
+      }
+    }
+  }
+  sm2PublicKey_1: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  me: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RAppUserVO']
+        }
+      }
+    }
+  }
+  remove_55: {
+    parameters: {
+      query?: {
+        id?: string
       }
       header?: never
       path?: never
