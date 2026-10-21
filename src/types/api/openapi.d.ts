@@ -4884,22 +4884,6 @@ export interface paths {
     patch?: never
     trace?: never
   }
-  '/auth/captcha': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get: operations['captcha']
-    put?: never
-    post?: never
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
   '/system/error-log/remove': {
     parameters: {
       query?: never
@@ -5931,15 +5915,11 @@ export interface components {
       password?: string
       nickname?: string
       phone?: string
-      captchaUuid?: string
-      captchaCode?: string
     }
     LoginDTO: {
       tenantId?: string
       username?: string
       password?: string
-      captchaUuid?: string
-      captchaCode?: string
       clientId?: string
     }
     ForgetResetDTO: {
@@ -5951,8 +5931,6 @@ export interface components {
     ForgetCodeDTO: {
       username?: string
       tenantId?: string
-      captchaUuid?: string
-      captchaCode?: string
     }
     RListMapStringObject: {
       /** Format: int32 */
@@ -7467,21 +7445,6 @@ export interface components {
       code?: number
       success?: boolean
       data?: components['schemas']['PageSysApiKey']
-      msg?: string
-      dataType?: string
-    }
-    CaptchaVO: {
-      captchaUuid?: string
-      captchaImage?: string
-      /** Format: int64 */
-      expireSeconds?: number
-      captchaCode?: string
-    }
-    RCaptchaVO: {
-      /** Format: int32 */
-      code?: number
-      success?: boolean
-      data?: components['schemas']['CaptchaVO']
       msg?: string
       dataType?: string
     }
@@ -14548,26 +14511,6 @@ export interface operations {
         }
         content: {
           '*/*': components['schemas']['RMapStringObject']
-        }
-      }
-    }
-  }
-  captcha: {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          '*/*': components['schemas']['RCaptchaVO']
         }
       }
     }

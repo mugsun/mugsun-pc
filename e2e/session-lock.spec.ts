@@ -1,7 +1,7 @@
 import { execSync } from 'node:child_process'
 import type { Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
-import { login, logout, readCaptchaCode, readAccessToken } from './fixtures/auth'
+import { login, logout, readAccessToken, assertCaptchaDisabled } from './fixtures/auth'
 import { buildXlsx } from './fixtures/xlsx'
 import { clearLoginLock, purgeUsers } from './helpers/cleanup'
 import { PG_CONTAINER } from './helpers/docker'
@@ -49,27 +49,14 @@ test.afterAll(async () => {
   }
 })
 
-/** 带验证码的登录提交（不管成败） */
+/** 登录提交（不管成败；前置：后端已关闭验证码） */
 async function loginAttempt(p: Page, username: string, password: string): Promise<void> {
-  let captured = ''
-  await p.route('**/api/auth/captcha', async (route) => {
-    const resp = await route.fetch()
-    try {
-      const json = await resp.json()
-      if (json?.data?.captchaUuid) captured = json.data.captchaUuid
-    } catch {
-      /* ignore */
-    }
-    await route.fulfill({ response: resp })
-  })
+  await assertCaptchaDisabled(p, 'login')
   if (p.url().includes('/auth/login')) {
     await p.reload()
   } else {
     await p.goto('/#/auth/login')
   }
-  await expect.poll(() => captured, { timeout: 10_000 }).not.toBe('')
-  const code = readCaptchaCode(captured)
-  await p.unroute('**/api/auth/captcha')
   await p
     .getByPlaceholder(/请输入账号|用户名/i)
     .first()
@@ -78,10 +65,6 @@ async function loginAttempt(p: Page, username: string, password: string): Promis
     .getByPlaceholder(/请输入密码/i)
     .first()
     .fill(password)
-  await p
-    .getByPlaceholder(/请输入验证码/i)
-    .first()
-    .fill(code)
   await p.getByRole('button', { name: '登录', exact: true }).click()
 }
 

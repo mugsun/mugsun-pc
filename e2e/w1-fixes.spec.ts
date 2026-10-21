@@ -1,7 +1,7 @@
 import { execSync } from 'node:child_process'
 import type { Page } from '@playwright/test'
 import { test, expect } from '@playwright/test'
-import { login, logout, readCaptchaCode, readAccessToken } from './fixtures/auth'
+import { login, logout, readAccessToken, assertCaptchaDisabled } from './fixtures/auth'
 import { purgeAttaches } from './helpers/cleanup'
 import { PG_CONTAINER } from './helpers/docker'
 
@@ -107,28 +107,14 @@ test('W1-R8/R2 自助注册分配默认角色 + 定时任务读接口按权限�
   const password = 'W1test@12345'
   await logout(page)
 
-  // —— 真实 UI 注册（含图形验证码、协议勾选） ——
-  let captured = ''
-  await page.route('**/api/auth/captcha', async (route) => {
-    const resp = await route.fetch()
-    try {
-      const json = await resp.json()
-      if (json?.data?.captchaUuid) captured = json.data.captchaUuid
-    } catch {
-      /* ignore */
-    }
-    await route.fulfill({ response: resp })
-  })
+  // —— 真实 UI 注册（协议勾选；前置：后端已关闭验证码） ——
+  await assertCaptchaDisabled(page, 'register')
   await page.goto('/#/auth/register')
-  await expect.poll(() => captured, { timeout: 10_000 }).not.toBe('')
-  const code = readCaptchaCode(captured)
-  await page.unroute('**/api/auth/captcha')
 
   const inputs = page.locator('form .el-input__inner')
   await inputs.nth(0).fill(username)
   await inputs.nth(1).fill(password)
   await inputs.nth(2).fill(password)
-  await inputs.nth(4).fill(code) // 第 4 个输入框是验证码（第 3 个手机号选填跳过）
   // 点复选框方格（容器内嵌隐私政策链接，点容器会误触跳转）
   await page.locator('form .el-checkbox__inner').first().click()
   await page.locator('form button').last().click()
