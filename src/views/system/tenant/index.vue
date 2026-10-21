@@ -46,7 +46,7 @@
             min-width="106"
             show-overflow-tooltip
           />
-          <ElTableColumn :label="$t('pages.system.tenant.package')" min-width="144">
+          <ElTableColumn :label="$t('pages.system.tenant.package')" min-width="150">
             <template #default="{ row }">
               <ElTag v-if="row.packageId" type="success">{{ packageName(row.packageId) }}</ElTag>
               <ElTag v-else type="info">{{ $t('pages.system.tenant.noLimitFeature') }}</ElTag>
