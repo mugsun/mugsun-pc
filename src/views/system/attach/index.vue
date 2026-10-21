@@ -59,7 +59,7 @@
   import { formatTableTime } from '@/utils/date'
   import { ElButton, ElImage, ElMessageBox, ElMessage } from 'element-plus'
   import { useI18n } from 'vue-i18n'
-  import { hasPerm } from '@/utils/permission'
+  import { renderAttachRowActions } from './row-actions'
 
   defineOptions({ name: 'Attach' })
 
@@ -204,25 +204,7 @@
           width: 160,
           fixed: 'right',
           formatter: (row: any) =>
-            h('div', { class: 'flex gap-1' }, [
-              h(
-                ElButton,
-                { link: true, type: 'primary', size: 'small', onClick: () => download(row) },
-                () => t('pages.system.attach.downloadBtn')
-              ),
-              hasPerm('sys:file:remove')
-                ? h(
-                    ElButton,
-                    {
-                      link: true,
-                      type: 'danger',
-                      size: 'small',
-                      onClick: () => deleteRow(row)
-                    },
-                    () => t('common.delete')
-                  )
-                : null
-            ])
+            renderAttachRowActions(row, { t, onDownload: download, onDelete: deleteRow })
         }
       ]
     },
