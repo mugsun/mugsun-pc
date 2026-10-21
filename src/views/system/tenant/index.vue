@@ -6,6 +6,7 @@
       v-model="searchForm"
       :items="searchItems"
       :span="6"
+      label-width="auto"
       @search="handleSearch"
       @reset="handleResetSearch"
     />
@@ -22,37 +23,48 @@
       <!-- 表格为自由增长内容：art-table-card 卡片体是 height:100%+overflow:hidden 裁剪，
            内部须自备滚动，否则矮视口下底部行被切断且不可达（同 track/user 修法） -->
       <div v-loading="loading" class="tenant-table-wrap">
-        <ElTable :data="tableData" border @selection-change="onSelectionChange">
+        <ElTable
+          :data="tableData"
+          border
+          class="tenant-table"
+          @selection-change="onSelectionChange"
+        >
           <template #empty>
             <span>{{ emptyText }}</span>
           </template>
           <ElTableColumn type="selection" width="48" :selectable="canSelect" />
-          <ElTableColumn type="index" :label="$t('table.column.index')" width="60" />
+          <ElTableColumn type="index" :label="$t('table.column.index')" min-width="70" />
           <ElTableColumn
             prop="tenantCode"
             :label="$t('pages.system.tenant.tenantCode')"
-            width="120"
+            min-width="130"
+            show-overflow-tooltip
           />
           <ElTableColumn
             prop="tenantName"
             :label="$t('pages.system.tenant.tenantName')"
             min-width="140"
+            show-overflow-tooltip
           />
-          <ElTableColumn :label="$t('pages.system.tenant.package')" min-width="100">
+          <ElTableColumn :label="$t('pages.system.tenant.package')" min-width="110">
             <template #default="{ row }">
               <ElTag v-if="row.packageId" type="success">{{ packageName(row.packageId) }}</ElTag>
               <ElTag v-else type="info">{{ $t('pages.system.tenant.noLimitFeature') }}</ElTag>
             </template>
           </ElTableColumn>
-          <ElTableColumn :label="$t('pages.system.tenant.contactUser')" min-width="100">
+          <ElTableColumn
+            :label="$t('pages.system.tenant.contactUser')"
+            min-width="100"
+            show-overflow-tooltip
+          >
             <template #default="{ row }">{{ row.contactUser || '—' }}</template>
           </ElTableColumn>
-          <ElTableColumn :label="$t('pages.system.tenant.contactPhone')" min-width="110">
+          <ElTableColumn :label="$t('pages.system.tenant.contactPhone')" min-width="140">
             <template #default="{ row }">{{ row.contactPhone || '—' }}</template>
           </ElTableColumn>
           <ElTableColumn
             :label="$t('pages.system.tenant.accountLimit')"
-            width="90"
+            min-width="130"
             align="center"
             header-align="center"
           >
@@ -66,7 +78,7 @@
           </ElTableColumn>
           <ElTableColumn
             :label="$t('pages.system.tenant.status')"
-            width="90"
+            min-width="90"
             align="center"
             header-align="center"
           >
@@ -328,6 +340,11 @@
 </script>
 
 <style scoped>
+  /* 表头不折行：列宽已按英文表头留足 min-width，窄屏横向滚动 */
+  .tenant-table :deep(.el-table__header .cell) {
+    white-space: nowrap;
+  }
+
   /* 卡片体改为纵向 flex，表格滚动区占满剩余高度（滚动区见模板注释） */
   .tenant-page :deep(.art-table-card > .el-card__body) {
     display: flex;

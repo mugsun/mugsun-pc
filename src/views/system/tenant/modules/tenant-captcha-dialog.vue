@@ -3,11 +3,11 @@
   <ElDialog
     v-model="dialogVisible"
     :title="$t('pages.system.tenant.captchaTitle', { name: row?.tenantName || '' })"
-    width="520px"
+    :width="narrow ? '92%' : '560px'"
     align-center
     destroy-on-close
   >
-    <ElForm label-width="90px">
+    <ElForm label-width="auto" :label-position="narrow ? 'top' : 'right'">
       <ElFormItem :label="$t('pages.system.tenant.captchaEnabled')">
         <ElSwitch v-model="enabled" />
       </ElFormItem>
@@ -46,6 +46,7 @@
 
 <script setup lang="ts">
   import { computed, ref, watch } from 'vue'
+  import { useWindowSize } from '@vueuse/core'
   import { useI18n } from 'vue-i18n'
   import { ElMessage } from 'element-plus'
   import { fetchTenantCaptcha } from '@/api/system-manage'
@@ -60,6 +61,9 @@
   const props = defineProps<{ visible: boolean; row: Record<string, any> | null }>()
   const emit = defineEmits<{ 'update:visible': [boolean]; saved: [] }>()
   const { t } = useI18n()
+  // 窄屏（≤768px，同 utils/form/responsive 的 xs 断点）标签放到上方
+  const { width: winWidth } = useWindowSize()
+  const narrow = computed(() => winWidth.value <= 768)
 
   const dialogVisible = computed({
     get: () => props.visible,
