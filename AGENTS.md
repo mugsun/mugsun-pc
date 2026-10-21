@@ -68,14 +68,14 @@ PC 管理台（Vue 3 + Vite + Element Plus + TypeScript），对接 mugsun-boot�
 
 ## 组件速查
 
-| 需求 | 位置 |
-| --- | --- |
-| HTTP 客户端 | `src/utils/http` |
-| CRUD 样板 | `src/hooks/core/useCrud.ts` |
-| 国密相关工具 | `src/utils/gm.ts` |
-| 验证码 | `src/utils/captcha/`、`src/components/core/captcha` |
-| 布局 / 表格 / 表单 | `src/components/core/{layouts,tables,forms}` |
-| 埋点 / GIS / AI 页面 | `modules/{track,gis,ai}/views` |
+| 需求                 | 位置                                                |
+| -------------------- | --------------------------------------------------- |
+| HTTP 客户端          | `src/utils/http`                                    |
+| CRUD 样板            | `src/hooks/core/useCrud.ts`                         |
+| 国密相关工具         | `src/utils/gm.ts`                                   |
+| 验证码               | `src/utils/captcha/`、`src/components/core/captcha` |
+| 布局 / 表格 / 表单   | `src/components/core/{layouts,tables,forms}`        |
+| 埋点 / GIS / AI 页面 | `modules/{track,gis,ai}/views`                      |
 
 ## 测试与构建
 
@@ -121,4 +121,6 @@ pre-commit：`.husky/pre-commit` 使用 `pnpm exec lint-staged --no-stash`（**�
 - `CHANGELOG.md` 写在 `## [Unreleased]` 下，**每行不超过 80 字**。
 - 不用 `git stash`；切换工作用 `git worktree`。
 - **只有分支最新的 commit 已经在分支上跑过同名必需检查、并且全绿，才可以快进推入 main。推送前用 `gh run list --commit <sha>` 自己确认。不要 force push。**
+- 合入后作者自行删除远端分支。
+- 提交的作者和提交者一律是 `Mugsun <100790155+mugsun@users.noreply.github.com>`：用 `git -c user.name=… -c user.email=… commit` 或仓库级 config，不改全局配置；已在 main 上的历史不改写。
 - 登录 / 验证码 / 加解密 / 新依赖 / CI workflow 属于敏感改动，需安全审查。
