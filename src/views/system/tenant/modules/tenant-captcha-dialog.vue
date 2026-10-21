@@ -139,6 +139,10 @@
     if (isNetworkError(error)) return true
     if (!(error instanceof HttpError)) return false
     if (error.canceled) return true
+    // 防重复提交拦截按形状识别，依赖三个条件同时成立：
+    //   errorKind === 'http'、code === ApiStatus.error、没有 url（请求未发出）
+    // TODO: 以后在请求层（utils/http）给防重复提交拦截加一个显式标记，
+    //   再把这里的形状判断换成该标记；该改动单独提交、单独审。
     return error.errorKind === 'http' && error.code === ApiStatus.error && !error.url
   }
 
