@@ -24,12 +24,9 @@ describe('锁屏校验值不进 pinia 持久化状态', () => {
     expect(src).toMatch(/clearLockSecret\(\)/)
   })
 
-  it('锁屏组件不再引用固定混淆值，算 hash 前先清空明文输入', () => {
+  it('锁屏组件不再引用固定混淆值，锁屏和解锁都走 lockFlow / unlockFlow', () => {
     expect(lockVue).not.toMatch(/VITE_LOCK_ENCRYPT_KEY|CryptoJS/)
-    const lockIdx = lockVue.indexOf('await setLockSecret(password)')
-    const clearIdx = lockVue.indexOf("formData.password = ''")
-    expect(lockIdx).toBeGreaterThan(0)
-    expect(clearIdx).toBeGreaterThan(0)
-    expect(clearIdx).toBeLessThan(lockIdx)
+    expect(lockVue).toMatch(/lockFlow\(formData, setLockSecret\)/)
+    expect(lockVue).toMatch(/unlockFlow\(unlockForm, verifyAndClearLockSecret\)/)
   })
 })

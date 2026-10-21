@@ -573,6 +573,7 @@
   },
   "lockScreen": {
     "pwdError": "Password error",
+    "lockFailed": "Failed to lock the screen. Please try again.",
     "lock": {
       "inputPlaceholder": "Please input lock screen password",
       "btnText": "Lock"

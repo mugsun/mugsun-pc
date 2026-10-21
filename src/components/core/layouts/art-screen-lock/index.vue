@@ -124,6 +124,7 @@
   import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
   import { useI18n } from 'vue-i18n'
   import { setLockSecret, verifyAndClearLockSecret } from '@/utils/lock/lockSecret'
+  import { lockFlow, unlockFlow } from '@/utils/lock/lockFlow'
   import { useUserStore } from '@/store/modules/user'
   import { mittBus } from '@/utils/sys'
 
@@ -354,10 +355,12 @@
 
     await formRef.value.validate(async (valid, fields) => {
       if (valid) {
-        const password = formData.password
-        // 算完 hash 立即丢弃明文
-        formData.password = ''
-        await setLockSecret(password)
+        // lockFlow 先清空明文再算 hash；setLockSecret 失败时不锁屏
+        const ok = await lockFlow(formData, setLockSecret)
+        if (!ok) {
+          ElMessage.error(t('lockScreen.lockFailed'))
+          return
+        }
         userStore.setLockStatus(true)
         visible.value = false
       } else {
@@ -371,9 +374,7 @@
 
     await unlockFormRef.value.validate(async (valid, fields) => {
       if (valid) {
-        const password = unlockForm.password
-        unlockForm.password = ''
-        const isValid = await verifyAndClearLockSecret(password)
+        const isValid = await unlockFlow(unlockForm, verifyAndClearLockSecret)
 
         if (isValid) {
           try {

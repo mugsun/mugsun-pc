@@ -63,7 +63,6 @@ export const useUserStore = defineStore(
     const isLogin = ref(false)
     // 锁屏状态
     const isLock = ref(false)
-    // 锁屏密码
     // 用户信息
     const info = ref<Partial<Api.Auth.UserInfo>>({})
     // 搜索历史记录
