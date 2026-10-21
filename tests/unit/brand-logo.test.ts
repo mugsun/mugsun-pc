@@ -24,14 +24,17 @@ describe('品牌字标颜色', () => {
   it('暗色模式取暗色菜单的 systemNameColor', () => {
     expect(resolveBrandTextColor(true, themeList, darkMenuStyles)).toBe('#DDDDDD')
   })
-  it('顶部栏和登录页不写死字标颜色', () => {
+  it('顶部栏不写死字标颜色', () => {
+    const s = read('src/components/core/layouts/art-header-bar/index.vue')
+    expect(s).toContain(':word-color="getBrandTextColor"')
+    expect(s).not.toMatch(/word-color="[^"]*#[0-9A-Fa-f]{3,6}/)
+  })
+  it('授权页改用主题色品牌标（字标颜色按定稿：亮 #1F2329、暗白色）', () => {
     for (const f of [
-      'src/components/core/layouts/art-header-bar/index.vue',
-      'src/components/core/views/login/LoginLeftView.vue'
+      'src/components/core/views/login/LoginLeftView.vue',
+      'src/components/core/views/login/AuthTopBar.vue'
     ]) {
-      const s = read(f)
-      expect(s).toContain(':word-color="getBrandTextColor"')
-      expect(s).not.toMatch(/word-color="[^"]*#[0-9A-Fa-f]{3,6}/)
+      expect(read(f)).toContain('<AuthBrandLogo')
     }
   })
 })

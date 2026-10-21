@@ -2,14 +2,7 @@
 <template>
   <div class="login-left-view">
     <div class="logo">
-      <ArtLogo
-        class="icon"
-        :size="40"
-        wordmark
-        :word-size="22"
-        :word-color="getBrandTextColor"
-        :on-dark="isDark"
-      />
+      <AuthBrandLogo class="icon" />
     </div>
 
     <div class="hero">
@@ -33,15 +26,12 @@
 </template>
 
 <script setup lang="ts">
-  import { storeToRefs } from 'pinia'
-  import { useSettingStore } from '@/store/modules/setting'
+  import AuthBrandLogo from './AuthBrandLogo.vue'
   import loginIcon from '@imgs/svg/login_icon.svg'
 
   defineProps<{
     hideContent?: boolean
   }>()
-
-  const { isDark, getBrandTextColor } = storeToRefs(useSettingStore())
 </script>
 
 <style lang="scss" scoped>
