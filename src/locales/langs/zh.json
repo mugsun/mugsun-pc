@@ -3340,6 +3340,7 @@
         "captchaLangNote": "英文界面不出文字点选；只启用文字点选时，英文用户会改用其他已启用的题型",
         "captchaSaved": "验证码设置已保存",
         "captchaSaveFailed": "验证码设置保存失败，请稍后重试。",
+        "captchaSaveNetworkError": "网络异常，验证码设置未保存，请检查网络后重试。",
         "captchaSaveFailedSep": "",
         "captchaSaveFailedId": "（错误编号：{id}）",
         "captchaWarningTitle": "已保存，但请注意",

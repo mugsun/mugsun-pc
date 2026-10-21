@@ -17,6 +17,7 @@ vi.mock('@/api/system-manage', () => ({
 }))
 
 import { HttpError } from '@/utils/http/error'
+import { ApiStatus } from '@/utils/http/status'
 import TenantCaptchaDialog from '@/views/system/tenant/modules/tenant-captcha-dialog.vue'
 
 const HEX32 = /^[0-9a-f]{32}$/
@@ -120,5 +121,45 @@ describe('租户验证码弹窗：保存失败', () => {
     visible.value = true
     await flush()
     expect(q('[data-testid="captcha-save-error"]')).toBeNull()
+  })
+
+  it.each([
+    [
+      '网络异常（errorKind=network）',
+      () =>
+        new HttpError('net', ApiStatus.network, {
+          url: '/api/system/tenant/captcha',
+          errorKind: 'network'
+        })
+    ],
+    ['防重复提交拦截（未发出请求）', () => new HttpError('repeat', ApiStatus.error)],
+    ['请求被取消', () => new HttpError('cancel', ApiStatus.error, { canceled: true })]
+  ])('请求没到后端：%s → 显示网络异常文案，不给错误编号', async (_name, make) => {
+    fetchTenantCaptcha.mockRejectedValue(make())
+    mount('zh')
+    await flush()
+    submit().click()
+    await flush()
+    const box = q('[data-testid="captcha-save-error"]')
+    expect(box?.textContent?.trim()).toBe('网络异常，验证码设置未保存，请检查网络后重试。')
+    expect(q('[data-testid="captcha-save-error-id"]')).toBeNull()
+    expect(q('[data-testid="captcha-save-live"]')?.textContent).toBe(
+      '网络异常，验证码设置未保存，请检查网络后重试。'
+    )
+    expect(visible.value).toBe(true)
+    expect(submit().disabled).toBe(false)
+  })
+
+  it('到过后端的业务失败仍显示错误编号（不误判为网络异常）', async () => {
+    fetchTenantCaptcha.mockRejectedValue(
+      new HttpError('biz', 500, { url: '/api/system/tenant/captcha', errorKind: 'business' })
+    )
+    mount('en')
+    await flush()
+    submit().click()
+    await flush()
+    expect(q('[data-testid="captcha-save-error-id"]')?.textContent).toMatch(
+      /^\(Error ID: [0-9a-f]{32}\)$/
+    )
   })
 })

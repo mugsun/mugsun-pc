@@ -36,9 +36,16 @@
       show-icon
     />
     <!-- 保存失败：弹窗内、按钮上方；前端文案 + 错误编号（X-Trace-Id），后端原文只进控制台 -->
-    <div v-if="saveErrorId" class="captcha-save-error" data-testid="captcha-save-error">
+    <div
+      v-if="saveErrorId || saveNetworkError"
+      class="captcha-save-error"
+      data-testid="captcha-save-error"
+    >
       <ElIcon class="captcha-save-error__icon" aria-hidden="true"><WarningFilled /></ElIcon>
-      <p class="captcha-save-error__text">
+      <p v-if="saveNetworkError" class="captcha-save-error__text">
+        {{ $t('pages.system.tenant.captchaSaveNetworkError') }}
+      </p>
+      <p v-else class="captcha-save-error__text">
         {{ saveErrorLead
         }}<span class="captcha-save-error__id" data-testid="captcha-save-error-id">{{
           saveErrorIdPart
@@ -65,6 +72,8 @@
   import { ElMessage } from 'element-plus'
   import { WarningFilled } from '@element-plus/icons-vue'
   import { newTraceId } from '@/utils/http/traceId'
+  import { HttpError, isNetworkError } from '@/utils/http/error'
+  import { ApiStatus } from '@/utils/http/status'
   import { fetchTenantCaptcha } from '@/api/system-manage'
   import {
     TENANT_CAPTCHA_TYPES,
@@ -92,6 +101,8 @@
   /** 保存失败的错误编号（本次请求的 X-Trace-Id）；有值即显示弹窗内错误提示 */
   const saveErrorId = ref('')
   const liveText = ref('')
+  /** 请求没到后端（网络异常 / 被取消或防重复提交拦截）：不给错误编号，提示检查网络 */
+  const saveNetworkError = ref(false)
 
   // 分两段渲染：编号段整段不断开；中英间隔走 i18n 的 Sep（同 captchaConfig.idSep）
   const saveErrorLead = computed(
@@ -103,6 +114,7 @@
 
   function clearSaveError() {
     saveErrorId.value = ''
+    saveNetworkError.value = false
     liveText.value = ''
   }
 
@@ -117,6 +129,18 @@
     },
     { immediate: true }
   )
+
+  /**
+   * 请求是否没到后端：errorKind=network（无响应），或被取消 / 防重复提交在前端拦下
+   *（防重复提交：errorKind=http、code=ApiStatus.error 且没有 url——请求根本没发出；
+   * 到过后端的 http/business 错误都带 url，401 的 code 是 unauthorized，不会落进来）
+   */
+  function notReachedBackend(error: unknown): boolean {
+    if (isNetworkError(error)) return true
+    if (!(error instanceof HttpError)) return false
+    if (error.canceled) return true
+    return error.errorKind === 'http' && error.code === ApiStatus.error && !error.url
+  }
 
   async function save() {
     if (!props.row) return
@@ -140,6 +164,11 @@
     } catch (error) {
       // 后端原文只打到控制台；弹窗不关、勾选保留
       console.error('[TenantCaptcha] save failed', { traceId, error })
+      if (notReachedBackend(error)) {
+        saveNetworkError.value = true
+        liveText.value = t('pages.system.tenant.captchaSaveNetworkError')
+        return
+      }
       saveErrorId.value = traceId
       liveText.value = saveErrorLead.value + saveErrorIdPart.value
     } finally {

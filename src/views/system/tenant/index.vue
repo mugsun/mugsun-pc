@@ -106,7 +106,11 @@
               }}
             </template>
           </ElTableColumn>
-          <ElTableColumn :label="$t('pages.system.tenant.actions')" width="180" fixed="right">
+          <ElTableColumn
+            :label="$t('pages.system.tenant.actions')"
+            width="180"
+            :fixed="narrow ? false : 'right'"
+          >
             <template #default="{ row }">
               <ElButton v-perm="'sys:tenant:save'" link type="primary" @click="openEdit(row)">{{
                 $t('pages.system.tenant.edit')
@@ -145,7 +149,8 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, onMounted, onDeactivated, onBeforeUnmount } from 'vue'
+  import { computed, ref, onMounted, onDeactivated, onBeforeUnmount } from 'vue'
+  import { useWindowSize } from '@vueuse/core'
   import { useI18n } from 'vue-i18n'
   import { onBeforeRouteLeave } from 'vue-router'
   import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
@@ -164,6 +169,9 @@
   defineOptions({ name: 'Tenant' })
 
   const { t } = useI18n()
+  // 窄屏（≤768px，同验证码弹窗）操作列不固定，避免盖住前面的列
+  const { width: winWidth } = useWindowSize()
+  const narrow = computed(() => winWidth.value <= 768)
 
   // ===== 查询栏 =====
   const searchForm = ref({

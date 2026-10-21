@@ -18,7 +18,12 @@ export function formatTableTime(v?: string | number | null): string {
     d = new Date(Number(v))
   } else {
     // LocalDateTime 序列化为 ISO 串（微秒 6 位，部分浏览器解析不稳），截掉小数秒段再解析
-    d = new Date(String(v).replace(/\.\d+/, ''))
+    // 'YYYY-MM-DD HH:mm:ss' 的空格换成 T（旧版 Safari 不认空格分隔）
+    d = new Date(
+      String(v)
+        .replace(/\.\d+/, '')
+        .replace(/^(\d{4}-\d{2}-\d{2}) (?=\d)/, '$1T')
+    )
   }
   if (Number.isNaN(d.getTime())) return '-'
   return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())} ${pad(d.getHours())}:${pad(d.getMinutes())}:${pad(d.getSeconds())}`

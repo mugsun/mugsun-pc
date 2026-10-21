@@ -21,6 +21,26 @@ describe('formatTableTime', () => {
     expect(formatTableTime('2026-08-28T09:07:05')).toBe('2026-08-28 09:07:05')
   })
 
+  it('空格分隔的 YYYY-MM-DD HH:mm:ss 先换成 T 再解析（旧版 Safari），结果不变', () => {
+    expect(formatTableTime('2026-08-28 09:07:05')).toBe('2026-08-28 09:07:05')
+    expect(formatTableTime('2026-08-28 09:07:05.123456')).toBe('2026-08-28 09:07:05')
+    // 模拟旧版 Safari：空格分隔的日期时间串解析成 Invalid Date
+    const RealDate = Date
+    class OldSafariDate extends RealDate {
+      constructor(...args: any[]) {
+        const [v] = args
+        if (typeof v === 'string' && /^\d{4}-\d{2}-\d{2} \d/.test(v)) super(NaN)
+        else super(...(args as []))
+      }
+    }
+    vi.stubGlobal('Date', OldSafariDate)
+    try {
+      expect(formatTableTime('2026-08-28 09:07:05')).toBe('2026-08-28 09:07:05')
+    } finally {
+      vi.unstubAllGlobals()
+    }
+  })
+
   it('月日时分秒补零到两位', () => {
     expect(formatTableTime('2026-01-02T03:04:05')).toBe('2026-01-02 03:04:05')
   })

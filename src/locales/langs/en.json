@@ -3340,6 +3340,7 @@
         "captchaLangNote": "The English UI never shows word click; English users get another enabled type instead",
         "captchaSaved": "Captcha settings saved",
         "captchaSaveFailed": "Failed to save captcha settings. Please try again later.",
+        "captchaSaveNetworkError": "Network error. Captcha settings were not saved. Check your connection and try again.",
         "captchaSaveFailedSep": " ",
         "captchaSaveFailedId": "(Error ID: {id})",
         "captchaWarningTitle": "Saved, with a warning",
