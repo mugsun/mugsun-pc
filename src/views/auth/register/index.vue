@@ -85,7 +85,9 @@
             </div>
 
             <div class="mt-5 text-sm text-g-600">
-              <span>{{ $t('register.hasAccount') }}</span>
+              <span :class="{ 'mr-1': locale !== LanguageEnum.ZH }">{{
+                $t('register.hasAccount')
+              }}</span>
               <RouterLink class="text-theme" :to="{ name: 'Login' }">{{
                 $t('register.toLogin')
               }}</RouterLink>
@@ -108,6 +110,7 @@
 
 <script setup lang="ts">
   import { useI18n } from 'vue-i18n'
+  import { LanguageEnum } from '@/enums/appEnum'
   import { ElMessage, type FormInstance, type FormRules } from 'element-plus'
   import { fetchRegister } from '@/api/auth'
   import { encryptPassword, isGmEncryptError } from '@/utils/gm'
@@ -163,7 +166,7 @@
    */
   const validatePassword = (_rule: any, value: string, callback: (error?: Error) => void) => {
     if (!value) {
-      callback(new Error(t('pages.auth.register.credentialsRequired')))
+      callback(new Error(t('register.rule.passwordRequired')))
       return
     }
 
@@ -210,7 +213,7 @@
 
   const rules = computed<FormRules<RegisterForm>>(() => ({
     username: [
-      { required: true, message: t('pages.auth.register.credentialsRequired'), trigger: 'blur' },
+      { required: true, message: t('register.rule.usernameRequired'), trigger: 'blur' },
       {
         min: USERNAME_MIN_LENGTH,
         max: USERNAME_MAX_LENGTH,

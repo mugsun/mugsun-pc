@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
 import { CaptchaCode } from '../../src/utils/captcha/codes'
+import { parseCaptchaEnabled } from '../helpers/captchaConfig'
 
 /**
  * 验证码开启时的服务端拦截（project `captcha-on`，pnpm test:e2e:captcha-on）。
@@ -21,19 +22,14 @@ test.beforeEach(async ({ page }, testInfo) => {
   const resp = await page.request.get('/api/auth/captcha/config', {
     params: { scene, clientId: 'web', tenantId: TENANT }
   })
-  const text = await resp.text()
-  let enabled: unknown
-  try {
-    enabled = JSON.parse(text)?.data?.enabled
-  } catch {
-    throw new Error(
-      `/auth/captcha/config（${scene}）返回的不是 JSON，HTTP ${resp.status()}，响应开头：${text.slice(0, 120)}`
-    )
-  }
+  // 只有明确返回 enabled=false 才跳过；500、非 JSON、data 为空等一律抛错
+  const enabled = parseCaptchaEnabled(
+    { status: resp.status(), ok: resp.ok(), text: await resp.text() },
+    scene
+  )
   test.skip(
-    enabled !== true,
-    `后端 ${scene} 场景验证码未开启（enabled=${String(enabled)}，HTTP ${resp.status()}）；` +
-      'captcha-on 用例须对开着验证码的后端运行'
+    !enabled,
+    `后端 ${scene} 场景验证码已关闭（enabled=false）；captcha-on 用例须对开着验证码的后端运行`
   )
 })
 

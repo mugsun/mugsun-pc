@@ -1,5 +1,6 @@
 import type { Page } from '@playwright/test'
 import { expect } from '@playwright/test'
+import { parseCaptchaEnabled } from '../helpers/captchaConfig'
 
 export interface LoginOptions {
   username?: string
@@ -26,22 +27,14 @@ export async function assertCaptchaDisabled(
   const resp = await page.request.get('/api/auth/captcha/config', {
     params: { scene, clientId: 'web', tenantId }
   })
-  const status = resp.status()
-  const text = await resp.text()
-  let json: { data?: { enabled?: unknown } } | null = null
-  try {
-    json = JSON.parse(text)
-  } catch {
+  const enabled = parseCaptchaEnabled(
+    { status: resp.status(), ok: resp.ok(), text: await resp.text() },
+    scene
+  )
+  if (enabled) {
     throw new Error(
-      `E2E 前置条件检查失败：/auth/captcha/config（${scene}）返回的不是 JSON，HTTP ${status}，` +
-        `响应开头：${text.slice(0, 120)}`
-    )
-  }
-  const enabled = json?.data?.enabled
-  if (enabled !== false) {
-    throw new Error(
-      `E2E 前置条件：${scene} 场景验证码须关闭（后端 mugsun.captcha.enabled=false 或关闭平台租户验证码开关），` +
-        `当前 /auth/captcha/config HTTP ${status}，enabled=${String(enabled)}`
+      `E2E 前置条件：${scene} 场景验证码须关闭（后端 mugsun.captcha.enabled=false 或关闭平台租户验证码开关）；` +
+        '验证码开启时请跑 pnpm test:e2e:captcha-on'
     )
   }
 }

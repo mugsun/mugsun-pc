@@ -477,7 +477,7 @@
     "rememberPwd": "Remember account",
     "forgetPwd": "Forgot password",
     "btnText": "Login",
-    "noAccount": "No account yet? ",
+    "noAccount": "No account yet?",
     "register": "Register",
     "success": {
       "title": "Login successful",
@@ -557,6 +557,8 @@
       "confirmPassword": "Please enter your password again"
     },
     "rule": {
+      "usernameRequired": "Enter a username",
+      "passwordRequired": "Enter a password",
       "confirmPasswordRequired": "Please enter your password again",
       "passwordMismatch": "The two passwords are inconsistent!",
       "usernameLength": "The length is 3 to 20 characters",
@@ -566,7 +568,7 @@
     "agreeText": "I agree",
     "privacyPolicy": "Privacy policy",
     "submitBtnText": "Register",
-    "hasAccount": "Already have an account? ",
+    "hasAccount": "Already have an account?",
     "toLogin": "To login"
   },
   "lockScreen": {
@@ -1184,9 +1186,8 @@
         "gmEncryptFailed": "Password SM2 encryption failed. Refresh the page and retry (plaintext login is blocked)"
       },
       "register": {
-        "phonePlaceholder": "Phone number (optional, can be used for SMS login)",
+        "phonePlaceholder": "Phone (optional, for SMS login)",
         "phoneInvalid": "Invalid phone number. Use an 11-digit number starting with 1, then register again.",
-        "credentialsRequired": "Username and password are required. Fill in both, then register again.",
         "successMessage": "Registration successful. Please log in"
       },
       "forgetPassword": {

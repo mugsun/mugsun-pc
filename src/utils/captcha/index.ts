@@ -8,6 +8,10 @@
  * @module utils/captcha
  */
 import { HttpError } from '@/utils/http/error'
+import { CaptchaCode } from './codes'
+
+/** 错误码（R.code），定义在无依赖的 codes.ts，e2e 也从那里引用 */
+export { CaptchaCode }
 
 /** 底图显示宽度下限（服务端拒绝 bgDisplayWidth < 260） */
 export const CAPTCHA_MIN_WIDTH = 260
@@ -21,10 +25,6 @@ export const TRACK_MAX_POINTS = 400
 export const DEFAULT_KEYBOARD_STEP_PX = 4
 /** Shift 大步倍率（相对 keyboardStep） */
 export const KEY_SHIFT_MULTIPLIER = 10
-
-/** 错误码（R.code），定义在无依赖的 codes.ts，e2e 也从那里引用 */
-export { CaptchaCode } from './codes'
-import { CaptchaCode } from './codes'
 
 export interface TrackPoint {
   x: number

@@ -152,7 +152,7 @@
           </div>
 
           <div class="mt-5 text-sm text-g-600 register-hint">
-            <span>{{ $t('login.noAccount') }}</span>
+            <span :class="{ 'mr-1': locale !== LanguageEnum.ZH }">{{ $t('login.noAccount') }}</span>
             <RouterLink class="text-theme" :to="{ name: 'Register' }">{{
               $t('login.register')
             }}</RouterLink>
@@ -188,6 +188,7 @@
   import AppConfig from '@/config'
   import { useUserStore } from '@/store/modules/user'
   import { useI18n } from 'vue-i18n'
+  import { LanguageEnum } from '@/enums/appEnum'
   import { HttpError } from '@/utils/http/error'
   import { fetchLogin, fetchTwoFactor, fetchSmsCode, fetchSmsLogin } from '@/api/auth'
   import { encryptPassword, isGmEncryptError } from '@/utils/gm'
