@@ -15,7 +15,7 @@
           <ElButton :loading="uploading" @click="triggerUpload" v-ripple>{{
             $t('pages.system.attach.uploadBtn')
           }}</ElButton>
-          <ElButton @click="deleteSelected" v-ripple>{{
+          <ElButton v-perm="'sys:file:remove'" @click="deleteSelected" v-ripple>{{
             $t('pages.system.attach.deleteSelectedBtn')
           }}</ElButton>
           <input ref="uploadInput" type="file" style="display: none" @change="handleUpload" />
@@ -59,6 +59,7 @@
   import { formatTableTime } from '@/utils/date'
   import { ElButton, ElImage, ElMessageBox, ElMessage } from 'element-plus'
   import { useI18n } from 'vue-i18n'
+  import { hasPerm } from '@/utils/permission'
 
   defineOptions({ name: 'Attach' })
 
@@ -209,16 +210,18 @@
                 { link: true, type: 'primary', size: 'small', onClick: () => download(row) },
                 () => t('pages.system.attach.downloadBtn')
               ),
-              h(
-                ElButton,
-                {
-                  link: true,
-                  type: 'danger',
-                  size: 'small',
-                  onClick: () => deleteRow(row)
-                },
-                () => t('common.delete')
-              )
+              hasPerm('sys:file:remove')
+                ? h(
+                    ElButton,
+                    {
+                      link: true,
+                      type: 'danger',
+                      size: 'small',
+                      onClick: () => deleteRow(row)
+                    },
+                    () => t('common.delete')
+                  )
+                : null
             ])
         }
       ]

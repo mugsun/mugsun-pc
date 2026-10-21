@@ -6,9 +6,12 @@
         <ElButton v-perm="'sys:region:save'" type="primary" @click="showDialog(null)">{{
           $t('pages.system.region.addProvince')
         }}</ElButton>
-        <ElButton :loading="exporting" @click="doExport">{{
-          $t('pages.system.region.export')
-        }}</ElButton>
+        <ElButton
+          v-perm="['sys:region:save', 'sys:region:remove', 'sys:region:import']"
+          :loading="exporting"
+          @click="doExport"
+          >{{ $t('pages.system.region.export') }}</ElButton
+        >
         <ElButton v-perm="'sys:region:import'" :loading="templating" @click="doTemplate">{{
           $t('pages.system.region.template')
         }}</ElButton>

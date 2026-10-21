@@ -18,7 +18,7 @@
           <ElButton v-perm="'sys:user:remove'" type="danger" plain @click="deleteSelected">{{
             $t('pages.system.user.deleteSelected')
           }}</ElButton>
-          <ElButton :loading="exporting" @click="handleExport" v-ripple>{{
+          <ElButton v-perm="'sys:user:list'" :loading="exporting" @click="handleExport" v-ripple>{{
             $t('pages.system.user.export')
           }}</ElButton>
           <ElButton v-perm="'sys:user:add'" @click="importVisible = true" v-ripple>{{

@@ -43,7 +43,7 @@
               <ElButton link type="primary" @click="showEdit(row)">{{
                 $t('pages.system.customer.edit')
               }}</ElButton>
-              <ElButton link type="danger" @click="remove(row)">{{
+              <ElButton v-perm="'sys:customer:remove'" link type="danger" @click="remove(row)">{{
                 $t('pages.system.customer.delete')
               }}</ElButton>
             </template>
