@@ -477,7 +477,7 @@
     "rememberPwd": "Remember account",
     "forgetPwd": "Forgot password",
     "btnText": "Login",
-    "noAccount": "No account yet?",
+    "noAccount": "No account yet? ",
     "register": "Register",
     "success": {
       "title": "Login successful",
@@ -566,7 +566,7 @@
     "agreeText": "I agree",
     "privacyPolicy": "Privacy policy",
     "submitBtnText": "Register",
-    "hasAccount": "Already have an account?",
+    "hasAccount": "Already have an account? ",
     "toLogin": "To login"
   },
   "lockScreen": {

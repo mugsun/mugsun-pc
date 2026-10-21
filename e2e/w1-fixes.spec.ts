@@ -110,6 +110,9 @@ test('W1-R8/R2 自助注册分配默认角色 + 定时任务读接口按权限�
   // —— 真实 UI 注册（协议勾选；前置：后端已关闭验证码） ——
   await assertCaptchaDisabled(page, 'register')
   await page.goto('/#/auth/register')
+  // 原先靠等验证码图片加载拖住时序；现在须显式等注册表单渲染，避免填到登录表单上
+  await expect(page.getByRole('button', { name: '注册', exact: true })).toBeVisible()
+  await expect(page.locator('form .el-input__inner')).toHaveCount(4)
 
   const inputs = page.locator('form .el-input__inner')
   await inputs.nth(0).fill(username)

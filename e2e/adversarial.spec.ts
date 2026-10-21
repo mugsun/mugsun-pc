@@ -61,21 +61,8 @@ test('ADV-1 搜索栏 SQL 注入与畸形输入（全平台新查询参数）', 
   expect((await check.json()).data.records.length).toBeGreaterThan(0)
 })
 
-test('ADV-2 忘记密码端点滥用（无码/错码/限频）', async () => {
-  // 不带验证码令牌直接发码（验证码开启时 → 400）
-  const noCaptcha = await page.request.fetch('/api/auth/forget-code', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    data: { username: 'admin' }
-  })
-  // E2E 后端关闭了验证码（见 fixtures/auth assertCaptchaDisabled），此时不带 captchaToken 发码属正常路径；
-  // 仅在验证码开启的环境断言被拒
-  const cfg = await page.request.get('/api/auth/captcha/config', {
-    params: { scene: 'forget', clientId: 'web', tenantId: '000000' }
-  })
-  if ((await cfg.json().catch(() => null))?.data?.enabled === true) {
-    expect((await noCaptcha.json()).code, '无验证码令牌发码须被拒').toBe(400)
-  }
+test('ADV-2 忘记密码端点滥用（错码）', async () => {
+  // 不带验证码令牌发码被拒：主套后端关闭验证码，此项移到 e2e/captcha-on/captcha-required.spec.ts（pnpm test:e2e:captcha-on）
 
   // 错码重置 → 400（且不计入真实码）
   const badCode = await page.request.fetch('/api/auth/forget-reset', {
