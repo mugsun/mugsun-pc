@@ -122,5 +122,5 @@ pre-commit：`.husky/pre-commit` 使用 `pnpm exec lint-staged --no-stash`（**�
 - 不用 `git stash`；切换工作用 `git worktree`。
 - **只有分支最新的 commit 已经在分支上跑过同名必需检查、并且全绿，才可以快进推入 main。推送前用 `gh run list --commit <sha>` 自己确认。不要 force push。**
 - 合入后作者自行删除远端分支。
-- 提交的作者和提交者一律是 `Mugsun <100790155+mugsun@users.noreply.github.com>`：用 `git -c user.name=… -c user.email=… commit` 或仓库级 config，不改全局配置；已在 main 上的历史不改写。
+- 提交的作者和提交者一律是 `mugsun <bydongxin@gmail.com>`：用 `git -c user.name=mugsun -c user.email=bydongxin@gmail.com commit` 或仓库级 config，不改全局配置。已推送的历史（含 main 上以 noreply 等旧身份提交的）一律不改写、不 force push。
 - 登录 / 验证码 / 加解密 / 新依赖 / CI workflow 属于敏感改动，需安全审查。
