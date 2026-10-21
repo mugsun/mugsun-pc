@@ -86,7 +86,8 @@
   const props = defineProps<{ visible: boolean; row: Record<string, any> | null }>()
   const emit = defineEmits<{ 'update:visible': [boolean]; saved: [] }>()
   const { t } = useI18n()
-  // 窄屏（≤768px，同 utils/form/responsive 的 xs 断点）标签放到上方
+  // 窄屏（≤768px）标签放到上方。注意：utils/form/responsive 的 xs 是 <768px，
+  // 这里含 768（平板竖屏 768 宽也按窄屏处理），与租户列表的 narrow 一致
   const { width: winWidth } = useWindowSize()
   const narrow = computed(() => winWidth.value <= 768)
 

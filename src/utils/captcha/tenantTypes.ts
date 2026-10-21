@@ -1,6 +1,6 @@
 /**
  * 租户验证码题型配置（POST /system/tenant/captcha，mugsun-boot#35）。
- * ROTATE 为辅助题型、默认关闭，排在最后。
+ * 平台默认五种题型全部开启、随机出题；ROTATE 为辅助题型，排在最后。
  */
 export const TENANT_CAPTCHA_TYPES = [
   'SLIDER',
