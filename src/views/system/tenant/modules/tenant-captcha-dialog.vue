@@ -72,8 +72,7 @@
   import { ElMessage } from 'element-plus'
   import { WarningFilled } from '@element-plus/icons-vue'
   import { newTraceId } from '@/utils/http/traceId'
-  import { HttpError, isNetworkError } from '@/utils/http/error'
-  import { ApiStatus } from '@/utils/http/status'
+  import { HttpError, isDuplicateSubmitError, isNetworkError } from '@/utils/http/error'
   import { fetchTenantCaptcha } from '@/api/system-manage'
   import {
     TENANT_CAPTCHA_TYPES,
@@ -131,20 +130,10 @@
     { immediate: true }
   )
 
-  /**
-   * 请求是否没到后端：errorKind=network（无响应），或被取消 / 防重复提交在前端拦下
-   *（防重复提交：errorKind=http、code=ApiStatus.error 且没有 url——请求根本没发出；
-   * 到过后端的 http/business 错误都带 url，401 的 code 是 unauthorized，不会落进来）
-   */
+  /** 请求是否没到后端：网络异常（无响应）、被取消、或被防重复提交拦下（请求层显式标记） */
   function notReachedBackend(error: unknown): boolean {
-    if (isNetworkError(error)) return true
-    if (!(error instanceof HttpError)) return false
-    if (error.canceled) return true
-    // 防重复提交拦截按形状识别，依赖三个条件同时成立：
-    //   errorKind === 'http'、code === ApiStatus.error、没有 url（请求未发出）
-    // TODO: 以后在请求层（utils/http）给防重复提交拦截加一个显式标记，
-    //   再把这里的形状判断换成该标记；该改动单独提交、单独审。
-    return error.errorKind === 'http' && error.code === ApiStatus.error && !error.url
+    if (isNetworkError(error) || isDuplicateSubmitError(error)) return true
+    return error instanceof HttpError && error.canceled
   }
 
   async function save() {

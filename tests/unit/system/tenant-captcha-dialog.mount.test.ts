@@ -132,7 +132,10 @@ describe('租户验证码弹窗：保存失败', () => {
           errorKind: 'network'
         })
     ],
-    ['防重复提交拦截（未发出请求）', () => new HttpError('repeat', ApiStatus.error)],
+    [
+      '防重复提交拦截（请求层标记 isDuplicateSubmit）',
+      () => new HttpError('repeat', ApiStatus.error, { duplicateSubmit: true })
+    ],
     ['请求被取消', () => new HttpError('cancel', ApiStatus.error, { canceled: true })]
   ])('请求没到后端：%s → 显示网络异常文案，不给错误编号', async (_name, make) => {
     fetchTenantCaptcha.mockRejectedValue(make())
@@ -160,6 +163,17 @@ describe('租户验证码弹窗：保存失败', () => {
     await flush()
     expect(q('[data-testid="captcha-save-error-id"]')?.textContent).toMatch(
       /^\(Error ID: [0-9a-f]{32}\)$/
+    )
+  })
+
+  it('没有防重复提交标记、也没有 url 的 http 错误不再按形状当成网络异常（仍显示错误编号）', async () => {
+    fetchTenantCaptcha.mockRejectedValue(new HttpError('x', ApiStatus.error))
+    mount('zh')
+    await flush()
+    submit().click()
+    await flush()
+    expect(q('[data-testid="captcha-save-error-id"]')?.textContent).toMatch(
+      /^（错误编号：[0-9a-f]{32}）$/
     )
   })
 })

@@ -69,6 +69,8 @@ export class HttpError extends Error {
   public readonly errorKind: HttpErrorKind
   /** 业务码（R.code）；HTTP 200 业务失败或非 2xx 响应体里带 code 时有值 */
   public readonly bizCode?: number
+  /** 防重复提交拦截：相同变更请求在途时被前端拦下，请求没有发出 */
+  public readonly isDuplicateSubmit: boolean
   /**
    * 已向用户提示过（toast）。埋点 SDK 在 skipHandledErrors 为 true 时据此（及 name==='HttpError'）
    * 跳过 $error 上报；管理台本身不再拦截，是否跳过由 SDK 开关决定。
@@ -85,6 +87,7 @@ export class HttpError extends Error {
       canceled?: boolean
       errorKind?: HttpErrorKind
       bizCode?: number
+      duplicateSubmit?: boolean
     }
   ) {
     super(message)
@@ -97,6 +100,7 @@ export class HttpError extends Error {
     this.canceled = options?.canceled ?? false
     this.errorKind = options?.errorKind ?? 'http'
     this.bizCode = options?.bizCode
+    this.isDuplicateSubmit = options?.duplicateSubmit ?? false
   }
 
   /** 是否网络异常（无响应） */
@@ -216,6 +220,10 @@ export function showSuccess(message: string, showMessage: boolean = true): void 
 export const isHttpError = (error: unknown): error is HttpError => {
   return error instanceof HttpError
 }
+
+/** 是否为防重复提交拦截的 HttpError（请求未发出） */
+export const isDuplicateSubmitError = (error: unknown): error is HttpError =>
+  error instanceof HttpError && error.isDuplicateSubmit
 
 /** 是否网络异常（无响应）的 HttpError */
 export const isNetworkError = (error: unknown): error is HttpError =>

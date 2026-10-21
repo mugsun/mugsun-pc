@@ -236,7 +236,9 @@ async function request<T = any>(config: ExtendedAxiosRequestConfig): Promise<T> 
       return existing.promise as Promise<T>
     }
     // 变更类：拦截重复提交（在途窗口内的相同请求）
-    const dupError = new HttpError($t('utils.http.repeatSubmit'), ApiStatus.error)
+    const dupError = new HttpError($t('utils.http.repeatSubmit'), ApiStatus.error, {
+      duplicateSubmit: true
+    })
     if (config.showErrorMessage !== false) showError(dupError, true)
     return Promise.reject(dupError)
   }
