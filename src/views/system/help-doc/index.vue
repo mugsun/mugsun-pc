@@ -250,17 +250,26 @@
           :placeholder="$t('pages.system.helpDoc.routePathPlaceholder')"
           style="width: 74%"
         />
-        <ElButton type="primary" :loading="submitting" @click="addBinding">{{
-          $t('pages.system.helpDoc.addBinding')
-        }}</ElButton>
+        <ElButton
+          v-perm="'sys:help:manage'"
+          type="primary"
+          :loading="submitting"
+          @click="addBinding"
+          >{{ $t('pages.system.helpDoc.addBinding') }}</ElButton
+        >
       </div>
       <ElTable :data="bindingList" border style="margin-top: 12px">
         <ElTableColumn prop="routePath" :label="$t('pages.system.helpDoc.routePath')" />
         <ElTableColumn :label="$t('pages.system.helpDoc.colOperation')" width="90">
           <template #default="{ row }">
-            <ElButton link type="danger" size="small" @click="removeBinding(row)">{{
-              $t('pages.system.helpDoc.remove')
-            }}</ElButton>
+            <ElButton
+              v-perm="'sys:help:manage'"
+              link
+              type="danger"
+              size="small"
+              @click="removeBinding(row)"
+              >{{ $t('pages.system.helpDoc.remove') }}</ElButton
+            >
           </template>
         </ElTableColumn>
       </ElTable>

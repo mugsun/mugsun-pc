@@ -12,7 +12,7 @@
           @clear="search"
         />
         <ElButton type="primary" @click="search">{{ $t('pages.system.customer.search') }}</ElButton>
-        <ElButton type="primary" @click="showCreate">{{
+        <ElButton v-perm="'sys:customer:save'" type="primary" @click="showCreate">{{
           $t('pages.system.customer.create')
         }}</ElButton>
       </div>
@@ -40,7 +40,7 @@
           />
           <ElTableColumn :label="$t('pages.system.customer.actions')" width="140" fixed="right">
             <template #default="{ row }">
-              <ElButton link type="primary" @click="showEdit(row)">{{
+              <ElButton v-perm="'sys:customer:save'" link type="primary" @click="showEdit(row)">{{
                 $t('pages.system.customer.edit')
               }}</ElButton>
               <ElButton v-perm="'sys:customer:remove'" link type="danger" @click="remove(row)">{{
