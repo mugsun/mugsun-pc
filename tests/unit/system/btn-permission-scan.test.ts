@@ -48,8 +48,9 @@ const EXEMPT: Record<string, string> = {
   'src/views/system/report/index.vue:removeChart(idx)': '报表表单本地删图表',
   'src/views/system/message-send/index.vue:form.vars.splice(i, 1)': '发送表单本地删变量',
   'src/views/system/message/index.vue:removeSelected':
-    '个人站内信：MessageController /remove 只校验登录（无 @SaCheckPermission），只删本人消息',
-  'src/views/system/message/index.vue:removeOne(row)': '同上，个人站内信单条删除',
+    '个人站内信：MessageController /remove 只校验登录（无 @SaCheckPermission），只删本人消息；依赖后端按归属删除（id + 当前用户 + 当前租户）',
+  'src/views/system/message/index.vue:removeOne(row)':
+    '同上，个人站内信单条删除；依赖后端按归属删除（id + 当前用户 + 当前租户）',
   'src/views/system/user/modules/user-import-dialog.vue:downloadUserImportTemplate()':
     '导入弹窗内按钮；打开弹窗的按钮已挂 sys:user:add。导入独立权限码待 boot fd95232 合入 main 后再改',
   'src/views/system/user/modules/user-import-dialog.vue:handleImport': '同上，导入弹窗内的提交'
