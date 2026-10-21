@@ -27,7 +27,8 @@
  * - localStorage（键 sys-v{version}-user）：仅非敏感字段 language、info、searchHistory
  * - sessionStorage（键 sys-v{version}-user-session）：accessToken、refreshToken、isLogin
  *   （仅当前标签页有效，关闭即失效；新标签页需重新登录）
- * - 不持久化：lockPassword、isLock（刷新后锁屏态丢失，可接受：锁屏态无密码时不应单独恢复）
+ * - 不持久化：isLock（刷新后锁屏态丢失，即刷新页面就会解锁；锁屏不是安全边界）
+ * - 锁屏密码不进 store：只以加盐 hash 存在 utils/lock/lockSecret 的内存里
  * - isLogin 与 token 同存 sessionStorage，避免出现「已登录但无 token」的异常态
  * - 登出时自动清理
  *
@@ -47,6 +48,7 @@ import { useMenuStore } from './menu'
 import { useTopMenuStore } from './topMenu'
 import { StorageConfig } from '@/utils/storage/storage-config'
 import { trackReset } from '@/plugins/track'
+import { clearLockSecret } from '@/utils/lock/lockSecret'
 
 /**
  * 用户状态管理
@@ -62,7 +64,6 @@ export const useUserStore = defineStore(
     // 锁屏状态
     const isLock = ref(false)
     // 锁屏密码
-    const lockPassword = ref('')
     // 用户信息
     const info = ref<Partial<Api.Auth.UserInfo>>({})
     // 搜索历史记录
@@ -121,14 +122,6 @@ export const useUserStore = defineStore(
     }
 
     /**
-     * 设置锁屏密码
-     * @param password 锁屏密码
-     */
-    const setLockPassword = (password: string) => {
-      lockPassword.value = password
-    }
-
-    /**
      * 设置令牌
      * @param newAccessToken 访问令牌
      * @param newRefreshToken 刷新令牌（可选）
@@ -164,8 +157,8 @@ export const useUserStore = defineStore(
       isLogin.value = false
       // 重置锁屏状态
       isLock.value = false
-      // 清空锁屏密码
-      lockPassword.value = ''
+      // 清空锁屏校验值（hash 与盐）
+      clearLockSecret()
       // 清空访问令牌
       accessToken.value = ''
       // 清空刷新令牌
@@ -218,7 +211,6 @@ export const useUserStore = defineStore(
       language,
       isLogin,
       isLock,
-      lockPassword,
       info,
       searchHistory,
       accessToken,
@@ -231,7 +223,6 @@ export const useUserStore = defineStore(
       setLanguage,
       setSearchHistory,
       setLockStatus,
-      setLockPassword,
       setToken,
       logOut,
       checkAndClearWorktabs
