@@ -121,6 +121,11 @@ pre-commit：`.husky/pre-commit` 使用 `pnpm exec lint-staged --no-stash`（**�
 - `CHANGELOG.md` 写在 `## [Unreleased]` 下，**每行不超过 80 字**。
 - 不用 `git stash`；切换工作用 `git worktree`。
 - **只有分支最新的 commit 已经在分支上跑过同名必需检查、并且全绿，才可以快进推入 main。推送前用 `gh run list --commit <sha>` 自己确认。不要 force push。**
+- 推 main 前的防误推（3.20）：
+  - 推 main 前显式核对：这个完整 SHA 已经审过（审查结论里写的就是它），并且 `gh run list --commit <完整 SHA>` 显示同名检查全绿。短 SHA 查询可能返回空，不算核对。
+  - 推送一律写全 refspec：`git push origin <sha>:refs/heads/<分支>`，不用裸 `git push`，也不依赖 upstream 跟踪。
+  - 还没审的本地提交，不放在跟踪 main（upstream 为 `origin/main`）的分支上。
+  - 改动 `.github/` 下任何文件的提交，必须先有安全官签字，才能进 main。
 - 合入后作者自行删除远端分支。
 - 提交的作者和提交者一律是 `mugsun <bydongxin@gmail.com>`：用 `git -c user.name=mugsun -c user.email=bydongxin@gmail.com commit` 或仓库级 config，不改全局配置。已推送的历史（含 main 上以 noreply 等旧身份提交的）一律不改写、不 force push。
 - 登录 / 验证码 / 加解密 / 新依赖 / CI workflow 属于敏感改动，需安全审查。
