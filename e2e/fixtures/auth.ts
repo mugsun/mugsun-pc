@@ -112,9 +112,17 @@ export async function logout(page: Page): Promise<void> {
   await page.waitForURL(/\/auth\/login/, { timeout: 10_000 })
 }
 
-/** 读取当前会话 accessToken（pinia 持久化键带版本前缀，如 sys-v3.0.2-user，向后兼容裸 user 键） */
+/** 读取当前会话 accessToken（优先 sessionStorage 的 user-session；兼容旧 localStorage user） */
 export async function readAccessToken(page: Page): Promise<string> {
   return page.evaluate(() => {
+    const sessKey =
+      Object.keys(sessionStorage).find((k) => k.endsWith('-user-session')) || 'user-session'
+    try {
+      const fromSess = JSON.parse(sessionStorage.getItem(sessKey) || '{}').accessToken || ''
+      if (fromSess) return fromSess
+    } catch {
+      /* ignore */
+    }
     const key = Object.keys(localStorage).find((k) => k.endsWith('-user')) || 'user'
     try {
       return JSON.parse(localStorage.getItem(key) || '{}').accessToken || ''
