@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 # 起 pc+boot+PG+Redis（CSP enforce、关验证码）→ 清平台 admin 强制改密 → 跑 e2e-csp。
 #
-# CI checkout 的 boot/core 默认跟各自仓库默认分支 tip（集成哨兵，未钉 SHA）；
-# 复现某次失败请在 workflow 里给 checkout 加 ref。
+# CI workflow 钉 boot/core SHA（见 .github/workflows/ci.yml csp-e2e）；
+# 升级依赖时同步改 ref，勿默默跟浮动 main（EPP Instantiator 曾被 tip 打断）。
 #
 # 目录布局（compose.pc.yml 约定）：
 #   <parent>/

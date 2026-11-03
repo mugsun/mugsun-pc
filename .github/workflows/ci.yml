@@ -113,6 +113,8 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           repository: mugsun/mugsun-boot
+          # 钉 tip：浮动 main 曾拉到双 public 构造 EPP 致 Instantiator 炸（#70 中途）
+          ref: 81dbe7fd0c3417548c5e7410ee9aa9f735fb9e41
           path: mugsun-boot
           persist-credentials: false
 
@@ -120,6 +122,7 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           repository: mugsun/mugsun-core
+          ref: 50c5843684c2f297f6aa37193fcc4e0c48ff12c6
           path: mugsun-core
           persist-credentials: false
 
