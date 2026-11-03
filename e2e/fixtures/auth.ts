@@ -107,8 +107,16 @@ export async function login(page: Page, opts: LoginOptions = {}): Promise<void> 
     const resp = await loginRespPromise
     let detail = 'login 无响应/已中断'
     if (resp) {
-      const body = await resp.text().catch(() => '')
-      detail = `login HTTP ${resp.status()} body=${body.slice(0, 240)}`
+      // 成功体含 token，禁止把 body 打进 CI 日志；只留 HTTP 状态与可选业务 code
+      let code = ''
+      try {
+        const j = (await resp.json()) as { code?: unknown; errorCode?: unknown }
+        const c = j.errorCode ?? j.code
+        if (c !== undefined && c !== null && String(c) !== '') code = ` code=${c}`
+      } catch {
+        /* 非 JSON / 已消费 body：忽略 */
+      }
+      detail = `login HTTP ${resp.status()}${code}`
     }
     throw new Error(`登录未离开 /auth/login（${detail}）`, { cause: err })
   }
