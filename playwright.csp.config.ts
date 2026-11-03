@@ -5,9 +5,9 @@ import { defineConfig, devices } from '@playwright/test'
  * 必须对 nginx 镜像跑（不是 vite dev/preview，后者不下发 CSP 头）。
  * CI：`csp-e2e` job（scripts/ci/run-csp-e2e.sh）会起 compose 并上传 test-results/csp/。
  * CI `csp-e2e` 钉 boot/core SHA（见 .github/workflows/ci.yml）：
- *   boot 289eb068dda51a10447deffc134bc8353ddbe8ee
+ *   boot a02dd2823bf49eca36052f0b3b1c2794a98483c2
  *   core 50c5843684c2f297f6aa37193fcc4e0c48ff12c6
- * 避 #70 JetCache tip 炸栈；升钉条件见 AGENTS.md（至少含 boot 289eb068）。
+ * 避 #70 JetCache tip 炸栈；#65 项8/11 需 demo CSP/F7；升钉见 AGENTS.md（至少 a02dd282）。
  * 本地最短路径：
  *   docker build -t mugsun/pc:csp-test .
  *   docker run -d -p 3094:8080 -e MUGSUN_CSP_MODE=enforce -e MUGSUN_API_UPSTREAM=http://host.docker.internal:<后端端口> mugsun/pc:csp-test

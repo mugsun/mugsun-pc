@@ -113,8 +113,8 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           repository: mugsun/mugsun-boot
-          # 含 289eb068（删 prod/demo 空 jetcache map）；#70 中途未含此修时 SIOOB
-          ref: 289eb068dda51a10447deffc134bc8353ddbe8ee
+          # a02dd282：CSP POST /csp-report + demo F7；含 289eb068 空块修
+          ref: a02dd2823bf49eca36052f0b3b1c2794a98483c2
           path: mugsun-boot
           persist-credentials: false
 

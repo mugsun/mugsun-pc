@@ -16,11 +16,13 @@
 
 ### 变更
 
-- CSP 绕过补 e2e（#65）并消化 #63 合后建议
-  - 6 sendBeacon / 7 回放(录制真、播放 fixture) 已覆盖；8 F7 与 11 未验收
-  - csp-e2e 升钉 boot@289eb068（空块修）+ AGENTS/playwright 对齐钉 SHA
+- CSP 绕过补 e2e（#65）收口项8/11，并消化 #63 合后建议
+  - 6 sendBeacon / 7 回放(录制真、播放 fixture) 已覆盖
+  - 11 report-uri：demo 收集端 204、日志去 query、限流 429
+  - 8 WebSocket：prod,demo 下伪造 Origin 非 101（F7）
+  - csp-e2e 开 demo（migrate→boot）+ report-uri；钉 boot@a02dd282
   - 失败 compose-logs 仅 step 日志，不进公仓 artifact
-  - 去掉口令 `|| '123456'`；导出真实 Redis/PG 容器名；AGENTS 澄清 required
+  - 去掉口令回落；导出真实 Redis/PG/boot 容器名
 - CI 接入 CSP 强制模式 e2e（#63）
   - 新增 `csp-e2e` job：compose 起栈（enforce）后跑 e2e-csp
   - 结果 JSON 作 artifact；本地脚本 `scripts/ci/run-csp-e2e.sh`
