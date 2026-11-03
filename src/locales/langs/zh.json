@@ -4464,6 +4464,7 @@
     "copied": "已复制",
     "messages": "消息列表",
     "retry": "重试",
+    "retryNeedRefresh": "找不到可重新生成的回复。请刷新会话后再试",
     "generating": "正在生成",
     "stop": "停止",
     "send": "发送",

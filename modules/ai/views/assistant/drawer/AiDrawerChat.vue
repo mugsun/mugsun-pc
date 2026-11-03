@@ -372,6 +372,7 @@
   import AiDrawerCloseButton from './AiDrawerCloseButton.vue'
   import { SESSION_GROUP_ORDER, sessionGroupOf } from './drawerLayout'
   import {
+    fetchAiChatRegenerate,
     fetchAiChatStop,
     fetchAiChatStream,
     fetchAiKnowledgePage,
@@ -383,6 +384,7 @@
     fetchRemoveAiSession,
     fetchSaveAiSession
   } from '../../../api'
+  import { pickAssistantMessageId, shouldRegenerate } from './chatRegenerate'
 
   defineProps<{ fullscreen?: boolean; canFullscreen?: boolean }>()
   const emit = defineEmits<{ 'toggle-fullscreen': []; close: [] }>()
@@ -665,9 +667,8 @@
 
   /**
    * 重试：只在出错的那条回答上出现，原地替换这一条，界面上不再插入一遍问题。
-   * 后端没有「重新生成」接口：/chat/stream 每次都会先写入用户消息。
-   * 如果上次是流式过程中出错（问题已入库），重试会在后端历史里再写一次问题，
-   * 已在 mugsun-boot 提 issue 请加重新生成接口；校验阶段出错（未入库）不受影响。
+   * 已入库（或能解析到 messageId）时走 boot #71 regenerate，不重复写提问；
+   * 校验阶段就失败（未入库）仍走 stream。
    */
   async function retry(msg: ChatMsg) {
     if (streaming.value || !msg.question) return
@@ -676,9 +677,76 @@
     target.content = ''
     target.thinkContent = ''
     target.refs = undefined
+    target.tokens = undefined
     target.error = undefined
     target.pending = true
+
+    let list: any[] | null = null
+    if (activeId.value && (target.id == null || target.persisted || target.requestId)) {
+      try {
+        list = await fetchAiMessageList(activeId.value)
+      } catch {
+        list = null
+      }
+    }
+    const messageId = pickAssistantMessageId(target, list)
+    if (shouldRegenerate(target, messageId) && activeId.value && messageId != null) {
+      target.id = messageId
+      await regenerate(target, messageId)
+      return
+    }
+    if (target.persisted) {
+      target.pending = false
+      target.error = t('aiChat.genFailed')
+      ElMessage.warning(t('aiDrawer.retryNeedRefresh'))
+      return
+    }
     await stream(target)
+  }
+
+  function bindStreamHandlers(msg: ChatMsg, finish: () => void) {
+    return {
+      onChunk: (c: string) => {
+        msg.content += c
+      },
+      onThink: (c: string) => {
+        msg.thinkContent = (msg.thinkContent || '') + c
+      },
+      onRefs: (refs: any) => {
+        const list = Array.isArray(refs) ? refs : refs?.refs
+        if (Array.isArray(list)) msg.refs = list
+      },
+      onUsage: (u: any) => {
+        msg.tokens = u?.totalTokens ?? u?.tokens
+        msg.modelName =
+          u?.modelName || chatModels.value.find((m) => m.id === modelId.value)?.modelName
+      },
+      onEvent: (_ev: string, data: string) => {
+        msg.persisted = true
+        try {
+          const j = JSON.parse(data)
+          if (j?.requestId) {
+            requestId.value = j.requestId
+            msg.requestId = j.requestId
+          }
+          if (j?.messageId != null) msg.id = j.messageId
+        } catch {
+          /* ignore */
+        }
+      },
+      onDone: (payload?: unknown) => {
+        if (payload && typeof payload === 'object' && payload !== null && 'messageId' in payload) {
+          const mid = (payload as { messageId?: unknown }).messageId
+          if (mid != null) msg.id = mid as string | number
+        }
+        finish()
+      },
+      onError: (m: string) => {
+        finish()
+        // 错误留在这条消息里，带重试；不只弹 toast
+        msg.error = m || t('aiChat.genFailed')
+      }
+    }
   }
 
   async function stream(assistant: ChatMsg) {
@@ -686,6 +754,7 @@
     const msg = messages.value.find((m) => m.uid === assistant.uid) || assistant
     streaming.value = true
     requestId.value = crypto.randomUUID().replace(/-/g, '')
+    msg.requestId = requestId.value
     const finish = () => {
       msg.pending = false
       streaming.value = false
@@ -699,38 +768,30 @@
         content: msg.question,
         requestId: requestId.value
       },
+      bindStreamHandlers(msg, finish)
+    )
+  }
+
+  /** boot #71：sessionId + messageId；不重复写提问；SSE 同 stream */
+  async function regenerate(assistant: ChatMsg, messageId: string | number) {
+    const msg = messages.value.find((m) => m.uid === assistant.uid) || assistant
+    streaming.value = true
+    requestId.value = crypto.randomUUID().replace(/-/g, '')
+    msg.requestId = requestId.value
+    const finish = () => {
+      msg.pending = false
+      streaming.value = false
+      abortCtrl.value = null
+    }
+    abortCtrl.value = await fetchAiChatRegenerate(
       {
-        onChunk: (c) => {
-          msg.content += c
-        },
-        onThink: (c) => {
-          msg.thinkContent = (msg.thinkContent || '') + c
-        },
-        onRefs: (refs: any) => {
-          const list = Array.isArray(refs) ? refs : refs?.refs
-          if (Array.isArray(list)) msg.refs = list
-        },
-        onUsage: (u: any) => {
-          msg.tokens = u?.totalTokens ?? u?.tokens
-          msg.modelName =
-            u?.modelName || chatModels.value.find((m) => m.id === modelId.value)?.modelName
-        },
-        onEvent: (_ev, data) => {
-          msg.persisted = true
-          try {
-            const j = JSON.parse(data)
-            if (j?.requestId) requestId.value = j.requestId
-          } catch {
-            /* ignore */
-          }
-        },
-        onDone: finish,
-        onError: (m) => {
-          finish()
-          // 错误留在这条消息里，带重试；不只弹 toast
-          msg.error = m || t('aiChat.genFailed')
-        }
-      }
+        sessionId: activeId.value,
+        messageId,
+        modelId: modelId.value,
+        knowledgeId: knowledgeId.value || undefined,
+        requestId: requestId.value
+      },
+      bindStreamHandlers(msg, finish)
     )
   }
 

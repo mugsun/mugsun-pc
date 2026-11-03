@@ -4464,6 +4464,7 @@
     "copied": "Copied",
     "messages": "Messages",
     "retry": "Retry",
+    "retryNeedRefresh": "Could not find a reply to regenerate. Refresh the chat and try again.",
     "generating": "Generating",
     "stop": "Stop",
     "send": "Send",
