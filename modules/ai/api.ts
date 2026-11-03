@@ -394,6 +394,10 @@ export function fetchAiMessageList(sessionId: AiId) {
 export function fetchAiChatStream(data: Record<string, any>, handlers: AiSseHandlers) {
   return consumeAiSse('/api/system/ai/chat/stream', data, handlers)
 }
+/** 重新生成：不重复写提问；SSE 同 stream；messageId 须为会话内最后一条助手消息 */
+export function fetchAiChatRegenerate(data: Record<string, any>, handlers: AiSseHandlers) {
+  return consumeAiSse('/api/system/ai/chat/regenerate', data, handlers)
+}
 export function fetchAiChatReceive(requestId: string) {
   return request.post<any>({
     url: '/api/system/ai/chat/receive',
