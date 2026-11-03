@@ -168,7 +168,7 @@ probe=$(curl -sS -o /dev/null -w '%{http_code}' -X POST "$base/api/csp-report" \
 [[ "$probe" == "204" || "$probe" == "429" ]] \
   || die "POST /api/csp-report 期望 204/429（demo 收集端），实际 HTTP $probe"
 
-echo ">> 跑 Playwright CSP e2e（E2E_BASE_URL=$base）"
+echo ">> 跑 Playwright CSP e2e（E2E_BASE_URL=${base}）"
 mkdir -p test-results/csp
 export E2E_BASE_URL="$base"
 export CSP_SHOTS_DIR="${CSP_SHOTS_DIR:-test-results/csp}"
