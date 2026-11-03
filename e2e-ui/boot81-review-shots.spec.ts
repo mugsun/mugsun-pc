@@ -163,9 +163,39 @@ async function mockApis(page: Page, opts: { needChangePassword?: boolean } = {})
   await page.routeWebSocket(/\/api\/ws\//, () => {})
 }
 
+/** 全局关掉 transition 后，MessageBox 可能停在 opacity:0；截图前强制可见 */
+async function revealOverlays(page: Page) {
+  await page.evaluate(() => {
+    document.querySelectorAll('.el-overlay, .el-message-box, .el-dialog').forEach((node) => {
+      const el = node as HTMLElement
+      el.style.setProperty('opacity', '1', 'important')
+      el.style.setProperty('transform', 'none', 'important')
+      el.style.setProperty('visibility', 'visible', 'important')
+    })
+  })
+}
+
 async function shot(page: Page, name: string) {
+  await revealOverlays(page)
   await stamp(page)
   await page.screenshot({ path: path.join(OUT, name), fullPage: false })
+}
+
+async function expectOtpDialogOpen(page: Page, pwd: string) {
+  const otp = page.locator('.el-message-box').filter({ hasText: pwd })
+  await expect(otp).toBeVisible({ timeout: 15_000 })
+  await revealOverlays(page)
+  await expect
+    .poll(async () => otp.evaluate((el) => getComputedStyle(el).opacity), { timeout: 5_000 })
+    .toBe('1')
+  const box = await otp.boundingBox()
+  expect(box, 'otp box missing').toBeTruthy()
+  expect((box?.width || 0) > 200 && (box?.height || 0) > 120).toBeTruthy()
+  await expect(otp.locator('.otp-box__row')).toHaveCount(2)
+  await expect(otp.getByText('账号', { exact: true })).toBeVisible()
+  await expect(otp.getByText('一次性口令', { exact: true })).toBeVisible()
+  await expect(otp.getByRole('button', { name: '复制' })).toHaveCount(2)
+  return otp
 }
 
 /** 视口内可见（非仅 DOM attached） */
@@ -327,21 +357,29 @@ test.describe('boot81 otp / force-change shots', () => {
     await shot(page, 'd-user-reset-otp-copied-zh-light-1440.png')
   })
 
-  test('e-v2 reset OTP dark dialog open 1440', async ({ page }) => {
+  test('e-v3 reset OTP dark dialog open 1440', async ({ page }) => {
     await mockApis(page, { needChangePassword: false })
     await seedSession(page, 'zh', 'dark')
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto('/#/system/user')
     await expect(page.getByText('fronttest')).toBeVisible({ timeout: 30_000 })
+    // 确认暗色已挂上，避免拍成浅色列表
+    await expect
+      .poll(async () => page.evaluate(() => document.documentElement.classList.contains('dark')))
+      .toBeTruthy()
     const row = page.locator('.el-table__row').filter({ hasText: 'fronttest' }).first()
-    await row.getByRole('button', { name: /重置|Reset/ }).click()
-    await page.getByRole('button', { name: /确定|确认|OK|Confirm/ }).click()
-    const otp = page.locator('.el-message-box').filter({ hasText: 'OtP-Mock-Reset-3k' })
-    await expect(otp).toBeVisible({ timeout: 15_000 })
-    await expect(otp.getByText('账号', { exact: true })).toBeVisible()
-    await expect(otp.getByText('一次性口令', { exact: true })).toBeVisible()
-    await expect(otp.getByRole('button', { name: '复制' }).first()).toBeVisible()
-    await expect(otp.locator('.otp-box__row')).toHaveCount(2)
-    await shot(page, 'e-v2-user-reset-otp-zh-dark-1440.png')
+    await row.getByRole('button', { name: /重置口令|重置密码|重置|Reset/ }).click()
+    // 确认框点确定：限定在当前 message-box，避免点到页内其它按钮
+    const resetConfirm = page.locator('.el-message-box').last()
+    await expect(resetConfirm).toBeVisible({ timeout: 10_000 })
+    await resetConfirm.getByRole('button', { name: /确定|确认|OK|Confirm/ }).click()
+    const otp = await expectOtpDialogOpen(page, 'OtP-Mock-Reset-3k')
+    // 再等一帧，确保 overlay 已绘入再截
+    await page.waitForTimeout(200)
+    await expect(otp).toBeVisible()
+    await shot(page, 'e-v3-user-reset-otp-zh-dark-1440.png')
+    // 截完仍须可见，防止截到关闭后的列表
+    await expect(otp).toBeVisible()
+    await expect(otp.getByText('OtP-Mock-Reset-3k')).toBeVisible()
   })
 })
