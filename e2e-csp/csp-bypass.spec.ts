@@ -246,9 +246,10 @@ test('7. 回放 iframe：录制→播放，DOM/进度前进，无 enforce', asyn
   test.setTimeout(180_000)
 
   // 真实录制：证明 enforce 下 SDK 能 POST /track/replay（种子 app replay_enabled=1）
+  // demo 只读：用户/角色列表多为 POST，会被 DemoReadOnlyFilter 403；改走 GET 可浏览页。
   for (const [hash, marker] of [
-    ['/#/system/user', '.el-table'],
-    ['/#/system/role', '.el-table'],
+    ['/#/dashboard/console', '#app'],
+    ['/#/track/overview', '#app'],
     ['/#/dashboard/console', '#app']
   ] as const) {
     await page.goto(hash)
