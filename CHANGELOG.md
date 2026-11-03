@@ -18,7 +18,7 @@
 
 - CSP 绕过补 e2e（#65）并消化 #63 合后建议
   - sendBeacon/回放(录制真、播放 fixture)/WS Origin；report-uri skip
-  - csp-e2e 钉 boot/core SHA，避 tip 中途 EPP 构造器炸栈
+  - csp-e2e 钉 boot@6d736c5 / core@50c5843（避 #70 JetCache tip 炸栈）
   - 去掉口令 `|| '123456'`；导出真实 Redis/PG 容器名；AGENTS 澄清 required
 - CI 接入 CSP 强制模式 e2e（#63）
   - 新增 `csp-e2e` job：compose 起栈（enforce）后跑 e2e-csp
