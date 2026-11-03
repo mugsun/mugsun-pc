@@ -96,3 +96,85 @@ jobs:
           name: ui-check-report
           path: e2e-ui-report/
           retention-days: 7
+
+  # CSP 强制模式 e2e（#63）：构建 pc/boot 镜像，enforce + 关验证码，跑 e2e-csp，上传 result.json
+  csp-e2e:
+    name: csp-e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - name: Checkout mugsun-pc
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          path: mugsun-pc
+          persist-credentials: false
+
+      - name: Checkout mugsun-boot
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: mugsun/mugsun-boot
+          path: mugsun-boot
+          persist-credentials: false
+
+      - name: Checkout mugsun-core
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: mugsun/mugsun-core
+          path: mugsun-core
+          persist-credentials: false
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          package_json_file: mugsun-pc/package.json
+
+      - name: Set up Node.js
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: mugsun-pc/.nvmrc
+          cache: pnpm
+          cache-dependency-path: mugsun-pc/pnpm-lock.yaml
+
+      - name: Install dependencies
+        working-directory: mugsun-pc
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright Chromium
+        working-directory: mugsun-pc
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Install CJK fonts
+        run: sudo apt-get update -q && sudo apt-get install -y -q fonts-noto-cjk
+
+      - name: CSP enforce e2e (compose + playwright)
+        working-directory: mugsun-pc
+        env:
+          # 留给后续 dump / artifact；job 末尾再 down -v
+          KEEP: '1'
+        run: scripts/ci/run-csp-e2e.sh
+
+      - name: Upload CSP e2e artifacts
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: csp-e2e-result
+          path: |
+            mugsun-pc/test-results/csp/
+          if-no-files-found: warn
+          retention-days: 14
+
+      - name: Dump compose logs on failure
+        if: failure()
+        working-directory: mugsun-pc
+        run: |
+          docker compose -p mugsun-csp-e2e \
+            -f docker/compose.pc.yml -f docker/compose.csp-e2e.yml \
+            --env-file docker/.env.csp-e2e logs --tail 200 || true
+
+      - name: Tear down CSP stack
+        if: always()
+        working-directory: mugsun-pc
+        run: |
+          docker compose -p mugsun-csp-e2e \
+            -f docker/compose.pc.yml -f docker/compose.csp-e2e.yml \
+            --env-file docker/.env.csp-e2e down -v --remove-orphans || true

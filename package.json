@@ -20,6 +20,7 @@
     "test:e2e": "playwright test",
     "test:e2e:captcha-on": "playwright test -c playwright.captcha-on.config.ts",
     "test:ui-check": "playwright test -c playwright.ui.config.ts",
+    "test:e2e:csp": "playwright test -c playwright.csp.config.ts",
     "lint": "eslint",
     "fix": "eslint --fix",
     "lint:prettier": "prettier --write \"**/*.{js,cjs,ts,json,tsx,css,less,scss,vue,html,md}\"",

@@ -16,6 +16,9 @@
 
 ### 变更
 
+- CI 接入 CSP 强制模式 e2e（#63）
+  - 新增 `csp-e2e` job：compose 起栈（enforce）后跑 e2e-csp
+  - 结果 JSON 作 artifact；本地脚本 `scripts/ci/run-csp-e2e.sh`
 - 跟版 boot#81：一次性口令展示与首次登录强制改密
   - 建租户 / 建用户（未填密）/ 重置口令 / 导入新建：弹窗展示可复制口令
   - 登录后 `needChangePassword` 时路由只放行个人中心改密页

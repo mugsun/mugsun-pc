@@ -124,7 +124,9 @@ test('2. 响应头：enforce CSP 存在且不含 unsafe-eval / * / https:，Repo
 })
 
 test('登录（真实验证码）', async () => {
-  await login(page)
+  await login(page, {
+    password: process.env.E2E_ADMIN_PASSWORD || '123456'
+  })
   const v = await drain(page)
   result.loginViolations = v
   expect(v.filter((x) => x.disposition === 'enforce')).toEqual([])

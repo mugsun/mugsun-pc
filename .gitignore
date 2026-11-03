@@ -30,3 +30,6 @@ e2e-ui-report/
 
 # 本地 UI 截图产物（不入库）
 artifacts/
+
+# CSP e2e 编排脚本生成的一次性密钥（勿提交）
+docker/.env.csp-e2e

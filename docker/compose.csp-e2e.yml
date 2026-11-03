@@ -1,0 +1,15 @@
+# CSP 强制模式 e2e 叠加层（配合 compose.pc.yml）
+#
+# 用途：CI / 本地 scripts/ci/run-csp-e2e.sh
+#   - pc：MUGSUN_CSP_MODE=enforce（覆盖 compose.pc.yml 默认 report-only）
+#   - boot：关闭全局验证码，满足 e2e/fixtures/auth.ts 前置条件
+#
+# 不单独 up；口令与密钥见 docker/.env.csp-e2e（gitignore，由脚本生成）。
+services:
+  pc:
+    environment:
+      MUGSUN_CSP_MODE: enforce
+  boot:
+    environment:
+      # Spring 绑定 mugsun.captcha.enabled；false 时各场景均不要求验证码
+      MUGSUN_CAPTCHA_ENABLED: ${MUGSUN_CAPTCHA_ENABLED:-false}

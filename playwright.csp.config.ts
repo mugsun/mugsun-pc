@@ -2,7 +2,9 @@ import { defineConfig, devices } from '@playwright/test'
 
 /**
  * CSP 强制模式检查（安全审查 boot58 任务二的 Playwright 部分）。
- * 必须对 nginx 镜像跑（不是 vite dev/preview，后者不下发 CSP 头）：
+ * 必须对 nginx 镜像跑（不是 vite dev/preview，后者不下发 CSP 头）。
+ * CI：`csp-e2e` job（scripts/ci/run-csp-e2e.sh）会起 compose 并上传 result.json。
+ * 本地最短路径：
  *   docker build -t mugsun/pc:csp-test .
  *   docker run -d -p 3094:8080 -e MUGSUN_CSP_MODE=enforce -e MUGSUN_API_UPSTREAM=http://host.docker.internal:<后端端口> mugsun/pc:csp-test
  *   E2E_BASE_URL=http://localhost:3094 pnpm exec playwright test -c playwright.csp.config.ts

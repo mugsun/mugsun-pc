@@ -96,9 +96,9 @@ pnpm run commit             # cz-git 交互式提交
 pnpm run clean:dev
 ```
 
-`playwright.csp.config.ts` 与 `e2e-csp/` 目前没有对应脚本。
+`pnpm run test:e2e:csp`（`playwright.csp.config.ts` / `e2e-csp/`）须对 nginx 镜像跑；CI 的 `csp-e2e` job 用 `scripts/ci/run-csp-e2e.sh` 起 compose（enforce + 关验证码）并上传 `test-results/csp/result.json`。
 
-CI 的必需检查是 `Build` 和 `UI self-check`（`.github/workflows/ci.yml`）。
+CI 的必需检查是 `Build`、`UI self-check` 与 `csp-e2e`（`.github/workflows/ci.yml`）。
 
 埋点 SDK：默认依赖 npm `@mugsun/track-web@0.3.0`，直接 `pnpm install` 即可。联调 SDK 源码时可选 `pnpm link ../mugsun-track` 或 `.npmrc` 里 `@mugsun/track-web=link:../mugsun-track`。
 
