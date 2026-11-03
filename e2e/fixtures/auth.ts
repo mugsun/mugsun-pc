@@ -82,6 +82,13 @@ export async function login(page: Page, opts: LoginOptions = {}): Promise<void> 
     }
   }
 
+  const loginRespPromise = page
+    .waitForResponse(
+      (r) => r.url().includes('/api/auth/login') && r.request().method() === 'POST',
+      { timeout: 20_000 }
+    )
+    .catch(() => null)
+
   await page.getByRole('button', { name: '登录', exact: true }).click()
 
   // 双因子兜底：若弹出二次验证框，dev 环境已自动填充，直接确认
@@ -94,7 +101,17 @@ export async function login(page: Page, opts: LoginOptions = {}): Promise<void> 
   }
 
   // 登录成功跳转离开登录页（hash 路由：判断 hash 段）
-  await expect(page).not.toHaveURL(/#\/auth\/login/, { timeout: 15_000 })
+  try {
+    await expect(page).not.toHaveURL(/#\/auth\/login/, { timeout: 15_000 })
+  } catch (err) {
+    const resp = await loginRespPromise
+    let detail = 'login 无响应/已中断'
+    if (resp) {
+      const body = await resp.text().catch(() => '')
+      detail = `login HTTP ${resp.status()} body=${body.slice(0, 240)}`
+    }
+    throw new Error(`登录未离开 /auth/login（${detail}）`, { cause: err })
+  }
 }
 
 /** 登出（清理会话并整页重载清内存态；保留「记住账号」的用户名记忆） */
