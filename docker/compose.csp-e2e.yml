@@ -4,7 +4,7 @@
 #   - pc：MUGSUN_CSP_MODE=enforce + report-uri=/api/csp-report（#65 项11）
 #   - boot-migrate：owner + prod，--mugsun.demo.migrate-only=true（demo 前须先迁移）
 #   - boot：prod,demo（装配 POST /csp-report 与 WS F7）；关验证码；track-collect=true（项6/7）
-#   - 仍用 owner 账号（mugsun），不建 demo 只读分账号——e2e 只需收集端/F7/限流，不测只读库权限
+#   - 仍用 owner 账号（mugsun），不建 demo 只读/日志分账号——e2e 只需收集端/F7/限流；日志库口令与 JDBC 同源避免空口令堵登录
 #   - 脚本另 SQL 清平台 admin must_change_password（仅本流程）
 #
 # 不单独 up；口令与密钥见 docker/.env.csp-e2e（gitignore，由脚本生成）。
@@ -71,6 +71,10 @@ services:
       MUGSUN_FRONT_URL: ${MUGSUN_FRONT_URL:-http://127.0.0.1:3094}
       FILE_DOMAIN: ${MUGSUN_FRONT_URL:-http://127.0.0.1:3094}/api/
       MUGSUN_DEMO_WS_ALLOWED_ORIGINS: ${MUGSUN_DEMO_WS_ALLOWED_ORIGINS:-http://127.0.0.1:3094}
+      # demo profile 默认日志库账号 mugsun_demo_log + 空口令；本栈用 owner（mugsun）不建分账号。
+      # 空口令会让登录写 sys_login_log 时 Hikari 堵到超时（CI 见 POST /api/auth/login 499），enforce 登录挂死。
+      MUGSUN_DEMO_LOG_DB_USERNAME: mugsun
+      MUGSUN_DEMO_LOG_DB_PASSWORD: ${MUGSUN_DB_PASSWORD:?请设置 MUGSUN_DB_PASSWORD（见文件头）}
     depends_on:
       boot-migrate:
         condition: service_completed_successfully
