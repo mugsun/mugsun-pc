@@ -16,6 +16,7 @@
 
 ### 变更
 
+- CI：csp-e2e demo 日志库改用 owner 口令，修 enforce 登录 499/停登录页
 - CSP 绕过补 e2e（#65）收口项8/11，并消化 #63 合后建议
   - 6 sendBeacon / 7 回放(录制真、播放 fixture) 已覆盖
   - 11 report-uri：demo 收集端 204、日志去 query、限流 429
