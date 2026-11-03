@@ -15,6 +15,7 @@
 #   scripts/ci/run-csp-e2e.sh
 #   KEEP=1 scripts/ci/run-csp-e2e.sh          # 验完不 down
 #   REGEN_SECRETS=1 scripts/ci/run-csp-e2e.sh # 强制重写 .env.csp-e2e
+#   改 front-url / 复用旧 docker/.env.csp-e2e 后建议 REGEN_SECRETS=1（口令与 Origin 对齐）
 #
 # 环境变量：
 #   MUGSUN_PC_PORT   宿主机端口（默认 3094，对齐 playwright.csp.config.ts）

@@ -11,7 +11,7 @@ import { defineConfig, devices } from '@playwright/test'
  * 本地最短路径：
  *   docker build -t mugsun/pc:csp-test .
  *   docker run -d -p 3094:8080 -e MUGSUN_CSP_MODE=enforce -e MUGSUN_API_UPSTREAM=http://host.docker.internal:<后端端口> mugsun/pc:csp-test
- *   E2E_BASE_URL=http://localhost:3094 pnpm exec playwright test -c playwright.csp.config.ts
+ *   E2E_BASE_URL=http://127.0.0.1:3094 pnpm exec playwright test -c playwright.csp.config.ts
  * 截图与结果：CSP_SHOTS_DIR（默认 test-results/csp）。
  */
 export default defineConfig({
@@ -22,7 +22,7 @@ export default defineConfig({
   workers: 1,
   reporter: [['list']],
   use: {
-    baseURL: process.env.E2E_BASE_URL || 'http://localhost:3094',
+    baseURL: process.env.E2E_BASE_URL || 'http://127.0.0.1:3094',
     locale: 'zh-CN',
     actionTimeout: 10_000
   },
