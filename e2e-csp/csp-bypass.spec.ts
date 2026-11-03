@@ -105,6 +105,65 @@ function wsUpgradeStatus(baseURL: string, token: string, originHeader: string): 
   })
 }
 
+/** 最小可播 rrweb 事件（Meta + FullSnapshot + 若干增量），供 CI 播放 fixture */
+function fixtureRrwebEvents(startMs = Date.now() - 5_000): unknown[] {
+  const events: unknown[] = [
+    {
+      type: 4,
+      data: { href: 'http://127.0.0.1/csp-fixture', width: 800, height: 600 },
+      timestamp: startMs
+    },
+    {
+      type: 2,
+      data: {
+        node: {
+          type: 0,
+          childNodes: [
+            {
+              type: 2,
+              tagName: 'html',
+              attributes: {},
+              childNodes: [
+                { type: 2, tagName: 'head', attributes: {}, childNodes: [], id: 3 },
+                {
+                  type: 2,
+                  tagName: 'body',
+                  attributes: {},
+                  childNodes: [
+                    {
+                      type: 2,
+                      tagName: 'div',
+                      attributes: { id: 'app' },
+                      childNodes: [{ type: 3, textContent: 'csp-replay-fixture', id: 5 }],
+                      id: 4
+                    }
+                  ],
+                  id: 2
+                }
+              ],
+              id: 1
+            }
+          ],
+          id: 0
+        },
+        initialOffset: { top: 0, left: 0 }
+      },
+      timestamp: startMs + 50
+    }
+  ]
+  for (let i = 0; i < 30; i++) {
+    events.push({
+      type: 3,
+      data: {
+        source: 1,
+        positions: [{ x: 20 + i * 3, y: 30 + i, id: 4, timeOffset: i * 40 }]
+      },
+      timestamp: startMs + 200 + i * 120
+    })
+  }
+  return events
+}
+
 test.beforeAll(async ({ browser, baseURL }) => {
   fs.mkdirSync(SHOTS, { recursive: true })
   testStart = Date.now()
@@ -185,7 +244,7 @@ test('6. sendBeacon 到 /api/track/collect：2xx 或 403，无 connect-src enfor
 test('7. 回放 iframe：录制→播放，DOM/进度前进，无 enforce', async () => {
   test.setTimeout(180_000)
 
-  // 浏览沉淀录制（种子 app replay_enabled=1 / sample 100）
+  // 真实录制：证明 enforce 下 SDK 能 POST /track/replay（种子 app replay_enabled=1）
   for (const [hash, marker] of [
     ['/#/system/user', '.el-table'],
     ['/#/system/role', '.el-table'],
@@ -196,19 +255,66 @@ test('7. 回放 iframe：录制→播放，DOM/进度前进，无 enforce', asyn
     await page.waitForTimeout(3_000)
   }
 
-  // 切块间隔约 5s + 异步落储；用 compose 内 postgres 反证
   await expect
     .poll(
       () =>
         Number(
           psqlTrack(
             `SELECT count(*) FROM track_replay WHERE app_key = '${SEED_APP_KEY}'` +
-              ` AND start_time >= to_timestamp(${testStart} / 1000.0)`
+              ` AND start_time >= to_timestamp(${testStart} / 1000.0) AND last_seq >= 0`
           )
         ) || 0,
-      { timeout: 60_000, message: 'track_replay 应有本会话行（真实录制路径）' }
+      { timeout: 60_000, message: 'track_replay 应有 last_seq>=0 的本会话行' }
     )
     .toBeGreaterThan(0)
+
+  // 播放：CI compose 下 local-plus 读块会「文件下载失败」（boot 日志已证 seq≥1），
+  // issue 允许 mock 可播记录——对 detail/data 注入最小 fixture，专验播放器 CSP。
+  const startMs = Date.now() - 5_000
+  const fixtureEvents = fixtureRrwebEvents(startMs)
+  await page.route('**/api/system/track/replay/detail**', async (route) => {
+    const u = new URL(route.request().url())
+    const sessionId = u.searchParams.get('sessionId') || 'csp-fixture'
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({
+        code: 200,
+        success: true,
+        data: {
+          replay: {
+            sessionId,
+            appKey: SEED_APP_KEY,
+            lastSeq: 0,
+            startTime: startMs,
+            durationMs: 5_000,
+            rrwebEvents: fixtureEvents.length,
+            hasError: 0,
+            entryPath: '/dashboard/console',
+            distinctId: 'csp-e2e',
+            firstEventTs: startMs,
+            lastEventTs: startMs + 5_000,
+            sizeBytes: 1024
+          },
+          blocks: [{ seq: 0, key: 'fixture/0.gz' }]
+        }
+      })
+    })
+  })
+  await page.route('**/api/system/track/replay/data**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify(fixtureEvents)
+    })
+  })
+  await page.route('**/api/system/track/replay/events**', async (route) => {
+    await route.fulfill({
+      status: 200,
+      contentType: 'application/json',
+      body: JSON.stringify({ code: 200, success: true, data: [] })
+    })
+  })
 
   await page.goto('/#/track/replay')
   await expect(page.locator('.track-replay-page')).toBeVisible({ timeout: 15_000 })
@@ -222,20 +328,18 @@ test('7. 回放 iframe：录制→播放，DOM/进度前进，无 enforce', asyn
   const drawer = page.locator('.el-drawer', { hasText: '会话回放' })
   await expect(drawer).toBeVisible({ timeout: 10_000 })
   await expect(page.locator('.rr-player')).toBeVisible({ timeout: 45_000 })
-  // rrweb-player 内部 iframe
   await expect(page.locator('.replayer-wrapper iframe, .rr-player iframe').first()).toBeAttached({
     timeout: 20_000
   })
 
   const progress = page.locator('.rr-progress__step').first()
   await expect(progress).toBeVisible({ timeout: 10_000 })
-  // 若未自动播，点控制器播放
   const playBtn = page.locator('.rr-controller__btns button').first()
   if (await playBtn.isVisible().catch(() => false)) {
     await playBtn.click().catch(() => undefined)
   }
   const widthBefore = await progress.evaluate(
-    (el) => (el as HTMLElement).style.width || el.clientWidth
+    (el) => (el as HTMLElement).style.width || String(el.clientWidth)
   )
   await expect
     .poll(
@@ -243,7 +347,7 @@ test('7. 回放 iframe：录制→播放，DOM/进度前进，无 enforce', asyn
         progress.evaluate((el) => (el as HTMLElement).style.width || String(el.clientWidth)),
       { timeout: 20_000, message: '回放进度条应前进' }
     )
-    .not.toBe(String(widthBefore))
+    .not.toBe(widthBefore)
 
   const v = await drain(page)
   const enf = v.filter((x) => x.disposition === 'enforce')
@@ -251,9 +355,12 @@ test('7. 回放 iframe：录制→播放，DOM/进度前进，无 enforce', asyn
   bypassResult.replay = {
     enforce: enf,
     progressMoved: true,
-    note: '真实录制路径（非 mock）'
+    note: '录制真实落库；播放块用 fixture（CI local-plus 读块失败）'
   }
   expect(enf, JSON.stringify(enf)).toEqual([])
+  await page.unroute('**/api/system/track/replay/detail**')
+  await page.unroute('**/api/system/track/replay/data**')
+  await page.unroute('**/api/system/track/replay/events**')
 })
 
 test('8. WebSocket 伪造 Origin 应被拒（boot F7）', async () => {
