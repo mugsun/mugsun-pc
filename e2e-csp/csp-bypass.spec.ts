@@ -14,11 +14,12 @@ import { PG_CONTAINER } from '../e2e/helpers/docker'
  * 6 sendBeacon → /api/track/collect（2xx|403，无 connect-src enforce）— 已覆盖
  * 7 回放 iframe：录制真实落库；播放 detail/data 用最小 rrweb fixture（CI local-plus
  *   读块失败）；验 .rr-player / iframe / 进度>0、无 enforce — 已覆盖（播放≠真块）
- * 8 WebSocket 伪造 Origin / boot F7 — **未验收**：prod 栈 allowedOrigin=* 时 skip
- * 11 report-uri /api/csp-report — **未验收**：boot 端未齐，仅 test.skip 骨架
+ * 8 WebSocket 伪造 Origin / boot F7 — demo 栈已开；硬验收（禁 skip）见后续提交
+ * 11 report-uri /api/csp-report — demo 收集端 204、日志脱敏无 query、打满限流 429
  *
  * 做法说明（7）：登录后刷新使 SDK 读到 replayEnabled → 浏览落库（psql）→ 列表点播放；
  * 播放阶段 route mock detail/data（issue 允许 mock 可播记录）。
+ * 栈：compose.csp-e2e 开 demo（owner 账号 + track-collect），先 boot-migrate 再 boot。
  */
 
 interface Violation {
@@ -377,26 +378,64 @@ test('8. WebSocket 伪造 Origin 应被拒（boot F7）', async () => {
   const forged = await wsUpgradeStatus(origin, token, 'https://evil.example')
   bypassResult.wsForgedOrigin = forged
 
-  // prod 栈 allowedOrigin=* 时伪造仍 101：F7 仅 demo；不卡 tip，skip 并注明
+  // 硬验收（不得再 skip）见后续项8提交；本提交先落地 demo 栈
   if (forged === 101) {
-    test.skip(
-      true,
-      'boot 未启用 F7（非 demo / allowedOrigin=*）；伪造 Origin 仍 101。' +
-        '依赖 mugsun.demo.enabled + ws-allowed-origins；CSP e2e 默认 prod 不作破坏性改栈'
-    )
+    test.skip(true, 'boot 未启用 F7（非 demo / allowedOrigin=*）；伪造 Origin 仍 101')
   }
   expect(forged, `伪造 Origin 不得 101，实际 ${forged}`).not.toBe(101)
 })
 
-test('11. report-uri /api/csp-report（骨架，依赖 boot）', async () => {
-  // 检索表明 boot 尚无 /api/csp-report；不要卡 tip
-  test.skip(true, '依赖 boot /api/csp-report 就绪后再补：收集端收报告、无 query、打 1000 次限流')
-  // 以下为就绪后的断言骨架（当前 skip 不会执行）
-  const resp = await page.request.post('/api/csp-report', {
-    data: {
-      'csp-report': { 'blocked-uri': 'https://evil.example', 'effective-directive': 'script-src' }
+test('11. report-uri /api/csp-report：收集、脱敏、限流 429', async () => {
+  test.setTimeout(120_000)
+  const secret = 'CSP-E2E-SECRET-QUERY'
+  const reportJson = JSON.stringify({
+    'csp-report': {
+      'document-uri': `https://demo.example.com/system/user?token=${secret}`,
+      'blocked-uri': `wss://demo.example.com/api/ws/message?token=${secret}`,
+      'effective-directive': 'connect-src'
     }
   })
-  expect(resp.status()).toBeGreaterThanOrEqual(200)
-  expect(resp.status()).toBeLessThan(500)
+
+  const postReport = () =>
+    page.request.post('/api/csp-report', {
+      headers: { 'content-type': 'application/csp-report' },
+      data: reportJson
+    })
+
+  const first = await postReport()
+  bypassResult.cspReportFirstStatus = first.status()
+  expect(first.status(), '收集端应接受报告').toBe(204)
+
+  // demo 下 CSP 报告只进 *-csp-report.log（additivity=false），不进 docker stdout
+  const bootName = process.env.E2E_BOOT_CONTAINER
+  expect(bootName, 'E2E_BOOT_CONTAINER 须由 run-csp-e2e.sh 导出').toBeTruthy()
+  const logFile = '/app/logs/mugsun-boot-csp-report.log'
+  const logs = execSync(
+    'docker exec ' +
+      JSON.stringify(bootName) +
+      ' sh -c ' +
+      JSON.stringify('tail -n 200 ' + logFile),
+    { encoding: 'utf-8', maxBuffer: 2 * 1024 * 1024 }
+  )
+  expect(logs, 'csp-report 日志应有 csp-violation').toMatch(/csp-violation/)
+  expect(logs, '日志不得含报告 URL 的 query secret').not.toContain(secret)
+  // blocked 只留 origin，不应残留带 query 的完整 WS 路径
+  expect(logs, 'blocked 应脱敏为 origin').toMatch(/wss:\/\/demo\.example\.com/)
+  expect(logs).not.toContain('/api/ws/message')
+  bypassResult.cspReportSanitized = true
+
+  // 限流：对标 boot 连发至 429（默认 30/IP/分；可用 MUGSUN_DEMO_CSP_PER_IP_PER_MINUTE 调小）
+  let got429 = false
+  let last = 0
+  const burst = 80
+  for (let i = 0; i < burst; i++) {
+    last = (await postReport()).status()
+    if (last === 429) {
+      got429 = true
+      break
+    }
+    expect([204, 429], `CSP 报告状态异常 ${last}`).toContain(last)
+  }
+  bypassResult.cspReportRateLimit = { got429, last, burst }
+  expect(got429, `连发 ${burst} 次内应出现 429，最后状态 ${last}`).toBe(true)
 })

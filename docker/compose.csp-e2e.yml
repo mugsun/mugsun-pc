@@ -1,8 +1,10 @@
 # CSP 强制模式 e2e 叠加层（配合 compose.pc.yml）——仅 CI / 本地脚本，非生产默认
 #
 # 用途：CI / 本地 scripts/ci/run-csp-e2e.sh
-#   - pc：MUGSUN_CSP_MODE=enforce（覆盖 compose.pc.yml 默认 report-only）
-#   - boot：关闭全局验证码，满足 e2e/fixtures/auth.ts 前置条件
+#   - pc：MUGSUN_CSP_MODE=enforce + report-uri=/api/csp-report（#65 项11）
+#   - boot-migrate：owner + prod，--mugsun.demo.migrate-only=true（demo 前须先迁移）
+#   - boot：prod,demo（装配 POST /csp-report 与 WS F7）；关验证码；track-collect=true（项6/7）
+#   - 仍用 owner 账号（mugsun），不建 demo 只读分账号——e2e 只需收集端/F7/限流，不测只读库权限
 #   - 脚本另 SQL 清平台 admin must_change_password（仅本流程）
 #
 # 不单独 up；口令与密钥见 docker/.env.csp-e2e（gitignore，由脚本生成）。
@@ -10,7 +12,69 @@ services:
   pc:
     environment:
       MUGSUN_CSP_MODE: enforce
+      MUGSUN_CSP_REPORT_URI: /api/csp-report
+
+  # owner 一次性迁移+播种，完成后退出；boot（demo）依赖本服务成功
+  boot-migrate:
+    build:
+      context: ../..
+      dockerfile: mugsun-boot/Dockerfile
+    image: mugsun/boot:local
+    environment:
+      SPRING_PROFILES_ACTIVE: prod
+      JDBC_URL: jdbc:postgresql://postgres:5432/mugsun
+      JDBC_USERNAME: mugsun
+      JDBC_PASSWORD: ${MUGSUN_DB_PASSWORD:?请设置 MUGSUN_DB_PASSWORD（见文件头）}
+      TRACK_JDBC_URL: jdbc:postgresql://postgres:5432/mugsun_track
+      TRACK_JDBC_USERNAME: mugsun
+      TRACK_JDBC_PASSWORD: ${MUGSUN_DB_PASSWORD:?请设置 MUGSUN_DB_PASSWORD（见文件头）}
+      REDIS_HOST: redis
+      REDIS_PASSWORD: ${MUGSUN_REDIS_PASSWORD:?请设置 MUGSUN_REDIS_PASSWORD（见文件头）}
+      MUGSUN_INIT_PASSWORD: ${MUGSUN_INIT_PASSWORD:?请设置 MUGSUN_INIT_PASSWORD（初始管理员口令）}
+      MUGSUN_SM2_PRIVATE_KEY: ${MUGSUN_SM2_PRIVATE_KEY:?请设置 MUGSUN_SM2_PRIVATE_KEY（见 mugsun-boot 部署文档）}
+      MUGSUN_SM2_PUBLIC_KEY: ${MUGSUN_SM2_PUBLIC_KEY:?请设置 MUGSUN_SM2_PUBLIC_KEY（见 mugsun-boot 部署文档）}
+      MUGSUN_SIGN_PRIVATE_KEY: ${MUGSUN_SIGN_PRIVATE_KEY:?请设置 MUGSUN_SIGN_PRIVATE_KEY（见 mugsun-boot 部署文档）}
+      MUGSUN_SIGN_PUBLIC_KEY: ${MUGSUN_SIGN_PUBLIC_KEY:?请设置 MUGSUN_SIGN_PUBLIC_KEY（见 mugsun-boot 部署文档）}
+      MUGSUN_SM4_KEY: ${MUGSUN_SM4_KEY:?请设置 MUGSUN_SM4_KEY（见 mugsun-boot 部署文档）}
+      MUGSUN_API_KEY: ${MUGSUN_API_KEY:?请设置 MUGSUN_API_KEY（见 mugsun-boot 部署文档）}
+      MUGSUN_FRONT_URL: ${MUGSUN_FRONT_URL:-http://127.0.0.1:3094}
+      FILE_DOMAIN: ${MUGSUN_FRONT_URL:-http://127.0.0.1:3094}/api/
+      SMTP_HOST: ${SMTP_HOST:-localhost}
+      SMTP_USERNAME: ${SMTP_USERNAME:-}
+      SMTP_PASSWORD: ${SMTP_PASSWORD:-}
+      SMS_AK: ${SMS_AK:-}
+      SMS_SK: ${SMS_SK:-}
+      SMS_SIGNATURE: ${SMS_SIGNATURE:-}
+      SMS_TEMPLATE_ID: ${SMS_TEMPLATE_ID:-}
+    entrypoint:
+      - sh
+      - -c
+      - exec java $$JAVA_OPTS -jar /app/app.jar --mugsun.demo.migrate-only=true
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: 'no'
+    networks:
+      - mugsun
+
   boot:
     environment:
-      # Spring 绑定 mugsun.captcha.enabled；false 时各场景均不要求验证码
+      # demo：CSP 收集端 + WS Origin 收紧（F7）；项6/7 需打开埋点采集白名单
+      SPRING_PROFILES_ACTIVE: prod,demo
       MUGSUN_CAPTCHA_ENABLED: ${MUGSUN_CAPTCHA_ENABLED:-false}
+      MUGSUN_DEMO_TRACK_COLLECT: 'true'
+      # e2e 对标 boot 1000 次限流测；默认 30，可用环境变量压到更小加快 429
+      MUGSUN_DEMO_CSP_PER_IP_PER_MINUTE: ${MUGSUN_DEMO_CSP_PER_IP_PER_MINUTE:-30}
+      # 与 Playwright E2E_BASE_URL（127.0.0.1）对齐，否则同源 WS 也会被 F7 拒
+      MUGSUN_FRONT_URL: ${MUGSUN_FRONT_URL:-http://127.0.0.1:3094}
+      FILE_DOMAIN: ${MUGSUN_FRONT_URL:-http://127.0.0.1:3094}/api/
+      MUGSUN_DEMO_WS_ALLOWED_ORIGINS: ${MUGSUN_DEMO_WS_ALLOWED_ORIGINS:-http://127.0.0.1:3094}
+    depends_on:
+      boot-migrate:
+        condition: service_completed_successfully
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
