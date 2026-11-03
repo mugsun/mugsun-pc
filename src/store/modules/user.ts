@@ -49,6 +49,7 @@ import { useTopMenuStore } from './topMenu'
 import { StorageConfig } from '@/utils/storage/storage-config'
 import { trackReset } from '@/plugins/track'
 import { clearLockSecret } from '@/utils/lock/lockSecret'
+import { clearTransportKey } from '@/utils/crypto/transportKey'
 
 /**
  * 用户状态管理
@@ -158,6 +159,8 @@ export const useUserStore = defineStore(
       isLock.value = false
       // 清空锁屏校验值（hash 与盐）
       clearLockSecret()
+      // 清空接口传输密钥（只存内存；下次登录重新 bootstrap）
+      clearTransportKey()
       // 清空访问令牌
       accessToken.value = ''
       // 清空刷新令牌

@@ -16,6 +16,9 @@
 
 ### 变更
 
+- 接口传输密钥改为登录后 `/api/crypto/bootstrap` 下发，只存内存
+  - 去掉演示页内置回落密钥；构建期 `VITE_CRYPTO_API_KEY` 可选且须与后端一致
+  - 登出 / 未登录不请求；失败或密钥不一致则禁用加密并提示
 - 默认依赖改为 npm `@mugsun/track-web@0.3.0`，去掉必平级克隆与 `setup:sdk`
   - CI / Dockerfile / compose 不再克隆或构建 mugsun-track
   - 联调 SDK 源码改为可选的 `pnpm link` 或 `.npmrc` link 覆盖

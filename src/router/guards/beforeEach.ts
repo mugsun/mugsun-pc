@@ -47,6 +47,7 @@ import { RoutesAlias } from '../routesAlias'
 import { staticRoutes } from '../routes/staticRoutes'
 import { loadingService } from '@/utils/ui'
 import { connectMessageSocket } from '@/utils/socket'
+import { ensureTransportKey } from '@/utils/crypto/transportKey'
 import { useCommon } from '@/hooks/core/useCommon'
 import { useWorktabStore } from '@/store/modules/worktab'
 import { fetchGetUserInfo } from '@/api/auth'
@@ -395,6 +396,8 @@ async function fetchUserInfo(): Promise<void> {
   useSettingStore().setWatermarkVisible(!!(data as any).watermark)
   // 检查并清理工作台标签页（如果是不同用户登录）
   userStore.checkAndClearWorktabs()
+  // 登录成功 / 刷新恢复登录态后拉取接口传输密钥（只存内存；失败则禁用加密）
+  await ensureTransportKey(true)
 }
 
 /**

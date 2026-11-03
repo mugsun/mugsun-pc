@@ -45,6 +45,8 @@ interface ImportMetaEnv {
   readonly VITE_TRACK_SKIP_HANDLED_ERRORS?: string
   readonly VITE_VERSION?: string
   /** 开发期滑块验证码 mock（仅 dev 生效，默认关闭） */
+  /** 可选构建期接口传输密钥；非空时须与 bootstrap 下发值字节一致，否则禁用加密 */
+  readonly VITE_CRYPTO_API_KEY?: string
   readonly VITE_CAPTCHA_MOCK?: string
   /** 仅 mock：旋转容差（度），缺省 10 */
   readonly VITE_CAPTCHA_MOCK_ROTATE_TOL?: string

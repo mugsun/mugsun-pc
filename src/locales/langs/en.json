@@ -2242,7 +2242,7 @@
       },
       "crypto": {
         "cardTitle": "API SM4 Encryption Demo",
-        "alertText": "Enter text and click \"Encrypt & Send\": the frontend encrypts the request body with SM4 (sm-crypto) before sending; the backend decrypts it, processes it, and returns an encrypted response, which the frontend decrypts and displays. Check the browser network panel to verify that both request and response are ciphertext.",
+        "alertText": "The transport key is fetched after login; build-time VITE_CRYPTO_API_KEY is optional and must match the backend when set. Enter text and click Encrypt & Send for SM4 round-trip. This key is transport obfuscation only and does not replace HTTPS.",
         "inputPlaceholder": "Enter the text to encrypt in transit",
         "sendBtn": "Encrypt & Send",
         "labelPlain": "① Original Plaintext",
@@ -2252,8 +2252,15 @@
         "defaultText": "Hello, Mugsun SM4 encryption!",
         "inputRequired": "Enter text",
         "cryptoFailed": "Encryption/decryption failed",
-        "noEncryptData": "(Response not encrypted or data is empty)"
+        "noEncryptData": "(Response not encrypted or data is empty)",
+        "keyErrorTitle": "Cannot encrypt",
+        "keyRuntimeUnavailable": "No transport key yet (sign in first; or bootstrap failed / build-time key mismatch).",
+        "keyMismatch": "Build-time key does not match the backend. Remove VITE_CRYPTO_API_KEY or set it to the same value as the backend.",
+        "buildKeyInvalid": "Build-time VITE_CRYPTO_API_KEY is invalid (32 hex chars or base64 decoding to 16 bytes). Encryption disabled.",
+        "bootstrapFailed": "Failed to fetch the transport key. Encryption disabled.",
+        "bootstrapKeyInvalid": "Transport key from the backend is invalid. Encryption disabled."
       },
+
       "apiKey": {
         "generateBtn": "Generate Key",
         "colIndex": "No.",

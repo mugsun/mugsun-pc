@@ -2242,7 +2242,7 @@
       },
       "crypto": {
         "cardTitle": "接口国密加解密演示（SM4）",
-        "alertText": "输入文本后点击「加密发送」：前端 sm-crypto 将请求体 SM4 加密为密文发送，后端解密处理后再将响应加密返回，前端解密展示。可在浏览器网络面板核对请求/响应均为密文。",
+        "alertText": "登录后自动获取接口传输密钥；构建期 VITE_CRYPTO_API_KEY 可选，须与后端一致。输入文本后点「加密发送」：前端 SM4 加密请求体，后端解密后再加密返回。密钥只作传输混淆，不能替代 HTTPS。",
         "inputPlaceholder": "请输入要加密传输的文本",
         "sendBtn": "加密发送",
         "labelPlain": "① 原始明文",
@@ -2252,8 +2252,15 @@
         "defaultText": "你好，Mugsun 国密加解密！",
         "inputRequired": "请输入文本",
         "cryptoFailed": "加解密失败",
-        "noEncryptData": "（响应未加密或 data 为空）"
+        "noEncryptData": "（响应未加密或 data 为空）",
+        "keyErrorTitle": "无法加密发送",
+        "keyRuntimeUnavailable": "尚未取得接口传输密钥（请先登录；或 bootstrap 失败 / 构建期密钥不一致）。",
+        "keyMismatch": "前端构建期密钥与后端不一致，请删除 VITE_CRYPTO_API_KEY 或改成与后端相同的值",
+        "buildKeyInvalid": "构建期 VITE_CRYPTO_API_KEY 格式无效（须 32 位 hex 或解码后 16 字节 base64），已禁用加密",
+        "bootstrapFailed": "获取接口传输密钥失败，已禁用加密发送",
+        "bootstrapKeyInvalid": "后端下发的接口传输密钥格式无效，已禁用加密发送"
       },
+
       "apiKey": {
         "generateBtn": "生成密钥",
         "colIndex": "序号",
