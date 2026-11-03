@@ -108,6 +108,25 @@ describe('transportKey', () => {
     expect(elMessageError).toHaveBeenCalled()
   })
 
+  it('logout 竞态：在途 bootstrap resolve 后不写回密钥', async () => {
+    let resolveBoot!: (v: { algorithm: string; keyHex: string; keySource: string }) => void
+    fetchCryptoBootstrap.mockReturnValue(
+      new Promise((resolve) => {
+        resolveBoot = resolve
+      })
+    )
+    const pending = ensureTransportKey(true)
+    clearTransportKey()
+    resolveBoot({
+      algorithm: 'SM4-GCM',
+      keyHex: KEY_HEX,
+      keySource: 'configured'
+    })
+    await expect(pending).resolves.toBe(false)
+    expect(getTransportKeyBytes()).toBeNull()
+    expect(isTransportEncryptionEnabled()).toBe(false)
+  })
+
   it('refreshTransportKeyOnce 只允许一次', async () => {
     fetchCryptoBootstrap.mockResolvedValue({
       algorithm: 'SM4-GCM',

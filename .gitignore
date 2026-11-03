@@ -27,3 +27,6 @@ dev.log
 docker/.env
 
 e2e-ui-report/
+
+# 本地 UI 截图产物（不入库）
+artifacts/

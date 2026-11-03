@@ -397,7 +397,8 @@ async function fetchUserInfo(): Promise<void> {
   // 检查并清理工作台标签页（如果是不同用户登录）
   userStore.checkAndClearWorktabs()
   // 登录成功 / 刷新恢复登录态后拉取接口传输密钥（只存内存；失败则禁用加密）
-  await ensureTransportKey(true)
+  // silent：避免与 crypto 演示页 Alert 双提示；失败由演示页或后续加密请求呈现
+  await ensureTransportKey(true, { silent: true })
 }
 
 /**

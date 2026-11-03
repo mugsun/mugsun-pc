@@ -120,7 +120,7 @@
   const syncKeyState = async () => {
     keyErrorKey.value = ''
     keyReady.value = false
-    const ok = await ensureTransportKey(!!userStore.isLogin)
+    const ok = await ensureTransportKey(!!userStore.isLogin, { silent: true })
     if (!ok || !isTransportEncryptionEnabled()) {
       keyErrorKey.value = 'pages.system.crypto.keyRuntimeUnavailable'
       keyErrorShown.value = true
