@@ -11,13 +11,14 @@ import { PG_CONTAINER } from '../e2e/helpers/docker'
 
 /**
  * #65 CSP 绕过补测（对 nginx enforce 镜像，经 csp-e2e / run-csp-e2e.sh）：
- * 6 sendBeacon → /api/track/collect（2xx|403，无 connect-src enforce）
- * 7 回放 iframe：真实录制→列表播放，.rr-player + iframe DOM、进度前进、无 enforce
- * 8 WebSocket 伪造 Origin 应被拒（boot F7；非 demo 栈 allowedOrigin=* 时 skip）
- * 11 report-uri：boot /api/csp-report 未齐 → skip 骨架
+ * 6 sendBeacon → /api/track/collect（2xx|403，无 connect-src enforce）— 已覆盖
+ * 7 回放 iframe：录制真实落库；播放 detail/data 用最小 rrweb fixture（CI local-plus
+ *   读块失败）；验 .rr-player / iframe / 进度>0、无 enforce — 已覆盖（播放≠真块）
+ * 8 WebSocket 伪造 Origin / boot F7 — **未验收**：prod 栈 allowedOrigin=* 时 skip
+ * 11 report-uri /api/csp-report — **未验收**：boot 端未齐，仅 test.skip 骨架
  *
- * 做法说明（7）：优先真实路径——登录后整页刷新使 SDK 读到 replayEnabled，
- * 浏览数页等切块落库（psql 反证），再打开 /#/track/replay 点播放。
+ * 做法说明（7）：登录后刷新使 SDK 读到 replayEnabled → 浏览落库（psql）→ 列表点播放；
+ * 播放阶段 route mock detail/data（issue 允许 mock 可播记录）。
  */
 
 interface Violation {
@@ -240,41 +241,6 @@ test('6. sendBeacon 到 /api/track/collect：2xx 或 403，无 connect-src enfor
   }
 })
 
-test('8. WebSocket 伪造 Origin 应被拒（boot F7）', async () => {
-  const token = await readAccessToken(page)
-  expect(token, '须已登录拿到 accessToken').toBeTruthy()
-
-  const sameOrigin = await wsUpgradeStatus(origin, token, origin)
-  bypassResult.wsSameOrigin = sameOrigin
-  expect(sameOrigin, '同源（或 front-url）握手应 101').toBe(101)
-
-  const forged = await wsUpgradeStatus(origin, token, 'https://evil.example')
-  bypassResult.wsForgedOrigin = forged
-
-  // prod 栈 allowedOrigin=* 时伪造仍 101：F7 仅 demo；不卡 tip，skip 并注明
-  if (forged === 101) {
-    test.skip(
-      true,
-      'boot 未启用 F7（非 demo / allowedOrigin=*）；伪造 Origin 仍 101。' +
-        '依赖 mugsun.demo.enabled + ws-allowed-origins；CSP e2e 默认 prod 不作破坏性改栈'
-    )
-  }
-  expect(forged, `伪造 Origin 不得 101，实际 ${forged}`).not.toBe(101)
-})
-
-test('11. report-uri /api/csp-report（骨架，依赖 boot）', async () => {
-  // 检索表明 boot 尚无 /api/csp-report；不要卡 tip
-  test.skip(true, '依赖 boot /api/csp-report 就绪后再补：收集端收报告、无 query、打 1000 次限流')
-  // 以下为就绪后的断言骨架（当前 skip 不会执行）
-  const resp = await page.request.post('/api/csp-report', {
-    data: {
-      'csp-report': { 'blocked-uri': 'https://evil.example', 'effective-directive': 'script-src' }
-    }
-  })
-  expect(resp.status()).toBeGreaterThanOrEqual(200)
-  expect(resp.status()).toBeLessThan(500)
-})
-
 test('7. 回放 iframe：录制→播放，DOM/进度前进，无 enforce', async () => {
   test.setTimeout(180_000)
 
@@ -398,4 +364,39 @@ test('7. 回放 iframe：录制→播放，DOM/进度前进，无 enforce', asyn
   await page.unroute('**/api/system/track/replay/detail**')
   await page.unroute('**/api/system/track/replay/data**')
   await page.unroute('**/api/system/track/replay/events**')
+})
+
+test('8. WebSocket 伪造 Origin 应被拒（boot F7）', async () => {
+  const token = await readAccessToken(page)
+  expect(token, '须已登录拿到 accessToken').toBeTruthy()
+
+  const sameOrigin = await wsUpgradeStatus(origin, token, origin)
+  bypassResult.wsSameOrigin = sameOrigin
+  expect(sameOrigin, '同源（或 front-url）握手应 101').toBe(101)
+
+  const forged = await wsUpgradeStatus(origin, token, 'https://evil.example')
+  bypassResult.wsForgedOrigin = forged
+
+  // prod 栈 allowedOrigin=* 时伪造仍 101：F7 仅 demo；不卡 tip，skip 并注明
+  if (forged === 101) {
+    test.skip(
+      true,
+      'boot 未启用 F7（非 demo / allowedOrigin=*）；伪造 Origin 仍 101。' +
+        '依赖 mugsun.demo.enabled + ws-allowed-origins；CSP e2e 默认 prod 不作破坏性改栈'
+    )
+  }
+  expect(forged, `伪造 Origin 不得 101，实际 ${forged}`).not.toBe(101)
+})
+
+test('11. report-uri /api/csp-report（骨架，依赖 boot）', async () => {
+  // 检索表明 boot 尚无 /api/csp-report；不要卡 tip
+  test.skip(true, '依赖 boot /api/csp-report 就绪后再补：收集端收报告、无 query、打 1000 次限流')
+  // 以下为就绪后的断言骨架（当前 skip 不会执行）
+  const resp = await page.request.post('/api/csp-report', {
+    data: {
+      'csp-report': { 'blocked-uri': 'https://evil.example', 'effective-directive': 'script-src' }
+    }
+  })
+  expect(resp.status()).toBeGreaterThanOrEqual(200)
+  expect(resp.status()).toBeLessThan(500)
 })

@@ -17,8 +17,9 @@
 ### 变更
 
 - CSP 绕过补 e2e（#65）并消化 #63 合后建议
-  - sendBeacon/回放(录制真、播放 fixture)/WS Origin；report-uri skip
-  - csp-e2e 钉 boot@6d736c5 / core@50c5843（避 #70 JetCache tip 炸栈）
+  - 6 sendBeacon / 7 回放(录制真、播放 fixture) 已覆盖；8 F7 与 11 未验收
+  - csp-e2e 升钉 boot@289eb068（空块修）+ AGENTS/playwright 对齐钉 SHA
+  - 失败 compose-logs 仅 step 日志，不进公仓 artifact
   - 去掉口令 `|| '123456'`；导出真实 Redis/PG 容器名；AGENTS 澄清 required
 - CI 接入 CSP 强制模式 e2e（#63）
   - 新增 `csp-e2e` job：compose 起栈（enforce）后跑 e2e-csp

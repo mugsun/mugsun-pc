@@ -113,8 +113,8 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           repository: mugsun/mugsun-boot
-          # 钉在 #70 JetCache 系列之前：81dbe7f 在 csp 栈触发 JetCacheCondition SIOOB
-          ref: 6d736c5460d29596f25ea5d650eb26fc07a6810c
+          # 含 289eb068（删 prod/demo 空 jetcache map）；#70 中途未含此修时 SIOOB
+          ref: 289eb068dda51a10447deffc134bc8353ddbe8ee
           path: mugsun-boot
           persist-credentials: false
 
@@ -156,23 +156,25 @@ jobs:
           KEEP: '1'
         run: scripts/ci/run-csp-e2e.sh
 
-      - name: Dump compose logs on failure
+      - name: Dump compose logs on failure (step log only)
         if: failure()
         working-directory: mugsun-pc
         run: |
-          mkdir -p test-results/csp
+          # 不写 test-results/csp/：避免口令/连接串进公仓 artifact；仅进本 step 日志
           docker compose -p mugsun-csp-e2e \
             -f docker/compose.pc.yml -f docker/compose.csp-e2e.yml \
-            --env-file docker/.env.csp-e2e logs --tail 200 \
-            > test-results/csp/compose-logs.txt 2>&1 || true
+            --env-file docker/.env.csp-e2e logs --tail 200 || true
 
       - name: Upload CSP e2e artifacts
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: csp-e2e-result
+          # 不含 compose-logs；仅 result/截图等（勿把 .env 或完整栈日志打进公仓）
           path: |
-            mugsun-pc/test-results/csp/
+            mugsun-pc/test-results/csp/result.json
+            mugsun-pc/test-results/csp/bypass-result.json
+            mugsun-pc/test-results/csp/*.png
           if-no-files-found: warn
           retention-days: 14
 

@@ -2,7 +2,8 @@
 # 起 pc+boot+PG+Redis（CSP enforce、关验证码）→ 清平台 admin 强制改密 → 跑 e2e-csp。
 #
 # CI workflow 钉 boot/core SHA（见 .github/workflows/ci.yml csp-e2e）；
-# 升级依赖时同步改 ref，勿默默跟浮动 main（EPP Instantiator 曾被 tip 打断）。
+# 当前 boot=289eb068dda5…（含 289eb068 空块修）、core=50c5843684c2…
+# 升钉改 ci.yml ref，并同步 AGENTS / playwright.csp.config.ts 注释。
 #
 # 目录布局（compose.pc.yml 约定）：
 #   <parent>/

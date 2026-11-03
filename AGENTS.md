@@ -102,7 +102,7 @@ pnpm run clean:dev
 
 `docker/compose.csp-e2e.yml` 为 **仅 CI/本地脚本** 叠加层：`MUGSUN_CSP_MODE=enforce`、`MUGSUN_CAPTCHA_ENABLED=false`，且脚本会 SQL 清平台 admin 的 `must_change_password`——**不要**把这套当成生产默认。
 
-CI checkout 的 `mugsun-boot` / `mugsun-core` 跟各自默认分支 tip，作集成哨兵（未钉 SHA）；要复现某次失败请在 workflow 给 checkout 加 `ref`。
+CI `csp-e2e` **钉** boot/core 完整 SHA（见 `.github/workflows/ci.yml` 该 job 的 checkout `ref`），当前 boot=`289eb068dda51a10447deffc134bc8353ddbe8ee`、core=`50c5843684c2f297f6aa37193fcc4e0c48ff12c6`。为何钉：浮动 tip 拉到 #70 JetCache 中途（双 public EPP / 空 jetcache map 冲掉 type）会 Instantiator 或 JetCacheCondition SIOOB，compose 就绪超时。升钉：boot 至少含 `289eb068`（空块修，已进 boot main）；再跟 tip 前须本 job 绿。改 `ref` 时同步改本段与 `playwright.csp.config.ts` 注释。
 
 埋点 SDK：默认依赖 npm `@mugsun/track-web@0.3.0`，直接 `pnpm install` 即可。联调 SDK 源码时可选 `pnpm link ../mugsun-track` 或 `.npmrc` 里 `@mugsun/track-web=link:../mugsun-track`。
 
