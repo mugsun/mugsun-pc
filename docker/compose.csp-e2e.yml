@@ -1,8 +1,9 @@
-# CSP 强制模式 e2e 叠加层（配合 compose.pc.yml）
+# CSP 强制模式 e2e 叠加层（配合 compose.pc.yml）——仅 CI / 本地脚本，非生产默认
 #
 # 用途：CI / 本地 scripts/ci/run-csp-e2e.sh
 #   - pc：MUGSUN_CSP_MODE=enforce（覆盖 compose.pc.yml 默认 report-only）
 #   - boot：关闭全局验证码，满足 e2e/fixtures/auth.ts 前置条件
+#   - 脚本另 SQL 清平台 admin must_change_password（仅本流程）
 #
 # 不单独 up；口令与密钥见 docker/.env.csp-e2e（gitignore，由脚本生成）。
 services:

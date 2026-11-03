@@ -96,9 +96,13 @@ pnpm run commit             # cz-git 交互式提交
 pnpm run clean:dev
 ```
 
-`pnpm run test:e2e:csp`（`playwright.csp.config.ts` / `e2e-csp/`）须对 nginx 镜像跑；CI 的 `csp-e2e` job 用 `scripts/ci/run-csp-e2e.sh` 起 compose（enforce + 关验证码）并上传 `test-results/csp/result.json`。
+`pnpm run test:e2e:csp`（`playwright.csp.config.ts` / `e2e-csp/`）须对 nginx 镜像跑；CI 的 `csp-e2e` job 用 `scripts/ci/run-csp-e2e.sh` 起 compose（enforce + 关验证码）并上传 `test-results/csp/`。
 
-CI 的必需检查是 `Build`、`UI self-check` 与 `csp-e2e`（`.github/workflows/ci.yml`）。
+`csp-e2e` **CI 会跑**；合 tip / 推 main 前该 job 须绿。是否 GitHub branch protection 的 required check **以仓库 Settings 为准**（本文件不宣称已勾选）。
+
+`docker/compose.csp-e2e.yml` 为 **仅 CI/本地脚本** 叠加层：`MUGSUN_CSP_MODE=enforce`、`MUGSUN_CAPTCHA_ENABLED=false`，且脚本会 SQL 清平台 admin 的 `must_change_password`——**不要**把这套当成生产默认。
+
+CI checkout 的 `mugsun-boot` / `mugsun-core` 跟各自默认分支 tip，作集成哨兵（未钉 SHA）；要复现某次失败请在 workflow 给 checkout 加 `ref`。
 
 埋点 SDK：默认依赖 npm `@mugsun/track-web@0.3.0`，直接 `pnpm install` 即可。联调 SDK 源码时可选 `pnpm link ../mugsun-track` 或 `.npmrc` 里 `@mugsun/track-web=link:../mugsun-track`。
 

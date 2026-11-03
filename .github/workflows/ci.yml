@@ -153,6 +153,16 @@ jobs:
           KEEP: '1'
         run: scripts/ci/run-csp-e2e.sh
 
+      - name: Dump compose logs on failure
+        if: failure()
+        working-directory: mugsun-pc
+        run: |
+          mkdir -p test-results/csp
+          docker compose -p mugsun-csp-e2e \
+            -f docker/compose.pc.yml -f docker/compose.csp-e2e.yml \
+            --env-file docker/.env.csp-e2e logs --tail 200 \
+            > test-results/csp/compose-logs.txt 2>&1 || true
+
       - name: Upload CSP e2e artifacts
         if: always()
         uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
@@ -162,14 +172,6 @@ jobs:
             mugsun-pc/test-results/csp/
           if-no-files-found: warn
           retention-days: 14
-
-      - name: Dump compose logs on failure
-        if: failure()
-        working-directory: mugsun-pc
-        run: |
-          docker compose -p mugsun-csp-e2e \
-            -f docker/compose.pc.yml -f docker/compose.csp-e2e.yml \
-            --env-file docker/.env.csp-e2e logs --tail 200 || true
 
       - name: Tear down CSP stack
         if: always()

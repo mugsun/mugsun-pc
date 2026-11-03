@@ -16,6 +16,9 @@
 
 ### 变更
 
+- CSP 绕过补 e2e（#65）并消化 #63 合后建议
+  - 新增 sendBeacon / 回放 iframe / WS 伪造 Origin；report-uri 骨架 skip
+  - 去掉口令 `|| '123456'`；导出真实 Redis/PG 容器名；AGENTS 澄清 required
 - CI 接入 CSP 强制模式 e2e（#63）
   - 新增 `csp-e2e` job：compose 起栈（enforce）后跑 e2e-csp
   - 结果 JSON 作 artifact；本地脚本 `scripts/ci/run-csp-e2e.sh`

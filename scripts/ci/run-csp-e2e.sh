@@ -1,6 +1,9 @@
 #!/usr/bin/env bash
 # 起 pc+boot+PG+Redis（CSP enforce、关验证码）→ 清平台 admin 强制改密 → 跑 e2e-csp。
 #
+# CI checkout 的 boot/core 默认跟各自仓库默认分支 tip（集成哨兵，未钉 SHA）；
+# 复现某次失败请在 workflow 里给 checkout 加 ref。
+#
 # 目录布局（compose.pc.yml 约定）：
 #   <parent>/
 #   ├── mugsun-core/
@@ -100,6 +103,16 @@ export E2E_ADMIN_PASSWORD
 echo ">> 起栈（项目 ${COMPOSE_PROJECT_NAME}，端口 ${MUGSUN_PC_PORT}，CSP enforce）"
 "${DC[@]}" down -v --remove-orphans >/dev/null 2>&1 || true
 "${DC[@]}" up -d --build --wait --wait-timeout "$WAIT_TIMEOUT"
+
+# 导出真实容器名（项目名 mugsun-csp-e2e ≠ helpers 默认 mugsun-redis / mugsun-pg）
+E2E_REDIS_CONTAINER="$("${DC[@]}" ps --format '{{.Name}}' redis | head -n1)"
+E2E_PG_CONTAINER="$("${DC[@]}" ps --format '{{.Name}}' postgres | head -n1)"
+[[ -n "$E2E_REDIS_CONTAINER" ]] || die "未能解析 redis 容器名（compose ps redis）"
+[[ -n "$E2E_PG_CONTAINER" ]] || die "未能解析 postgres 容器名（compose ps postgres）"
+export E2E_REDIS_CONTAINER E2E_PG_CONTAINER
+E2E_DB_PASSWORD="$(sed -n 's/^MUGSUN_DB_PASSWORD=//p' "$ENV_FILE")"
+export E2E_DB_PASSWORD
+echo ">> 容器：redis=${E2E_REDIS_CONTAINER} postgres=${E2E_PG_CONTAINER}"
 
 base="http://127.0.0.1:${MUGSUN_PC_PORT}"
 echo ">> 等待后端经 nginx 就绪：$base/api/auth/captcha/config"

@@ -123,10 +123,14 @@ test('2. 响应头：enforce CSP 存在且不含 unsafe-eval / * / https:，Repo
   expect(ro).not.toContain("'unsafe-inline'")
 })
 
-test('登录（真实验证码）', async () => {
-  await login(page, {
-    password: process.env.E2E_ADMIN_PASSWORD || '123456'
-  })
+test('登录（验证码已关闭）', async () => {
+  const password = process.env.E2E_ADMIN_PASSWORD
+  if (!password) {
+    throw new Error(
+      'E2E_ADMIN_PASSWORD 未设置（csp-e2e 须由 run-csp-e2e.sh 导出，禁止回落默认口令）'
+    )
+  }
+  await login(page, { password })
   const v = await drain(page)
   result.loginViolations = v
   expect(v.filter((x) => x.disposition === 'enforce')).toEqual([])
