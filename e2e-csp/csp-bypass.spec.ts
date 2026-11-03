@@ -105,8 +105,8 @@ function wsUpgradeStatus(baseURL: string, token: string, originHeader: string): 
   })
 }
 
-/** 最小可播 rrweb 事件（Meta + FullSnapshot + 若干增量），供 CI 播放 fixture */
-function fixtureRrwebEvents(startMs = Date.now() - 5_000): unknown[] {
+/** 最小可播 rrweb 事件（Meta + FullSnapshot + Scroll），供 CI 播放 fixture */
+function fixtureRrwebEvents(startMs = Date.now() - 10_000): unknown[] {
   const events: unknown[] = [
     {
       type: 4,
@@ -119,12 +119,13 @@ function fixtureRrwebEvents(startMs = Date.now() - 5_000): unknown[] {
         node: {
           type: 0,
           childNodes: [
+            { type: 1, name: 'html', publicId: '', systemId: '', id: 2 },
             {
               type: 2,
               tagName: 'html',
-              attributes: {},
+              attributes: { lang: 'zh-CN' },
               childNodes: [
-                { type: 2, tagName: 'head', attributes: {}, childNodes: [], id: 3 },
+                { type: 2, tagName: 'head', attributes: {}, childNodes: [], id: 4 },
                 {
                   type: 2,
                   tagName: 'body',
@@ -134,31 +135,29 @@ function fixtureRrwebEvents(startMs = Date.now() - 5_000): unknown[] {
                       type: 2,
                       tagName: 'div',
                       attributes: { id: 'app' },
-                      childNodes: [{ type: 3, textContent: 'csp-replay-fixture', id: 5 }],
-                      id: 4
+                      childNodes: [{ type: 3, textContent: 'csp-replay-fixture', id: 7 }],
+                      id: 6
                     }
                   ],
-                  id: 2
+                  id: 5
                 }
               ],
-              id: 1
+              id: 3
             }
           ],
-          id: 0
+          id: 1
         },
         initialOffset: { top: 0, left: 0 }
       },
-      timestamp: startMs + 50
+      timestamp: startMs + 100
     }
   ]
-  for (let i = 0; i < 30; i++) {
+  // Scroll 增量（source=3）拉长时间轴，避免 MouseMove 格式差异导致中途停播
+  for (let i = 1; i <= 40; i++) {
     events.push({
       type: 3,
-      data: {
-        source: 1,
-        positions: [{ x: 20 + i * 3, y: 30 + i, id: 4, timeOffset: i * 40 }]
-      },
-      timestamp: startMs + 200 + i * 120
+      data: { source: 3, id: 5, x: 0, y: i * 20 },
+      timestamp: startMs + 250 + i * 200
     })
   }
   return events
@@ -241,6 +240,41 @@ test('6. sendBeacon 到 /api/track/collect：2xx 或 403，无 connect-src enfor
   }
 })
 
+test('8. WebSocket 伪造 Origin 应被拒（boot F7）', async () => {
+  const token = await readAccessToken(page)
+  expect(token, '须已登录拿到 accessToken').toBeTruthy()
+
+  const sameOrigin = await wsUpgradeStatus(origin, token, origin)
+  bypassResult.wsSameOrigin = sameOrigin
+  expect(sameOrigin, '同源（或 front-url）握手应 101').toBe(101)
+
+  const forged = await wsUpgradeStatus(origin, token, 'https://evil.example')
+  bypassResult.wsForgedOrigin = forged
+
+  // prod 栈 allowedOrigin=* 时伪造仍 101：F7 仅 demo；不卡 tip，skip 并注明
+  if (forged === 101) {
+    test.skip(
+      true,
+      'boot 未启用 F7（非 demo / allowedOrigin=*）；伪造 Origin 仍 101。' +
+        '依赖 mugsun.demo.enabled + ws-allowed-origins；CSP e2e 默认 prod 不作破坏性改栈'
+    )
+  }
+  expect(forged, `伪造 Origin 不得 101，实际 ${forged}`).not.toBe(101)
+})
+
+test('11. report-uri /api/csp-report（骨架，依赖 boot）', async () => {
+  // 检索表明 boot 尚无 /api/csp-report；不要卡 tip
+  test.skip(true, '依赖 boot /api/csp-report 就绪后再补：收集端收报告、无 query、打 1000 次限流')
+  // 以下为就绪后的断言骨架（当前 skip 不会执行）
+  const resp = await page.request.post('/api/csp-report', {
+    data: {
+      'csp-report': { 'blocked-uri': 'https://evil.example', 'effective-directive': 'script-src' }
+    }
+  })
+  expect(resp.status()).toBeGreaterThanOrEqual(200)
+  expect(resp.status()).toBeLessThan(500)
+})
+
 test('7. 回放 iframe：录制→播放，DOM/进度前进，无 enforce', async () => {
   test.setTimeout(180_000)
 
@@ -270,7 +304,7 @@ test('7. 回放 iframe：录制→播放，DOM/进度前进，无 enforce', asyn
 
   // 播放：CI compose 下 local-plus 读块会「文件下载失败」（boot 日志已证 seq≥1），
   // issue 允许 mock 可播记录——对 detail/data 注入最小 fixture，专验播放器 CSP。
-  const startMs = Date.now() - 5_000
+  const startMs = Date.now() - 10_000
   const fixtureEvents = fixtureRrwebEvents(startMs)
   await page.route('**/api/system/track/replay/detail**', async (route) => {
     const u = new URL(route.request().url())
@@ -287,13 +321,13 @@ test('7. 回放 iframe：录制→播放，DOM/进度前进，无 enforce', asyn
             appKey: SEED_APP_KEY,
             lastSeq: 0,
             startTime: startMs,
-            durationMs: 5_000,
+            durationMs: 10_000,
             rrwebEvents: fixtureEvents.length,
             hasError: 0,
             entryPath: '/dashboard/console',
             distinctId: 'csp-e2e',
             firstEventTs: startMs,
-            lastEventTs: startMs + 5_000,
+            lastEventTs: startMs + 10_000,
             sizeBytes: 1024
           },
           blocks: [{ seq: 0, key: 'fixture/0.gz' }]
@@ -334,19 +368,28 @@ test('7. 回放 iframe：录制→播放，DOM/进度前进，无 enforce', asyn
 
   const progress = page.locator('.rr-progress__step').first()
   await expect(progress).toBeVisible({ timeout: 10_000 })
-  const playBtn = page.locator('.rr-controller__btns button').first()
-  if (await playBtn.isVisible().catch(() => false)) {
+  // autoPlay：进度应离开 0%
+  await expect
+    .poll(async () => progress.evaluate((el) => parseFloat((el as HTMLElement).style.width) || 0), {
+      timeout: 15_000,
+      message: 'autoPlay 后进度应 > 0'
+    })
+    .toBeGreaterThan(0)
+  const widthBefore = await progress.evaluate((el) => (el as HTMLElement).style.width || '')
+  // 点击进度条后半段强制 seek，确认可交互前进（不依赖持续 autoPlay）
+  const bar = page.locator('.rr-progress').first()
+  const box = await bar.boundingBox()
+  if (box) {
+    await page.mouse.click(box.x + box.width * 0.72, box.y + box.height / 2)
+  } else {
+    const playBtn = page.locator('.rr-controller__btns button').first()
     await playBtn.click().catch(() => undefined)
   }
-  const widthBefore = await progress.evaluate(
-    (el) => (el as HTMLElement).style.width || String(el.clientWidth)
-  )
   await expect
-    .poll(
-      async () =>
-        progress.evaluate((el) => (el as HTMLElement).style.width || String(el.clientWidth)),
-      { timeout: 20_000, message: '回放进度条应前进' }
-    )
+    .poll(async () => progress.evaluate((el) => (el as HTMLElement).style.width || ''), {
+      timeout: 15_000,
+      message: 'seek/播放后进度条宽度应变'
+    })
     .not.toBe(widthBefore)
 
   const v = await drain(page)
@@ -361,39 +404,4 @@ test('7. 回放 iframe：录制→播放，DOM/进度前进，无 enforce', asyn
   await page.unroute('**/api/system/track/replay/detail**')
   await page.unroute('**/api/system/track/replay/data**')
   await page.unroute('**/api/system/track/replay/events**')
-})
-
-test('8. WebSocket 伪造 Origin 应被拒（boot F7）', async () => {
-  const token = await readAccessToken(page)
-  expect(token, '须已登录拿到 accessToken').toBeTruthy()
-
-  const sameOrigin = await wsUpgradeStatus(origin, token, origin)
-  bypassResult.wsSameOrigin = sameOrigin
-  expect(sameOrigin, '同源（或 front-url）握手应 101').toBe(101)
-
-  const forged = await wsUpgradeStatus(origin, token, 'https://evil.example')
-  bypassResult.wsForgedOrigin = forged
-
-  // prod 栈 allowedOrigin=* 时伪造仍 101：F7 仅 demo；不卡 tip，skip 并注明
-  if (forged === 101) {
-    test.skip(
-      true,
-      'boot 未启用 F7（非 demo / allowedOrigin=*）；伪造 Origin 仍 101。' +
-        '依赖 mugsun.demo.enabled + ws-allowed-origins；CSP e2e 默认 prod 不作破坏性改栈'
-    )
-  }
-  expect(forged, `伪造 Origin 不得 101，实际 ${forged}`).not.toBe(101)
-})
-
-test('11. report-uri /api/csp-report（骨架，依赖 boot）', async () => {
-  // 检索表明 boot 尚无 /api/csp-report；不要卡 tip
-  test.skip(true, '依赖 boot /api/csp-report 就绪后再补：收集端收报告、无 query、打 1000 次限流')
-  // 以下为就绪后的断言骨架（当前 skip 不会执行）
-  const resp = await page.request.post('/api/csp-report', {
-    data: {
-      'csp-report': { 'blocked-uri': 'https://evil.example', 'effective-directive': 'script-src' }
-    }
-  })
-  expect(resp.status()).toBeGreaterThanOrEqual(200)
-  expect(resp.status()).toBeLessThan(500)
 })
