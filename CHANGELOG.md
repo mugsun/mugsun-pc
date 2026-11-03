@@ -20,6 +20,7 @@
   - 6 sendBeacon / 7 回放(录制真、播放 fixture) 已覆盖
   - 11 report-uri：demo 收集端 204、日志去 query、限流 429
   - 8 WebSocket：prod,demo 下伪造 Origin 非 101（F7）
+  - demo 栈下项7录制改走工作台/埋点概览（避免用户/角色 POST 被只读拦）
   - csp-e2e 开 demo（migrate→boot）+ report-uri；钉 boot@a02dd282
   - 失败 compose-logs 仅 step 日志，不进公仓 artifact
   - 去掉口令回落；导出真实 Redis/PG/boot 容器名
