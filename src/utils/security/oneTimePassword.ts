@@ -176,6 +176,7 @@ export function showOneTimeCredentials(options: ShowOneTimeCredentialsOptions): 
         done()
         return
       }
+      // ElMessageBoxOptions 类型不含 zIndex；无遮罩 + 运行时抬 overlay，叠在主 OTP 上同屏可见
       void ElMessageBox.confirm(
         $t('pages.system.otp.closeConfirm'),
         $t('pages.system.otp.closeTitle'),
@@ -186,9 +187,7 @@ export function showOneTimeCredentials(options: ShowOneTimeCredentialsOptions): 
           distinguishCancelAndClose: true,
           closeOnClickModal: false,
           closeOnPressEscape: true,
-          // 无遮罩 + 更高 zIndex：叠在主 OTP 之上，两者同屏可见
           modal: false,
-          zIndex: 10000,
           customClass: 'otp-close-confirm-box',
           confirmButtonClass: '',
           cancelButtonClass: 'el-button--danger'
@@ -203,6 +202,12 @@ export function showOneTimeCredentials(options: ShowOneTimeCredentialsOptions): 
             done()
           }
         })
+      window.setTimeout(() => {
+        document.querySelectorAll('.otp-close-confirm-box').forEach((box) => {
+          const overlay = box.closest('.el-overlay') as HTMLElement | null
+          if (overlay) overlay.style.zIndex = '10000'
+        })
+      }, 0)
     }
   }).then(() => undefined)
 }
