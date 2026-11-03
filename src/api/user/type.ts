@@ -28,11 +28,20 @@ export interface UserImportFailRow {
   reason: string
 }
 
-/** 用户导入结果（成败计数 + 失败明细） */
+/** 用户导入新建成功行（一次性口令仅本次响应） */
+export interface UserImportCreatedRow {
+  rowIndex: number
+  username: string
+  initialPassword: string
+}
+
+/** 用户导入结果（成败计数 + 失败明细 + 新建口令） */
 export interface UserImportResult {
   successCount: number
   failCount: number
   failList: UserImportFailRow[]
+  /** 新建账号的一次性口令；覆盖更新行不在此列 */
+  createdList?: UserImportCreatedRow[]
 }
 
 /** 用户新增/编辑表单 */

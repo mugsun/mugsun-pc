@@ -1,6 +1,15 @@
 <!-- 个人中心：头像/昵称/密码维护 + 联系方式展示 + 第三方账号绑定 -->
 <template>
   <div class="user-center-page art-full-height">
+    <ElAlert
+      v-if="needChangePassword"
+      type="warning"
+      :closable="false"
+      show-icon
+      class="uc-force-pwd-alert"
+      :title="$t('pages.system.userCenter.forceChangeTitle')"
+      :description="$t('pages.system.userCenter.forceChangeDesc')"
+    />
     <ElRow :gutter="16">
       <ElCol :xs="24" :md="10">
         <ElCard>
@@ -140,6 +149,7 @@
   const { t } = useI18n()
 
   const userStore = useUserStore()
+  const needChangePassword = computed(() => !!userStore.getUserInfo?.needChangePassword)
   const info = computed<any>(() => userStore.getUserInfo || {})
 
   // 角色码 → 角色名映射：/auth/info 只返回角色码（admin/R_SUPER…），按角色码下拉翻译为中文名；
@@ -275,7 +285,13 @@
         pwdForm.oldPassword = ''
         pwdForm.newPassword = ''
         pwdForm.confirmPassword = ''
-        // 后端改密即全端下线，前端同步清理并回登录页
+        // 清强制改密标记；后端改密即全端下线，前端同步清理并回登录页
+        if (userStore.getUserInfo?.needChangePassword) {
+          userStore.setUserInfo({
+            ...userStore.getUserInfo,
+            needChangePassword: false
+          } as Api.Auth.UserInfo)
+        }
         setTimeout(() => {
           userStore.logOut()
         }, 800)

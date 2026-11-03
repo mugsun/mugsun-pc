@@ -110,7 +110,10 @@
     "saveSuccess": "Saved successfully",
     "saveFailed": "Save failed",
     "operationSuccess": "Operation successful",
-    "operationFailed": "Operation failed"
+    "operationFailed": "Operation failed",
+    "copy": "Copy",
+    "copied": "Copied",
+    "copyFailed": "Copy failed; please copy manually"
   },
   "search": {
     "placeholder": "Search page",
@@ -1351,8 +1354,12 @@
         "lockSuccess": "Account locked",
         "unlock": "Unlock",
         "unlockSuccess": "Account unlocked",
-        "resetPwdConfirm": "Reset the password of user \"{name}\" to the initial password?",
-        "resetPwdSuccess": "Password has been reset to the initial password",
+        "resetPwdConfirm": "Reset the password of user \"{name}\"? A one-time password will be issued; they must change it on first sign-in.",
+        "resetPwdSuccess": "Password has been reset",
+        "otpTitle": "One-time password (shown once)",
+        "otpTip": "Copy it for the user now. They must change it on first sign-in; it cannot be viewed again after closing.",
+        "initialPassword": "One-time password",
+        "createWithPasswordSuccess": "Created. Give them the account and the password you set",
         "deleteUser": "Delete User",
         "deleteSelected": "Delete selected",
         "deleteConfirm": "Delete user \"{name}\"? They will not be able to sign in.",
@@ -1360,7 +1367,7 @@
         "deleteEmpty": "Select users to delete first",
         "deleteSuccess": "Deleted. They can no longer sign in.",
         "saveSuccess": "Saved. Their department and status are on the list.",
-        "emptyList": "No users yet. Add one and give them the account and initial password.",
+        "emptyList": "No users yet. Add one and give them the account and one-time password.",
         "emptySearch": "No matching users. Change the account, nickname, phone, status, or department.",
         "fields": {
           "username": "Username",
@@ -1398,7 +1405,7 @@
           "email": "Please enter email (for notifications)",
           "phoneForm": "Please enter phone number (displayed masked)",
           "idCard": "Please enter ID number (stored encrypted)",
-          "password": "Leave blank to use the initial password"
+          "password": "Leave blank to issue a one-time password (must change on first sign-in)"
         },
         "setLeader": "Set as Manager",
         "unsetLeader": "Unset Manager",
@@ -1419,7 +1426,10 @@
         },
         "importDialog": {
           "title": "Import Users",
-          "tips": "Fill in the template before uploading. Departments/positions are matched by name. New users get the system initial password.",
+          "tips": "Fill in the template before uploading. Departments/positions are matched by name. New users get a one-time password shown in the result; they must change it on first sign-in.",
+          "createdDetail": "One-time passwords for new accounts",
+          "createdTip": "Passwords are shown once. Copy them for users now; they must change on first sign-in.",
+          "copyAllPasswords": "Copy all passwords",
           "downloadTemplate": "Download Template",
           "overwrite": "Overwrite existing accounts (update nickname/status/email/department/position by username; password and phone number are not updated)",
           "uploadText": "Drag files here, or ",
@@ -2698,6 +2708,8 @@
         "passwordRule": "At least 8 characters with 3 of: uppercase, lowercase, digit, symbol",
         "passwordMismatch": "The two passwords do not match",
         "passwordSaved": "Password changed, please log in again",
+        "forceChangeTitle": "Change your password first",
+        "forceChangeDesc": "You signed in with a one-time password. Change it before using the rest of the system. You will need to sign in again after saving.",
         "bindFailed": "Failed to initiate binding",
         "unbindSuccess": "Unbound"
       },
@@ -3385,7 +3397,11 @@
         "accountTip": "-1 means no limit",
         "submit": "Submit",
         "msgUpdated": "Saved. The list shows this tenant's status and expiration",
-        "msgCreated": "Created. Code {code}. The default department, post, role, and admin are ready to sign in",
+        "msgCreated": "Created. Code {code}. The default department, post, role, and admin are ready",
+        "otpTitle": "Tenant created (password shown once)",
+        "otpTip": "Code {code}. Admin account is admin. Copy the one-time password now; they must change it on first sign-in.",
+        "adminAccount": "Admin account",
+        "initialPassword": "One-time password",
         "confirmDelete": "Delete tenant \"{name}\"? Its departments, posts, roles, and users will be removed. To pause sign-in, edit it and choose Disabled",
         "confirmDeleteSelected": "Delete the {count} selected tenants? Their departments, posts, roles, and users will be removed",
         "deleteTitle": "Delete Tenant",

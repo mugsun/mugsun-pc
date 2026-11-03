@@ -134,8 +134,14 @@ export function fetchSerialNumberRecords(params: Record<string, any>) {
 export function fetchTenantList(params?: Record<string, any>) {
   return request.get<any[]>({ url: '/api/system/tenant/list', params })
 }
+/** 创建租户：返回编号与管理员一次性口令（仅此一次） */
+export interface CreateTenantResult {
+  tenantCode: string
+  initialPassword: string
+}
+
 export function fetchCreateTenant(data: Record<string, any>) {
-  return request.post<string>({ url: '/api/system/tenant/create', data })
+  return request.post<CreateTenantResult>({ url: '/api/system/tenant/create', data })
 }
 export function fetchRemoveTenant(ids: (number | string)[] | number | string) {
   return request.post<void>({

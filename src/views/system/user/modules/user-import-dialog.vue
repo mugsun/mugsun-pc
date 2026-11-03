@@ -3,7 +3,7 @@
   <ElDialog
     v-model="dialogVisible"
     :title="$t('pages.system.user.importDialog.title')"
-    width="620px"
+    width="680px"
     align-center
     @closed="resetState"
   >
@@ -46,6 +46,39 @@
           })
         "
       />
+      <template v-if="(result.createdList || []).length > 0">
+        <div class="fail-header">
+          <span>{{ $t('pages.system.user.importDialog.createdDetail') }}</span>
+          <ElButton link type="primary" @click="copyAllCreatedPasswords">{{
+            $t('pages.system.user.importDialog.copyAllPasswords')
+          }}</ElButton>
+        </div>
+        <ElAlert
+          type="warning"
+          :closable="false"
+          :title="$t('pages.system.user.importDialog.createdTip')"
+          style="margin-bottom: 8px"
+        />
+        <ElTable :data="result.createdList" border size="small" max-height="240">
+          <ElTableColumn
+            prop="rowIndex"
+            :label="$t('pages.system.user.importDialog.rowIndex')"
+            width="80"
+          />
+          <ElTableColumn
+            prop="username"
+            :label="$t('pages.system.user.fields.username')"
+            min-width="120"
+            show-overflow-tooltip
+          />
+          <ElTableColumn
+            prop="initialPassword"
+            :label="$t('pages.system.user.initialPassword')"
+            min-width="160"
+            show-overflow-tooltip
+          />
+        </ElTable>
+      </template>
       <template v-if="result.failList.length > 0">
         <div class="fail-header">
           <span>{{ $t('pages.system.user.importDialog.failDetail') }}</span>
@@ -154,7 +187,7 @@
     importing.value = true
     try {
       const data = await importUser(file.value, updateSupport.value)
-      result.value = data ?? { successCount: 0, failCount: 0, failList: [] }
+      result.value = data ?? { successCount: 0, failCount: 0, failList: [], createdList: [] }
       if (result.value.failCount === 0) {
         ElMessage.success(
           t('pages.system.user.importDialog.importSuccess', { count: result.value.successCount })
@@ -166,6 +199,18 @@
       }
     } finally {
       importing.value = false
+    }
+  }
+
+  const copyAllCreatedPasswords = async (): Promise<void> => {
+    const rows = result.value?.createdList || []
+    if (!rows.length) return
+    const payload = rows.map((r) => `${r.username}\t${r.initialPassword}`).join('\n')
+    try {
+      await navigator.clipboard.writeText(payload)
+      ElMessage.success(t('common.copied'))
+    } catch {
+      ElMessage.error(t('common.copyFailed'))
     }
   }
 

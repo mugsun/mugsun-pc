@@ -56,6 +56,9 @@ import { ApiStatus } from '@/utils/http/status'
 import { isHttpError } from '@/utils/http/error'
 import { RouteRegistry, MenuProcessor, IframeRouteManager, RoutePermissionValidator } from '../core'
 
+/** 强制改密时仅放行个人中心（改密表单所在页） */
+const FORCE_CHANGE_PASSWORD_PATH = '/system/user-center'
+
 // 路由注册器实例
 let routeRegistry: RouteRegistry | null = null
 
@@ -167,6 +170,11 @@ async function handleRouteGuard(
     connectMessageSocket()
   }
 
+  // 1b. 强制改密：动态路由已注册时拦截到个人中心（初始化路径见 handleDynamicRoutes）
+  if (routeRegistry?.isRegistered() && handleForceChangePassword(to, userStore, next)) {
+    return
+  }
+
   // 2. 检查路由初始化是否已失败（防止死循环）
   if (routeInitFailed) {
     // 已经失败过，直接放行到错误页面，不再重试
@@ -214,6 +222,32 @@ async function handleRouteGuard(
 
   // 6. 未匹配到路由，跳转到 404
   next({ name: 'Exception404' })
+}
+
+/**
+ * 是否须强制改密（一次性口令首次登录 / 策略到期）
+ */
+function needsForceChangePassword(userStore: ReturnType<typeof useUserStore>): boolean {
+  return !!userStore.getUserInfo?.needChangePassword
+}
+
+/**
+ * 强制改密拦截：已登录且须改密时，只放行个人中心与静态页（登录/登出回流）
+ * @returns true 表示已 next，调用方应 return；false 表示未拦截可继续
+ */
+function handleForceChangePassword(
+  to: RouteLocationNormalized,
+  userStore: ReturnType<typeof useUserStore>,
+  next: NavigationGuardNext
+): boolean {
+  if (!userStore.isLogin || !needsForceChangePassword(userStore)) {
+    return false
+  }
+  if (to.path === FORCE_CHANGE_PASSWORD_PATH || isStaticRoute(to.path)) {
+    return false
+  }
+  next({ path: FORCE_CHANGE_PASSWORD_PATH, replace: true })
+  return true
 }
 
 /**
@@ -311,8 +345,18 @@ async function handleDynamicRoutes(
     useWorktabStore().validateWorktabs(router)
 
     // 8. 静态路由不依赖菜单权限，初始化后直接恢复目标地址。
+    // 强制改密时静态业务页仍拦到个人中心；登录等鉴权静态页放行。
     if (isStaticRoute(to.path)) {
       routeInitInProgress = false
+      const userStoreForOtp = useUserStore()
+      if (
+        needsForceChangePassword(userStoreForOtp) &&
+        to.path !== RoutesAlias.Login &&
+        !to.path.startsWith('/auth/')
+      ) {
+        next({ path: FORCE_CHANGE_PASSWORD_PATH, replace: true })
+        return
+      }
       next({
         path: to.path,
         query: to.query,
@@ -322,7 +366,18 @@ async function handleDynamicRoutes(
       return
     }
 
-    // 8. 验证目标路径权限
+    // 8. 强制改密优先：一次性口令首次登录只放行个人中心
+    const userStore = useUserStore()
+    if (needsForceChangePassword(userStore)) {
+      routeInitInProgress = false
+      next({
+        path: FORCE_CHANGE_PASSWORD_PATH,
+        replace: true
+      })
+      return
+    }
+
+    // 9. 验证目标路径权限
     const { homePath } = useCommon()
     const { path: validatedPath, hasPermission } = RoutePermissionValidator.validatePath(
       to.path,
@@ -333,7 +388,7 @@ async function handleDynamicRoutes(
     // 初始化成功，重置进行中标记
     routeInitInProgress = false
 
-    // 9. 重新导航到目标路由
+    // 10. 重新导航到目标路由
     if (!hasPermission) {
       // 无权限访问，跳转到首页
       closeLoading()
@@ -393,7 +448,7 @@ async function fetchUserInfo(): Promise<void> {
   // 埋点身份绑定（$identify；事件级 user_id 最终由服务端按 token 裁定）
   trackIdentify(data.userId)
   // 按后端策略开关全局水印（等保：用户名+日期，防截屏泄露溯源）
-  useSettingStore().setWatermarkVisible(!!(data as any).watermark)
+  useSettingStore().setWatermarkVisible(!!data.watermark)
   // 检查并清理工作台标签页（如果是不同用户登录）
   userStore.checkAndClearWorktabs()
   // 登录成功 / 刷新恢复登录态后拉取接口传输密钥（只存内存；失败则禁用加密）

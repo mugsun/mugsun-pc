@@ -110,7 +110,10 @@
     "saveSuccess": "保存成功",
     "saveFailed": "保存失败",
     "operationSuccess": "操作成功",
-    "operationFailed": "操作失败"
+    "operationFailed": "操作失败",
+    "copy": "复制",
+    "copied": "已复制",
+    "copyFailed": "复制失败，请手动复制"
   },
   "search": {
     "placeholder": "搜索页面",
@@ -1351,8 +1354,12 @@
         "lockSuccess": "账号已锁定",
         "unlock": "解锁",
         "unlockSuccess": "账号已解锁",
-        "resetPwdConfirm": "确定重置用户\"{name}\"的密码为初始密码吗？",
-        "resetPwdSuccess": "密码已重置为初始密码",
+        "resetPwdConfirm": "确定重置用户\"{name}\"的口令吗？将生成一次性随机口令，对方首次登录须改密。",
+        "resetPwdSuccess": "口令已重置",
+        "otpTitle": "一次性口令（仅此一次）",
+        "otpTip": "请立刻复制交给对方。对方首次登录须修改口令；关闭后无法再查看。",
+        "initialPassword": "一次性口令",
+        "createWithPasswordSuccess": "已创建。请把账号和刚设置的密码交给对方登录",
         "deleteUser": "删除用户",
         "deleteSelected": "删除所选",
         "deleteConfirm": "确定删除用户「{name}」吗？删除后不能再登录",
@@ -1360,7 +1367,7 @@
         "deleteEmpty": "请先勾选要删除的用户",
         "deleteSuccess": "已删除。他们不能再登录，列表里不会再出现",
         "saveSuccess": "已保存。列表里可以查看这名用户的部门和状态",
-        "emptyList": "还没有用户。点「新增用户」建档，把账号和初始密码交给对方登录",
+        "emptyList": "还没有用户。点「新增用户」建档，把账号和一次性口令交给对方登录",
         "emptySearch": "没有符合条件的用户。请改账号、昵称、手机号、状态或部门后再查",
         "fields": {
           "username": "用户名",
@@ -1398,7 +1405,7 @@
           "email": "请输入邮箱（接收通知）",
           "phoneForm": "请输入手机号（展示脱敏）",
           "idCard": "请输入身份证号（加密存储）",
-          "password": "留空则为初始密码"
+          "password": "留空则生成一次性口令，首次登录须改密"
         },
         "setLeader": "设为主管",
         "unsetLeader": "取消主管",
@@ -1419,7 +1426,10 @@
         },
         "importDialog": {
           "title": "导入用户",
-          "tips": "请按模板填写后上传，部门/岗位按名称匹配，新用户初始密码为系统初始密码。",
+          "tips": "请按模板填写后上传，部门/岗位按名称匹配。新用户会生成一次性口令，请在导入结果中复制交给对方；首次登录须改密。",
+          "createdDetail": "新建账号的一次性口令",
+          "createdTip": "口令仅此一次返回，请立刻复制交给对方；首次登录须改密。",
+          "copyAllPasswords": "复制全部口令",
           "downloadTemplate": "下载模板",
           "overwrite": "覆盖已存在的账号（按用户名更新昵称/状态/邮箱/部门/岗位，不更新密码与手机号）",
           "uploadText": "将文件拖到此处，或",
@@ -2698,6 +2708,8 @@
         "passwordRule": "密码至少 8 位，且含大小写/数字/特殊字符中至少 3 类",
         "passwordMismatch": "两次密码不一致",
         "passwordSaved": "密码已修改，请重新登录",
+        "forceChangeTitle": "请先修改初始口令",
+        "forceChangeDesc": "当前账号使用一次性口令登录，须修改后再使用系统其它功能。改密成功后需重新登录。",
         "bindFailed": "发起绑定失败",
         "unbindSuccess": "已解绑"
       },
@@ -3385,7 +3397,11 @@
         "accountTip": "-1 表示不限制",
         "submit": "提交",
         "msgUpdated": "已保存。列表里可以查看这名租户的状态和到期时间",
-        "msgCreated": "已创建，编号 {code}。默认部门、岗位、角色和管理员已准备好，把编号交给对方即可登录",
+        "msgCreated": "已创建，编号 {code}。默认部门、岗位、角色和管理员已准备好",
+        "otpTitle": "租户已创建（口令仅此一次）",
+        "otpTip": "编号 {code}。管理员账号 admin，一次性口令请立刻复制交给对方；首次登录须改密。",
+        "adminAccount": "管理员账号",
+        "initialPassword": "一次性口令",
         "confirmDelete": "确定删除租户「{name}」吗？该租户的部门、岗位、角色和用户会一起清掉。若只是暂时停用，请改为编辑并选择停用",
         "confirmDeleteSelected": "确定删除所选的 {count} 个租户吗？他们的部门、岗位、角色和用户会一起清掉",
         "deleteTitle": "删除租户",

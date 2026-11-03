@@ -89,6 +89,14 @@ declare namespace Api {
       userName: string
       email: string
       avatar?: string
+      /**
+       * 须改密：一次性口令首次登录或策略到期。
+       * 为 true 时路由只放行个人中心改密，直至 update-password 成功。
+       * 后端 tip 7201b60；openapi 未合入前手改约定。
+       */
+      needChangePassword?: boolean
+      /** 等保水印开关 */
+      watermark?: boolean
       /** 地理信息模块开关（默认开） */
       gisEnabled?: boolean
       /** 埋点模块开关（默认开） */

@@ -11,9 +11,18 @@ export function fetchUserDetail(id: number | string) {
   return request.get<UserVO>({ url: '/api/system/user/detail', params: { id } })
 }
 
+/** 新建且未填密时响应带 initialPassword（一次性口令，仅此一次） */
+export interface SaveUserResult {
+  initialPassword?: string
+}
+
 /** 保存用户（新增/编辑同端点） */
-export function saveUser(data: UserForm) {
-  return request.post<void>({ url: '/api/system/user/submit', data, showSuccessMessage: true })
+export function saveUser(data: UserForm, opts: { showSuccessMessage?: boolean } = {}) {
+  return request.post<SaveUserResult | null>({
+    url: '/api/system/user/submit',
+    data,
+    showSuccessMessage: opts.showSuccessMessage ?? true
+  })
 }
 
 /** 删除用户（批量 id 数组） */
@@ -50,9 +59,16 @@ export function fetchUserLocks() {
   >({ url: '/api/system/user/locks' })
 }
 
-/** 重置密码为默认（批量 id 数组） */
+/** 重置口令结果行（一次性口令仅响应返回） */
+export interface ResetPasswordItem {
+  id: number | string
+  username: string
+  initialPassword: string
+}
+
+/** 重置为一次性随机口令（批量 id 数组；口令仅响应返回一次） */
 export function resetUserPassword(ids: Array<number | string>) {
-  return request.post<void>({ url: '/api/system/user/reset-password', data: ids })
+  return request.post<ResetPasswordItem[]>({ url: '/api/system/user/reset-password', data: ids })
 }
 
 /** 用户已授权角色 id（回显） */

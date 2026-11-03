@@ -51,8 +51,15 @@ test('W15-1 新增租户并落库', async () => {
   expect(resp.status()).toBe(200)
   const body = await resp.json()
   expect(body.code).toBe(200)
-  tenantCode = String(body.data || '')
+  // boot#81：data 为 { tenantCode, initialPassword }；兼容旧 string
+  const raw = body.data
+  tenantCode = String(raw && typeof raw === 'object' ? raw.tenantCode || '' : raw || '')
   expect(tenantCode.length).toBeGreaterThan(0)
+  if (raw && typeof raw === 'object' && raw.initialPassword) {
+    // 一次性口令弹窗：确认后关闭
+    await expect(page.getByText(String(raw.initialPassword))).toBeVisible({ timeout: 10_000 })
+    await page.getByRole('button', { name: /确定|确认|OK|Confirm/ }).click()
+  }
   await expect(dialog).toBeHidden({ timeout: 10_000 })
 
   await expect(root.getByRole('row', { name: new RegExp(tenantName) }).first()).toBeVisible({

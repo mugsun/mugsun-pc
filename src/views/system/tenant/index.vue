@@ -165,6 +165,7 @@
   import TenantCaptchaDialog from './modules/tenant-captcha-dialog.vue'
   import { formatTableDate } from '@/utils/date'
   import { ElMessageBox, ElMessage } from 'element-plus'
+  import { showOneTimeCredentials } from '@/utils/security/oneTimePassword'
 
   defineOptions({ name: 'Tenant' })
 
@@ -301,12 +302,33 @@
       if (form.id) {
         await fetchUpdateTenant(form)
         ElMessage.success(t('pages.system.tenant.msgUpdated'))
+        dialogVisible.value = false
+        loadData()
+        return
+      }
+      const created = await fetchCreateTenant(form)
+      const code = created?.tenantCode || ''
+      const initialPassword = created?.initialPassword || ''
+      // 先关新建弹窗再展示口令，避免遮罩叠层挡住运维复制
+      dialogVisible.value = false
+      dialogSaving.value = false
+      loadData()
+      if (initialPassword) {
+        await showOneTimeCredentials({
+          title: t('pages.system.tenant.otpTitle'),
+          tip: t('pages.system.tenant.otpTip', { code }),
+          items: [
+            { label: t('pages.system.tenant.tenantCode'), value: code },
+            { label: t('pages.system.tenant.adminAccount'), value: 'admin' },
+            {
+              label: t('pages.system.tenant.initialPassword'),
+              value: initialPassword
+            }
+          ]
+        })
       } else {
-        const code = await fetchCreateTenant(form)
         ElMessage.success(t('pages.system.tenant.msgCreated', { code }))
       }
-      dialogVisible.value = false
-      loadData()
     } finally {
       dialogSaving.value = false
     }

@@ -148,6 +148,7 @@
   import UserRoleDialog from './modules/user-role-dialog.vue'
   import UserImportDialog from './modules/user-import-dialog.vue'
   import { ElButton, ElMessageBox, ElMessage } from 'element-plus'
+  import { showOneTimeCredentials } from '@/utils/security/oneTimePassword'
   import { DICT_CODE } from '@/utils/constants'
   import { hasPerm } from '@/utils/permission'
   import { useUserStore } from '@/store/modules/user'
@@ -245,8 +246,20 @@
         type: 'warning'
       }
     ).then(async () => {
-      await resetUserPassword([row.id])
-      ElMessage.success(t('pages.system.user.resetPwdSuccess'))
+      const issued = (await resetUserPassword([row.id])) || []
+      const items = issued.map((item) => ({
+        label: item.username || String(row.username || ''),
+        value: item.initialPassword
+      }))
+      if (items.length && items.every((i) => i.value)) {
+        await showOneTimeCredentials({
+          title: t('pages.system.user.otpTitle'),
+          tip: t('pages.system.user.otpTip'),
+          items
+        })
+      } else {
+        ElMessage.success(t('pages.system.user.resetPwdSuccess'))
+      }
     })
   }
 
@@ -606,9 +619,26 @@
   const handleDialogSubmit = async (form: Record<string, any>): Promise<void> => {
     dialogSaving.value = true
     try {
-      await saveUser(form)
+      const creating = !form.id
+      // 新建可能返回一次性口令：关掉默认 toast，改弹窗展示，避免一闪而过
+      const res = await saveUser(form, { showSuccessMessage: !creating })
       dialogVisible.value = false
+      dialogSaving.value = false
       refreshData()
+      if (creating && res?.initialPassword) {
+        await showOneTimeCredentials({
+          title: t('pages.system.user.otpTitle'),
+          tip: t('pages.system.user.otpTip'),
+          items: [
+            {
+              label: form.username || t('pages.system.user.fields.username'),
+              value: res.initialPassword
+            }
+          ]
+        })
+      } else if (creating) {
+        ElMessage.success(t('pages.system.user.createWithPasswordSuccess'))
+      }
     } finally {
       dialogSaving.value = false
     }
