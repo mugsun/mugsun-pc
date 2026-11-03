@@ -20,8 +20,8 @@ importers:
         specifier: ^5.0.0
         version: 5.0.0(vue@3.5.22(typescript@5.6.3))
       '@mugsun/track-web':
-        specifier: file:../mugsun-track
-        version: file:../mugsun-track(vue@3.5.22(typescript@5.6.3))
+        specifier: 0.3.0
+        version: 0.3.0(vue@3.5.22(typescript@5.6.3))
       '@tailwindcss/vite':
         specifier: ^4.1.14
         version: 4.1.14(vite@7.1.7(@types/node@24.8.1)(jiti@2.6.0)(lightningcss@1.30.1)(sass@1.93.2)(terser@5.44.0)(tsx@4.20.6)(yaml@2.8.1))
@@ -1409,9 +1409,12 @@ packages:
         integrity: sha512-dXn3FZhPv0US+7dtJsIi2R+c7qWYiReoEh5zUntWCf4oSpMNib8FDhSoed6m3QyZdx5hK7iLFkYk3rNxwt8vTA==
       }
 
-  '@mugsun/track-web@file:../mugsun-track':
-    resolution: { directory: ../mugsun-track, type: directory }
-    engines: { node: '>=20' }
+  '@mugsun/track-web@0.3.0':
+    resolution:
+      {
+        integrity: sha512-H3ZIXNGTM1JV4oWHzJYf3CpJWK+o7fWH+zpPYa+kNAVYI7Y2Z+AMtetM8e2eynyw3cX+X5pZccsHxM9sOQZIIQ==
+      }
+    engines: { node: '>=22.13', pnpm: '>=11.11' }
     peerDependencies:
       vue: '>=3.2.0'
     peerDependenciesMeta:
@@ -9144,7 +9147,7 @@ snapshots:
 
   '@keyv/serialize@1.1.1': {}
 
-  '@mugsun/track-web@file:../mugsun-track(vue@3.5.22(typescript@5.6.3))':
+  '@mugsun/track-web@0.3.0(vue@3.5.22(typescript@5.6.3))':
     dependencies:
       rrweb: 2.1.1
     optionalDependencies:

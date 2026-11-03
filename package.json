@@ -11,7 +11,6 @@
   "scripts": {
     "dev": "vite --open",
     "dev:e2e": "vite --port 3007",
-    "setup:sdk": "pnpm --dir ../mugsun-track install && pnpm --dir ../mugsun-track build",
     "build": "vue-tsc --noEmit && vite build",
     "typecheck": "vue-tsc --noEmit",
     "serve": "vite preview",
@@ -67,7 +66,7 @@
     "@form-create/designer": "^3.5.0",
     "@form-create/element-ui": "^3.3.1",
     "@iconify/vue": "^5.0.0",
-    "@mugsun/track-web": "file:../mugsun-track",
+    "@mugsun/track-web": "0.3.0",
     "@tailwindcss/vite": "^4.1.14",
     "@vue-flow/core": "^1.48.1",
     "@vue/reactivity": "^3.5.21",

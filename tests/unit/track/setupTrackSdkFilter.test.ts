@@ -1,6 +1,6 @@
 /**
- * 护栏：用真实 SDK（Vue 适配层 + errorPlugin）跑过滤路径，SDK 需 ≥ mugsun-track#19（5d2dbf3，
- * CI 的 TRACK_REF 即此提交）。三条必须都在：
+ * 护栏：用真实 SDK（Vue 适配层 + errorPlugin）跑过滤路径，SDK 需 ≥ @mugsun/track-web 0.2.0
+ *（含 skipHandledErrors；本仓钉 0.3.0）。三条必须都在：
  * - 取消的请求（isCanceledError）不上报；
  * - 不传参数时，已处理的 HttpError 上报 1 条 $error（SDK 默认 skipHandledErrors=false）；
  * - 显式 skipHandledErrors=true 时不上报。

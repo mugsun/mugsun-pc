@@ -26,25 +26,16 @@
 
 ## 部署
 
-前置条件：Node.js ≥ 22.13、pnpm ≥ 11.11；[mugsun-boot](https://github.com/mugsun/mugsun-boot) 已在 `:8080` 运行。无论是否开启埋点，都须与 [mugsun-track](https://github.com/mugsun/mugsun-track) **平级** clone，否则 `pnpm install` 会因找不到 `../mugsun-track` 而失败（`@mugsun/track-web` 以 `file:../mugsun-track` 引用，源码仓不提交 `dist/`）。
+前置条件：Node.js ≥ 22.13、pnpm ≥ 11.11；[mugsun-boot](https://github.com/mugsun/mugsun-boot) 已在 `:8080` 运行。埋点 SDK 默认走 npm 包 `@mugsun/track-web@0.3.0`，**不必**再平级克隆 [mugsun-track](https://github.com/mugsun/mugsun-track)。
 
 ```bash
-pnpm setup:sdk   # 对 ../mugsun-track 执行 install + build；VITE_ENABLE_TRACK=false 时可跳过构建，但平级目录仍须存在
 pnpm install
 pnpm dev
 ```
 
 开发地址：http://localhost:3006（`VITE_PORT`）。`/api/**` 代理至 `.env.development` 中的 `VITE_API_PROXY_URL`（默认 `http://localhost:8080`）。登录账号与 boot 一致（默认 `admin` / `123456`）。
 
-平级目录约定：
-
-```text
-mugsun/
-  mugsun-core/
-  mugsun-boot/     # :8080
-  mugsun-pc/       # 本仓 :3006
-  mugsun-track/    # file: 依赖（pnpm install 恒需要）
-```
+联调 SDK 源码（可选）：平级克隆 `mugsun-track` 后，用 `pnpm link ../mugsun-track`，或在 `.npmrc` 写 `@mugsun/track-web=link:../mugsun-track`，再 `pnpm install`。
 
 逐步说明见 [文档 · 快速开始](https://docs.mugsun.com/guide/getting-started)。
 
@@ -68,11 +59,11 @@ mugsun-pc/
 
 构建期开关（默认均为开启；设为 `false` 关闭）：
 
-| 变量 | 作用 |
-| --- | --- |
-| `VITE_ENABLE_GIS` | 注册 GIS 路由与相关别名；关闭时可删除 `modules/gis` |
-| `VITE_ENABLE_TRACK` | 注册埋点路由与 SDK 插件；关闭时可跳过 `setup:sdk` 并删除 `modules/track`（平级 `../mugsun-track` 目录仍须存在，供 `pnpm install` 解析） |
-| `VITE_ENABLE_AI` | 注册 AI 路由与插件；关闭时可删除 `modules/ai` |
+| 变量                | 作用                                                  |
+| ------------------- | ----------------------------------------------------- |
+| `VITE_ENABLE_GIS`   | 注册 GIS 路由与相关别名；关闭时可删除 `modules/gis`   |
+| `VITE_ENABLE_TRACK` | 注册埋点路由与 SDK 插件；关闭时可删除 `modules/track` |
+| `VITE_ENABLE_AI`    | 注册 AI 路由与插件；关闭时可删除 `modules/ai`         |
 
 请求链路：视图与 hooks 经 axios 访问 `/api`；开发期由 Vite 代理至 boot。埋点 SDK 经同源 `/api/track/collect` 上报，同样经代理进入 boot 的 track 模块。
 
@@ -85,7 +76,7 @@ UI 基座衍生自 [art-design-pro](https://github.com/Daymychen/art-design-pro)
 - 与 boot 同源的菜单权限与系统管理页面
 - 可选 GIS / 埋点看板 / AI 前端模块及构建期开关
 - 开发期对真实 boot 的反向代理（无独立完整 mock 层）
-- 与 `@mugsun/track-web` 平级联调路径（`pnpm setup:sdk`）
+- 可选：`pnpm link` / workspace 覆盖联调 `@mugsun/track-web` 源码
 
 **暂未提供**
 
@@ -101,7 +92,7 @@ UI 基座衍生自 [art-design-pro](https://github.com/Daymychen/art-design-pro)
 | 仓库 | 与本仓库的关系 |
 | --- | --- |
 | [mugsun-boot](https://github.com/mugsun/mugsun-boot) | 后端 API；CORS / OAuth 回跳默认指向本仓开发端口 `3006` |
-| [mugsun-track](https://github.com/mugsun/mugsun-track) | 浏览器 SDK；本仓以 `file:` 引用，业务项目宜用 npm 包 |
+| [mugsun-track](https://github.com/mugsun/mugsun-track) | 浏览器 SDK；本仓默认依赖 npm `@mugsun/track-web@0.3.0`，源码联调见上方可选步骤 |
 | [mugsun-core](https://github.com/mugsun/mugsun-core) | 后端共享内核；本仓不直接依赖 |
 | [mugsun-docs](https://github.com/mugsun/mugsun-docs) | 文档站 [docs.mugsun.com](https://docs.mugsun.com/) |
 

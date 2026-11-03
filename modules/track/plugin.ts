@@ -1,7 +1,7 @@
 /**
  * 埋点接入模块（mugsun-pc 自监控）
  *
- * SDK 为平台内 file 依赖（../mugsun-track，@mugsun/track-web），Vue 层 install 统一完成：
+ * SDK 依赖 npm `@mugsun/track-web`（默认 0.3.0；源码联调可用 pnpm link），Vue 层 install 统一完成：
  * provide/$track/v-track 指令、errorHandler 链式挂接（保留既有 setupErrorHandle）、
  * router 集成（route_path 取 matched 路由模板防高基数，afterEach 驱动 SPA pageview 配对）。
  *
@@ -91,7 +91,7 @@ function replayBridgePlugin(): TrackPlugin {
  * 主动取消的请求不是错误，经 SDK 的 ignoreErrors 谓词丢弃。
  */
 export function setupTrack(app: App, options: TrackSetupOptions = {}): void {
-  // 错误过滤相关选项（需 SDK ≥ mugsun-track#19）；skipHandledErrors 未传时不带这个键
+  // 错误过滤相关选项（需 @mugsun/track-web ≥ 0.2.0 / track#19）；skipHandledErrors 未传时不带这个键
   const errorOptions: {
     ignoreErrors: (error: unknown, message: string) => boolean
     skipHandledErrors?: boolean

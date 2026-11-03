@@ -1,8 +1,8 @@
 # mugsun 一条命令起全套（pc + boot + PostgreSQL/PostGIS + Redis）
 #
-# 目录布局（与各仓 CI 一致，平级克隆）：
+# 目录布局（pc 镜像已用 npm @mugsun/track-web，无需平级 mugsun-track）：
 #   mugsun/
-#   ├── mugsun-core/  mugsun-boot/  mugsun-track/
+#   ├── mugsun-core/  mugsun-boot/
 #   └── mugsun-pc/    ← 本文件在 mugsun-pc/docker/
 #
 # 用法（在 mugsun-pc 目录）：
@@ -29,8 +29,6 @@ services:
     build:
       context: ..
       dockerfile: Dockerfile
-      additional_contexts:
-        track: ../../mugsun-track
     image: mugsun/pc:local
     environment:
       MUGSUN_API_UPSTREAM: http://boot:8080

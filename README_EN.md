@@ -26,25 +26,16 @@ The console does not maintain a separate permission model: sidebar menus, button
 
 ## Deployment
 
-Prerequisites: Node.js ≥ 22.13, pnpm ≥ 11.11; [mugsun-boot](https://github.com/mugsun/mugsun-boot) running on `:8080`. Whether or not the track module is enabled, clone [mugsun-track](https://github.com/mugsun/mugsun-track) as a **sibling**; otherwise `pnpm install` fails because `../mugsun-track` is missing (`@mugsun/track-web` is referenced as `file:../mugsun-track`; the SDK repository does not commit `dist/`).
+Prerequisites: Node.js ≥ 22.13, pnpm ≥ 11.11; [mugsun-boot](https://github.com/mugsun/mugsun-boot) running on `:8080`. The analytics SDK defaults to the npm package `@mugsun/track-web@0.3.0`; you do **not** need a sibling clone of [mugsun-track](https://github.com/mugsun/mugsun-track).
 
 ```bash
-pnpm setup:sdk   # install + build ../mugsun-track; the build can be skipped when VITE_ENABLE_TRACK=false, but the sibling directory must still exist
 pnpm install
 pnpm dev
 ```
 
 Development URL: http://localhost:3006 (`VITE_PORT`). `/api/**` proxies to `VITE_API_PROXY_URL` in `.env.development` (default `http://localhost:8080`). Login credentials match boot (default `admin` / `123456`).
 
-Sibling layout:
-
-```text
-mugsun/
-  mugsun-core/
-  mugsun-boot/     # :8080
-  mugsun-pc/       # this repository :3006
-  mugsun-track/    # file: dependency (always needed by pnpm install)
-```
+Optional SDK source linking: clone `mugsun-track` as a sibling, then `pnpm link ../mugsun-track`, or set `@mugsun/track-web=link:../mugsun-track` in `.npmrc` and run `pnpm install`.
 
 Walkthrough: [Documentation · Getting started](https://docs.mugsun.com/en/guide/getting-started).
 
@@ -68,11 +59,11 @@ mugsun-pc/
 
 Build-time flags (all enabled by default; set to `false` to disable):
 
-| Variable | Effect |
-| --- | --- |
-| `VITE_ENABLE_GIS` | Registers GIS routes and aliases; `modules/gis` may be removed when off |
-| `VITE_ENABLE_TRACK` | Registers track routes and SDK plugin; skip `setup:sdk` and remove `modules/track` when off (the sibling `../mugsun-track` must still exist for `pnpm install`) |
-| `VITE_ENABLE_AI` | Registers AI routes and plugin; `modules/ai` may be removed when off |
+| Variable            | Effect                                                                  |
+| ------------------- | ----------------------------------------------------------------------- |
+| `VITE_ENABLE_GIS`   | Registers GIS routes and aliases; `modules/gis` may be removed when off |
+| `VITE_ENABLE_TRACK` | Registers track routes and SDK plugin; remove `modules/track` when off  |
+| `VITE_ENABLE_AI`    | Registers AI routes and plugin; `modules/ai` may be removed when off    |
 
 Request path: views and hooks call `/api` via axios; Vite proxies to boot in development. The analytics SDK posts to same-origin `/api/track/collect`, which is likewise proxied into boot’s track module.
 
@@ -85,7 +76,7 @@ The UI base derives from [art-design-pro](https://github.com/Daymychen/art-desig
 - Backend-driven menus and system administration pages aligned with boot
 - Optional GIS / analytics console / AI front-end modules with build-time switches
 - Development reverse proxy to a live boot instance (no full replaceable mock layer)
-- Sibling integration path for `@mugsun/track-web` (`pnpm setup:sdk`)
+- Optional: `pnpm link` / workspace override to develop against `@mugsun/track-web` source
 
 **Not provided**
 
@@ -101,7 +92,7 @@ Open-source line: `boot` · `core` · `pc` · `track` · [mugsun-docs](https://g
 | Repository | Relationship |
 | --- | --- |
 | [mugsun-boot](https://github.com/mugsun/mugsun-boot) | Backend APIs; CORS / OAuth redirect defaults to this console’s development port `3006` |
-| [mugsun-track](https://github.com/mugsun/mugsun-track) | Browser SDK; this repository uses `file:`; application projects should prefer the npm package |
+| [mugsun-track](https://github.com/mugsun/mugsun-track) | Browser SDK; this repo depends on npm `@mugsun/track-web@0.3.0` by default (optional source link above) |
 | [mugsun-core](https://github.com/mugsun/mugsun-core) | Shared backend kernel; not a direct dependency of this repository |
 | [mugsun-docs](https://github.com/mugsun/mugsun-docs) | Documentation site [docs.mugsun.com](https://docs.mugsun.com/) |
 

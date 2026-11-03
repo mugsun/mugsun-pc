@@ -54,7 +54,7 @@ function psqlBiz(sql: string): string {
   }).trim()
 }
 
-// ===== 指纹算法与 SDK 保持一致（mugsun-track core/utils fnv1a + plugins/error firstFrame） =====
+// ===== 指纹算法与 @mugsun/track-web 保持一致（core/utils fnv1a + plugins/error firstFrame） =====
 function fnv1a(str: string): number {
   let h = 0x811c9dc5
   for (let i = 0; i < str.length; i++) {

@@ -100,7 +100,7 @@ pnpm run clean:dev
 
 CI 的必需检查是 `Build` 和 `UI self-check`（`.github/workflows/ci.yml`）。
 
-埋点 SDK：不管开不开埋点，都必须平级 clone `../mugsun-track`，否则 `pnpm install` 会失败。首次先 `pnpm run setup:sdk`，再 `pnpm install`。
+埋点 SDK：默认依赖 npm `@mugsun/track-web@0.3.0`，直接 `pnpm install` 即可。联调 SDK 源码时可选 `pnpm link ../mugsun-track` 或 `.npmrc` 里 `@mugsun/track-web=link:../mugsun-track`。
 
 pre-commit：`.husky/pre-commit` 使用 `pnpm exec lint-staged --no-stash`（**不要**改回会建 stash 的默认行为）。`package.json` 的 `lint:lint-staged` 脚本也已带 `--no-stash`。
 

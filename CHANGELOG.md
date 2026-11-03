@@ -16,6 +16,9 @@
 
 ### 变更
 
+- 默认依赖改为 npm `@mugsun/track-web@0.3.0`，去掉必平级克隆与 `setup:sdk`
+  - CI / Dockerfile / compose 不再克隆或构建 mugsun-track
+  - 联调 SDK 源码改为可选的 `pnpm link` 或 `.npmrc` link 覆盖
 - 锁屏去掉固定混淆值 `VITE_LOCK_ENCRYPT_KEY`，密码只以加盐 hash 存在内存里
   - 每次锁屏用 `crypto.getRandomValues` 生成 16 字节盐，用 `crypto.subtle` 算 SHA-256
   - 算完 hash 即丢弃明文；解锁成功或登出时 hash 与盐一起清掉
