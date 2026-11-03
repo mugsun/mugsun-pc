@@ -14,7 +14,7 @@ import { PG_CONTAINER } from '../e2e/helpers/docker'
  * 6 sendBeacon → /api/track/collect（2xx|403，无 connect-src enforce）— 已覆盖
  * 7 回放 iframe：录制真实落库；播放 detail/data 用最小 rrweb fixture（CI local-plus
  *   读块失败）；验 .rr-player / iframe / 进度>0、无 enforce — 已覆盖（播放≠真块）
- * 8 WebSocket 伪造 Origin / boot F7 — demo 栈已开；硬验收（禁 skip）见后续提交
+ * 8 WebSocket 伪造 Origin / boot F7 — csp-e2e 开 prod,demo，同源 101、伪造非 101
  * 11 report-uri /api/csp-report — demo 收集端 204、日志脱敏无 query、打满限流 429
  *
  * 做法说明（7）：登录后刷新使 SDK 读到 replayEnabled → 浏览落库（psql）→ 列表点播放；
@@ -377,12 +377,9 @@ test('8. WebSocket 伪造 Origin 应被拒（boot F7）', async () => {
 
   const forged = await wsUpgradeStatus(origin, token, 'https://evil.example')
   bypassResult.wsForgedOrigin = forged
-
-  // 硬验收（不得再 skip）见后续项8提交；本提交先落地 demo 栈
-  if (forged === 101) {
-    test.skip(true, 'boot 未启用 F7（非 demo / allowedOrigin=*）；伪造 Origin 仍 101')
-  }
+  // csp-e2e 开 prod,demo：allowedOrigin=front-url，伪造不得升级成功
   expect(forged, `伪造 Origin 不得 101，实际 ${forged}`).not.toBe(101)
+  expect(forged, `伪造 Origin 应被拒（4xx），实际 ${forged}`).toBeGreaterThanOrEqual(400)
 })
 
 test('11. report-uri /api/csp-report：收集、脱敏、限流 429', async () => {
