@@ -1359,6 +1359,7 @@
         "otpTitle": "One-time password (shown once)",
         "otpTip": "Copy it for the user now. They must change it on first sign-in; it cannot be viewed again after closing.",
         "initialPassword": "One-time password",
+        "account": "Account",
         "createWithPasswordSuccess": "Created. Give them the account and the password you set",
         "deleteUser": "Delete User",
         "deleteSelected": "Delete selected",
@@ -2676,6 +2677,12 @@
         "reset": "Reset",
         "searchPlaceholder": "Search by content"
       },
+      "otp": {
+        "closeTitle": "Close confirmation",
+        "closeConfirm": "The password cannot be viewed again after closing. Close anyway?",
+        "keepViewing": "Keep viewing",
+        "stillClose": "Close anyway"
+      },
       "userCenter": {
         "infoTitle": "Profile",
         "avatarAlt": "Avatar",
@@ -2709,7 +2716,7 @@
         "passwordMismatch": "The two passwords do not match",
         "passwordSaved": "Password changed, please log in again",
         "forceChangeTitle": "Change your password first",
-        "forceChangeDesc": "You signed in with a one-time password. Change it before using the rest of the system. You will need to sign in again after saving.",
+        "forceChangeDesc": "You signed in with a one-time password. Change it before using the rest of the system. You must sign in again after changing your password.",
         "bindFailed": "Failed to initiate binding",
         "unbindSuccess": "Unbound"
       },

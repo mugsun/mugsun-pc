@@ -280,7 +280,10 @@
    * 宽屏右对齐设置图标、与顶栏留 10px，不再压住通知/设置；无人理会 8 秒后自动收起并记住。
    */
   const GUIDE_AUTO_HIDE_MS = 8000
-  const guideVisible = computed(() => showSettingGuide.value && width.value > 640)
+  // 强制改密期间不弹顶栏新手引导（避免挡改密）
+  const guideVisible = computed(
+    () => showSettingGuide.value && width.value > 640 && !userStore.getUserInfo?.needChangePassword
+  )
   let guideTimer: ReturnType<typeof setTimeout> | undefined
   watch(
     guideVisible,

@@ -59,6 +59,17 @@ import { RouteRegistry, MenuProcessor, IframeRouteManager, RoutePermissionValida
 /** 强制改密时仅放行个人中心（改密表单所在页） */
 const FORCE_CHANGE_PASSWORD_PATH = '/system/user-center'
 
+/**
+ * 强制改密白名单：与 handleDynamicRoutes 对齐，不因 isStaticRoute 整放。
+ * 仅改密页 + 登录/鉴权回流 + 错误页；iframe / oauth-consent / outside 等一律拦回。
+ */
+function isForceChangeAllowedPath(path: string): boolean {
+  if (path === FORCE_CHANGE_PASSWORD_PATH) return true
+  if (path === RoutesAlias.Login || path.startsWith('/auth/')) return true
+  if (path === '/403' || path === '/500') return true
+  return false
+}
+
 // 路由注册器实例
 let routeRegistry: RouteRegistry | null = null
 
@@ -232,7 +243,7 @@ function needsForceChangePassword(userStore: ReturnType<typeof useUserStore>): b
 }
 
 /**
- * 强制改密拦截：已登录且须改密时，只放行个人中心与静态页（登录/登出回流）
+ * 强制改密拦截：已登录且须改密时，只放行白名单（个人中心 / auth / 错误页）
  * @returns true 表示已 next，调用方应 return；false 表示未拦截可继续
  */
 function handleForceChangePassword(
@@ -243,7 +254,7 @@ function handleForceChangePassword(
   if (!userStore.isLogin || !needsForceChangePassword(userStore)) {
     return false
   }
-  if (to.path === FORCE_CHANGE_PASSWORD_PATH || isStaticRoute(to.path)) {
+  if (isForceChangeAllowedPath(to.path)) {
     return false
   }
   next({ path: FORCE_CHANGE_PASSWORD_PATH, replace: true })
@@ -345,15 +356,11 @@ async function handleDynamicRoutes(
     useWorktabStore().validateWorktabs(router)
 
     // 8. 静态路由不依赖菜单权限，初始化后直接恢复目标地址。
-    // 强制改密时静态业务页仍拦到个人中心；登录等鉴权静态页放行。
+    // 强制改密：不因 isStaticRoute 整放，仅白名单（与 handleForceChangePassword 对齐）
     if (isStaticRoute(to.path)) {
       routeInitInProgress = false
       const userStoreForOtp = useUserStore()
-      if (
-        needsForceChangePassword(userStoreForOtp) &&
-        to.path !== RoutesAlias.Login &&
-        !to.path.startsWith('/auth/')
-      ) {
+      if (needsForceChangePassword(userStoreForOtp) && !isForceChangeAllowedPath(to.path)) {
         next({ path: FORCE_CHANGE_PASSWORD_PATH, replace: true })
         return
       }

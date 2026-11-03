@@ -247,10 +247,13 @@
       }
     ).then(async () => {
       const issued = (await resetUserPassword([row.id])) || []
-      const items = issued.map((item) => ({
-        label: item.username || String(row.username || ''),
-        value: item.initialPassword
-      }))
+      const items = issued.flatMap((item) => {
+        const account = item.username || String(row.username || '')
+        return [
+          { label: t('pages.system.user.account'), value: account },
+          { label: t('pages.system.user.initialPassword'), value: item.initialPassword }
+        ]
+      })
       if (items.length && items.every((i) => i.value)) {
         await showOneTimeCredentials({
           title: t('pages.system.user.otpTitle'),
@@ -631,7 +634,11 @@
           tip: t('pages.system.user.otpTip'),
           items: [
             {
-              label: form.username || t('pages.system.user.fields.username'),
+              label: t('pages.system.user.account'),
+              value: form.username || ''
+            },
+            {
+              label: t('pages.system.user.initialPassword'),
               value: res.initialPassword
             }
           ]

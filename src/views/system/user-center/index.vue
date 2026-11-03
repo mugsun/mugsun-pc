@@ -10,8 +10,8 @@
       :title="$t('pages.system.userCenter.forceChangeTitle')"
       :description="$t('pages.system.userCenter.forceChangeDesc')"
     />
-    <ElRow :gutter="16">
-      <ElCol :xs="24" :md="10">
+    <ElRow :gutter="16" class="uc-row" :class="{ 'is-force-pwd': needChangePassword }">
+      <ElCol :xs="24" :md="10" class="uc-col-info">
         <ElCard>
           <template #header>{{ $t('pages.system.userCenter.infoTitle') }}</template>
           <div class="uc-avatar-row">
@@ -24,16 +24,28 @@
             <div v-else class="uc-avatar uc-avatar-fallback">
               {{ (info.nickName || info.userName || '?').slice(0, 1) }}
             </div>
-            <ElUpload
-              :auto-upload="false"
-              :show-file-list="false"
-              accept=".png,.jpg,.jpeg,.gif,.webp,image/png,image/jpeg,image/gif,image/webp"
-              :on-change="handleAvatarChange"
+            <ElTooltip
+              :disabled="!needChangePassword"
+              :content="$t('pages.system.userCenter.forceChangeTitle')"
+              placement="top"
             >
-              <ElButton size="small" :loading="avatarUploading">{{
-                $t('pages.system.userCenter.changeAvatar')
-              }}</ElButton>
-            </ElUpload>
+              <span class="uc-inline-block">
+                <ElUpload
+                  :auto-upload="false"
+                  :show-file-list="false"
+                  :disabled="needChangePassword"
+                  accept=".png,.jpg,.jpeg,.gif,.webp,image/png,image/jpeg,image/gif,image/webp"
+                  :on-change="handleAvatarChange"
+                >
+                  <ElButton
+                    size="small"
+                    :loading="avatarUploading"
+                    :disabled="needChangePassword"
+                    >{{ $t('pages.system.userCenter.changeAvatar') }}</ElButton
+                  >
+                </ElUpload>
+              </span>
+            </ElTooltip>
           </div>
           <ElDescriptions :column="1" border>
             <ElDescriptionsItem :label="$t('pages.system.userCenter.labelUsername')">{{
@@ -55,30 +67,13 @@
         </ElCard>
       </ElCol>
 
-      <ElCol :xs="24" :md="14">
-        <ElCard class="uc-form-card">
-          <template #header>{{ $t('pages.system.userCenter.editNicknameTitle') }}</template>
-          <ElForm ref="infoRef" :model="infoForm" :rules="infoRules" label-width="90px">
-            <ElFormItem :label="$t('pages.system.userCenter.labelNickname')" prop="nickname">
-              <ElInput
-                v-model="infoForm.nickname"
-                :placeholder="$t('pages.system.userCenter.nicknamePlaceholder')"
-                style="max-width: 320px"
-              />
-            </ElFormItem>
-            <ElFormItem>
-              <ElButton type="primary" :loading="infoSaving" @click="saveInfo">{{
-                $t('pages.system.userCenter.save')
-              }}</ElButton>
-            </ElFormItem>
-          </ElForm>
-        </ElCard>
-
-        <ElCard class="uc-form-card">
+      <ElCol :xs="24" :md="14" class="uc-col-forms">
+        <ElCard class="uc-form-card uc-pwd-card" ref="pwdCardRef">
           <template #header>{{ $t('pages.system.userCenter.editPasswordTitle') }}</template>
           <ElForm ref="pwdRef" :model="pwdForm" :rules="pwdRules" label-width="90px">
             <ElFormItem :label="$t('pages.system.userCenter.oldPassword')" prop="oldPassword">
               <ElInput
+                ref="oldPwdInputRef"
                 v-model="pwdForm.oldPassword"
                 type="password"
                 show-password
@@ -112,8 +107,44 @@
           </ElForm>
         </ElCard>
 
+        <ElCard class="uc-form-card uc-nickname-card">
+          <template #header>{{ $t('pages.system.userCenter.editNicknameTitle') }}</template>
+          <ElForm
+            ref="infoRef"
+            :model="infoForm"
+            :rules="infoRules"
+            label-width="90px"
+            :disabled="needChangePassword"
+          >
+            <ElFormItem :label="$t('pages.system.userCenter.labelNickname')" prop="nickname">
+              <ElInput
+                v-model="infoForm.nickname"
+                :placeholder="$t('pages.system.userCenter.nicknamePlaceholder')"
+                style="max-width: 320px"
+              />
+            </ElFormItem>
+            <ElFormItem>
+              <ElTooltip
+                :disabled="!needChangePassword"
+                :content="$t('pages.system.userCenter.forceChangeTitle')"
+                placement="top"
+              >
+                <span class="uc-inline-block">
+                  <ElButton
+                    type="primary"
+                    :loading="infoSaving"
+                    :disabled="needChangePassword"
+                    @click="saveInfo"
+                    >{{ $t('pages.system.userCenter.save') }}</ElButton
+                  >
+                </span>
+              </ElTooltip>
+            </ElFormItem>
+          </ElForm>
+        </ElCard>
+
         <!-- 第三方账号：mock 来源仅 dev 且后端允许时可见（门控与登录页对齐，生产绝不出现） -->
-        <ElCard class="uc-form-card" v-if="showMockBind">
+        <ElCard class="uc-form-card" v-if="showMockBind && !needChangePassword">
           <template #header>{{ $t('pages.system.userCenter.socialTitle') }}</template>
           <div class="uc-social">
             <span>{{ $t('pages.system.userCenter.mockSocial') }}</span>
@@ -134,9 +165,10 @@
 
 <script setup lang="ts">
   import { resolveAvatarUrl } from '@/utils/avatar'
-  import { ref, reactive, computed, onMounted } from 'vue'
+  import { watch, nextTick, ref, reactive, computed, onMounted } from 'vue'
   import type { FormInstance, FormRules, UploadFile } from 'element-plus'
   import { useUserStore } from '@/store/modules/user'
+  import { useSettingStore } from '@/store/modules/setting'
   import { fetchUpdateInfo, fetchUpdatePassword, uploadAvatarFile } from '@/api/system-manage'
   import { fetchSocialRender, fetchSocialUnbind, fetchSocialSources } from '@/api/auth'
   import { fetchRoleCodeSelect } from '@/api/role'
@@ -149,8 +181,27 @@
   const { t } = useI18n()
 
   const userStore = useUserStore()
+  const settingStore = useSettingStore()
   const needChangePassword = computed(() => !!userStore.getUserInfo?.needChangePassword)
   const info = computed<any>(() => userStore.getUserInfo || {})
+  const pwdCardRef = ref<any>()
+  const oldPwdInputRef = ref<any>()
+
+  /** 强制改密：关掉顶栏新手引导；滚到改密卡并聚焦原密码 */
+  const focusForceChangePassword = async (): Promise<void> => {
+    if (!needChangePassword.value) return
+    settingStore.hideSettingGuide()
+    await nextTick()
+    const cardEl =
+      (pwdCardRef.value?.$el as HTMLElement | undefined) ||
+      (document.querySelector('.uc-pwd-card') as HTMLElement | null)
+    cardEl?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+    await nextTick()
+    const input = oldPwdInputRef.value
+    // Element Plus ElInput：focus() 或内部 input
+    if (input?.focus) input.focus()
+    else input?.input?.focus?.()
+  }
 
   // 角色码 → 角色名映射：/auth/info 只返回角色码（admin/R_SUPER…），按角色码下拉翻译为中文名；
   // 无角色列表权限时接口被拒，降级原样显示角色码
@@ -162,6 +213,11 @@
     } catch {
       roleNameMap.value = {}
     }
+    await focusForceChangePassword()
+  })
+
+  watch(needChangePassword, (v) => {
+    if (v) void focusForceChangePassword()
   })
   // R_SUPER/R_ADMIN 是菜单门控伪角色（非 sys_role 真实角色），不展示；真实角色码翻译为中文名
   const PSEUDO_ROLES = ['R_SUPER', 'R_ADMIN']
@@ -371,5 +427,42 @@
     color: #fff;
     user-select: none;
     background: var(--theme-color);
+  }
+
+  .uc-force-pwd-alert {
+    margin-bottom: 16px;
+  }
+
+  .uc-force-pwd-alert :deep(.el-alert__title),
+  .uc-force-pwd-alert :deep(.el-alert__description) {
+    color: #b45309;
+  }
+
+  .uc-inline-block {
+    display: inline-block;
+  }
+
+  /* 强制改密 + ≤767：改密卡排到个人信息上面（display:contents 拆开 forms 列） */
+  @media (width <= 767px) {
+    .uc-row.is-force-pwd {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .uc-row.is-force-pwd .uc-col-forms {
+      display: contents;
+    }
+
+    .uc-row.is-force-pwd .uc-pwd-card {
+      order: 1;
+    }
+
+    .uc-row.is-force-pwd .uc-col-info {
+      order: 2;
+    }
+
+    .uc-row.is-force-pwd .uc-nickname-card {
+      order: 3;
+    }
   }
 </style>

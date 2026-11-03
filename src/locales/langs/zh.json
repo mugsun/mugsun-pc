@@ -1359,6 +1359,7 @@
         "otpTitle": "一次性口令（仅此一次）",
         "otpTip": "请立刻复制交给对方。对方首次登录须修改口令；关闭后无法再查看。",
         "initialPassword": "一次性口令",
+        "account": "账号",
         "createWithPasswordSuccess": "已创建。请把账号和刚设置的密码交给对方登录",
         "deleteUser": "删除用户",
         "deleteSelected": "删除所选",
@@ -2675,6 +2676,12 @@
         "search": "查询",
         "reset": "重置",
         "searchPlaceholder": "按内容查找"
+      },
+      "otp": {
+        "closeTitle": "确认关闭",
+        "closeConfirm": "口令关闭后无法再查看，确定关闭？",
+        "keepViewing": "继续查看",
+        "stillClose": "仍要关闭"
       },
       "userCenter": {
         "infoTitle": "个人信息",
