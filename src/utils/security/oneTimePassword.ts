@@ -186,6 +186,10 @@ export function showOneTimeCredentials(options: ShowOneTimeCredentialsOptions): 
           distinguishCancelAndClose: true,
           closeOnClickModal: false,
           closeOnPressEscape: true,
+          // 无遮罩 + 更高 zIndex：叠在主 OTP 之上，两者同屏可见
+          modal: false,
+          zIndex: 10000,
+          customClass: 'otp-close-confirm-box',
           confirmButtonClass: '',
           cancelButtonClass: 'el-button--danger'
         }

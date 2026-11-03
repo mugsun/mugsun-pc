@@ -29,20 +29,26 @@
               :content="$t('pages.system.userCenter.forceChangeTitle')"
               placement="top"
             >
-              <span class="uc-inline-block">
+              <!-- 强制改密：不挂 Upload，避免 disabled 仍可点开选文件 -->
+              <span class="uc-inline-block uc-force-lock-wrap">
+                <ElButton
+                  v-if="needChangePassword"
+                  size="small"
+                  disabled
+                  aria-disabled="true"
+                  class="is-force-locked"
+                  >{{ $t('pages.system.userCenter.changeAvatar') }}</ElButton
+                >
                 <ElUpload
+                  v-else
                   :auto-upload="false"
                   :show-file-list="false"
-                  :disabled="needChangePassword"
                   accept=".png,.jpg,.jpeg,.gif,.webp,image/png,image/jpeg,image/gif,image/webp"
                   :on-change="handleAvatarChange"
                 >
-                  <ElButton
-                    size="small"
-                    :loading="avatarUploading"
-                    :disabled="needChangePassword"
-                    >{{ $t('pages.system.userCenter.changeAvatar') }}</ElButton
-                  >
+                  <ElButton size="small" :loading="avatarUploading">{{
+                    $t('pages.system.userCenter.changeAvatar')
+                  }}</ElButton>
                 </ElUpload>
               </span>
             </ElTooltip>
@@ -129,11 +135,14 @@
                 :content="$t('pages.system.userCenter.forceChangeTitle')"
                 placement="top"
               >
-                <span class="uc-inline-block">
+                <span class="uc-inline-block uc-force-lock-wrap">
                   <ElButton
-                    type="primary"
+                    :type="needChangePassword ? 'default' : 'primary'"
                     :loading="infoSaving"
                     :disabled="needChangePassword"
+                    :aria-disabled="needChangePassword ? 'true' : undefined"
+                    class="uc-nickname-save"
+                    :class="{ 'is-force-locked': needChangePassword }"
                     @click="saveInfo"
                     >{{ $t('pages.system.userCenter.save') }}</ElButton
                   >
@@ -192,15 +201,18 @@
     if (!needChangePassword.value) return
     settingStore.hideSettingGuide()
     await nextTick()
-    const cardEl =
-      (pwdCardRef.value?.$el as HTMLElement | undefined) ||
-      (document.querySelector('.uc-pwd-card') as HTMLElement | null)
-    cardEl?.scrollIntoView({ block: 'start', behavior: 'smooth' })
+    // 不 scrollIntoView：390 首屏须同时看见顶部横幅 + 改密表单
+    const pageEl = document.querySelector('.user-center-page') as HTMLElement | null
+    if (pageEl) pageEl.scrollTop = 0
+    window.scrollTo(0, 0)
     await nextTick()
     const input = oldPwdInputRef.value
-    // Element Plus ElInput：focus() 或内部 input
-    if (input?.focus) input.focus()
-    else input?.input?.focus?.()
+    // preventScroll：避免聚焦把横幅顶出视口
+    const native = (input?.input || input?.$el?.querySelector?.('input')) as
+      | HTMLInputElement
+      | undefined
+    if (native?.focus) native.focus({ preventScroll: true })
+    else if (input?.focus) input.focus()
   }
 
   // 角色码 → 角色名映射：/auth/info 只返回角色码（admin/R_SUPER…），按角色码下拉翻译为中文名；
@@ -239,6 +251,7 @@
   }
 
   const saveInfo = async (): Promise<void> => {
+    if (needChangePassword.value) return
     if (!infoRef.value || infoSaving.value) return
     await infoRef.value.validate(async (valid) => {
       if (!valid) return
@@ -265,6 +278,7 @@
   }
 
   const handleAvatarChange = async (uploadFile: UploadFile): Promise<void> => {
+    if (needChangePassword.value) return
     const raw = uploadFile.raw
     if (!raw) return
     if (!isAllowedAvatar(raw)) {
@@ -440,6 +454,23 @@
 
   .uc-inline-block {
     display: inline-block;
+  }
+
+  /* 强制改密：禁用态必须一眼灰、不可点（含 primary） */
+  .uc-force-lock-wrap :deep(.el-button.is-disabled),
+  .uc-force-lock-wrap :deep(.el-button.is-force-locked),
+  .is-force-locked.el-button.is-disabled {
+    color: #a8abb2 !important;
+    pointer-events: none;
+    cursor: not-allowed !important;
+    background-color: #f5f7fa !important;
+    border-color: #e4e7ed !important;
+    box-shadow: none !important;
+    opacity: 1;
+  }
+
+  .uc-force-lock-wrap {
+    cursor: not-allowed;
   }
 
   /* 强制改密 + ≤767：改密卡排到个人信息上面（display:contents 拆开 forms 列） */

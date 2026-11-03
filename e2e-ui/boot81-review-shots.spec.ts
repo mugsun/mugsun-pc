@@ -168,29 +168,104 @@ async function shot(page: Page, name: string) {
   await page.screenshot({ path: path.join(OUT, name), fullPage: false })
 }
 
+/** 视口内可见（非仅 DOM attached） */
+async function expectInViewport(page: Page, locator: ReturnType<Page['locator']>) {
+  await expect(locator).toBeVisible()
+  const box = await locator.boundingBox()
+  expect(box, 'missing box').toBeTruthy()
+  const vp = page.viewportSize()!
+  expect(box!.y + box!.height > 0 && box!.y < vp.height).toBeTruthy()
+}
+
 test.describe('boot81 otp / force-change shots', () => {
-  test('a force-change zh 1440: nickname disabled + pwd focused', async ({ page }) => {
+  test('a-v2 force-change controls disabled zh 1440', async ({ page }) => {
     await mockApis(page, { needChangePassword: true })
     await seedForceChange(page, 'zh', 'light')
     await page.setViewportSize({ width: 1440, height: 900 })
     await page.goto('/#/system/user-center')
     await expect(page.getByText('请先修改初始口令')).toBeVisible({ timeout: 30_000 })
-    await expect(page.locator('.uc-nickname-card input').first()).toBeDisabled({ timeout: 10_000 })
-    await expect(page.locator('.uc-pwd-card input').first()).toBeFocused({ timeout: 10_000 })
-    await shot(page, 'a-force-change-zh-light-1440.png')
+
+    const avatarBtn = page.getByRole('button', { name: '更换头像' })
+    const saveBtn = page.locator('.uc-nickname-save')
+    await expect(avatarBtn).toBeDisabled({ timeout: 10_000 })
+    await expect(saveBtn).toBeDisabled({ timeout: 10_000 })
+    await expect(avatarBtn).toHaveAttribute('aria-disabled', 'true')
+    await expect(saveBtn).toHaveAttribute('aria-disabled', 'true')
+
+    // 局部特写：把头像区与昵称保存拼进同一张图（滚动昵称卡入视口后裁切两区）
+    await stamp(page)
+    const avatarShot = path.join(OUT, '_tmp-avatar.png')
+    const nickShot = path.join(OUT, '_tmp-nick.png')
+    await page.locator('.uc-avatar-row').screenshot({ path: avatarShot })
+    await page.locator('.uc-nickname-card').scrollIntoViewIfNeeded()
+    await page.waitForTimeout(200)
+    await page.locator('.uc-nickname-card').screenshot({ path: nickShot })
+
+    // 用页面合成一条标注条图，避免依赖本机 Pillow；改用 canvas 在 page 内拼
+    await page.evaluate(
+      async ({ aB64, nB64, outHint }) => {
+        const load = (b64: string) =>
+          new Promise<HTMLImageElement>((res, rej) => {
+            const img = new Image()
+            img.onload = () => res(img)
+            img.onerror = rej
+            img.src = 'data:image/png;base64,' + b64
+          })
+        const a = await load(aB64)
+        const n = await load(nB64)
+        const pad = 16
+        const labelH = 28
+        const w = Math.max(a.width, n.width) + pad * 2
+        const h = labelH + a.height + pad + labelH + n.height + pad * 2
+        const canvas = document.createElement('canvas')
+        canvas.width = w
+        canvas.height = h
+        const ctx = canvas.getContext('2d')!
+        ctx.fillStyle = '#f5f7fa'
+        ctx.fillRect(0, 0, w, h)
+        ctx.fillStyle = '#303133'
+        ctx.font = '14px sans-serif'
+        ctx.fillText('更换头像（强制改密 · 已禁用）', pad, 20)
+        ctx.drawImage(a, pad, labelH)
+        ctx.fillText('昵称保存（强制改密 · 已禁用）', pad, labelH + a.height + pad + 20)
+        ctx.drawImage(n, pad, labelH + a.height + pad + labelH)
+        ;(window as any).__boot81Composite = canvas.toDataURL('image/png')
+        void outHint
+      },
+      {
+        aB64: fs.readFileSync(avatarShot).toString('base64'),
+        nB64: fs.readFileSync(nickShot).toString('base64'),
+        outHint: 'a-v2'
+      }
+    )
+    const dataUrl = await page.evaluate(() => (window as any).__boot81Composite as string)
+    const b64 = dataUrl.split(',')[1]
+    fs.writeFileSync(
+      path.join(OUT, 'a-v2-force-change-controls-zh-1440.png'),
+      Buffer.from(b64, 'base64')
+    )
+    fs.rmSync(avatarShot, { force: true })
+    fs.rmSync(nickShot, { force: true })
   })
 
-  test('b force-change zh 390: pwd card first', async ({ page }) => {
+  test('b-v2 force-change zh 390 first screen banner+pwd', async ({ page }) => {
     await mockApis(page, { needChangePassword: true })
     await seedForceChange(page, 'zh', 'light')
     await page.setViewportSize({ width: 390, height: 844 })
     await page.goto('/#/system/user-center')
     await expect(page.getByText('请先修改初始口令')).toBeVisible({ timeout: 30_000 })
-    await page.waitForTimeout(400)
-    await shot(page, 'b-force-change-zh-light-390.png')
+    await page.waitForTimeout(500)
+    await expectInViewport(page, page.locator('.uc-force-pwd-alert'))
+    await expectInViewport(page, page.locator('.uc-pwd-card'))
+    await expectInViewport(page, page.locator('.uc-pwd-card').getByText('原密码', { exact: false }))
+    await expectInViewport(
+      page,
+      page.locator('.uc-pwd-card').getByRole('button', { name: /保存|Save/ })
+    )
+    await shot(page, 'b-v2-force-change-zh-390.png')
   })
 
-  test('c tenant OTP close confirm before copy', async ({ page }) => {
+  test('c-v2 tenant OTP close confirm both dialogs', async ({ page }) => {
     await mockApis(page, { needChangePassword: false })
     await seedSession(page, 'zh', 'light')
     await page.setViewportSize({ width: 1440, height: 900 })
@@ -208,17 +283,25 @@ test.describe('boot81 otp / force-change shots', () => {
     await dialog.locator('input').first().fill('截图租户')
     await dialog.getByRole('button', { name: /提交|保存|确定|Submit|Save|OK/ }).click()
     await expect(page.getByText('OtP-Mock-Tenant-9x')).toBeVisible({ timeout: 15_000 })
-    await expect(page.locator('.el-message-box').first()).toBeVisible()
-    // 未复制：点 X → 二次确认
-    await page.locator('.el-message-box__headerbtn').first().click()
-    await expect(page.getByText('口令关闭后无法再查看')).toBeVisible({ timeout: 10_000 })
-    await shot(page, 'c-tenant-otp-close-confirm-zh-1440.png')
+    const otpBox = page.locator('.el-message-box').filter({ hasText: 'OtP-Mock-Tenant-9x' })
+    await expect(otpBox).toBeVisible()
+    // 未复制：点 X → 二次确认（主弹窗须仍在）
+    await otpBox.locator('.el-message-box__headerbtn').click()
+    const confirmBox = page.locator('.el-message-box.otp-close-confirm-box')
+    await expect(confirmBox).toBeVisible({ timeout: 10_000 })
+    await expect(confirmBox.getByText('口令关闭后无法再查看，确定关闭？')).toBeVisible()
+    await expect(confirmBox.getByRole('button', { name: '继续查看' })).toBeVisible()
+    await expect(confirmBox.getByRole('button', { name: '仍要关闭' })).toBeVisible()
+    // 主 OTP + 二次确认必须同屏
+    await expect(otpBox).toBeVisible()
+    await expect(page.getByText('OtP-Mock-Tenant-9x')).toBeVisible()
+    await page.waitForTimeout(300)
+    await shot(page, 'c-v2-tenant-otp-close-confirm-zh-1440.png')
   })
 
   test('d reset OTP rows + copied feedback zh 1440', async ({ page, context }) => {
     await context.grantPermissions(['clipboard-read', 'clipboard-write'])
     await page.addInitScript(() => {
-      // headless 下保证 writeText 成功，才能触发「已复制」
       Object.defineProperty(navigator, 'clipboard', {
         configurable: true,
         value: {
@@ -238,14 +321,13 @@ test.describe('boot81 otp / force-change shots', () => {
     await expect(page.getByText('OtP-Mock-Reset-3k')).toBeVisible({ timeout: 15_000 })
     await expect(page.getByText('账号', { exact: true })).toBeVisible()
     await expect(page.getByText('一次性口令', { exact: true })).toBeVisible()
-    // 点口令行复制 → 已复制
     const pwdRow = page.locator('.otp-box__row').filter({ hasText: 'OtP-Mock-Reset-3k' })
     await pwdRow.getByRole('button', { name: '复制' }).click()
     await expect(pwdRow.getByRole('button', { name: '已复制' })).toBeVisible({ timeout: 5_000 })
     await shot(page, 'd-user-reset-otp-copied-zh-light-1440.png')
   })
 
-  test('e reset OTP dark 1440', async ({ page }) => {
+  test('e-v2 reset OTP dark dialog open 1440', async ({ page }) => {
     await mockApis(page, { needChangePassword: false })
     await seedSession(page, 'zh', 'dark')
     await page.setViewportSize({ width: 1440, height: 900 })
@@ -254,7 +336,12 @@ test.describe('boot81 otp / force-change shots', () => {
     const row = page.locator('.el-table__row').filter({ hasText: 'fronttest' }).first()
     await row.getByRole('button', { name: /重置|Reset/ }).click()
     await page.getByRole('button', { name: /确定|确认|OK|Confirm/ }).click()
-    await expect(page.getByText('OtP-Mock-Reset-3k')).toBeVisible({ timeout: 15_000 })
-    await shot(page, 'e-user-reset-otp-zh-dark-1440.png')
+    const otp = page.locator('.el-message-box').filter({ hasText: 'OtP-Mock-Reset-3k' })
+    await expect(otp).toBeVisible({ timeout: 15_000 })
+    await expect(otp.getByText('账号', { exact: true })).toBeVisible()
+    await expect(otp.getByText('一次性口令', { exact: true })).toBeVisible()
+    await expect(otp.getByRole('button', { name: '复制' }).first()).toBeVisible()
+    await expect(otp.locator('.otp-box__row')).toHaveCount(2)
+    await shot(page, 'e-v2-user-reset-otp-zh-dark-1440.png')
   })
 })
