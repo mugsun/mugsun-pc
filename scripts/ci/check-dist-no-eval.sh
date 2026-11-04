@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# 扫 dist/assets/*.js 的 `new Function` / `eval(`（Issue #64，安全官对 #61 复审 F4）。
+# 扫 dist/assets/*.js 的 `new Function` / `eval(` / `\bFunction(`（Issue #64，安全官对 #61 复审 F4；合后跟加固）。
 #
 # 目标：确认 __INTLIFY_JIT_COMPILATION__ 后 vue-i18n 编译路径不再把 new Function 打进产物；
 # 已知第三方（Cesium / form-create / echarts / hogan / source-map-js）按 chunk 白名单放行。
@@ -8,9 +8,23 @@
 #   1) dist/index.html 入口 module script 所在 chunk
 #   2) 含 vue-i18n / @intlify / compileToFunction 标记的 chunk
 #
+# 白名单假冒防护（合后跟 P2）：
+#   前缀命中（Cesium-*.js 等）还须通过轻量内容指纹；缺库特征 → 失败，不静默放行。
+#   指纹钉库内稳定标记，不钉 content-hash 文件名。
+#
+# Function( 变体（合后跟 P3）：
+#   另扫词边界 `\bFunction(`，堵住 `Function("...")()`；忽略常见良性
+#   `Function("return this")`（lodash / 旧 UMD 取全局）。
+#
 # 用法（仓库根目录，需已有 dist）：
 #   scripts/ci/check-dist-no-eval.sh
 #   DIST_DIR=dist scripts/ci/check-dist-no-eval.sh
+#
+# 负向夹具（应 FAIL）：
+#   DIST_DIR=scripts/ci/fixtures/dist-no-eval/fake-prefix \
+#     scripts/ci/check-dist-no-eval.sh
+#   DIST_DIR=scripts/ci/fixtures/dist-no-eval/bare-function \
+#     scripts/ci/check-dist-no-eval.sh
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/../.." && pwd)"
@@ -76,6 +90,39 @@ whitelist_reason() {
   return 1
 }
 
+# 前缀白名单命中后的内容指纹（缺则视为假冒前缀，失败）
+# 标记取自真实 dist / node_modules 抽样，避免钉 hash。
+prefix_fingerprint_ok() {
+  local base="$1" file="$2"
+  case "$base" in
+    Cesium-*.js|cesium-*.js)
+      grep -q 'Cesium' "$file" \
+        && grep -qE 'RequestScheduler|Cartesian3' "$file"
+      return $?
+      ;;
+    form-create-*.js)
+      # formCreate 为包稳定 API；再要 PREFIX / FcDesigner / parseFn 之一防空壳假冒
+      grep -q 'formCreate' "$file" \
+        && grep -qE 'FORM-CREATE-PREFIX|FcDesigner|parseFn' "$file"
+      return $?
+      ;;
+    installCanvasRenderer-*.js|echarts-*.js)
+      # installCanvasRenderer 真 chunk 含 GeoJSON 兜底；小 stub 无 PATTERN 不会走到这里
+      grep -qi 'echarts' "$file" && grep -q 'GeoJSON' "$file"
+      return $?
+      ;;
+    source-map-*.js)
+      grep -qE 'SourceMapConsumer|doQuickSort' "$file"
+      return $?
+      ;;
+    hogan-*.js)
+      grep -q 'makePartials' "$file" && grep -q 'wrapMain' "$file" && grep -qi 'hogan' "$file"
+      return $?
+      ;;
+  esac
+  return 1
+}
+
 # Vite 偶发把 hogan 打成 index-*.js：用内容指纹认库，避免钉 hash。
 content_whitelist_reason() {
   local file="$1"
@@ -93,7 +140,44 @@ is_i18n_sensitive() {
   grep -qE 'vue-i18n|@intlify|compileToFunction' "$file"
 }
 
-PATTERN='new Function|eval\('
+# 命中检测：new Function / eval( / 词边界 Function(
+# 从副本中剔除良性 Function("return this") 后再判，降低 lodash/UMD 假阳
+file_has_forbidden() {
+  local file="$1"
+  local tmp
+  tmp="$(mktemp)"
+  # 去掉 return-this 取全局的常见写法（双/单引号）
+  sed -E \
+    -e 's/Function\(["'\'']return this["'\'']\)//g' \
+    "$file" >"$tmp"
+  if grep -qE 'new Function|eval\(|(^|[^[:alnum:]_])Function\(' "$tmp"; then
+    rm -f "$tmp"
+    return 0
+  fi
+  rm -f "$tmp"
+  return 1
+}
+
+# 汇总命中种类（已忽略 return-this）
+summarize_hits() {
+  local file="$1"
+  local tmp
+  tmp="$(mktemp)"
+  sed -E \
+    -e 's/Function\(["'\'']return this["'\'']\)//g' \
+    "$file" >"$tmp"
+  # 先抽出 new Function，再抽剩余 Function(，避免重复计 new 的 Function
+  {
+    grep -oE 'new Function' "$tmp" || true
+    # 去掉 new Function 后再找裸 Function(
+    sed -E 's/new Function//g' "$tmp" \
+      | grep -oE '(^|[^[:alnum:]_])Function\(' \
+      | sed -E 's/^[^F]*//' || true
+    grep -oE 'eval\(' "$tmp" || true
+  } | sort | uniq -c | awk '{c=$1; $1=""; sub(/^ /,""); printf "%sx %s ", c, $0}' | sed 's/[[:space:]]*$//'
+  rm -f "$tmp"
+}
+
 shopt -s nullglob
 files=("$ASSETS"/*.js)
 [[ ${#files[@]} -gt 0 ]] || die "${ASSETS} 下没有 .js"
@@ -105,12 +189,13 @@ declare -a FAIL_MSGS=()
 
 for file in "${files[@]}"; do
   base="$(basename "$file")"
-  if ! grep -qE "$PATTERN" "$file"; then
+  if ! file_has_forbidden "$file"; then
     clean=$((clean + 1))
     continue
   fi
 
-  hits="$(grep -oE "$PATTERN" "$file" | sort | uniq -c | awk '{c=$1; $1=""; sub(/^ /,""); printf "%sx %s ", c, $0}' | sed 's/[[:space:]]*$//')"
+  hits="$(summarize_hits "$file")"
+  [[ -n "$hits" ]] || hits="(pattern)"
   entry=0
   i18n=0
   is_entry "$base" && entry=1
@@ -127,6 +212,11 @@ for file in "${files[@]}"; do
 
   reason=""
   if reason="$(whitelist_reason "$base")"; then
+    if ! prefix_fingerprint_ok "$base" "$file"; then
+      FAIL_MSGS+=("${base}: 命中 [${hits}] — 前缀像白名单（${reason}）但缺库内容指纹（疑假冒，拒绝放行）")
+      failed=$((failed + 1))
+      continue
+    fi
     log "允许 ${base} [${hits}] — ${reason}"
     allowed=$((allowed + 1))
     continue

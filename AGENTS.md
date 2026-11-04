@@ -98,7 +98,7 @@ pnpm run clean:dev
 
 `pnpm run test:e2e:csp`（`playwright.csp.config.ts` / `e2e-csp/`）须对 nginx 镜像跑；CI 的 `csp-e2e` job 用 `scripts/ci/run-csp-e2e.sh` 起 compose（enforce + 关验证码）并上传 `test-results/csp/`。
 
-Build job 在 `vite build` 后跑 `scripts/ci/check-dist-no-eval.sh`（#64）：入口与 vue-i18n/@intlify chunk 禁止 `new Function`/`eval(`；Cesium、form-create、echarts、hogan、source-map-js 按 chunk 白名单放行。
+Build job 在 `vite build` 后跑 `scripts/ci/check-dist-no-eval.sh`（#64）：入口与 vue-i18n/@intlify chunk 禁止 `new Function`/`eval(`/`Function(`；Cesium、form-create、echarts、hogan、source-map-js 按 chunk 前缀白名单放行，且须通过内容指纹（防假冒前缀）。负向夹具见 `scripts/ci/fixtures/dist-no-eval/`。
 
 Build job 在依赖安装前跑 `scripts/ci/check-offline-icons-vs-boot.sh`（#62）：稀疏 checkout `mugsun-boot@main` 种子 SQL，抽出菜单 `prefix:name`，须被 `scripts/offline-icons.extra.txt` ∪ `src/assets/icons/offline-icons.json` 覆盖；缺失打印清单并失败。本地：`BOOT_DIR=~/opc/java/mugsun/mugsun-boot scripts/ci/check-offline-icons-vs-boot.sh`（默认 `BOOT_REF=origin/main`）。boot 改种子图标后先改 extra.txt，再跑 `scripts/gen-offline-icons.mjs` 并提交 JSON。
 

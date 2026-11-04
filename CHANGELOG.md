@@ -16,6 +16,9 @@
 
 ### 变更
 
+- CI：加固 dist no-eval 白名单指纹，并扫 Function(（#64 合后跟）
+  - 前缀白名单须过内容指纹；负向夹具 scripts/ci/fixtures/dist-no-eval/
+
 - CI：对照 boot 种子菜单图标与 offline-icons（#62）
   - Build 稀疏拉 mugsun-boot@main 种子 SQL；scripts/ci/check-offline-icons-vs-boot.sh
 

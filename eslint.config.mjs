@@ -77,7 +77,9 @@ export default [
       'public',
       '.vscode/**',
       'src/assets/**',
-      'src/utils/console.ts'
+      'src/utils/console.ts',
+      // #64 合后跟负向夹具（假 dist chunk，不走业务 lint）
+      'scripts/ci/fixtures/**'
     ]
   },
   // prettier 配置
