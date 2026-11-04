@@ -100,6 +100,8 @@ pnpm run clean:dev
 
 Build job 在 `vite build` 后跑 `scripts/ci/check-dist-no-eval.sh`（#64）：入口与 vue-i18n/@intlify chunk 禁止 `new Function`/`eval(`；Cesium、form-create、echarts、hogan、source-map-js 按 chunk 白名单放行。
 
+Build job 在依赖安装前跑 `scripts/ci/check-offline-icons-vs-boot.sh`（#62）：稀疏 checkout `mugsun-boot@main` 种子 SQL，抽出菜单 `prefix:name`，须被 `scripts/offline-icons.extra.txt` ∪ `src/assets/icons/offline-icons.json` 覆盖；缺失打印清单并失败。本地：`BOOT_DIR=~/opc/java/mugsun/mugsun-boot scripts/ci/check-offline-icons-vs-boot.sh`（默认 `BOOT_REF=origin/main`）。boot 改种子图标后先改 extra.txt，再跑 `scripts/gen-offline-icons.mjs` 并提交 JSON。
+
 `csp-e2e` **CI 会跑**；合 tip / 推 main 前该 job 须绿。是否 GitHub branch protection 的 required check **以仓库 Settings 为准**（本文件不宣称已勾选）。
 
 `docker/compose.csp-e2e.yml` 为 **仅 CI/本地脚本** 叠加层：`MUGSUN_CSP_MODE=enforce`、`MUGSUN_CAPTCHA_ENABLED=false`，且脚本会 SQL 清平台 admin 的 `must_change_password`——**不要**把这套当成生产默认。

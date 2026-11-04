@@ -24,6 +24,26 @@ jobs:
         with:
           persist-credentials: false
 
+      # Issue #62：对照 boot 种子菜单图标与 offline-icons（不依赖 node_modules）
+      - name: Checkout mugsun-boot seeds
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          repository: mugsun/mugsun-boot
+          ref: main
+          path: mugsun-boot
+          persist-credentials: false
+          sparse-checkout: |
+            mugsun-boot-core/src/main/resources/db
+            mugsun-boot-track/src/main/resources/db
+          sparse-checkout-cone-mode: true
+
+      - name: Check offline icons cover boot seed menus
+        env:
+          BOOT_DIR: mugsun-boot
+          # checkout 已是 main 工作区；空 BOOT_REF 读文件，不依赖 origin/*
+          BOOT_REF: ''
+        run: scripts/ci/check-offline-icons-vs-boot.sh
+
       # 版本取自 package.json 的 packageManager（pnpm@11.28.2）
       - name: Set up pnpm
         uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4

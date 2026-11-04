@@ -16,6 +16,9 @@
 
 ### 变更
 
+- CI：对照 boot 种子菜单图标与 offline-icons（#62）
+  - Build 稀疏拉 mugsun-boot@main 种子 SQL；scripts/ci/check-offline-icons-vs-boot.sh
+
 - CI：扫 dist 产物禁入口/i18n 的 new Function（#64）
   - build 后跑 scripts/ci/check-dist-no-eval.sh；第三方 chunk 白名单带来源
 
