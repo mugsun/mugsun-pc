@@ -29,7 +29,8 @@ jobs:
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           repository: mugsun/mugsun-boot
-          ref: main
+          # 菜单图标种子对照（#62 合后跟）：钉 tip，避免浮动 main；种子变了要 bump
+          ref: bee6abf3657e78b7f37dbcac451a475377b4fcac
           path: mugsun-boot
           persist-credentials: false
           sparse-checkout: |
@@ -40,7 +41,7 @@ jobs:
       - name: Check offline icons cover boot seed menus
         env:
           BOOT_DIR: mugsun-boot
-          # checkout 已是 main 工作区；空 BOOT_REF 读文件，不依赖 origin/*
+          # checkout 已钉 tip 工作区；空 BOOT_REF 读文件，不依赖 origin/*
           BOOT_REF: ''
         run: scripts/ci/check-offline-icons-vs-boot.sh
 
@@ -62,7 +63,7 @@ jobs:
       - name: Generate auto-imports.d.ts (vite build)
         run: pnpm exec vite build
 
-      # Issue #64：产物层确认入口 / vue-i18n 无 new Function|eval(；第三方按 chunk 白名单
+      # Issue #64：产物层确认入口 / vue-i18n 无 new Function|eval(|Function(；前缀白名单+指纹
       - name: Check dist has no unexpected new Function / eval
         run: scripts/ci/check-dist-no-eval.sh
 

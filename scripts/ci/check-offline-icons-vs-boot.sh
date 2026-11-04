@@ -14,7 +14,8 @@
 #   BOOT_DIR   boot 仓根目录。未设时依次试：同级 ../mugsun-boot、./mugsun-boot、
 #              $HOME/opc/java/mugsun/mugsun-boot
 #   BOOT_REF   若 BOOT_DIR 是 git 仓且该 ref 可解析，则在该树上读 SQL（默认 origin/main）；
-#              设为空字符串则用工作区当前文件（CI sparse checkout 后常用）
+#              设为空字符串则用工作区当前文件（CI sparse checkout 钉 tip 后常用）。
+#              也可显式钉 SHA：BOOT_REF=bee6abf3657e78b7f37dbcac451a475377b4fcac
 #   EXTRA_TXT  默认 scripts/offline-icons.extra.txt
 #   OFFLINE_JSON 默认 src/assets/icons/offline-icons.json
 set -euo pipefail
@@ -67,7 +68,9 @@ root = Path(os.environ["ROOT"])
 extra_path = root / os.environ["EXTRA_TXT"]
 json_path = root / os.environ["OFFLINE_JSON"]
 
-# Iconify 前缀：与 gen-offline-icons / offline-icons 单测已知集对齐，并覆盖菜单常见集
+# Iconify 前缀：与 tests/unit/offline-icons.test.ts 的 KNOWN_ICON_PREFIXES、
+# offline-icons.json / offline-icons.extra.txt、gen-offline-icons 扫描集对齐。
+# 改前缀时三处一起改，避免漂移。boot 种子（bee6abf）当前只用 ri；保留常见集减假阴。
 ICON_PREFIXES = {
     "ri", "ep", "mdi", "fluent", "solar", "icon-park-outline", "vaadin", "ix",
     "iconamoon", "carbon", "tabler", "lucide", "material-symbols",
@@ -76,6 +79,30 @@ ICON_PREFIXES = {
 TOKEN_RE = re.compile(
     r"""['"]([a-z][a-z0-9]*(?:-[a-z0-9]+)*):([a-z0-9]+(?:-[a-z0-9]+)*)['"]"""
 )
+
+def prefixes_from_extra(path: Path) -> set[str]:
+    out: set[str] = set()
+    line_re = re.compile(
+        r"^([a-z][a-z0-9]*(?:-[a-z0-9]+)*):([a-z0-9]+(?:-[a-z0-9]+)*)$"
+    )
+    for line in path.read_text(encoding="utf-8").splitlines():
+        t = line.strip()
+        if not t or t.startswith("#"):
+            continue
+        m = line_re.match(t)
+        if m:
+            out.add(m.group(1))
+    return out
+
+def prefixes_from_json(path: Path) -> set[str]:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, list):
+        return set()
+    return {item.get("prefix") for item in data if isinstance(item, dict) and item.get("prefix")}
+
+# 运行时并入 extra/json 前缀，避免 JSON 已有而硬编码漏登造成假阴
+ICON_PREFIXES |= prefixes_from_extra(extra_path)
+ICON_PREFIXES |= prefixes_from_json(json_path)
 
 SKIP_DIR_PARTS = {
     "migration-dm", "migration-og", "target", "released", "node_modules", ".git",
@@ -167,6 +194,11 @@ def load_json_icons(path: Path) -> set[str]:
             out.add(f"{prefix}:{name}")
     return out
 
+
+print(
+    "check-offline-icons-vs-boot: ICON_PREFIXES="
+    + ",".join(sorted(ICON_PREFIXES))
+)
 
 # Resolve SQL corpus
 if boot_ref:

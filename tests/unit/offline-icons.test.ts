@@ -20,6 +20,7 @@ const has = (prefix: string, name: string) => {
 }
 
 // 已知会被当成图标集前缀的写法：只有这些前缀才算图标；其余（update:modelValue 等）忽略
+// 与 scripts/ci/check-offline-icons-vs-boot.sh 的 ICON_PREFIXES 对齐；改前缀两边一起改
 const KNOWN_ICON_PREFIXES = new Set([
   ...prefixes,
   'mdi',

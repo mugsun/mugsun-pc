@@ -19,6 +19,9 @@
 - CI：加固 dist no-eval 白名单指纹，并扫 Function(（#64 合后跟）
   - 前缀白名单须过内容指纹；负向夹具 scripts/ci/fixtures/dist-no-eval/
 
+- CI：offline-icons 对照钉 boot tip，并对齐 ICON_PREFIXES（#62 合后跟）
+  - Build 稀疏 checkout 钉 bee6abf；前缀与单测/json 交叉注释
+
 - CI：对照 boot 种子菜单图标与 offline-icons（#62）
   - Build 稀疏拉 mugsun-boot@main 种子 SQL；scripts/ci/check-offline-icons-vs-boot.sh
 
