@@ -4148,6 +4148,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/system/ai/chat/regenerate': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get?: never
+    put?: never
+    post: operations['regenerate']
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/system/ai/chat/receive': {
     parameters: {
       query?: never
@@ -4526,22 +4542,6 @@ export interface paths {
     get?: never
     put?: never
     post: operations['socialBind']
-    delete?: never
-    options?: never
-    head?: never
-    patch?: never
-    trace?: never
-  }
-  '/auth/sms/send': {
-    parameters: {
-      query?: never
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    get?: never
-    put?: never
-    post: operations['send_1']
     delete?: never
     options?: never
     head?: never
@@ -9092,6 +9092,22 @@ export interface paths {
     patch?: never
     trace?: never
   }
+  '/crypto/bootstrap': {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    get: operations['bootstrap']
+    put?: never
+    post?: never
+    delete?: never
+    options?: never
+    head?: never
+    patch?: never
+    trace?: never
+  }
   '/auth/social/sources': {
     parameters: {
       query?: never
@@ -9449,17 +9465,45 @@ export interface components {
       email?: string
       phone?: string
       idCard?: string
+      /** Format: int32 */
+      mustChangePassword?: number
       deptName?: string
       postName?: string
       roleNames?: string
       leaderName?: string
       roleIds?: number[]
     }
+    RMapStringObject: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: {
+        [key: string]: unknown
+      }
+      msg?: string
+      dataType?: string
+    }
     StatusParam: {
       /** Format: int64 */
       id?: number
       /** Format: int32 */
       status?: number
+    }
+    RListMapStringObject: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: {
+        [key: string]: unknown
+      }[]
+      msg?: string
+      dataType?: string
+    }
+    CreatedRow: {
+      /** Format: int32 */
+      rowIndex?: number
+      username?: string
+      initialPassword?: string
     }
     FailRow: {
       /** Format: int32 */
@@ -9481,21 +9525,12 @@ export interface components {
       /** Format: int32 */
       failCount?: number
       failList?: components['schemas']['FailRow'][]
+      createdList?: components['schemas']['CreatedRow'][]
     }
     UserGrantParam: {
       /** Format: int64 */
       userId?: number
       roleIds?: number[]
-    }
-    RMapStringObject: {
-      /** Format: int32 */
-      code?: number
-      success?: boolean
-      data?: {
-        [key: string]: unknown
-      }
-      msg?: string
-      dataType?: string
     }
     RTrackVisualRule: {
       /** Format: int32 */
@@ -9624,14 +9659,6 @@ export interface components {
       captchaEnabled?: number
       captchaTypes?: string
     }
-    RString: {
-      /** Format: int32 */
-      code?: number
-      success?: boolean
-      data?: string
-      msg?: string
-      dataType?: string
-    }
     CaptchaSwitchDTO: {
       /** Format: int64 */
       id?: number
@@ -9711,6 +9738,14 @@ export interface components {
       /** Format: int64 */
       id?: number
       phone?: string
+    }
+    RString: {
+      /** Format: int32 */
+      code?: number
+      success?: boolean
+      data?: string
+      msg?: string
+      dataType?: string
     }
     SysSerialNumber: {
       /** Format: int64 */
@@ -10391,6 +10426,8 @@ export interface components {
     PresignedPutParam: {
       filename?: string
       access?: string
+      /** Format: int64 */
+      size?: number
     }
     PresignedPutResult: {
       supported?: boolean
@@ -10966,16 +11003,6 @@ export interface components {
       code?: number
       success?: boolean
       data?: components['schemas']['AiKnowledgeSegment']
-      msg?: string
-      dataType?: string
-    }
-    RListMapStringObject: {
-      /** Format: int32 */
-      code?: number
-      success?: boolean
-      data?: {
-        [key: string]: unknown
-      }[]
       msg?: string
       dataType?: string
     }
@@ -12827,35 +12854,35 @@ export interface components {
       submitterName?: string
     }
     Instance: {
-      /** Format: int64 */
-      definitionId?: number
-      /** Format: int32 */
-      activityStatus?: number
-      ext?: string
-      /** Format: int64 */
-      id?: number
-      variable?: string
-      /** Format: int32 */
-      nodeType?: number
       /** Format: date-time */
       createTime?: string
       tenantId?: string
+      /** Format: int32 */
+      activityStatus?: number
+      /** Format: int64 */
+      definitionId?: number
       flowStatus?: string
       createBy?: string
       nodeCode?: string
       variableMap?: {
         [key: string]: unknown
       }
+      /** Format: int32 */
+      nodeType?: number
       nodeName?: string
       /** Format: date-time */
       updateTime?: string
       updateBy?: string
+      variable?: string
       delFlag?: string
       flowName?: string
       businessId?: string
       formCustom?: string
       formPath?: string
       defJson?: string
+      /** Format: int64 */
+      id?: number
+      ext?: string
     }
     RInstance: {
       /** Format: int32 */
@@ -13753,6 +13780,7 @@ export interface components {
       enabled?: boolean
       type?: string
       scene?: string
+      registerMode?: string
     }
     RCaptchaConfigVO: {
       /** Format: int32 */
@@ -14136,7 +14164,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          '*/*': components['schemas']['RVoid']
+          '*/*': components['schemas']['RMapStringObject']
         }
       }
     }
@@ -14206,7 +14234,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          '*/*': components['schemas']['RVoid']
+          '*/*': components['schemas']['RListMapStringObject']
         }
       }
     }
@@ -14743,7 +14771,7 @@ export interface operations {
           [name: string]: unknown
         }
         content: {
-          '*/*': components['schemas']['RString']
+          '*/*': components['schemas']['RMapStringObject']
         }
       }
     }
@@ -20356,6 +20384,30 @@ export interface operations {
       }
     }
   }
+  regenerate: {
+    parameters: {
+      query?: never
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['JsonNode']
+      }
+    }
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          'text/event-stream': components['schemas']['SseEmitter']
+        }
+      }
+    }
+  }
   receive: {
     parameters: {
       query?: never
@@ -20983,28 +21035,6 @@ export interface operations {
         }
       }
     }
-    responses: {
-      /** @description OK */
-      200: {
-        headers: {
-          [name: string]: unknown
-        }
-        content: {
-          '*/*': components['schemas']['RVoid']
-        }
-      }
-    }
-  }
-  send_1: {
-    parameters: {
-      query: {
-        phone: string
-      }
-      header?: never
-      path?: never
-      cookie?: never
-    }
-    requestBody?: never
     responses: {
       /** @description OK */
       200: {
@@ -27436,6 +27466,26 @@ export interface operations {
         client_id: string
         scope?: string
       }
+      header?: never
+      path?: never
+      cookie?: never
+    }
+    requestBody?: never
+    responses: {
+      /** @description OK */
+      200: {
+        headers: {
+          [name: string]: unknown
+        }
+        content: {
+          '*/*': components['schemas']['RMapStringObject']
+        }
+      }
+    }
+  }
+  bootstrap: {
+    parameters: {
+      query?: never
       header?: never
       path?: never
       cookie?: never
