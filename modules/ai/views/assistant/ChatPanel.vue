@@ -81,7 +81,7 @@
       </header>
 
       <div ref="msgBoxRef" class="ai-chat-msgs" @click="onMsgsClick">
-        <div v-for="(msg, idx) in messages" :key="msg.id || idx" class="ai-msg" :class="msg.role">
+        <div v-for="msg in messages" :key="msg.uid" class="ai-msg" :class="msg.role">
           <div class="ai-msg__role">{{
             msg.role === 'user' ? $t('aiChat.me') : $t('aiChat.assistant')
           }}</div>
@@ -92,8 +92,20 @@
               </ElCollapseItem>
             </ElCollapse>
             <div class="ai-msg__content" v-html="renderMd(msg.content)" />
+            <ElAlert
+              v-if="msg.error"
+              class="ai-msg__err"
+              type="error"
+              :title="msg.error"
+              :closable="false"
+              show-icon
+            >
+              <ElButton size="small" :disabled="streaming" @click="retry(msg)">
+                {{ $t('aiDrawer.retry') }}
+              </ElButton>
+            </ElAlert>
             <ElButton
-              v-if="msg.role === 'assistant' && msg.requestId"
+              v-if="msg.role === 'assistant' && msg.requestId && !msg.error && !msg.pending"
               link
               type="primary"
               :disabled="streaming"
@@ -159,6 +171,7 @@
   import { ElMessage, ElMessageBox } from 'element-plus'
   import { handleCodeCopy, renderMarkdown } from './renderMarkdown'
   import {
+    fetchAiChatRegenerate,
     fetchAiChatReplay,
     fetchAiChatStop,
     fetchAiChatStream,
@@ -171,6 +184,7 @@
     fetchRemoveAiSession,
     fetchSaveAiSession
   } from '../../api'
+  import { pickAssistantMessageId, shouldRegenerate } from './drawer/chatRegenerate'
 
   const { t } = useI18n()
 
@@ -178,6 +192,8 @@
 
   interface ChatMsg {
     id?: string | number
+    /** 列表渲染稳定键；与后端 messageId 分开 */
+    uid: number
     role: 'user' | 'assistant' | 'system'
     content: string
     thinkContent?: string
@@ -186,7 +202,16 @@
     durationMs?: number
     requestId?: string
     refs?: Array<{ content?: string; score?: number; source?: string; segmentId?: string | number }>
+    pending?: boolean
+    /** 出错前是否已收到过 SSE（提问/助手行多半已入库） */
+    persisted?: boolean
+    error?: string
+    /** 这条回答对应的提问，用于重试/重新生成 */
+    question?: string
   }
+
+  let uidSeed = 0
+  const nextUid = () => ++uidSeed
 
   const collapsed = ref(false)
   /** 窄屏（UX-113）：单栏，会话列表收成覆盖层，默认收起，选中会话后自动收起 */
@@ -275,16 +300,22 @@
     activeSession.value = s
     modelId.value = s.modelId || modelId.value
     const list = await fetchAiMessageList(s.id)
-    messages.value = (list || []).map((m: any) => ({
-      id: m.id,
-      role: m.role,
-      content: m.content || '',
-      thinkContent: m.thinkContent,
-      modelName: m.modelName,
-      tokens: m.tokens,
-      durationMs: m.durationMs,
-      requestId: m.requestId
-    }))
+    let lastQuestion = ''
+    messages.value = (list || []).map((m: any) => {
+      if (m.role === 'user') lastQuestion = m.content || ''
+      return {
+        id: m.id,
+        uid: nextUid(),
+        role: m.role,
+        content: m.content || '',
+        thinkContent: m.thinkContent,
+        modelName: m.modelName,
+        tokens: m.tokens,
+        durationMs: m.durationMs,
+        requestId: m.requestId,
+        question: m.role === 'assistant' ? lastQuestion : undefined
+      }
+    })
     await scrollBottom()
   }
 
@@ -359,6 +390,103 @@
     }
   }
 
+  function bindStreamHandlers(msg: ChatMsg, finish: () => void, started?: number) {
+    return {
+      onChunk: (c: string) => {
+        msg.content += c
+        void scrollBottom()
+      },
+      onThink: (chunk: string) => {
+        msg.thinkContent = (msg.thinkContent || '') + chunk
+      },
+      onRefs: (refs: any) => {
+        const list = Array.isArray(refs) ? refs : refs?.refs
+        if (Array.isArray(list)) {
+          msg.refs = list
+          void scrollBottom()
+        }
+      },
+      onUsage: (u: any) => {
+        msg.tokens = u?.totalTokens ?? u?.tokens
+        msg.modelName =
+          u?.modelName || chatModels.value.find((m) => m.id === modelId.value)?.modelName
+      },
+      onEvent: (_ev: string, data: string) => {
+        msg.persisted = true
+        try {
+          const parsed = JSON.parse(data)
+          if (parsed?.requestId) {
+            requestId.value = parsed.requestId
+            msg.requestId = parsed.requestId
+          }
+          if (parsed?.messageId != null) msg.id = parsed.messageId
+        } catch {
+          /* ignore */
+        }
+      },
+      onDone: (payload?: unknown) => {
+        if (payload && typeof payload === 'object' && payload !== null && 'messageId' in payload) {
+          const mid = (payload as { messageId?: unknown }).messageId
+          if (mid != null) msg.id = mid as string | number
+        }
+        if (started != null) msg.durationMs = Date.now() - started
+        finish()
+      },
+      onError: (m: string) => {
+        finish()
+        msg.error = m || t('aiChat.genFailed')
+        ElMessage.error(msg.error)
+      }
+    }
+  }
+
+  async function stream(assistant: ChatMsg) {
+    const msg = messages.value.find((m) => m.uid === assistant.uid) || assistant
+    streaming.value = true
+    requestId.value = crypto.randomUUID().replace(/-/g, '')
+    msg.requestId = requestId.value
+    const started = Date.now()
+    const finish = () => {
+      msg.pending = false
+      streaming.value = false
+      abortCtrl.value = null
+    }
+    abortCtrl.value = await fetchAiChatStream(
+      {
+        sessionId: activeId.value,
+        modelId: modelId.value,
+        knowledgeId: knowledgeId.value || undefined,
+        content: msg.question,
+        requestId: requestId.value
+      },
+      bindStreamHandlers(msg, finish, started)
+    )
+  }
+
+  /** boot #71：sessionId + messageId；不重复写提问；SSE 同 stream */
+  async function regenerate(assistant: ChatMsg, messageId: string | number) {
+    const msg = messages.value.find((m) => m.uid === assistant.uid) || assistant
+    streaming.value = true
+    requestId.value = crypto.randomUUID().replace(/-/g, '')
+    msg.requestId = requestId.value
+    const started = Date.now()
+    const finish = () => {
+      msg.pending = false
+      streaming.value = false
+      abortCtrl.value = null
+    }
+    abortCtrl.value = await fetchAiChatRegenerate(
+      {
+        sessionId: activeId.value,
+        messageId,
+        modelId: modelId.value,
+        knowledgeId: knowledgeId.value || undefined,
+        requestId: requestId.value
+      },
+      bindStreamHandlers(msg, finish, started)
+    )
+  }
+
   async function send() {
     const text = input.value.trim()
     if (!text || streaming.value) return
@@ -368,72 +496,57 @@
       return
     }
     input.value = ''
-    messages.value.push({ role: 'user', content: text })
-    const assistant: ChatMsg = { role: 'assistant', content: '', thinkContent: '' }
+    messages.value.push({ uid: nextUid(), role: 'user', content: text })
+    const assistant: ChatMsg = {
+      uid: nextUid(),
+      role: 'assistant',
+      content: '',
+      thinkContent: '',
+      pending: true,
+      question: text
+    }
     messages.value.push(assistant)
-    streaming.value = true
-    requestId.value = crypto.randomUUID().replace(/-/g, '')
     await scrollBottom()
-    const started = Date.now()
-    abortCtrl.value = await fetchAiChatStream(
-      {
-        sessionId: activeId.value,
-        modelId: modelId.value,
-        knowledgeId: knowledgeId.value || undefined,
-        content: text,
-        requestId: requestId.value
-      },
-      {
-        onChunk: (c) => {
-          assistant.content += c
-          void scrollBottom()
-        },
-        onThink: (chunk) => {
-          assistant.thinkContent = (assistant.thinkContent || '') + chunk
-        },
-        onRefs: (refs: any) => {
-          const list = Array.isArray(refs) ? refs : refs?.refs
-          if (Array.isArray(list)) {
-            assistant.refs = list
-            void scrollBottom()
-          }
-        },
-        onUsage: (u: any) => {
-          assistant.tokens = u?.totalTokens ?? u?.tokens
-          assistant.modelName =
-            u?.modelName || chatModels.value.find((m) => m.id === modelId.value)?.modelName
-        },
-        onEvent: (ev, data) => {
-          if (
-            ev === 'chunk' ||
-            ev === 'think' ||
-            ev === 'done' ||
-            ev === 'message' ||
-            ev === 'meta' ||
-            ev === 'refs'
-          ) {
-            try {
-              const j = JSON.parse(data)
-              if (j.requestId) requestId.value = j.requestId
-            } catch {
-              /* ignore */
-            }
-          }
-        },
-        onDone: () => {
-          assistant.durationMs = Date.now() - started
-          streaming.value = false
-          abortCtrl.value = null
-        },
-        onError: (msg) => {
-          streaming.value = false
-          abortCtrl.value = null
-          const text = msg || t('aiChat.genFailed')
-          if (!assistant.content) assistant.content = text
-          ElMessage.error(text)
-        }
+    await stream(assistant)
+  }
+
+  /**
+   * 失败重试：与抽屉同语义——已入库走 regenerate（不重复写提问）；
+   * 校验阶段失败仍走 stream；只更新本条助手消息。
+   */
+  async function retry(msg: ChatMsg) {
+    if (streaming.value || !msg.question) return
+    const target = messages.value.find((m) => m.uid === msg.uid)
+    if (!target) return
+    target.content = ''
+    target.thinkContent = ''
+    target.refs = undefined
+    target.tokens = undefined
+    target.durationMs = undefined
+    target.error = undefined
+    target.pending = true
+
+    let list: any[] | null = null
+    if (activeId.value && (target.id == null || target.persisted || target.requestId)) {
+      try {
+        list = await fetchAiMessageList(activeId.value)
+      } catch {
+        list = null
       }
-    )
+    }
+    const messageId = pickAssistantMessageId(target, list)
+    if (shouldRegenerate(target, messageId) && activeId.value && messageId != null) {
+      target.id = messageId
+      await regenerate(target, messageId)
+      return
+    }
+    if (target.persisted) {
+      target.pending = false
+      target.error = t('aiChat.genFailed')
+      ElMessage.warning(t('aiDrawer.retryNeedRefresh'))
+      return
+    }
+    await stream(target)
   }
 
   async function replayMessage(msg: ChatMsg) {
@@ -683,6 +796,10 @@
     margin-top: 6px;
     font-size: 12px;
     color: var(--el-text-color-secondary);
+  }
+
+  .ai-msg__err {
+    margin-top: 8px;
   }
 
   .ai-msg__think {
