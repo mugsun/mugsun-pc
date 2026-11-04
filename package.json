@@ -28,7 +28,8 @@
     "lint:lint-staged": "lint-staged --no-stash",
     "prepare": "husky",
     "commit": "git-cz",
-    "clean:dev": "tsx scripts/clean-dev.ts"
+    "clean:dev": "tsx scripts/clean-dev.ts",
+    "check:dist-eval": "bash scripts/ci/check-dist-no-eval.sh"
   },
   "config": {
     "commitizen": {

@@ -42,6 +42,10 @@ jobs:
       - name: Generate auto-imports.d.ts (vite build)
         run: pnpm exec vite build
 
+      # Issue #64：产物层确认入口 / vue-i18n 无 new Function|eval(；第三方按 chunk 白名单
+      - name: Check dist has no unexpected new Function / eval
+        run: scripts/ci/check-dist-no-eval.sh
+
       - name: Verify generated declarations
         run: test -s src/types/import/auto-imports.d.ts && test -s src/types/import/components.d.ts
 

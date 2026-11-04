@@ -16,6 +16,9 @@
 
 ### 变更
 
+- CI：扫 dist 产物禁入口/i18n 的 new Function（#64）
+  - build 后跑 scripts/ci/check-dist-no-eval.sh；第三方 chunk 白名单带来源
+
 - 全页助手失败重试去双重提示，补 retryNeedRefresh 行为单测
   - stream onError 只留行内 ElAlert；与抽屉同语义
   - chatRegenerate 抽 decide/applyChatRetry，覆盖已入库无 messageId
