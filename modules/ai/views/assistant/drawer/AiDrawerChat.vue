@@ -384,7 +384,7 @@
     fetchRemoveAiSession,
     fetchSaveAiSession
   } from '../../../api'
-  import { pickAssistantMessageId, shouldRegenerate } from './chatRegenerate'
+  import { pickAssistantMessageId, applyChatRetry } from './chatRegenerate'
 
   defineProps<{ fullscreen?: boolean; canFullscreen?: boolean }>()
   const emit = defineEmits<{ 'toggle-fullscreen': []; close: [] }>()
@@ -690,18 +690,15 @@
       }
     }
     const messageId = pickAssistantMessageId(target, list)
-    if (shouldRegenerate(target, messageId) && activeId.value && messageId != null) {
-      target.id = messageId
-      await regenerate(target, messageId)
-      return
-    }
-    if (target.persisted) {
-      target.pending = false
-      target.error = t('aiChat.genFailed')
-      ElMessage.warning(t('aiDrawer.retryNeedRefresh'))
-      return
-    }
-    await stream(target)
+    await applyChatRetry(target, messageId, !!activeId.value, {
+      regenerate: (id) => regenerate(target, id),
+      stream: () => stream(target),
+      onNeedRefresh: () => {
+        target.pending = false
+        target.error = t('aiChat.genFailed')
+        ElMessage.warning(t('aiDrawer.retryNeedRefresh'))
+      }
+    })
   }
 
   function bindStreamHandlers(msg: ChatMsg, finish: () => void) {

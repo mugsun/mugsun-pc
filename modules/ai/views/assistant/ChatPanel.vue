@@ -184,7 +184,7 @@
     fetchRemoveAiSession,
     fetchSaveAiSession
   } from '../../api'
-  import { pickAssistantMessageId, shouldRegenerate } from './drawer/chatRegenerate'
+  import { pickAssistantMessageId, applyChatRetry } from './drawer/chatRegenerate'
 
   const { t } = useI18n()
 
@@ -434,8 +434,8 @@
       },
       onError: (m: string) => {
         finish()
+        // 与抽屉一致：错误留在本条 ElAlert + 重试，不叠 toast
         msg.error = m || t('aiChat.genFailed')
-        ElMessage.error(msg.error)
       }
     }
   }
@@ -535,18 +535,15 @@
       }
     }
     const messageId = pickAssistantMessageId(target, list)
-    if (shouldRegenerate(target, messageId) && activeId.value && messageId != null) {
-      target.id = messageId
-      await regenerate(target, messageId)
-      return
-    }
-    if (target.persisted) {
-      target.pending = false
-      target.error = t('aiChat.genFailed')
-      ElMessage.warning(t('aiDrawer.retryNeedRefresh'))
-      return
-    }
-    await stream(target)
+    await applyChatRetry(target, messageId, !!activeId.value, {
+      regenerate: (id) => regenerate(target, id),
+      stream: () => stream(target),
+      onNeedRefresh: () => {
+        target.pending = false
+        target.error = t('aiChat.genFailed')
+        ElMessage.warning(t('aiDrawer.retryNeedRefresh'))
+      }
+    })
   }
 
   async function replayMessage(msg: ChatMsg) {

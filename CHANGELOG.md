@@ -16,6 +16,9 @@
 
 ### 变更
 
+- 全页助手失败重试去双重提示，补 retryNeedRefresh 行为单测
+  - stream onError 只留行内 ElAlert；与抽屉同语义
+  - chatRegenerate 抽 decide/applyChatRetry，覆盖已入库无 messageId
 - AI 抽屉重试改调 boot `POST /system/ai/chat/regenerate`（#71）
   - 已入库失败重试不重复写提问；校验失败仍走 stream
   - SSE 同 stream；捕获 done/messageId 供再次 regenerate
