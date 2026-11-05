@@ -52,7 +52,7 @@ export function fetchTrackErrorIssuePage(params: Record<string, any>) {
     showErrorMessage: false
   })
 }
-/** 问题单详情（id；或 fingerprint+appKey）；组内事件仍用 fetchTrackErrorDetail */
+/** 问题单详情：须带 appKey（与 page 一致；可用 Record 传 id+appKey 或 fingerprint+appKey）；组内事件仍用 fetchTrackErrorDetail */
 export function fetchTrackErrorIssueDetail(params: Record<string, any>) {
   return request.get<any>({
     url: '/api/system/track/error-issues/detail',
@@ -60,9 +60,10 @@ export function fetchTrackErrorIssueDetail(params: Record<string, any>) {
     showErrorMessage: false
   })
 }
-/** 指派：body { id, assigneeId }；assigneeId 空=取消；RESOLVED 再指派=重开为 ASSIGNED */
+/** 指派：body { id, appKey, assigneeId }；assigneeId 空=取消；RESOLVED 再指派=重开为 ASSIGNED */
 export function fetchAssignTrackErrorIssue(data: {
   id: number | string
+  appKey: string
   assigneeId?: number | null
 }) {
   return request.post<void>({
@@ -71,16 +72,16 @@ export function fetchAssignTrackErrorIssue(data: {
     showSuccessMessage: true
   })
 }
-/** 标为已解决：body { id } */
-export function fetchResolveTrackErrorIssue(data: { id: number | string }) {
+/** 标为已解决：body { id, appKey } */
+export function fetchResolveTrackErrorIssue(data: { id: number | string; appKey: string }) {
   return request.post<void>({
     url: '/api/system/track/error-issues/resolve',
     data,
     showSuccessMessage: true
   })
 }
-/** 重开：body { id } → OPEN */
-export function fetchReopenTrackErrorIssue(data: { id: number | string }) {
+/** 重开：body { id, appKey } → OPEN */
+export function fetchReopenTrackErrorIssue(data: { id: number | string; appKey: string }) {
   return request.post<void>({
     url: '/api/system/track/error-issues/reopen',
     data,

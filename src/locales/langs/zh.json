@@ -4265,6 +4265,7 @@
         "confirmAssign": "确认指派",
         "countLine": "事件 {events} · 会话 {sessions} · 用户 {users}",
         "detailTitle": "问题单 · {msg}",
+        "needAppKey": "缺少应用 appKey，无法打开详情或写操作",
         "needId": "缺少问题单 id，无法打开详情",
         "noSession": "暂无关联会话，无法打开回放",
         "noUser": "暂无关联用户或访客",

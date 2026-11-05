@@ -457,9 +457,18 @@
     })
   )
 
+  const resolveIssueAppKey = (row?: Record<string, any> | null): string => {
+    return String(appKey.value || row?.appKey || detail.value?.appKey || '').trim()
+  }
+
   const showDetail = async (row: Record<string, any>): Promise<void> => {
     if (row?.id === undefined || row?.id === null || row?.id === '') {
       ElMessage.warning(t('pages.track.errorIssue.needId'))
+      return
+    }
+    const issueAppKey = resolveIssueAppKey(row)
+    if (!issueAppKey) {
+      ElMessage.warning(t('pages.track.errorIssue.needAppKey'))
       return
     }
     detailVisible.value = true
@@ -467,11 +476,14 @@
     detailBackendMissing.value = false
     detail.value = null
     try {
-      const resp: any = await fetchTrackErrorIssueDetail({ id: row.id })
+      const resp: any = await fetchTrackErrorIssueDetail({
+        id: row.id,
+        appKey: issueAppKey
+      })
       detail.value = (resp ?? row) as ErrorIssueDetail
       if (detail.value?.fingerprint) {
         replaceEventsParams({
-          appKey: appKey.value,
+          appKey: issueAppKey,
           fingerprint: detail.value.fingerprint,
           pageNum: 1,
           pageSize: 10
@@ -576,16 +588,25 @@
 
   const reloadDetail = async (): Promise<void> => {
     if (!detail.value?.id) return
-    await showDetail({ id: detail.value.id })
+    await showDetail({
+      id: detail.value.id,
+      appKey: resolveIssueAppKey(detail.value)
+    })
     await loadPage()
   }
 
   const doAssign = async (): Promise<void> => {
     if (!detail.value?.id) return
+    const issueAppKey = resolveIssueAppKey(detail.value)
+    if (!issueAppKey) {
+      ElMessage.warning(t('pages.track.errorIssue.needAppKey'))
+      return
+    }
     assignSaving.value = true
     try {
       await fetchAssignTrackErrorIssue({
         id: detail.value.id,
+        appKey: issueAppKey,
         assigneeId: assignUserId.value ?? null
       })
       assignVisible.value = false
@@ -603,6 +624,11 @@
 
   const doResolve = async (): Promise<void> => {
     if (!detail.value?.id) return
+    const issueAppKey = resolveIssueAppKey(detail.value)
+    if (!issueAppKey) {
+      ElMessage.warning(t('pages.track.errorIssue.needAppKey'))
+      return
+    }
     try {
       await ElMessageBox.confirm(
         t('pages.track.errorIssue.resolveConfirm'),
@@ -613,7 +639,10 @@
       return
     }
     try {
-      await fetchResolveTrackErrorIssue({ id: detail.value.id })
+      await fetchResolveTrackErrorIssue({
+        id: detail.value.id,
+        appKey: issueAppKey
+      })
       await reloadDetail()
     } catch (err) {
       if (isErrorIssueBackendMissing(err) || (isHttpError(err) && err.code === 404)) {
@@ -626,6 +655,11 @@
 
   const doReopen = async (): Promise<void> => {
     if (!detail.value?.id) return
+    const issueAppKey = resolveIssueAppKey(detail.value)
+    if (!issueAppKey) {
+      ElMessage.warning(t('pages.track.errorIssue.needAppKey'))
+      return
+    }
     try {
       await ElMessageBox.confirm(
         t('pages.track.errorIssue.reopenConfirm'),
@@ -636,7 +670,10 @@
       return
     }
     try {
-      await fetchReopenTrackErrorIssue({ id: detail.value.id })
+      await fetchReopenTrackErrorIssue({
+        id: detail.value.id,
+        appKey: issueAppKey
+      })
       await reloadDetail()
     } catch (err) {
       if (isErrorIssueBackendMissing(err) || (isHttpError(err) && err.code === 404)) {

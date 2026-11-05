@@ -4265,6 +4265,7 @@
         "confirmAssign": "Confirm",
         "countLine": "Events {events} · Sessions {sessions} · Users {users}",
         "detailTitle": "Issue · {msg}",
+        "needAppKey": "Missing appKey; cannot open detail or write",
         "needId": "Missing issue id",
         "noSession": "No linked session for replay",
         "noUser": "No linked user or guest",
