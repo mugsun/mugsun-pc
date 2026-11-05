@@ -16,6 +16,10 @@
 
 ### 变更
 
+- 埋点：错误问题单页（release 筛 + 指派/解决/重开）
+  - 跳回放/用户；真路径 `/api/system/track/error-issues*`
+  - 404 友好空态；读 list / 写 edit 权限
+
 - CI：加固 dist no-eval 白名单指纹，并扫 Function(（#64 合后跟）
   - 前缀白名单须过内容指纹；负向夹具 scripts/ci/fixtures/dist-no-eval/
 
