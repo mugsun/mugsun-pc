@@ -16,6 +16,10 @@
 
 ### 变更
 
+- AI：知识库资料支持 PDF/Word/PPT 文档解析上传
+  - multipart `POST .../asset/upload-file`；权限 `ai:kb-asset:upload`
+  - 列表展示 failReason；pending 轮询进度；分段可按资料筛
+
 - 埋点：问数据对齐 boot 真出参（resultType/series）
   - 兼容 metrics/unsupported/raw；趋势行 [{date,pv,uv}]
   - mock 动态 import；raw 结构化兜底

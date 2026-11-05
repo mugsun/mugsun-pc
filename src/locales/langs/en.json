@@ -366,7 +366,7 @@
     "delete": "Delete",
     "colVector": "Vector",
     "edit": "Edit",
-    "onlyText": "Only text files are supported: txt / md / csv / json / log / html",
+    "onlyText": "PDF / Word (docx) / PPT (pptx), plus txt/md/csv/json/log/html; max 20MB each",
     "pickFile": "Please choose a file",
     "confirmTitle": "Confirm",
     "editSegPrompt": "Edit segment content (re-vectorized automatically after saving)",
@@ -384,7 +384,21 @@
     "resegOk": "Re-segmented into {n} segments",
     "removeConfirm": "Deleting “{name}” removes the file and its segments.",
     "rebuildOk": "Rebuild finished: {n} segments processed",
-    "vecOk": "Vectorization finished: {n} segments processed (pending {pending} → succeeded {success})"
+    "vecOk": "Vectorization finished: {n} segments processed (pending {pending} → succeeded {success})",
+    "onlyDocs": "PDF / Word (docx) / PPT (pptx), plus txt/md/csv/json/log/html; max 20MB each",
+    "fileTooLarge": "File exceeds 20MB. Compress or split it, then try again.",
+    "fileEmpty": "The file is empty. Choose one with content.",
+    "pickFileBtn": "Choose file",
+    "uploadTip": "Documents use parse upload; text still uses JSON upload. Failures show in the file list.",
+    "pickedFile": "Selected: {name} ({size})",
+    "uploading": "Uploading…",
+    "polling": "Processing — refreshing progress…",
+    "colFailReason": "Failure reason",
+    "statKeyword": "Keyword",
+    "filterAsset": "Filter segments by file",
+    "allAssets": "All files",
+    "viewSegs": "Segments",
+    "noUploadPerm": "Missing upload permission (ai:kb-asset:upload)"
   },
   "worktab": {
     "btn": {

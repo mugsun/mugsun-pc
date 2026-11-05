@@ -512,9 +512,25 @@ export function fetchTestAiKnowledge(data: Record<string, any>) {
 export function fetchStatusAiKnowledge(data: Record<string, any>) {
   return request.post<void>({ url: '/api/system/ai/knowledge/status', data })
 }
-export function fetchUploadKbAsset(data: FormData | Record<string, any>) {
-  // 兼容 FormData（取文本）与 JSON 正文
+/** JSON 上传（正文 contentText；文本类仍兼容） */
+export function fetchUploadKbAsset(data: Record<string, any>) {
   return request.post<any>({ url: '/api/system/ai/knowledge/asset/upload', data })
+}
+/**
+ * multipart 文档上传（PDF/DOCX/PPTX）。
+ * 字段：knowledgeId + file；可选 segmentType/segmentLength/segmentOverlap 等同现 upload。
+ * 权限：ai:kb-asset:upload；进度可经 onUploadProgress 读 xhr。
+ */
+export function fetchUploadKbAssetFile(
+  data: FormData,
+  opts?: { onUploadProgress?: (e: { loaded: number; total?: number }) => void }
+) {
+  return request.post<any>({
+    url: '/api/system/ai/knowledge/asset/upload-file',
+    data,
+    timeout: 120_000,
+    onUploadProgress: opts?.onUploadProgress
+  })
 }
 export function fetchKbAssetPage(params: Record<string, any>) {
   return request.get<any>({ url: '/api/system/ai/knowledge/asset/list', params })

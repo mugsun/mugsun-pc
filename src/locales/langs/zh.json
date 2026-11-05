@@ -366,7 +366,7 @@
     "delete": "删除",
     "colVector": "向量",
     "edit": "编辑",
-    "onlyText": "当前仅支持文本类：txt / md / csv / json / log / html",
+    "onlyText": "支持 PDF / Word（docx）/ PPT（pptx），以及 txt/md/csv/json/log/html；单文件 ≤20MB",
     "pickFile": "请选择文件",
     "confirmTitle": "确认",
     "editSegPrompt": "编辑分段内容（保存后自动重新向量化）",
@@ -384,7 +384,21 @@
     "resegOk": "重分段完成，共 {n} 段",
     "removeConfirm": "删除「{name}」后，资料和分段都会清掉",
     "rebuildOk": "重建完成，处理 {n} 段",
-    "vecOk": "向量化完成，处理 {n} 段（待处理 {pending} → 成功 {success}）"
+    "vecOk": "向量化完成，处理 {n} 段（待处理 {pending} → 成功 {success}）",
+    "onlyDocs": "支持 PDF / Word（docx）/ PPT（pptx），以及 txt/md/csv/json/log/html；单文件 ≤20MB",
+    "fileTooLarge": "文件超过 20MB，请压缩或拆分后再传",
+    "fileEmpty": "文件是空的，换一份有内容的再传",
+    "pickFileBtn": "选择文件",
+    "uploadTip": "文档走解析上传；文本仍可直传。失败原因见资料列表",
+    "pickedFile": "已选：{name}（{size}）",
+    "uploading": "上传中…",
+    "polling": "处理中，自动刷新进度…",
+    "colFailReason": "失败原因",
+    "statKeyword": "关键词",
+    "filterAsset": "按资料筛选分段",
+    "allAssets": "全部资料",
+    "viewSegs": "看分段",
+    "noUploadPerm": "没有上传权限（ai:kb-asset:upload）"
   },
   "worktab": {
     "btn": {
