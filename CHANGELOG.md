@@ -19,7 +19,8 @@
 - 审批流：设计器/实例对接 AI 节点（type=ai）
   - GraphAdd/graph-model/toTree/validate；绑已启用 AiApp
   - 实例 history 渲染 aiTrace；抽屉展示 AI 写回变量
-  - DEV 仅 `VITE_FLOW_AI_MOCK=true` 下拉 mock；默认可关
+  - 契约收紧：inputMap 字段必填（{}可零注入）；outputMap 目标键白名单；timeoutMs≤300000
+  - `VITE_FLOW_AI_MOCK` 默认 false，接真 API；仅 DEV+true 走下拉 mock
 
 - 埋点：空间行为 query 列表改逗号串，漏斗步骤改正整数
   - eventNames/funnelSteps `join(',')`，避免 axios `[]=`

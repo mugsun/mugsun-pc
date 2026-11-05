@@ -116,7 +116,7 @@
               v-model="node.timeoutMs"
               size="small"
               :min="1000"
-              :max="600000"
+              :max="300000"
               :step="1000"
               controls-position="right"
               class="g-ai-timeout"
