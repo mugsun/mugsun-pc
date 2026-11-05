@@ -16,6 +16,9 @@
 
 ### 变更
 
+- 埋点：错误问题单详情/写路径补 appKey（合后跟）
+  - 与 boot loadIssue(id+appKey+租户) 对齐；缺 appKey 不发请求
+
 - 埋点：错误问题单页（release 筛 + 指派/解决/重开）
   - 跳回放/用户；真路径 `/api/system/track/error-issues*`
   - 404 友好空态；读 list / 写 edit 权限
