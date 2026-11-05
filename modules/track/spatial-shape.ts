@@ -12,6 +12,23 @@ import { filterValidCells, filterValidPoints } from '@/gis/trackSpatial'
 
 export type { TrackSpatialCell, TrackSpatialPoint }
 
+/**
+ * boot points[].userId 是 string（缺则省略）。
+ * gis TrackSpatialPoint 仍可能标 number|null；页壳统一成 string | null | undefined，跳转勿 Number()。
+ */
+export type TrackSpatialPointShell = Omit<TrackSpatialPoint, 'userId'> & {
+  userId?: string | null
+}
+
+/** 原串保留；空 / null / undefined → undefined（调用方勿挂 query） */
+export function normalizeSpatialUserId(
+  raw: string | number | null | undefined
+): string | undefined {
+  if (raw === undefined || raw === null) return undefined
+  const s = String(raw).trim()
+  return s === '' ? undefined : s
+}
+
 /** DEV + 显式 true 才启用本地假数据（仿 ask；.env.development 可开到后端 tip 就绪）。 */
 export function isTrackSpatialMockEnabled(
   env: { DEV?: boolean; VITE_TRACK_SPATIAL_MOCK?: string } = import.meta.env as {
@@ -32,7 +49,8 @@ export type TrackSpatialMode = 'agg' | 'points'
 export interface TrackSpatialResult {
   mode: TrackSpatialMode | string
   cells: TrackSpatialCell[]
-  points: TrackSpatialPoint[]
+  /** userId 已规范为 string | undefined（缺则省略） */
+  points: TrackSpatialPointShell[]
   geoCount: number
   truncated: boolean
 }
@@ -120,7 +138,25 @@ export function normalizeSpatialResult(
 ): TrackSpatialResult {
   const mode = normalizeSpatialMode(raw?.mode)
   const cells = filterValidCells(raw?.cells ?? [])
-  const points = filterValidPoints(raw?.points ?? [])
+  // gis 类型可能是 number；boot 实为 string —— 页侧统一成原字符串，避免 Number 丢精度
+  const points: TrackSpatialPointShell[] = filterValidPoints(
+    (raw?.points ?? []) as TrackSpatialPoint[]
+  ).map((p) => {
+    const uid = normalizeSpatialUserId((p as { userId?: string | number | null }).userId)
+    const base: TrackSpatialPointShell = {
+      lon: p.lon,
+      lat: p.lat,
+      eventName: p.eventName,
+      ts: p.ts,
+      urlPath: p.urlPath,
+      eventId: p.eventId,
+      sessionId: p.sessionId,
+      distinctId: p.distinctId,
+      converted: p.converted
+    }
+    if (uid !== undefined) base.userId = uid
+    return base
+  })
   const geoCount =
     raw?.geoCount != null && Number.isFinite(Number(raw.geoCount))
       ? Number(raw.geoCount)
@@ -146,7 +182,13 @@ export type SpatialJump =
  * 否则有 userId/distinctId → 用户；无 id 不跳。
  */
 export function resolveSpatialPointJump(
-  point: TrackSpatialPoint | null | undefined,
+  point:
+    | Pick<TrackSpatialPointShell, 'sessionId' | 'userId' | 'distinctId'>
+    | (Pick<TrackSpatialPoint, 'sessionId' | 'distinctId'> & {
+        userId?: string | number | null
+      })
+    | null
+    | undefined,
   canReplay: boolean
 ): SpatialJump {
   if (!point) return { kind: 'none', reason: 'no-id' }
@@ -155,10 +197,8 @@ export function resolveSpatialPointJump(
     if (!canReplay) return { kind: 'none', reason: 'no-replay-perm' }
     return { kind: 'replay', sessionId }
   }
-  const userId =
-    point.userId !== undefined && point.userId !== null && String(point.userId).trim() !== ''
-      ? String(point.userId)
-      : undefined
+  // 原字符串 id，勿 Number()（雪花会丢精度）
+  const userId = normalizeSpatialUserId(point.userId as string | number | null | undefined)
   const distinctId = String(point.distinctId || '').trim() || undefined
   if (userId || distinctId) {
     return { kind: 'user', userId, distinctId }

@@ -148,7 +148,7 @@
   import { ElMessage } from 'element-plus'
   import { fetchTrackEventDefPage, fetchTrackSpatial } from '@/api/track'
   import GisSpatialMap from '@/components/gis/GisSpatialMap.vue'
-  import type { TrackSpatialPoint, TrackSpatialViewport } from '@/gis/trackSpatial'
+  import type { TrackSpatialViewport } from '@/gis/trackSpatial'
   import { hasPerm } from '@/utils/permission'
   import { fmtTrackTime, useTrackApp } from '@/views/track/shared/useTrackApp'
   import {
@@ -162,6 +162,7 @@
     resolveSpatialPointJump,
     zoomToGridPrecision,
     type TrackSpatialMode,
+    type TrackSpatialPointShell,
     type TrackSpatialQuery,
     type TrackSpatialResult
   } from '../../spatial-shape'
@@ -192,7 +193,7 @@
   const loading = ref(false)
   const searched = ref(false)
   const result = ref<TrackSpatialResult | null>(null)
-  const selected = ref<TrackSpatialPoint | null>(null)
+  const selected = ref<TrackSpatialPointShell | null>(null)
   /** 避免首帧 viewport 与手动查询打架 */
   const autoReloadEnabled = ref(false)
 
@@ -296,7 +297,7 @@
     void loadSpatial({ fromViewport: true })
   }
 
-  const onSelectPoint = (point: TrackSpatialPoint): void => {
+  const onSelectPoint = (point: TrackSpatialPointShell): void => {
     selected.value = point
   }
 

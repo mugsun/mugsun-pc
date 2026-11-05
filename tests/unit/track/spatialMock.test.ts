@@ -178,6 +178,12 @@ describe('resolveSpatialPointJump', () => {
   })
 
   it('无 session 时走 userId / distinctId', () => {
+    expect(resolveSpatialPointJump({ lon: 1, lat: 2, userId: '9' }, true)).toEqual({
+      kind: 'user',
+      userId: '9',
+      distinctId: undefined
+    })
+    // gis 旧 number 入参仍按原串跳（勿 Number 丢精度）
     expect(resolveSpatialPointJump({ lon: 1, lat: 2, userId: 9 }, true)).toEqual({
       kind: 'user',
       userId: '9',

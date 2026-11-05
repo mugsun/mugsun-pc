@@ -26,7 +26,10 @@
     "prefix": "icon-park-outline",
     "info": {
       "name": "IconPark Outline",
-      "author": { "name": "ByteDance", "url": "https://github.com/bytedance/IconPark" },
+      "author": {
+        "name": "ByteDance",
+        "url": "https://github.com/bytedance/IconPark"
+      },
       "license": {
         "title": "Apache 2.0",
         "spdx": "Apache-2.0",
@@ -46,7 +49,10 @@
     "prefix": "iconamoon",
     "info": {
       "name": "IconaMoon",
-      "author": { "name": "Dariush Habibpour", "url": "https://github.com/dariushhpg1/IconaMoon" },
+      "author": {
+        "name": "Dariush Habibpour",
+        "url": "https://github.com/dariushhpg1/IconaMoon"
+      },
       "license": {
         "title": "CC BY 4.0",
         "spdx": "CC-BY-4.0",
@@ -66,7 +72,10 @@
     "prefix": "ix",
     "info": {
       "name": "Siemens Industrial Experience Icons",
-      "author": { "name": "Siemens AG", "url": "https://github.com/siemens/ix-icons" },
+      "author": {
+        "name": "Siemens AG",
+        "url": "https://github.com/siemens/ix-icons"
+      },
       "license": {
         "title": "MIT",
         "spdx": "MIT",
@@ -86,7 +95,10 @@
     "prefix": "ri",
     "info": {
       "name": "Remix Icon",
-      "author": { "name": "Remix Design", "url": "https://github.com/cyberalien/RemixIcon" },
+      "author": {
+        "name": "Remix Design",
+        "url": "https://github.com/cyberalien/RemixIcon"
+      },
       "license": {
         "title": "Apache 2.0",
         "spdx": "Apache-2.0",
@@ -431,6 +443,9 @@
       "map-pin-line": {
         "body": "<path fill=\"currentColor\" d=\"m12 20.9l4.95-4.95a7 7 0 1 0-9.9 0zm0 2.828l-6.364-6.364a9 9 0 1 1 12.728 0zM12 13a2 2 0 1 0 0-4a2 2 0 0 0 0 4m0 2a4 4 0 1 1 0-8a4 4 0 0 1 0 8\"/>"
       },
+      "map-pin-range-line": {
+        "body": "<path fill=\"currentColor\" d=\"M11 17.938A8.001 8.001 0 0 1 12 2a8 8 0 0 1 1 15.938v2.074c3.946.092 7 .723 7 1.488c0 .828-3.582 1.5-8 1.5s-8-.672-8-1.5c0-.765 3.054-1.396 7-1.488zM12 16a6 6 0 1 0 0-12a6 6 0 0 0 0 12m0-4a2 2 0 1 1 0-4a2 2 0 0 1 0 4\"/>"
+      },
       "megaphone-line": {
         "body": "<path fill=\"currentColor\" d=\"M9 17s7 1 10 4h1a1 1 0 0 0 1-1v-6.063a2 2 0 0 0 0-3.874V4a1 1 0 0 0-1-1h-1C16 6 9 7 9 7H5a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h1l1 5h2zm2-8.339c.683-.146 1.527-.35 2.44-.617c1.678-.494 3.81-1.271 5.56-2.47v12.851c-1.75-1.198-3.883-1.975-5.56-2.469A34 34 0 0 0 11 15.34zM5 9h4v6H5z\"/>"
       },
@@ -657,8 +672,14 @@
     "prefix": "vaadin",
     "info": {
       "name": "Vaadin Icons",
-      "author": { "name": "Vaadin", "url": "https://github.com/vaadin/web-components" },
-      "license": { "title": "Apache 2.0", "spdx": "Apache-2.0" },
+      "author": {
+        "name": "Vaadin",
+        "url": "https://github.com/vaadin/web-components"
+      },
+      "license": {
+        "title": "Apache 2.0",
+        "spdx": "Apache-2.0"
+      },
       "source": "@iconify-json/vaadin@1.2.1"
     },
     "icons": {

@@ -7,7 +7,7 @@ import {
   normalizeSpatialMode,
   parseCsv,
   type TrackSpatialCell,
-  type TrackSpatialPoint,
+  type TrackSpatialPointShell,
   type TrackSpatialQuery,
   type TrackSpatialResult
 } from './spatial-shape'
@@ -43,7 +43,7 @@ export function buildTrackSpatialMock(input: TrackSpatialQuery): TrackSpatialRes
     return { mode, cells: [], points: [], geoCount: 0, truncated: false }
   }
 
-  const points: TrackSpatialPoint[] = seed.map((b, i) => ({
+  const points: TrackSpatialPointShell[] = seed.map((b, i) => ({
     lon: b.lon,
     lat: b.lat,
     eventName: b.name,
@@ -52,7 +52,7 @@ export function buildTrackSpatialMock(input: TrackSpatialQuery): TrackSpatialRes
     eventId: `ev_mock_spatial_${i + 1}`,
     sessionId: i === 1 ? '' : `sess_mock_spatial_${String(i + 1).padStart(3, '0')}`,
     distinctId: i === 2 ? `guest_mock_${i}` : undefined,
-    userId: i === 2 ? undefined : i === 3 ? undefined : 1000 + i,
+    userId: i === 2 || i === 3 ? undefined : String(1000 + i),
     converted: i % 2 === 0
   }))
   // i===3：无 session / user / distinct → 点选不跳（测守卫）

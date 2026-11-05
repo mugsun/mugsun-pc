@@ -53,6 +53,7 @@ ri:mail-send-line
 ri:mail-settings-line
 ri:map-2-line
 ri:map-pin-line
+ri:map-pin-range-line
 ri:megaphone-line
 ri:menu-line
 ri:message-2-line
