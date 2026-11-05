@@ -213,6 +213,7 @@
 <script setup lang="ts">
   import { fetchTrackUserApiBody, fetchTrackUserTimeline } from '@/api/track'
   import { useI18n } from 'vue-i18n'
+  import { useRoute } from 'vue-router'
   import { fetchUserPage } from '@/api/user'
   import { isNetworkError } from '@/utils/http/error'
   import {
@@ -275,6 +276,26 @@
   const distinctId = ref('')
   /** 时间范围（默认近 1 天；查询时硬校验 ≤7 天） */
   const timeRange = ref<[Date, Date]>([new Date(Date.now() - 24 * 3600 * 1000), new Date()])
+
+  // 问题单等入口跳转：?userId= / ?distinctId= / ?appKey= 预填一次（不自动发起查询）
+  const route = useRoute()
+  const qUserId = route.query.userId
+  const qDistinctId = route.query.distinctId
+  const qAppKey = route.query.appKey
+  if (typeof qAppKey === 'string' && qAppKey.trim()) {
+    appKey.value = qAppKey.trim()
+  }
+  if (typeof qUserId === 'string' && qUserId.trim()) {
+    const n = Number(qUserId)
+    if (Number.isFinite(n)) {
+      idMode.value = 'user'
+      userId.value = n
+      userOptions.value = [{ id: n, label: String(n) }]
+    }
+  } else if (typeof qDistinctId === 'string' && qDistinctId.trim()) {
+    idMode.value = 'guest'
+    distinctId.value = qDistinctId.trim()
+  }
 
   /** 用户选择器远程搜索：既有 /system/user/page?username=（records 含 id/username/nickname） */
   const searchUsers = async (keyword: string): Promise<void> => {
