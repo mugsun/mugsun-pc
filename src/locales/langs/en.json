@@ -903,7 +903,8 @@
       "user": "User Drilldown",
       "funnel": "Funnel Analysis",
       "retention": "Retention Analysis",
-      "app": "Integration"
+      "app": "Integration",
+      "errorIssue": "Error Issues"
     },
     "openPlatform": {
       "title": "Open Platform",
@@ -2271,7 +2272,6 @@
         "bootstrapFailed": "Failed to fetch the transport key. Encryption disabled.",
         "bootstrapKeyInvalid": "Transport key from the backend is invalid. Encryption disabled."
       },
-
       "apiKey": {
         "generateBtn": "Generate Key",
         "colIndex": "No.",
@@ -4253,6 +4253,45 @@
         "window1h": "1-hour conversion window",
         "window24h": "24-hour conversion window",
         "window7d": "7-day conversion window"
+      },
+      "errorIssue": {
+        "assign": "Assign",
+        "assignClearHint": "Clear assignee to unassign. Assigning a resolved issue reopens it as Assigned.",
+        "assignTitle": "Assign issue",
+        "assignee": "Assignee",
+        "assigneePlaceholder": "Search users",
+        "backendMissing": "Error-issue API is not ready yet (backend missing or 404). Try again later.",
+        "cancel": "Cancel",
+        "confirmAssign": "Confirm",
+        "countLine": "Events {events} · Sessions {sessions} · Users {users}",
+        "detailTitle": "Issue · {msg}",
+        "needId": "Missing issue id",
+        "noSession": "No linked session for replay",
+        "noUser": "No linked user or guest",
+        "openReplay": "Open session replay",
+        "openUser": "View business user",
+        "recentReleases": "Recent releases",
+        "regressedOnly": "Regressed only",
+        "relatedEvents": "Related error events",
+        "releaseFlag": {
+          "new": "New",
+          "ongoing": "Ongoing",
+          "regressed": "Regressed"
+        },
+        "releaseFlagLabel": "New / regressed",
+        "releasePlaceholder": "Release (optional)",
+        "reopen": "Reopen",
+        "reopenConfirm": "Reopen this issue?",
+        "resolve": "Mark resolved",
+        "resolveConfirm": "Mark this issue as resolved?",
+        "status": {
+          "assigned": "Assigned",
+          "open": "Open",
+          "resolved": "Resolved",
+          "unknown": "Unknown"
+        },
+        "statusPlaceholder": "Status",
+        "summary": "Summary"
       }
     }
   },

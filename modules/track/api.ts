@@ -41,6 +41,53 @@ export function fetchTrackErrorDetail(params: Record<string, any>) {
   return request.get<any>({ url: '/api/system/track/errors/detail', params })
 }
 
+// ===== 错误问题单（error-issues；与 /errors* 指纹列表分开） =====
+// 读权限复用 sys:track-error:list；写（指派/解决/重开）sys:track-error-issue:edit。
+// 后端未合前 404 正常——页面侧友好空态，勿编造其它路径。
+/** 问题单分页：appKey/release/status/assigneeId/regressedOnly + pageNum/pageSize */
+export function fetchTrackErrorIssuePage(params: Record<string, any>) {
+  return request.get<any>({
+    url: '/api/system/track/error-issues/page',
+    params,
+    showErrorMessage: false
+  })
+}
+/** 问题单详情（id；或 fingerprint+appKey）；组内事件仍用 fetchTrackErrorDetail */
+export function fetchTrackErrorIssueDetail(params: Record<string, any>) {
+  return request.get<any>({
+    url: '/api/system/track/error-issues/detail',
+    params,
+    showErrorMessage: false
+  })
+}
+/** 指派：body { id, assigneeId }；assigneeId 空=取消；RESOLVED 再指派=重开为 ASSIGNED */
+export function fetchAssignTrackErrorIssue(data: {
+  id: number | string
+  assigneeId?: number | null
+}) {
+  return request.post<void>({
+    url: '/api/system/track/error-issues/assign',
+    data,
+    showSuccessMessage: true
+  })
+}
+/** 标为已解决：body { id } */
+export function fetchResolveTrackErrorIssue(data: { id: number | string }) {
+  return request.post<void>({
+    url: '/api/system/track/error-issues/resolve',
+    data,
+    showSuccessMessage: true
+  })
+}
+/** 重开：body { id } → OPEN */
+export function fetchReopenTrackErrorIssue(data: { id: number | string }) {
+  return request.post<void>({
+    url: '/api/system/track/error-issues/reopen',
+    data,
+    showSuccessMessage: true
+  })
+}
+
 // ===== 会话回放 =====
 /** 回放会话分页（appKey/hasError 可筛，startTime 倒序） */
 export function fetchTrackReplayPage(params: Record<string, any>) {

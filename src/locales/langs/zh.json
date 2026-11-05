@@ -903,7 +903,8 @@
       "user": "用户细查",
       "funnel": "漏斗分析",
       "retention": "留存分析",
-      "app": "接入管理"
+      "app": "接入管理",
+      "errorIssue": "错误问题单"
     },
     "openPlatform": {
       "title": "开放平台",
@@ -2271,7 +2272,6 @@
         "bootstrapFailed": "获取接口传输密钥失败，已禁用加密发送",
         "bootstrapKeyInvalid": "后端下发的接口传输密钥格式无效，已禁用加密发送"
       },
-
       "apiKey": {
         "generateBtn": "生成密钥",
         "colIndex": "序号",
@@ -4253,6 +4253,45 @@
         "window1h": "1 小时转化窗口",
         "window24h": "24 小时转化窗口",
         "window7d": "7 天转化窗口"
+      },
+      "errorIssue": {
+        "assign": "指派",
+        "assignClearHint": "清空指派人即取消指派；已解决单再指派会重开为「处理中」。",
+        "assignTitle": "指派问题单",
+        "assignee": "指派人",
+        "assigneePlaceholder": "搜索用户",
+        "backendMissing": "错误问题单接口尚未就绪（后端未合入或 404），请稍后再试。",
+        "cancel": "取消",
+        "confirmAssign": "确认指派",
+        "countLine": "事件 {events} · 会话 {sessions} · 用户 {users}",
+        "detailTitle": "问题单 · {msg}",
+        "needId": "缺少问题单 id，无法打开详情",
+        "noSession": "暂无关联会话，无法打开回放",
+        "noUser": "暂无关联用户或访客",
+        "openReplay": "打开会话回放",
+        "openUser": "查看业务用户",
+        "recentReleases": "近期版本",
+        "regressedOnly": "仅看复发",
+        "relatedEvents": "关联错误事件",
+        "releaseFlag": {
+          "new": "新增",
+          "ongoing": "持续",
+          "regressed": "复发"
+        },
+        "releaseFlagLabel": "新增/复发",
+        "releasePlaceholder": "Release（可选）",
+        "reopen": "重开",
+        "reopenConfirm": "确认重开该问题单？",
+        "resolve": "标为已解决",
+        "resolveConfirm": "确认将该问题单标为已解决？",
+        "status": {
+          "assigned": "处理中",
+          "open": "待处理",
+          "resolved": "已解决",
+          "unknown": "未知"
+        },
+        "statusPlaceholder": "状态",
+        "summary": "摘要"
       }
     }
   },

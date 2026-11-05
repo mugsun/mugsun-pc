@@ -110,6 +110,8 @@ CI `csp-e2e` **钉** boot/core 完整 SHA（见 `.github/workflows/ci.yml` 该 j
 
 埋点 SDK：默认依赖 npm `@mugsun/track-web@0.3.0`，直接 `pnpm install` 即可。联调 SDK 源码时可选 `pnpm link ../mugsun-track` 或 `.npmrc` 里 `@mugsun/track-web=link:../mugsun-track`。
 
+错误问题单：`/track/error-issue` → `/api/system/track/error-issues*`（与 `/errors*` 分开）。读复用 `sys:track-error:list`，写 `sys:track-error-issue:edit`；后端未合前 404 页面友好空态。组内事件仍走 `errors/detail`。权限种子合入时对齐 boot。
+
 pre-commit：`.husky/pre-commit` 使用 `pnpm exec lint-staged --no-stash`（**不要**改回会建 stash 的默认行为）。`package.json` 的 `lint:lint-staged` 脚本也已带 `--no-stash`。
 
 ## 本地构建

@@ -1,7 +1,7 @@
 import { AppRouteRecord } from '@/types/router'
 
 /**
- * 埋点分析应用（顶级应用分组）：数据概览、事件分析、性能分析、错误监控、会话回放与接入管理。
+ * 埋点分析应用（顶级应用分组）：数据概览、事件分析、性能分析、错误监控、错误问题单、会话回放与接入管理。
  */
 export const trackRoutes: AppRouteRecord = {
   path: '/track',
@@ -53,6 +53,19 @@ export const trackRoutes: AppRouteRecord = {
       meta: {
         title: 'menus.track.error',
         icon: 'ri:bug-line',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
+      // 错误问题单：release 筛 + 指派/解决闭环；读 sys:track-error:list，写 sys:track-error-issue:edit
+      // 菜单种子/权限码合入 boot 前超管可测，合入时对齐 boot 种子（勿自编其它权限码）
+      path: 'error-issue',
+      name: 'TrackErrorIssue',
+      component: '/track/error-issue',
+      meta: {
+        title: 'menus.track.errorIssue',
+        icon: 'ri:file-list-3-line',
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }
