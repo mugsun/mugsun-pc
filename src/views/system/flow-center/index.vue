@@ -257,6 +257,17 @@
         </ElDescriptions>
         <ElEmpty v-else :description="$t('pages.system.flowCenter.noForm')" :image-size="60" />
 
+        <template v-if="aiWritebackVars.length">
+          <ElDivider content-position="left">{{
+            $t('pages.system.flowCenter.aiVarsDivider')
+          }}</ElDivider>
+          <ElDescriptions :column="1" border size="small">
+            <ElDescriptionsItem v-for="item in aiWritebackVars" :key="item.key" :label="item.label">
+              {{ item.value }}
+            </ElDescriptionsItem>
+          </ElDescriptions>
+        </template>
+
         <template v-if="mode === 'todo'">
           <ElDivider content-position="left">{{
             $t('pages.system.flowCenter.nextApproverDivider')
@@ -313,6 +324,42 @@
                 $t('pages.system.flowCenter.handlerText', { name: h.approver })
               }}</span>
               <span v-if="h.message">· {{ h.message }}</span>
+            </div>
+            <div
+              v-if="h.aiTrace"
+              class="fc-ai-trace"
+              :class="{ 'is-error': !!h.aiTrace.errorCode || !!h.aiTrace.errorMsg }"
+            >
+              <div class="fc-ai-trace-hd">{{ $t('pages.system.flowCenter.aiTraceTitle') }}</div>
+              <div v-if="h.aiTrace.inputSummary" class="fc-ai-line">
+                <span class="fc-ai-k">{{ $t('pages.system.flowCenter.aiInputSummary') }}</span>
+                {{ h.aiTrace.inputSummary }}
+              </div>
+              <div v-if="h.aiTrace.output" class="fc-ai-line">
+                <span class="fc-ai-k">{{ $t('pages.system.flowCenter.aiSummary') }}</span>
+                {{ h.aiTrace.output.ai_summary }}
+              </div>
+              <div v-if="h.aiTrace.output && h.aiTrace.output.ai_pass != null" class="fc-ai-line">
+                <span class="fc-ai-k">{{ $t('pages.system.flowCenter.aiPass') }}</span>
+                {{
+                  h.aiTrace.output.ai_pass
+                    ? $t('pages.system.flowCenter.pass')
+                    : $t('pages.system.flowCenter.reject')
+                }}
+              </div>
+              <div v-if="h.aiTrace.output?.ai_reason" class="fc-ai-line">
+                <span class="fc-ai-k">{{ $t('pages.system.flowCenter.aiReason') }}</span>
+                {{ h.aiTrace.output.ai_reason }}
+              </div>
+              <div v-if="h.aiTrace.errorCode || h.aiTrace.errorMsg" class="fc-ai-line fc-ai-err">
+                <span class="fc-ai-k">{{ $t('pages.system.flowCenter.aiError') }}</span>
+                {{ h.aiTrace.errorCode }} {{ h.aiTrace.errorMsg }}
+              </div>
+              <div class="fc-ai-line fc-ai-meta">
+                <span v-if="h.aiTrace.runId">runId={{ h.aiTrace.runId }}</span>
+                <span v-if="h.aiTrace.aiFlowId"> · aiFlowId={{ h.aiTrace.aiFlowId }}</span>
+                <span v-if="h.aiTrace.durationMs != null"> · {{ h.aiTrace.durationMs }}ms </span>
+              </div>
             </div>
           </ElTimelineItem>
         </ElTimeline>
@@ -730,6 +777,25 @@
     })[s] ||
     s ||
     '-'
+  const AI_VAR_KEYS: Array<{ key: string; labelKey: string }> = [
+    { key: 'ai_summary', labelKey: 'pages.system.flowCenter.aiSummary' },
+    { key: 'ai_pass', labelKey: 'pages.system.flowCenter.aiPass' },
+    { key: 'ai_reason', labelKey: 'pages.system.flowCenter.aiReason' },
+    { key: 'ai_run_id', labelKey: 'pages.system.flowCenter.aiRunId' },
+    { key: 'ai_error_code', labelKey: 'pages.system.flowCenter.aiErrorCode' },
+    { key: 'ai_error_msg', labelKey: 'pages.system.flowCenter.aiErrorMsg' }
+  ]
+  const aiWritebackVars = computed(() => {
+    const data = form.data || {}
+    return AI_VAR_KEYS.filter(
+      (k) => data[k.key] !== undefined && data[k.key] !== null && data[k.key] !== ''
+    ).map((k) => ({
+      key: k.key,
+      label: t(k.labelKey),
+      value: typeof data[k.key] === 'boolean' ? String(data[k.key]) : data[k.key]
+    }))
+  })
+
   const timelineType = (h: any): 'primary' | 'success' | 'warning' | 'danger' => {
     const s = String(h.flowStatus)
     if (s === '9' || s === '11') return 'warning'
@@ -808,5 +874,43 @@
   .fc-actions {
     display: flex;
     gap: 10px;
+  }
+
+  .fc-ai-trace {
+    padding: 8px 10px;
+    margin-top: 6px;
+    font-size: 12px;
+    line-height: 1.5;
+    background: var(--el-fill-color-lighter);
+    border-left: 3px solid var(--el-color-primary);
+    border-radius: 6px;
+  }
+
+  .fc-ai-trace.is-error {
+    border-left-color: var(--el-color-danger);
+  }
+
+  .fc-ai-trace-hd {
+    margin-bottom: 4px;
+    font-weight: 600;
+    color: var(--el-text-color-primary);
+  }
+
+  .fc-ai-line {
+    color: var(--el-text-color-regular);
+  }
+
+  .fc-ai-k {
+    margin-right: 4px;
+    color: var(--el-text-color-secondary);
+  }
+
+  .fc-ai-err {
+    color: var(--el-color-danger);
+  }
+
+  .fc-ai-meta {
+    margin-top: 2px;
+    color: var(--el-text-color-secondary);
   }
 </style>
