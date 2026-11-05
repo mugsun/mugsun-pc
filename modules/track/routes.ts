@@ -117,6 +117,19 @@ export const trackRoutes: AppRouteRecord = {
       }
     },
     {
+      // 空间行为：agg 热力 / points 点选跳回放或用户；读 sys:track-spatial:list
+      // 菜单种子随后端合入前超管可测；合入时对齐 boot（勿自编其它权限码）
+      path: 'spatial',
+      name: 'TrackSpatial',
+      component: '/track/spatial',
+      meta: {
+        title: 'menus.track.spatial',
+        icon: 'ri:map-pin-range-line',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
       path: 'retention',
       name: 'TrackRetention',
       component: '/track/retention',

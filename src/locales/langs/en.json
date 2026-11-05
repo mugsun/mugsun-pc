@@ -919,7 +919,8 @@
       "retention": "Retention Analysis",
       "app": "Integration",
       "errorIssue": "Error Issues",
-      "ask": "Ask data"
+      "ask": "Ask data",
+      "spatial": "Spatial behavior"
     },
     "openPlatform": {
       "title": "Open Platform",
@@ -4336,6 +4337,33 @@
         "startTime": "Start time",
         "hasError": "Has error",
         "askFailed": "Ask data failed. Retry later, or check whether the backend is merged"
+      },
+      "spatial": {
+        "title": "Spatial behavior",
+        "modeAgg": "Aggregate heat",
+        "modePoints": "Event points",
+        "eventNamesPlaceholder": "Event names (multi / type)",
+        "funnelIdPlaceholder": "Funnel ID (optional)",
+        "funnelStepsPlaceholder": "Funnel step events (optional)",
+        "convertedOnly": "Converted only",
+        "mapTitle": "Spatial distribution",
+        "mapPending": "Placeholder when map component or basemap is unavailable",
+        "sideTitle": "Selected point",
+        "sideEmpty": "No point selected; click a point in points mode",
+        "emptyIdle": "Pick an app, then query spatial data",
+        "emptyNoData": "No spatial data",
+        "geoCount": "{n} spatial events",
+        "coords": "Coords",
+        "time": "Time",
+        "openReplay": "Open replay",
+        "openUser": "User profile",
+        "needApp": "Select an app first",
+        "noPerm": "Missing spatial view permission (sys:track-spatial:list)",
+        "noReplayPerm": "Missing replay permission; cannot open replay",
+        "noJumpId": "Point has no session or user id; cannot navigate",
+        "loadFailed": "Failed to load spatial data",
+        "truncated": "Result truncated; zoom in or narrow filters and retry",
+        "mockHint": "Local mock on (DEV only when VITE_TRACK_SPATIAL_MOCK=true; turn off after backend tip)"
       }
     }
   },

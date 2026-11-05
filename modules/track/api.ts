@@ -1,4 +1,5 @@
 import request from '@/utils/http'
+import type { TrackSpatialQuery, TrackSpatialResult } from './spatial-shape'
 
 // ===== 埋点分析 =====
 /** 概览卡片 + 来源/设备/浏览器分布（days 缺省 7，范围 1..90） */
@@ -294,6 +295,18 @@ export function fetchTrackAsk(data: { appKey: string; question: string; days?: n
     url: '/api/system/track/ask',
     data,
     // 无权限/业务失败由页面按文案展示；避免与页内空态叠两层 toast
+    showErrorMessage: false
+  })
+}
+
+// ===== 空间行为（精确坐标 agg 热力 / points 点选） =====
+// 读权限 sys:track-spatial:list；默认打真 API。DEV 仅当 VITE_TRACK_SPATIAL_MOCK=true 走本地 mock。
+// 菜单种子随后端合入；本路由仅本地/超管可测，勿半成品菜单上线。
+/** 空间行为：appKey + days(1..30) + mode=agg|points + 可选 bbox/zoom/事件/漏斗筛 */
+export function fetchTrackSpatial(params: TrackSpatialQuery) {
+  return request.get<TrackSpatialResult>({
+    url: '/api/system/track/spatial',
+    params,
     showErrorMessage: false
   })
 }

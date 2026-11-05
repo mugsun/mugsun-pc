@@ -919,7 +919,8 @@
       "retention": "留存分析",
       "app": "接入管理",
       "errorIssue": "错误问题单",
-      "ask": "问数据"
+      "ask": "问数据",
+      "spatial": "空间行为"
     },
     "openPlatform": {
       "title": "开放平台",
@@ -4336,6 +4337,33 @@
         "startTime": "开始时间",
         "hasError": "含错误",
         "askFailed": "问数据失败。请稍后重试，或检查后端是否已合入"
+      },
+      "spatial": {
+        "title": "空间行为",
+        "modeAgg": "聚合热力",
+        "modePoints": "事件点",
+        "eventNamesPlaceholder": "事件名（可多选/手输）",
+        "funnelIdPlaceholder": "漏斗 ID（可选）",
+        "funnelStepsPlaceholder": "漏斗步骤事件（可选）",
+        "convertedOnly": "仅转化",
+        "mapTitle": "空间分布",
+        "mapPending": "地图组件未就绪或底图失败时显示占位",
+        "sideTitle": "选中点",
+        "sideEmpty": "暂无选中点；在点模式下点击地图上的点",
+        "emptyIdle": "选择应用后查询空间数据",
+        "emptyNoData": "暂无空间数据",
+        "geoCount": "空间事件 {n} 条",
+        "coords": "坐标",
+        "time": "时间",
+        "openReplay": "查看回放",
+        "openUser": "用户画像",
+        "needApp": "请先选择应用",
+        "noPerm": "没有空间行为查看权限（sys:track-spatial:list）",
+        "noReplayPerm": "没有会话回放权限，无法跳转回放",
+        "noJumpId": "该点缺少会话或用户标识，无法跳转",
+        "loadFailed": "空间数据加载失败",
+        "truncated": "结果已截断，请放大地图或收窄筛选后再查",
+        "mockHint": "当前为本地 mock（仅 DEV 且 VITE_TRACK_SPATIAL_MOCK=true；后端 tip 进 main 后可关）"
       }
     }
   },
