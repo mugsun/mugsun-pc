@@ -12,6 +12,7 @@ ri:building-line
 ri:chat-1-line
 ri:chat-ai-line
 ri:chat-history-line
+ri:chat-search-line
 ri:cloud-line
 ri:code-box-line
 ri:community-line
@@ -63,7 +64,6 @@ ri:play-circle-line
 ri:plug-line
 ri:price-tag-3-line
 ri:question-line
-ri:chat-search-line
 ri:quill-pen-line
 ri:robot-2-line
 ri:robot-line
