@@ -37,9 +37,9 @@
 </template>
 
 <script setup lang="ts">
-  import { h, onDeactivated, ref } from 'vue'
+  import { h, onDeactivated, onMounted, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
-  import { onBeforeRouteLeave } from 'vue-router'
+  import { onBeforeRouteLeave, useRoute } from 'vue-router'
   import { useTable } from '@/hooks/core/useTable'
   import { fetchTrackReplayPage } from '@/api/track'
   import {
@@ -58,6 +58,7 @@
   const { t } = useI18n()
 
   const { appOptions, appKey, appsLoading } = useTrackApp()
+  const route = useRoute()
   /** 错误会话筛选（undefined=全部） */
   const hasError = ref<number | undefined>(undefined)
 
@@ -206,6 +207,23 @@
     currentSessionId.value = String(row.sessionId ?? '')
     playerVisible.value = true
   }
+
+  /** 问数据等入口：?sessionId=&appKey= → 对齐应用并打开播放抽屉 */
+  const applyReplayQuery = (): void => {
+    const qApp = String(route.query.appKey || '').trim()
+    if (qApp && qApp !== appKey.value) appKey.value = qApp
+    const sid = String(route.query.sessionId || '').trim()
+    if (!sid) return
+    if (!hasPerm('sys:track-replay:view')) return
+    currentSessionId.value = sid
+    playerVisible.value = true
+  }
+
+  onMounted(applyReplayQuery)
+  watch(
+    () => [route.query.sessionId, route.query.appKey],
+    () => applyReplayQuery()
+  )
 
   const closeOverlays = (): void => {
     playerVisible.value = false

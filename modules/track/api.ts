@@ -285,3 +285,15 @@ export function fetchTrackAppHealthSummary() {
 export function fetchTrackAppHealth(params: { appKey: string }) {
   return request.get<any>({ url: '/api/system/track/app/health', params })
 }
+
+// ===== 问数据（自然语言 → 埋点分析；与 AI dataset 问数无关） =====
+// 读权限 sys:track-ask:list；后端未合前 404 正常——页面可走本地 mock 自测。
+/** 问数据：入参 appKey + question(≤500) + days?(1..90) */
+export function fetchTrackAsk(data: { appKey: string; question: string; days?: number }) {
+  return request.post<any>({
+    url: '/api/system/track/ask',
+    data,
+    // 无权限/业务失败由页面按文案展示；避免与页内空态叠两层 toast
+    showErrorMessage: false
+  })
+}

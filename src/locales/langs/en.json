@@ -904,7 +904,8 @@
       "funnel": "Funnel Analysis",
       "retention": "Retention Analysis",
       "app": "Integration",
-      "errorIssue": "Error Issues"
+      "errorIssue": "Error Issues",
+      "ask": "Ask data"
     },
     "openPlatform": {
       "title": "Open Platform",
@@ -4293,6 +4294,33 @@
         },
         "statusPlaceholder": "Status",
         "summary": "Summary"
+      },
+      "ask": {
+        "title": "Ask data",
+        "placeholder": "Ask about track data, e.g. How were visits in the last 7 days?",
+        "ask": "Ask",
+        "needApp": "Select an app first. Ask data is scoped per app.",
+        "needQuestion": "Enter a question first",
+        "questionTooLong": "Keep the question within 500 characters",
+        "noPerm": "No ask-data permission. Requires sys:track-ask:list",
+        "result": "Result",
+        "summary": "Summary",
+        "metrics": "Metrics",
+        "series": "Trend",
+        "table": "Table",
+        "replays": "Related replays",
+        "replayEmpty": "No matching session replay",
+        "replayDenied": "No session-replay permission; related replays are unavailable",
+        "openReplay": "Open replay",
+        "unsupportedHint": "This question is out of scope. Try another phrasing.",
+        "emptyIdle": "After you ask, metrics, charts, or tables show up here",
+        "mockHint": "Local mock on (set VITE_TRACK_ASK_MOCK=false when the real API is live)",
+        "intent": "Intent",
+        "warnings": "Warnings",
+        "entryPath": "Entry page",
+        "startTime": "Start time",
+        "hasError": "Has error",
+        "askFailed": "Ask data failed. Retry later, or check whether the backend is merged"
       }
     }
   },

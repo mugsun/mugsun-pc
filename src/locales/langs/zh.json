@@ -904,7 +904,8 @@
       "funnel": "漏斗分析",
       "retention": "留存分析",
       "app": "接入管理",
-      "errorIssue": "错误问题单"
+      "errorIssue": "错误问题单",
+      "ask": "问数据"
     },
     "openPlatform": {
       "title": "开放平台",
@@ -4293,6 +4294,33 @@
         },
         "statusPlaceholder": "状态",
         "summary": "摘要"
+      },
+      "ask": {
+        "title": "问数据",
+        "placeholder": "用中文问埋点数据，例如：近 7 天访问量怎么样？",
+        "ask": "提问",
+        "needApp": "请先选择应用。问数据是按应用分开的",
+        "needQuestion": "请先输入问题",
+        "questionTooLong": "问题请控制在 500 字以内",
+        "noPerm": "没有问数据权限。需要 sys:track-ask:list",
+        "result": "结果",
+        "summary": "摘要",
+        "metrics": "指标",
+        "series": "趋势",
+        "table": "明细",
+        "replays": "相关回放",
+        "replayEmpty": "没有匹配到可打开的会话回放",
+        "replayDenied": "当前账号没有会话回放权限，无法打开相关回放",
+        "openReplay": "打开回放",
+        "unsupportedHint": "这个问题还不在支持范围，请换一种问法",
+        "emptyIdle": "输入问题后，这里会显示指标、图表或表格",
+        "mockHint": "当前为本地 mock（接真 API 后自动关闭或设 VITE_TRACK_ASK_MOCK=false）",
+        "intent": "意图",
+        "warnings": "提示",
+        "entryPath": "入口页",
+        "startTime": "开始时间",
+        "hasError": "含错误",
+        "askFailed": "问数据失败。请稍后重试，或检查后端是否已合入"
       }
     }
   },

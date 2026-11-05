@@ -16,6 +16,11 @@
 
 ### 变更
 
+- 埋点：问数据页骨架（中文提问 → 指标/图/表 → 相关回放）
+  - 路由 `/track/ask`；真路径 `POST /api/system/track/ask`
+  - 读 `sys:track-ask:list`；回放跳 replay 带 sessionId+appKey
+  - DEV 默认可本地 mock；与 AI dataset 问数无关
+
 - 埋点：错误问题单详情/写路径补 appKey（合后跟）
   - 与 boot loadIssue(id+appKey+租户) 对齐；缺 appKey 不发请求
 

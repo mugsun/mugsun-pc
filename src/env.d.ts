@@ -43,6 +43,8 @@ interface ImportMetaEnv {
   readonly VITE_TRACK_APP_KEY?: string
   /** 埋点是否跳过已处理错误：true / false（不区分大小写）；不设则用 SDK 默认值 */
   readonly VITE_TRACK_SKIP_HANDLED_ERRORS?: string
+  /** 埋点问数据 DEV mock：设 false 关本地假数据，改打真 API */
+  readonly VITE_TRACK_ASK_MOCK?: string
   readonly VITE_VERSION?: string
   /** 可选构建期接口传输密钥；非空时须与 bootstrap 下发值字节一致，否则禁用加密 */
   readonly VITE_CRYPTO_API_KEY?: string
