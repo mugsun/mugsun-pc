@@ -16,6 +16,10 @@
 
 ### 变更
 
+- GIS：GisSpatialMap 空间行为热力/点选（合 boot spatial）
+  - props：mode/cells/points；weight 回退 count
+  - emit：viewport、select-point；旧 GisHeatMap 不动
+
 - AI：知识库资料支持 PDF/Word/PPT 文档解析上传
   - multipart `POST .../asset/upload-file`；权限 `ai:kb-asset:upload`
   - 列表展示 failReason；pending 轮询进度；分段可按资料筛
