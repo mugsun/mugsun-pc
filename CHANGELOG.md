@@ -16,6 +16,11 @@
 
 ### 变更
 
+- AI：应用编排支持 foreach / parallel 控制节点（DEV mock）
+  - palette 可拖入；属性面板有序 bodyNodeIds / branches
+  - 运行结果展示 iterations[] / branches[]（truncated/partial）
+  - DEV 仅 `VITE_AI_FLOW_CONTROL_MOCK=true` 走本地同形 mock
+
 - 审批流：设计器/实例对接 AI 节点（type=ai）
   - GraphAdd/graph-model/toTree/validate；绑已启用 AiApp
   - 实例 history 渲染 aiTrace；抽屉展示 AI 写回变量

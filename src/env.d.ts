@@ -47,6 +47,8 @@ interface ImportMetaEnv {
   readonly VITE_TRACK_ASK_MOCK?: string
   /** 埋点空间行为 DEV mock：仅 true 启用本地假数据；默认/未设打真 API */
   readonly VITE_TRACK_SPATIAL_MOCK?: string
+  /** AI 流 foreach/parallel DEV mock；仅 DEV 且显式 true 时走本地假运行 */
+  readonly VITE_AI_FLOW_CONTROL_MOCK?: string
   /** 审批流 AI 节点 AiApp 下拉 DEV mock：仅 true；默认/未设打真 API */
   readonly VITE_FLOW_AI_MOCK?: string
   readonly VITE_VERSION?: string

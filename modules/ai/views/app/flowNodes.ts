@@ -21,7 +21,9 @@ export const NODE_LABEL_KEYS: Record<string, string> = {
   code: 'aiAppDesign.nodeCode',
   text: 'aiAppDesign.nodeText',
   updateVar: 'aiAppDesign.nodeUpdateVar',
-  notice: 'aiAppDesign.nodeNotice'
+  notice: 'aiAppDesign.nodeNotice',
+  foreach: 'aiAppDesign.nodeForeach',
+  parallel: 'aiAppDesign.nodeParallel'
 }
 
 export const FIXED_LABELS: Record<string, string> = { http: 'HTTP', mcp: 'MCP' }
@@ -46,7 +48,9 @@ export const LEGACY_DEFAULT_LABELS: Record<string, string> = {
   updateVar: '变量更新',
   http: 'HTTP',
   mcp: 'MCP',
-  notice: '通知'
+  notice: '通知',
+  foreach: '循环',
+  parallel: '并行'
 }
 
 /** 「运行」按钮发给模型的固定测试输入，不跟界面语言变 */

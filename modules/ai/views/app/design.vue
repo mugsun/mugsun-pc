@@ -13,6 +13,14 @@
         $t('aiAppDesign.save')
       }}</ElButton>
     </div>
+    <ElAlert
+      v-if="mockOn"
+      class="mock-hint"
+      type="info"
+      :closable="false"
+      :title="$t('aiAppDesign.mockHint')"
+      show-icon
+    />
 
     <!-- 对话助手形态 -->
     <div v-if="app?.appType === 'chat'" class="chat-mode">
@@ -124,7 +132,167 @@
             <ElFormItem v-if="hasField('value')" :label="$t('aiAppDesign.expected')">
               <ElInput v-model="selected.data.value" />
             </ElFormItem>
-            <ElFormItem :label="$t('aiAppDesign.outputVar')">
+
+            <!-- foreach -->
+            <template v-if="selected.data.type === 'foreach'">
+              <ElFormItem :label="$t('aiAppDesign.inputPath')" required>
+                <ElInput
+                  v-model="selected.data.inputPath"
+                  :placeholder="$t('aiAppDesign.inputPathPlaceholder')"
+                />
+              </ElFormItem>
+              <ElFormItem :label="$t('aiAppDesign.itemVar')">
+                <ElInput v-model="selected.data.itemVar" placeholder="item" />
+              </ElFormItem>
+              <ElFormItem :label="$t('aiAppDesign.indexVar')">
+                <ElInput v-model="selected.data.indexVar" placeholder="index" />
+              </ElFormItem>
+              <ElFormItem :label="$t('aiAppDesign.maxIterations')">
+                <ElInputNumber
+                  v-model="selected.data.maxIterations"
+                  :min="1"
+                  :max="100"
+                  controls-position="right"
+                />
+              </ElFormItem>
+              <ElFormItem :label="$t('aiAppDesign.timeoutMs')">
+                <ElInputNumber
+                  v-model="selected.data.timeoutMs"
+                  :min="1000"
+                  :max="300000"
+                  :step="1000"
+                  controls-position="right"
+                />
+              </ElFormItem>
+              <ElFormItem :label="$t('aiAppDesign.aggregate')">
+                <ElSelect v-model="selected.data.aggregate" style="width: 100%">
+                  <ElOption :label="$t('aiAppDesign.aggregateArray')" value="array" />
+                  <ElOption :label="$t('aiAppDesign.aggregateLast')" value="last" />
+                  <ElOption :label="$t('aiAppDesign.aggregateNone')" value="none" />
+                </ElSelect>
+              </ElFormItem>
+              <ElFormItem :label="$t('aiAppDesign.onItemFailure')">
+                <ElSelect v-model="selected.data.onItemFailure" style="width: 100%">
+                  <ElOption :label="$t('aiAppDesign.onFailContinue')" value="continue" />
+                  <ElOption :label="$t('aiAppDesign.onFailAbort')" value="abort" />
+                </ElSelect>
+              </ElFormItem>
+              <ElFormItem :label="$t('aiAppDesign.bodyNodeIds')">
+                <ElSelect
+                  :model-value="selected.data.bodyNodeIds || []"
+                  multiple
+                  filterable
+                  style="width: 100%"
+                  :placeholder="$t('aiAppDesign.bodyNodeIdsHint')"
+                  @update:model-value="onBodyNodeIdsChange"
+                >
+                  <ElOption
+                    v-for="opt in bodyOptions"
+                    :key="opt.id"
+                    :label="opt.label"
+                    :value="opt.id"
+                  />
+                </ElSelect>
+              </ElFormItem>
+            </template>
+
+            <!-- parallel -->
+            <template v-if="selected.data.type === 'parallel'">
+              <ElFormItem :label="$t('aiAppDesign.waitAll')">
+                <ElSwitch v-model="selected.data.waitAll" />
+              </ElFormItem>
+              <ElFormItem :label="$t('aiAppDesign.onBranchFailure')">
+                <ElSelect v-model="selected.data.onBranchFailure" style="width: 100%" disabled>
+                  <ElOption :label="$t('aiAppDesign.onFailContinue')" value="continue" />
+                </ElSelect>
+              </ElFormItem>
+              <ElFormItem :label="$t('aiAppDesign.maxBranches')">
+                <ElInputNumber
+                  v-model="selected.data.maxBranches"
+                  :min="2"
+                  :max="16"
+                  controls-position="right"
+                />
+              </ElFormItem>
+              <ElFormItem :label="$t('aiAppDesign.timeoutMs')">
+                <ElInputNumber
+                  v-model="selected.data.timeoutMs"
+                  :min="1000"
+                  :max="300000"
+                  :step="1000"
+                  controls-position="right"
+                />
+              </ElFormItem>
+              <div class="branches-block">
+                <div class="branches-hd">
+                  <span>{{ $t('aiAppDesign.branches') }}</span>
+                  <ElButton
+                    link
+                    type="primary"
+                    size="small"
+                    :disabled="
+                      (selected.data.branches || []).length >= (selected.data.maxBranches || 8)
+                    "
+                    @click="addBranch"
+                    >{{ $t('aiAppDesign.addBranch') }}</ElButton
+                  >
+                </div>
+                <div
+                  v-for="(b, bi) in selected.data.branches || []"
+                  :key="b.id || bi"
+                  class="branch-card"
+                >
+                  <div class="branch-row">
+                    <ElInput
+                      v-model="b.id"
+                      size="small"
+                      :placeholder="$t('aiAppDesign.branchId')"
+                      style="width: 88px"
+                    />
+                    <ElInput
+                      v-model="b.label"
+                      size="small"
+                      :placeholder="$t('aiAppDesign.branchLabel')"
+                    />
+                    <ElButton
+                      v-if="(selected.data.branches || []).length > 2"
+                      link
+                      type="danger"
+                      size="small"
+                      @click="removeBranch(bi)"
+                      >{{ $t('aiAppDesign.removeBranch') }}</ElButton
+                    >
+                  </div>
+                  <ElSelect
+                    :model-value="b.bodyNodeIds || []"
+                    multiple
+                    filterable
+                    size="small"
+                    style="width: 100%; margin-top: 6px"
+                    :placeholder="$t('aiAppDesign.branchBody')"
+                    @update:model-value="(v) => onBranchBodyChange(bi, v)"
+                  >
+                    <ElOption
+                      v-for="opt in bodyOptions"
+                      :key="opt.id"
+                      :label="opt.label"
+                      :value="opt.id"
+                    />
+                  </ElSelect>
+                  <ElInput
+                    v-model="b.outputVar"
+                    size="small"
+                    style="margin-top: 6px"
+                    :placeholder="$t('aiAppDesign.outputVar')"
+                  />
+                </div>
+              </div>
+            </template>
+
+            <ElFormItem
+              v-if="selected.data.type !== 'start' && selected.data.type !== 'end'"
+              :label="$t('aiAppDesign.outputVar')"
+            >
               <ElInput
                 v-model="selected.data.outputVar"
                 :placeholder="$t('aiAppDesign.optional')"
@@ -139,6 +307,33 @@
       </aside>
     </div>
 
+    <div v-if="controlOutputs.length" class="control-detail">
+      <h4>{{ $t('aiAppDesign.runControlDetail') }}</h4>
+      <div v-for="c in controlOutputs" :key="c.nodeId + c.nodeType" class="control-card">
+        <div class="control-hd">
+          <ElTag size="small">{{ c.nodeType }}</ElTag>
+          <span class="cid">{{ c.nodeId }}</span>
+          <ElTag v-if="c.truncated" type="warning" size="small">{{
+            $t('aiAppDesign.truncated')
+          }}</ElTag>
+          <ElTag v-if="c.partial" type="warning" size="small">{{
+            $t('aiAppDesign.partial')
+          }}</ElTag>
+        </div>
+        <div v-if="c.iterations?.length" class="control-sec">
+          <div class="sec-title"
+            >{{ $t('aiAppDesign.iterations') }} ({{ c.ranCount ?? c.iterations.length }}/{{
+              c.inputCount ?? '?'
+            }})</div
+          >
+          <pre class="mini">{{ JSON.stringify(c.iterations, null, 2) }}</pre>
+        </div>
+        <div v-if="c.branches?.length" class="control-sec">
+          <div class="sec-title">{{ $t('aiAppDesign.parallelBranches') }}</div>
+          <pre class="mini">{{ JSON.stringify(c.branches, null, 2) }}</pre>
+        </div>
+      </div>
+    </div>
     <pre v-if="runResult" class="result">{{ runResult }}</pre>
   </div>
 </template>
@@ -159,8 +354,25 @@
   } from '@vue-flow/core'
   import '@vue-flow/core/dist/style.css'
   import '@vue-flow/core/dist/theme-default.css'
-  import { fetchAiAppDetail, fetchRunAiApp, fetchSaveAiAppDsl, fetchShareAiApp } from '../../api'
+  import {
+    fetchAiAppDetail,
+    fetchAiAppRunDetail,
+    fetchRunAiApp,
+    fetchSaveAiAppDsl,
+    fetchShareAiApp
+  } from '../../api'
   import { displayLabel, RUN_SAMPLE_INPUT, withStoredLabel } from './flowNodes'
+  import {
+    bodyCandidateNodes,
+    defaultDataForType,
+    extractControlOutputs,
+    isAiFlowControlMockEnabled,
+    normalizeControlData,
+    syncOrderedIds,
+    validateControlNode,
+    type ControlNodeOutput,
+    type ParallelBranch
+  } from './flowControl'
 
   defineOptions({ name: 'AiAppDesign' })
   const { t } = useI18n()
@@ -174,6 +386,8 @@
   const saving = ref(false)
   const running = ref(false)
   const runResult = ref('')
+  const controlOutputs = ref<ControlNodeOutput[]>([])
+  const mockOn = isAiFlowControlMockEnabled()
   const chat = reactive({
     temperature: 0.7,
     maxTokens: 2000,
@@ -190,7 +404,9 @@
       nodes: [
         { type: 'start', label: t('aiAppDesign.nodeStart') },
         { type: 'end', label: t('aiAppDesign.nodeEnd') },
-        { type: 'switch', label: t('aiAppDesign.nodeSwitch') }
+        { type: 'switch', label: t('aiAppDesign.nodeSwitch') },
+        { type: 'foreach', label: t('aiAppDesign.nodeForeach') },
+        { type: 'parallel', label: t('aiAppDesign.nodeParallel') }
       ]
     },
     {
@@ -241,6 +457,71 @@
     return !!type && (fieldMap[type] || []).includes(f)
   }
 
+  const bodyOptions = computed(() =>
+    bodyCandidateNodes(
+      nodes.value.map((n) => ({ id: n.id, data: n.data as any })),
+      selected.value?.id
+    ).map((n) => ({
+      id: n.id,
+      label: `${displayLabel(n.data?.type, n.data?.label, t)} (${n.id})`
+    }))
+  )
+
+  function ensureForeachDefaults(data: Record<string, any>) {
+    if (!Array.isArray(data.bodyNodeIds)) data.bodyNodeIds = []
+    if (data.bodyMode == null) data.bodyMode = 'nodeIds'
+    if (data.itemVar == null || data.itemVar === '') data.itemVar = 'item'
+    if (data.indexVar == null || data.indexVar === '') data.indexVar = 'index'
+    if (data.maxIterations == null) data.maxIterations = 20
+    if (data.timeoutMs == null) data.timeoutMs = 120000
+    if (data.aggregate == null) data.aggregate = 'array'
+    if (data.onItemFailure == null) data.onItemFailure = 'continue'
+    if (data.outputVar == null || data.outputVar === '') data.outputVar = 'foreachResults'
+  }
+
+  function ensureParallelDefaults(data: Record<string, any>) {
+    if (data.waitAll == null) data.waitAll = true
+    if (data.onBranchFailure == null) data.onBranchFailure = 'continue'
+    if (data.maxBranches == null) data.maxBranches = 8
+    if (data.timeoutMs == null) data.timeoutMs = 120000
+    if (!Array.isArray(data.branches) || data.branches.length < 2) {
+      data.branches = [
+        { id: 'b1', label: '', bodyNodeIds: [], outputVar: 'branch_b1' },
+        { id: 'b2', label: '', bodyNodeIds: [], outputVar: 'branch_b2' }
+      ]
+    }
+  }
+
+  function onBodyNodeIdsChange(next: string[]) {
+    if (!selected.value || selected.value.data?.type !== 'foreach') return
+    selected.value.data.bodyNodeIds = syncOrderedIds(selected.value.data.bodyNodeIds, next)
+  }
+
+  function onBranchBodyChange(bi: number, next: string[]) {
+    if (!selected.value || selected.value.data?.type !== 'parallel') return
+    const branches = selected.value.data.branches as ParallelBranch[]
+    if (!branches?.[bi]) return
+    branches[bi].bodyNodeIds = syncOrderedIds(branches[bi].bodyNodeIds, next)
+  }
+
+  function addBranch() {
+    if (!selected.value || selected.value.data?.type !== 'parallel') return
+    ensureParallelDefaults(selected.value.data)
+    const branches = selected.value.data.branches as ParallelBranch[]
+    const max = Number(selected.value.data.maxBranches) || 8
+    if (branches.length >= max) return
+    const n = branches.length + 1
+    const id = `b${n}`
+    branches.push({ id, label: '', bodyNodeIds: [], outputVar: `branch_${id}` })
+  }
+
+  function removeBranch(bi: number) {
+    if (!selected.value || selected.value.data?.type !== 'parallel') return
+    const branches = selected.value.data.branches as ParallelBranch[]
+    if (!branches || branches.length <= 2) return
+    branches.splice(bi, 1)
+  }
+
   function onDragStart(e: DragEvent, n: { type: string; label: string }) {
     e.dataTransfer?.setData('application/vueflow', JSON.stringify(n))
   }
@@ -263,18 +544,7 @@
       id,
       type: 'custom',
       position: { x: e.clientX - bounds.left - 60, y: e.clientY - bounds.top - 20 },
-      data: {
-        type: n.type,
-        // 默认名不写 label 字段，显示时按 type 实时翻译
-        prompt: '',
-        text: '',
-        url: '',
-        sql: '',
-        knowledgeId: '',
-        expression: '',
-        value: 'true',
-        outputVar: ''
-      }
+      data: defaultDataForType(n.type)
     })
   }
 
@@ -313,10 +583,22 @@
     )
     const loose = [...new Set([...noIn, ...noOut])]
     if (loose.length) return t('aiAppDesign.looseNodes', { names: loose.map(label).join(', ') })
+
+    const byId = new Map(nodes.value.map((n) => [n.id, { id: n.id, data: n.data as any }]))
+    for (const n of nodes.value) {
+      const err = validateControlNode({ id: n.id, data: n.data as any }, byId)
+      if (err) {
+        return t('aiAppDesign.controlValidateFailed', {
+          msg: `${label(n)}: ${err.message} (${err.code})`
+        })
+      }
+    }
     return null
   }
 
   function onNodeClick({ node }: { node: Node }) {
+    if (node.data?.type === 'foreach') ensureForeachDefaults(node.data)
+    if (node.data?.type === 'parallel') ensureParallelDefaults(node.data)
     selected.value = node
   }
 
@@ -333,12 +615,18 @@
       return JSON.stringify({ mode: 'chat', chat: { ...chat }, nodes: [], edges: [] })
     }
     return JSON.stringify({
-      nodes: nodes.value.map((n) => ({
-        id: n.id,
-        type: n.data?.type || n.type,
-        position: n.position,
-        data: withStoredLabel(n.data?.type || n.type, n.data)
-      })),
+      nodes: nodes.value.map((n) => {
+        const type = n.data?.type || n.type
+        const raw = withStoredLabel(type, n.data) as Record<string, any>
+        const data =
+          type === 'foreach' || type === 'parallel' ? normalizeControlData(type, raw) : raw
+        return {
+          id: n.id,
+          type,
+          position: n.position,
+          data
+        }
+      }),
       edges: edges.value.map((e) => ({
         id: e.id,
         source: e.source,
@@ -360,15 +648,22 @@
         Object.assign(chat, dsl.chat || {})
         return
       }
-      nodes.value = (dsl.nodes || []).map((n: any) => ({
-        id: n.id,
-        type: 'custom',
-        position: n.position || { x: 0, y: 0 },
-        data: {
-          ...withStoredLabel(n.data?.type || n.type, n.data),
-          type: n.data?.type || n.type
+      nodes.value = (dsl.nodes || []).map((n: any) => {
+        const type = n.data?.type || n.type
+        let data = {
+          ...withStoredLabel(type, n.data),
+          type
+        } as Record<string, any>
+        if (type === 'foreach' || type === 'parallel') {
+          data = normalizeControlData(type, data)
         }
-      }))
+        return {
+          id: n.id,
+          type: 'custom',
+          position: n.position || { x: 0, y: 0 },
+          data
+        }
+      })
       const eds = dsl.edges || dsl.connections || []
       edges.value = eds.map((e: any, i: number) => ({
         id: e.id || `e_${i}`,
@@ -406,11 +701,39 @@
     }
   }
 
+  async function applyRunDetail(runId: string | number) {
+    try {
+      const detail = await fetchAiAppRunDetail(runId)
+      const list = (detail?.nodes || []).map((nr: any) => ({
+        nodeId: nr.nodeId || nr.node_id,
+        nodeType: nr.nodeType || nr.node_type,
+        outputJson: nr.outputJson || nr.output_json
+      }))
+      controlOutputs.value = extractControlOutputs(list)
+    } catch {
+      // 详情拉取失败时仍保留 run 原文
+    }
+  }
+
   async function run() {
     running.value = true
+    controlOutputs.value = []
     try {
+      if (mockOn) {
+        const { buildAiFlowControlMock } = await import('./flowControlMock')
+        const r = buildAiFlowControlMock({
+          id: appId.value,
+          dsl: buildDsl(),
+          input: RUN_SAMPLE_INPUT
+        })
+        controlOutputs.value = r.controlOutputs
+        runResult.value = JSON.stringify(r, null, 2)
+        return
+      }
       const r = await fetchRunAiApp({ id: appId.value, input: RUN_SAMPLE_INPUT })
       runResult.value = typeof r === 'string' ? r : JSON.stringify(r, null, 2)
+      const runId = (r as any)?.runId
+      if (runId != null) await applyRunDetail(runId)
     } finally {
       running.value = false
     }
@@ -455,10 +778,14 @@
     font-size: 16px;
   }
 
+  .mock-hint {
+    margin: 0;
+  }
+
   .flow-layout {
     display: grid;
     flex: 1;
-    grid-template-columns: 180px 1fr 260px;
+    grid-template-columns: 180px 1fr 280px;
     gap: 8px;
     min-height: 520px;
     overflow: hidden;
@@ -501,6 +828,33 @@
     border-left: 1px solid var(--el-border-color);
   }
 
+  .branches-block {
+    margin-bottom: 8px;
+  }
+
+  .branches-hd {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+  }
+
+  .branch-card {
+    padding: 8px;
+    margin-bottom: 8px;
+    background: var(--el-fill-color-blank);
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 6px;
+  }
+
+  .branch-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+  }
+
   .flow-node {
     min-width: 120px;
     padding: 8px 10px;
@@ -534,6 +888,55 @@
 
   .chat-form {
     max-width: 720px;
+  }
+
+  .control-detail {
+    padding: 10px 12px;
+    background: var(--el-fill-color-blank);
+    border: 1px solid var(--el-border-color);
+    border-radius: 8px;
+  }
+
+  .control-detail h4 {
+    margin: 0 0 8px;
+    font-size: 14px;
+  }
+
+  .control-card {
+    padding: 8px;
+    margin-bottom: 8px;
+    background: var(--el-bg-color);
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: 6px;
+  }
+
+  .control-hd {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .cid {
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+  }
+
+  .sec-title {
+    margin-bottom: 4px;
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+  }
+
+  .mini {
+    max-height: 180px;
+    padding: 6px;
+    margin: 0;
+    overflow: auto;
+    font-size: 12px;
+    background: var(--el-fill-color-light);
+    border-radius: 4px;
   }
 
   .result {
