@@ -41,14 +41,9 @@
         :placeholder="$t('pages.track.spatial.funnelIdPlaceholder')"
         class="track-funnel-id"
       />
-      <ElSelect
-        v-model="funnelSteps"
-        multiple
-        filterable
-        allow-create
-        default-first-option
+      <ElInput
+        v-model="funnelStepsText"
         clearable
-        collapse-tags
         :placeholder="$t('pages.track.spatial.funnelStepsPlaceholder')"
         class="track-funnel-steps"
       />
@@ -160,7 +155,10 @@
     clampSpatialDays,
     isSpatialEmpty,
     isTrackSpatialMockEnabled,
+    joinCsv,
     normalizeSpatialMode,
+    normalizeSpatialResult,
+    parsePositiveIntCsv,
     resolveSpatialPointJump,
     zoomToGridPrecision,
     type TrackSpatialMode,
@@ -185,7 +183,8 @@
   const eventNames = ref<string[]>([])
   const eventNameOptions = ref<string[]>(['page_view', 'click', 'purchase', 'add_cart'])
   const funnelId = ref('')
-  const funnelSteps = ref<string[]>([])
+  /** 漏斗步骤号：正整数逗号分隔，对齐 boot parseFunnelSteps（非事件名） */
+  const funnelStepsText = ref('')
   const windowHours = ref(24)
   const convertedOnly = ref(false)
   const viewport = ref<Partial<TrackSpatialViewport>>({})
@@ -236,11 +235,15 @@
       q.zoom = viewport.value.zoom
       q.gridPrecision = zoomToGridPrecision(viewport.value.zoom)
     }
-    if (eventNames.value.length) q.eventNames = [...eventNames.value]
+    // 与漏斗 steps 一致：多选 join(',')，勿传 string[]（避免 eventNames[]=）
+    const eventNamesCsv = joinCsv(eventNames.value)
+    if (eventNamesCsv) q.eventNames = eventNamesCsv
     if (funnelId.value.trim()) q.funnelId = funnelId.value.trim()
-    if (funnelSteps.value.length) q.funnelSteps = [...funnelSteps.value]
+    const stepNums = parsePositiveIntCsv(funnelStepsText.value)
+    const funnelStepsCsv = joinCsv(stepNums)
+    if (funnelStepsCsv) q.funnelSteps = funnelStepsCsv
     if (convertedOnly.value) q.convertedOnly = true
-    if (funnelId.value.trim() || funnelSteps.value.length) {
+    if (funnelId.value.trim() || funnelStepsCsv) {
       q.windowHours = Number(windowHours.value) || 24
     }
     return q
@@ -258,10 +261,10 @@
       const query = buildQuery()
       if (usingMock) {
         const { buildTrackSpatialMock } = await import('../../spatial-mock')
-        result.value = buildTrackSpatialMock(query)
+        result.value = normalizeSpatialResult(buildTrackSpatialMock(query))
       } else {
         const data = await fetchTrackSpatial(query)
-        result.value = data as TrackSpatialResult
+        result.value = normalizeSpatialResult(data as TrackSpatialResult)
       }
       searched.value = true
       autoReloadEnabled.value = true
@@ -331,29 +334,28 @@
     .track-toolbar {
       display: flex;
       flex-wrap: wrap;
-      gap: 12px;
+      gap: 8px;
       align-items: center;
 
       .track-app-select {
-        width: 220px;
+        width: 180px;
       }
 
       .track-event-names {
-        min-width: 200px;
-        max-width: 280px;
-      }
-
-      .track-funnel-id {
-        width: 140px;
-      }
-
-      .track-funnel-steps {
         min-width: 160px;
         max-width: 220px;
       }
 
-      .track-window-select {
+      .track-funnel-id {
+        width: 110px;
+      }
+
+      .track-funnel-steps {
         width: 140px;
+      }
+
+      .track-window-select {
+        width: 120px;
       }
     }
 

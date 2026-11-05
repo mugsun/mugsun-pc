@@ -302,7 +302,8 @@ export function fetchTrackAsk(data: { appKey: string; question: string; days?: n
 // ===== 空间行为（精确坐标 agg 热力 / points 点选） =====
 // 读权限 sys:track-spatial:list；默认打真 API。DEV 仅当 VITE_TRACK_SPATIAL_MOCK=true 走本地 mock。
 // 菜单种子随后端合入；本路由仅本地/超管可测，勿半成品菜单上线。
-/** 空间行为：appKey + days(1..30) + mode=agg|points + 可选 bbox/zoom/事件/漏斗筛 */
+/** 空间行为：appKey + days(1..30) + mode=agg|points + 可选 bbox/zoom；
+ * eventNames/funnelSteps 须为逗号分隔 String（同漏斗 steps），勿传数组 */
 export function fetchTrackSpatial(params: TrackSpatialQuery) {
   return request.get<TrackSpatialResult>({
     url: '/api/system/track/spatial',

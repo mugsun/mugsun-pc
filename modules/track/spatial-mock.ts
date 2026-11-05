@@ -5,6 +5,7 @@
 import {
   clampSpatialDays,
   normalizeSpatialMode,
+  parseCsv,
   type TrackSpatialCell,
   type TrackSpatialPoint,
   type TrackSpatialQuery,
@@ -27,7 +28,7 @@ export function buildTrackSpatialMock(input: TrackSpatialQuery): TrackSpatialRes
   const days = clampSpatialDays(input.days)
   const mode = normalizeSpatialMode(input.mode)
   const now = Date.now()
-  const names = (input.eventNames || []).map((n) => String(n).trim()).filter(Boolean)
+  const names = parseCsv(input.eventNames)
   const convertedOnly = Boolean(input.convertedOnly)
 
   let seed = BASE

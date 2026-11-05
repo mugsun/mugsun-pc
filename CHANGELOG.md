@@ -16,6 +16,10 @@
 
 ### 变更
 
+- 埋点：空间行为 query 列表改逗号串，漏斗步骤改正整数
+  - eventNames/funnelSteps `join(',')`，避免 axios `[]=`
+  - funnelSteps 对齐 boot parseFunnelSteps（正整数）
+
 - 埋点：空间行为页（agg 热力 / points 点选）
   - 路由 `/track/spatial`；读 `sys:track-spatial:list`
   - `GET /api/system/track/spatial`；DEV 仅 `VITE_TRACK_SPATIAL_MOCK=true` mock

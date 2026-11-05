@@ -2,9 +2,13 @@
  * 埋点「空间行为」契约形状（对齐 boot GET /api/system/track/spatial）。
  * mode：agg（cells+weight 热力）| points（点图层）
  * cells/points 类型与 @/gis/trackSpatial 对齐，供页壳与 GisSpatialMap 共用。
+ *
+ * 列表类 query（eventNames / funnelSteps）必须 join(',') 成单个 String 下发，
+ * 与漏斗页 steps 一致；勿传 string[]（axios 会变成 eventNames[]=）。
  */
 
 import type { TrackSpatialCell, TrackSpatialPoint } from '@/gis/trackSpatial'
+import { filterValidCells, filterValidPoints } from '@/gis/trackSpatial'
 
 export type { TrackSpatialCell, TrackSpatialPoint }
 
@@ -33,6 +37,7 @@ export interface TrackSpatialResult {
   truncated: boolean
 }
 
+/** 发往 API 的 query：列表字段已是逗号分隔 String */
 export interface TrackSpatialQuery {
   appKey: string
   days?: number
@@ -40,9 +45,11 @@ export interface TrackSpatialQuery {
   bbox?: string
   zoom?: number
   gridPrecision?: number
-  eventNames?: string[]
+  /** 逗号分隔事件名，如 page_view,click */
+  eventNames?: string
   funnelId?: string | number
-  funnelSteps?: string[]
+  /** 逗号分隔正整数步骤号，如 1,2,3（对齐 boot parseFunnelSteps） */
+  funnelSteps?: string
   convertedOnly?: boolean
   windowHours?: number
 }
@@ -57,12 +64,76 @@ export function normalizeSpatialMode(mode?: string | null): TrackSpatialMode {
   return mode === 'points' ? 'points' : 'agg'
 }
 
+/**
+ * 把多选值拼成单个逗号分隔 String（漏斗 steps 同口径）。
+ * 空 / 全空白 → undefined（调用方勿挂到 params）。
+ */
+export function joinCsv(values: Array<string | number> | null | undefined): string | undefined {
+  if (!values?.length) return undefined
+  const parts = values.map((v) => String(v).trim()).filter(Boolean)
+  return parts.length ? parts.join(',') : undefined
+}
+
+/** 解析逗号分隔；兼容误传 string[]（仅取 trim 非空） */
+export function parseCsv(raw?: string | string[] | null): string[] {
+  if (raw == null) return []
+  if (Array.isArray(raw)) {
+    return raw.map((s) => String(s).trim()).filter(Boolean)
+  }
+  const s = String(raw).trim()
+  if (!s) return []
+  return s
+    .split(',')
+    .map((x) => x.trim())
+    .filter(Boolean)
+}
+
+/**
+ * boot parseFunnelSteps：只要正整数。非法片段丢弃。
+ * 入参可为 "1,2,3" / ["1","2"] / [1,2]
+ */
+export function parsePositiveIntCsv(raw?: string | Array<string | number> | null): number[] {
+  const parts = Array.isArray(raw)
+    ? raw.map((x) => String(x).trim()).filter(Boolean)
+    : parseCsv(raw == null ? null : String(raw))
+  const out: number[] = []
+  for (const p of parts) {
+    if (!/^\d+$/.test(p)) continue
+    const n = Number(p)
+    if (!Number.isInteger(n) || n < 1) continue
+    out.push(n)
+  }
+  return out
+}
+
 /** 空态：无 cell/point（按 mode） */
 export function isSpatialEmpty(result: TrackSpatialResult | null | undefined): boolean {
   if (!result) return true
   const mode = normalizeSpatialMode(result.mode)
   if (mode === 'points') return !Array.isArray(result.points) || result.points.length === 0
   return !Array.isArray(result.cells) || result.cells.length === 0
+}
+
+/** 出参防御：缺键补空数组，丢掉非法坐标 */
+export function normalizeSpatialResult(
+  raw: Partial<TrackSpatialResult> | null | undefined
+): TrackSpatialResult {
+  const mode = normalizeSpatialMode(raw?.mode)
+  const cells = filterValidCells(raw?.cells ?? [])
+  const points = filterValidPoints(raw?.points ?? [])
+  const geoCount =
+    raw?.geoCount != null && Number.isFinite(Number(raw.geoCount))
+      ? Number(raw.geoCount)
+      : mode === 'points'
+        ? points.length
+        : cells.reduce((s, c) => s + (c.count ?? 0), 0)
+  return {
+    mode,
+    cells,
+    points,
+    geoCount,
+    truncated: Boolean(raw?.truncated)
+  }
 }
 
 export type SpatialJump =

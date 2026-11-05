@@ -4,7 +4,11 @@ import {
   clampSpatialDays,
   isSpatialEmpty,
   isTrackSpatialMockEnabled,
+  joinCsv,
   normalizeSpatialMode,
+  normalizeSpatialResult,
+  parseCsv,
+  parsePositiveIntCsv,
   resolveSpatialPointJump,
   zoomToGridPrecision
 } from '../../../modules/track/spatial-shape'
@@ -24,7 +28,45 @@ describe('isTrackSpatialMockEnabled', () => {
   })
 })
 
-describe('clamp / mode / empty', () => {
+describe('joinCsv / parseCsv（对齐漏斗 steps，禁 string[] 下发）', () => {
+  it('joinCsv 产出单个逗号串，空则 undefined', () => {
+    expect(joinCsv(['page_view', 'click'])).toBe('page_view,click')
+    expect(joinCsv([1, 2, 3])).toBe('1,2,3')
+    expect(joinCsv(['  a  ', '', 'b'])).toBe('a,b')
+    expect(joinCsv([])).toBeUndefined()
+    expect(joinCsv(null)).toBeUndefined()
+  })
+
+  it('parseCsv 认逗号串；兼容误传数组', () => {
+    expect(parseCsv('page_view,click')).toEqual(['page_view', 'click'])
+    expect(parseCsv(' a , b ')).toEqual(['a', 'b'])
+    expect(parseCsv(['x', ' y '])).toEqual(['x', 'y'])
+    expect(parseCsv('')).toEqual([])
+    expect(parseCsv(undefined)).toEqual([])
+  })
+
+  it('query 形态：eventNames/funnelSteps 是 string 不是数组', () => {
+    const eventNames = joinCsv(['page_view', 'click'])
+    const funnelSteps = joinCsv(parsePositiveIntCsv('1,2,3'))
+    expect(typeof eventNames).toBe('string')
+    expect(typeof funnelSteps).toBe('string')
+    expect(Array.isArray(eventNames)).toBe(false)
+    expect(Array.isArray(funnelSteps)).toBe(false)
+    expect(eventNames).toBe('page_view,click')
+    expect(funnelSteps).toBe('1,2,3')
+  })
+})
+
+describe('parsePositiveIntCsv（boot parseFunnelSteps）', () => {
+  it('只要正整数，丢弃事件名与非法片段', () => {
+    expect(parsePositiveIntCsv('1,2,3')).toEqual([1, 2, 3])
+    expect(parsePositiveIntCsv('1, page_view, 2, 0, -1, 3.5, x')).toEqual([1, 2])
+    expect(parsePositiveIntCsv(['1', 'abc', '4'])).toEqual([1, 4])
+    expect(parsePositiveIntCsv('')).toEqual([])
+  })
+})
+
+describe('clamp / mode / empty / normalize', () => {
   it('days 夹紧 1..30，缺省 7', () => {
     expect(clampSpatialDays(undefined)).toBe(7)
     expect(clampSpatialDays(0)).toBe(1)
@@ -62,6 +104,25 @@ describe('clamp / mode / empty', () => {
       })
     ).toBe(false)
   })
+
+  it('normalizeSpatialResult 补缺键并丢非法坐标', () => {
+    const r = normalizeSpatialResult({
+      mode: 'points',
+      // @ts-expect-error 故意缺键
+      cells: undefined,
+      points: [
+        { lon: 121, lat: 31 },
+        { lon: Number.NaN, lat: 31 },
+        { lon: 1, lat: Number.NaN }
+      ] as any,
+      truncated: true
+    })
+    expect(r.cells).toEqual([])
+    expect(r.points).toEqual([{ lon: 121, lat: 31 }])
+    expect(r.geoCount).toBe(1)
+    expect(r.truncated).toBe(true)
+    expect(r.mode).toBe('points')
+  })
 })
 
 describe('buildTrackSpatialMock', () => {
@@ -74,17 +135,24 @@ describe('buildTrackSpatialMock', () => {
     expect(r.geoCount).toBeGreaterThan(0)
   })
 
-  it('points 产出可跳转字段；__empty__ 空数组', () => {
+  it('points 产出可跳转字段；eventNames 逗号串筛 / __empty__', () => {
     const r = buildTrackSpatialMock({ appKey: 'ak', mode: 'points' })
     expect(r.mode).toBe('points')
     expect(r.points.length).toBeGreaterThan(0)
     expect(r.cells).toEqual([])
     expect(r.points.some((p) => p.sessionId)).toBe(true)
 
+    const filtered = buildTrackSpatialMock({
+      appKey: 'ak',
+      mode: 'points',
+      eventNames: 'click'
+    })
+    expect(filtered.points.every((p) => p.eventName === 'click')).toBe(true)
+
     const empty = buildTrackSpatialMock({
       appKey: 'ak',
       mode: 'points',
-      eventNames: ['__empty__']
+      eventNames: '__empty__'
     })
     expect(empty.points).toEqual([])
     expect(empty.geoCount).toBe(0)
