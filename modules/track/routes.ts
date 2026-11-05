@@ -26,13 +26,13 @@ export const trackRoutes: AppRouteRecord = {
     },
     {
       // 问数据：中文提问 → 指标/图/表 → 相关回放；读 sys:track-ask:list
-      // 菜单种子/权限码合入 boot 前超管可测，合入时对齐 boot（勿自编其它权限码）
+      // 图标对齐 boot V19 种子 ri:chat-search-line（勿自编其它权限码）
       path: 'ask',
       name: 'TrackAsk',
       component: '/track/ask',
       meta: {
         title: 'menus.track.ask',
-        icon: 'ri:question-line',
+        icon: 'ri:chat-search-line',
         keepAlive: true,
         roles: ['R_SUPER', 'R_ADMIN']
       }

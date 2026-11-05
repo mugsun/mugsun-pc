@@ -63,6 +63,7 @@ ri:play-circle-line
 ri:plug-line
 ri:price-tag-3-line
 ri:question-line
+ri:chat-search-line
 ri:quill-pen-line
 ri:robot-2-line
 ri:robot-line
