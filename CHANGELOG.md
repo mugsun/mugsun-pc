@@ -21,6 +21,7 @@
   - 实例 history 渲染 aiTrace；抽屉展示 AI 写回变量
   - 契约收紧：inputMap 字段必填（{}可零注入）；outputMap 目标键白名单；timeoutMs≤300000
   - 修复：outputMap 白名单改校映射值（to）；from 侧普通变量名
+  - 修复：AI 映射删行按钮进 btn-permission EXEMPT（同设计器本地 splice）
   - `VITE_FLOW_AI_MOCK` 默认 false，接真 API；仅 DEV+true 走下拉 mock
 
 - 埋点：空间行为 query 列表改逗号串，漏斗步骤改正整数

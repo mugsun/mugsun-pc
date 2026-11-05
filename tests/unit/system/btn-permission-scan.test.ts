@@ -40,6 +40,10 @@ const EXEMPT: Record<string, string> = {
     '流程图组件本地删候选人',
   'src/views/system/flow-graph/GraphChain.vue:node.branches.splice(bi, 1)': '流程图组件本地删分支',
   'src/views/system/flow-graph/GraphChain.vue:b.conditions.splice(ri, 1)': '流程图组件本地删条件',
+  'src/views/system/flow-graph/GraphChain.vue:node.inputMap && node.inputMap.splice(ei, 1)':
+    '流程图组件本地删 AI inputMap 行',
+  'src/views/system/flow-graph/GraphChain.vue:node.outputMap && node.outputMap.splice(ei, 1)':
+    '流程图组件本地删 AI outputMap 行',
   'src/views/system/gen-modeling/index.vue:candidate.columns.splice($index, 1)': '建模表单本地删列',
   'src/views/system/gen-modeling/index.vue:addCol': '建模表单本地加列',
   'src/views/system/gen-modeling/index.vue:editing.columns.splice($index, 1)': '建模表单本地删列',
