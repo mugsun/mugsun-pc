@@ -17,13 +17,27 @@ export interface GBranch {
   isDefault: boolean
   children: GNode[]
 }
+
+/** KV 映射一行（设计器编辑用；提交时压成 Record） */
+export interface GMapEntry {
+  key: string
+  value: string
+}
+
 export interface GNode {
   id: string
-  type: 'approval' | 'condition' | 'parallel'
+  type: 'approval' | 'condition' | 'parallel' | 'ai'
   name: string
   candidates: { type: string; value: string }[]
   nodeRatio: string
   branches: GBranch[]
+  /** AI 节点：已启用 AiApp id（Long；前端按 string|number 存） */
+  aiFlowId?: string | number
+  inputMap?: GMapEntry[]
+  outputMap?: GMapEntry[]
+  timeoutMs?: number
+  /** rejectLast | stay | transfer:role:<code> */
+  onFailure?: string
 }
 
 export const newBranch = (name = $t('pages.system.flowGraph.branch')): GBranch => ({
@@ -56,6 +70,14 @@ export const newNode = (type: string): GNode => {
       newBranch($t('pages.system.flowGraph.branchOne')),
       newBranch($t('pages.system.flowGraph.branchTwo'))
     ]
+  } else if (type === 'ai') {
+    base.name = $t('pages.system.flowGraph.typeAi')
+    base.candidates = []
+    base.aiFlowId = ''
+    base.inputMap = []
+    base.outputMap = []
+    base.timeoutMs = 120000
+    base.onFailure = 'rejectLast'
   } else {
     base.name = $t('pages.system.flowGraph.typeApproval')
   }
@@ -69,6 +91,20 @@ const candidateToken = (c: { type: string; value: string }): string => {
   return c.value ? `${c.type}:${c.value}` : ''
 }
 
+const entriesToMap = (entries?: GMapEntry[]): Record<string, string> | undefined => {
+  if (!entries?.length) return undefined
+  const out: Record<string, string> = {}
+  for (const e of entries) {
+    const k = (e.key || '').trim()
+    if (!k) continue
+    out[k] = e.value ?? ''
+  }
+  return Object.keys(out).length ? out : undefined
+}
+
+const ON_FAILURE_OK = (v: string): boolean =>
+  v === 'rejectLast' || v === 'stay' || /^transfer:role:[A-Za-z0-9_.-]+$/.test(v)
+
 // 节点数组 → 后端递归 DTO（childNode 单链 + branches[].childNode）
 export const toTree = (nodes: GNode[], i = 0): any => {
   if (i >= nodes.length) return null
@@ -77,6 +113,15 @@ export const toTree = (nodes: GNode[], i = 0): any => {
   if (n.type === 'approval') {
     out.candidates = n.candidates.map(candidateToken).filter(Boolean)
     out.nodeRatio = n.nodeRatio
+  } else if (n.type === 'ai') {
+    out.aiFlowId = n.aiFlowId === '' || n.aiFlowId == null ? undefined : n.aiFlowId
+    const inputMap = entriesToMap(n.inputMap)
+    const outputMap = entriesToMap(n.outputMap)
+    if (inputMap) out.inputMap = inputMap
+    if (outputMap) out.outputMap = outputMap
+    out.timeoutMs =
+      n.timeoutMs == null || Number.isNaN(Number(n.timeoutMs)) ? 120000 : Number(n.timeoutMs)
+    out.onFailure = (n.onFailure || 'rejectLast').trim() || 'rejectLast'
   } else {
     out.branches = n.branches.map((b) => ({
       name: b.name,
@@ -89,10 +134,10 @@ export const toTree = (nodes: GNode[], i = 0): any => {
 }
 
 const RULE_OPS = new Set(['eq', 'ne', 'gt', 'ge', 'lt', 'le', 'like', 'notLike'])
-const NODE_TYPES = new Set(['approval', 'condition', 'parallel'])
+const NODE_TYPES = new Set(['approval', 'condition', 'parallel', 'ai'])
 const FIELD_RE = /^[A-Za-z_][A-Za-z0-9_]*$/
 
-// 校验：审批节点须有候选人；条件分支须有非空分支
+// 校验：审批节点须有候选人；AI 须绑 aiFlowId；条件分支须有非空分支
 export const validateTree = (nodes: GNode[]): string => {
   for (const n of nodes) {
     if (!NODE_TYPES.has(n.type)) return $t('pages.system.flowGraph.errNodeType')
@@ -103,6 +148,27 @@ export const validateTree = (nodes: GNode[]): string => {
       }
       if (!n.candidates.map(candidateToken).filter(Boolean).length)
         return $t('pages.system.flowGraph.errNodeNoCandidate', { name: n.name })
+    } else if (n.type === 'ai') {
+      const id = n.aiFlowId
+      if (id === '' || id == null || (typeof id === 'string' && !id.trim())) {
+        return $t('pages.system.flowGraph.errAiFlowId', {
+          name: (n.name || '').trim() || $t('pages.system.flowGraph.typeAi')
+        })
+      }
+      const timeout = n.timeoutMs == null ? 120000 : Number(n.timeoutMs)
+      if (!Number.isFinite(timeout) || timeout < 1000 || timeout > 600000) {
+        return $t('pages.system.flowGraph.errAiTimeout')
+      }
+      const fail = (n.onFailure || 'rejectLast').trim() || 'rejectLast'
+      if (!ON_FAILURE_OK(fail)) return $t('pages.system.flowGraph.errAiOnFailure')
+      for (const list of [n.inputMap, n.outputMap]) {
+        if (!list) continue
+        for (const e of list) {
+          const k = (e.key || '').trim()
+          if (!k && !(e.value || '').trim()) continue
+          if (!k || !FIELD_RE.test(k)) return $t('pages.system.flowGraph.errAiMapKey')
+        }
+      }
     } else {
       if (n.type === 'parallel' && n.branches.length < 2)
         return $t('pages.system.flowGraph.errParallelMinBranch', {

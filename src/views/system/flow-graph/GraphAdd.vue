@@ -1,4 +1,4 @@
-<!-- 节点插入选择器：审批 / 条件分支 / 并行分支 -->
+<!-- 节点插入选择器：审批 / 条件分支 / 并行分支 / AI -->
 <template>
   <ElDropdown trigger="click" @command="(c: string) => emit('pick', c)">
     <span class="g-add-btn"><ArtSvgIcon icon="ri:add-line" /></span>
@@ -13,6 +13,7 @@
         <ElDropdownItem command="parallel">{{
           $t('pages.system.flowGraph.typeParallel')
         }}</ElDropdownItem>
+        <ElDropdownItem command="ai">{{ $t('pages.system.flowGraph.typeAi') }}</ElDropdownItem>
       </ElDropdownMenu>
     </template>
   </ElDropdown>

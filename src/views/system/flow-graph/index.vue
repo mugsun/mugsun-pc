@@ -146,11 +146,12 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, provide, onMounted, onDeactivated } from 'vue'
+  import { ref, reactive, provide, onMounted, watch, onDeactivated } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import GraphChain from './GraphChain.vue'
   import { newNode, toTree, validateTree, type GNode } from './graph-model'
+  import { flowAiAppsStore } from './flow-ai-apps'
   import {
     fetchFlowDefinitions,
     fetchFlowDesignGraph,
@@ -212,6 +213,7 @@
     ensureUsers
   })
   provide('flowReg', reg)
+  provide('flowAiApps', flowAiAppsStore)
 
   // composable 选项/加载态同步进 reg，供 GraphChain 候选人下拉渲染
   watch(userOptions, (list) => (reg.users = [...list]), { immediate: true })

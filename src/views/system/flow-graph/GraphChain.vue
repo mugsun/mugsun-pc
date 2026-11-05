@@ -1,4 +1,4 @@
-<!-- 递归流程链：渲染一段流程节点数组（审批/条件分支/并行分支），条件/并行节点内嵌分支列 → 递归子链 -->
+<!-- 递归流程链：审批 / 条件 / 并行 / AI；条件/并行内嵌分支列 → 递归子链 -->
 <template>
   <div class="g-chain">
     <div class="g-add">
@@ -86,6 +86,127 @@
           </div>
         </div>
 
+        <!-- AI 节点：绑已启用 AiApp + 映射 / 超时 / 失败策略；不做节点内提示词编辑 -->
+        <div v-else-if="node.type === 'ai'" class="g-node-bd g-ai">
+          <div class="g-ai-row">
+            <span class="g-ai-label">{{ $t('pages.system.flowGraph.aiFlow') }}</span>
+            <ElSelect
+              v-model="node.aiFlowId"
+              size="small"
+              filterable
+              clearable
+              class="g-ai-flow"
+              :loading="aiApps.loading"
+              :placeholder="$t('pages.system.flowGraph.aiFlowPlaceholder')"
+            >
+              <ElOption
+                v-for="a in aiApps.list"
+                :key="String(a.id)"
+                :label="`${a.name} (${a.appType})`"
+                :value="a.id"
+              />
+            </ElSelect>
+            <ElButton link size="small" :loading="aiApps.loading" @click="aiApps.reload()">{{
+              $t('pages.system.flowGraph.refresh')
+            }}</ElButton>
+          </div>
+          <div class="g-ai-row">
+            <span class="g-ai-label">{{ $t('pages.system.flowGraph.aiTimeout') }}</span>
+            <ElInputNumber
+              v-model="node.timeoutMs"
+              size="small"
+              :min="1000"
+              :max="600000"
+              :step="1000"
+              controls-position="right"
+              class="g-ai-timeout"
+            />
+            <span class="g-ai-hint">ms</span>
+          </div>
+          <div class="g-ai-row">
+            <span class="g-ai-label">{{ $t('pages.system.flowGraph.aiOnFailure') }}</span>
+            <ElSelect
+              v-model="node.onFailure"
+              size="small"
+              class="g-ai-fail"
+              allow-create
+              filterable
+            >
+              <ElOption :label="$t('pages.system.flowGraph.aiFailRejectLast')" value="rejectLast" />
+              <ElOption :label="$t('pages.system.flowGraph.aiFailStay')" value="stay" />
+              <ElOption
+                v-for="r in reg.roles"
+                :key="`tr-${r.value}`"
+                :label="
+                  $t('pages.system.flowGraph.aiFailTransferRole', { code: r.label || r.value })
+                "
+                :value="`transfer:role:${r.value}`"
+              />
+            </ElSelect>
+          </div>
+          <div class="g-ai-map">
+            <div class="g-ai-map-hd">{{ $t('pages.system.flowGraph.aiInputMap') }}</div>
+            <div v-for="(e, ei) in node.inputMap || []" :key="`in-${ei}`" class="g-rule">
+              <ElInput
+                v-model="e.key"
+                size="small"
+                class="g-rf"
+                :placeholder="$t('pages.system.flowGraph.aiMapKey')"
+              />
+              <ElInput
+                v-model="e.value"
+                size="small"
+                class="g-rv-wide"
+                :placeholder="$t('pages.system.flowGraph.aiMapValue')"
+              />
+              <ElButton
+                link
+                type="danger"
+                size="small"
+                @click="node.inputMap && node.inputMap.splice(ei, 1)"
+                >×</ElButton
+              >
+            </div>
+            <ElButton
+              link
+              size="small"
+              @click="(node.inputMap ||= []).push({ key: '', value: '' })"
+              >{{ $t('pages.system.flowGraph.aiAddMap') }}</ElButton
+            >
+          </div>
+          <div class="g-ai-map">
+            <div class="g-ai-map-hd">{{ $t('pages.system.flowGraph.aiOutputMap') }}</div>
+            <div v-for="(e, ei) in node.outputMap || []" :key="`out-${ei}`" class="g-rule">
+              <ElInput
+                v-model="e.key"
+                size="small"
+                class="g-rf"
+                :placeholder="$t('pages.system.flowGraph.aiMapKey')"
+              />
+              <ElInput
+                v-model="e.value"
+                size="small"
+                class="g-rv-wide"
+                :placeholder="$t('pages.system.flowGraph.aiMapValue')"
+              />
+              <ElButton
+                link
+                type="danger"
+                size="small"
+                @click="node.outputMap && node.outputMap.splice(ei, 1)"
+                >×</ElButton
+              >
+            </div>
+            <ElButton
+              link
+              size="small"
+              @click="(node.outputMap ||= []).push({ key: '', value: '' })"
+              >{{ $t('pages.system.flowGraph.aiAddMap') }}</ElButton
+            >
+          </div>
+          <p class="g-ai-tip">{{ $t('pages.system.flowGraph.aiPromptHint') }}</p>
+        </div>
+
         <!-- 条件/并行分支 -->
         <div v-else class="g-branches">
           <div v-for="(b, bi) in node.branches" :key="b.id" class="g-branch">
@@ -165,10 +286,11 @@
 </template>
 
 <script setup lang="ts">
-  import { inject } from 'vue'
+  import { inject, onMounted } from 'vue'
   import { useI18n } from 'vue-i18n'
   import GraphAdd from './GraphAdd.vue'
   import { newNode, newBranch, type GNode } from './graph-model'
+  import { flowAiAppsStore } from './flow-ai-apps'
 
   defineOptions({ name: 'GraphChain' })
 
@@ -193,6 +315,13 @@
     syncSelected: () => undefined
   })
 
+  // AiApp 列表：模块级 store，递归多实例共享一次加载
+  const aiApps = inject('flowAiApps', flowAiAppsStore)
+
+  onMounted(() => {
+    if (!aiApps.list.length && !aiApps.loading) void aiApps.reload()
+  })
+
   const OPS = [
     { label: t('pages.system.flowGraph.opEq'), value: 'eq' },
     { label: t('pages.system.flowGraph.opNe'), value: 'ne' },
@@ -208,7 +337,8 @@
     ({
       approval: t('pages.system.flowGraph.typeApproval'),
       condition: t('pages.system.flowGraph.typeCondition'),
-      parallel: t('pages.system.flowGraph.typeParallel')
+      parallel: t('pages.system.flowGraph.typeParallel'),
+      ai: t('pages.system.flowGraph.typeAi')
     })[type] || type
 
   // 递归树编辑器：节点链是父级下传的共享响应式数组，就地增删是该场景既定模式（各层协同编辑同一棵树）
@@ -254,6 +384,11 @@
     border-left-color: var(--el-color-success);
   }
 
+  .g-node--ai {
+    width: 320px;
+    border-left-color: var(--el-color-primary-dark-2, #337ecc);
+  }
+
   .g-node-hd {
     display: flex;
     gap: 6px;
@@ -296,6 +431,62 @@
     gap: 8px;
     align-items: center;
     margin-top: 2px;
+  }
+
+  .g-ai-row {
+    display: flex;
+    gap: 6px;
+    align-items: center;
+    margin-bottom: 6px;
+  }
+
+  .g-ai-label {
+    flex-shrink: 0;
+    width: 64px;
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+  }
+
+  .g-ai-flow {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .g-ai-timeout {
+    width: 140px;
+  }
+
+  .g-ai-fail {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .g-ai-hint {
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+  }
+
+  .g-ai-map {
+    margin-top: 4px;
+    margin-bottom: 6px;
+  }
+
+  .g-ai-map-hd {
+    margin-bottom: 4px;
+    font-size: 12px;
+    color: var(--el-text-color-secondary);
+  }
+
+  .g-rv-wide {
+    flex: 1;
+    min-width: 0;
+  }
+
+  .g-ai-tip {
+    margin: 4px 0 0;
+    font-size: 12px;
+    line-height: 1.4;
+    color: var(--el-text-color-secondary);
   }
 
   .g-branches {
