@@ -4308,6 +4308,7 @@
         "metrics": "Metrics",
         "series": "Trend",
         "table": "Table",
+        "raw": "Raw",
         "replays": "Related replays",
         "replayEmpty": "No matching session replay",
         "replayDenied": "No session-replay permission; related replays are unavailable",

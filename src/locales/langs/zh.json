@@ -4308,6 +4308,7 @@
         "metrics": "指标",
         "series": "趋势",
         "table": "明细",
+        "raw": "原始数据",
         "replays": "相关回放",
         "replayEmpty": "没有匹配到可打开的会话回放",
         "replayDenied": "当前账号没有会话回放权限，无法打开相关回放",

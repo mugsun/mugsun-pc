@@ -1,73 +1,8 @@
 /**
  * 埋点「问数据」本地 mock（与 boot POST /api/system/track/ask 出参同形）。
- * 仅 DEV 且显式 VITE_TRACK_ASK_MOCK=true 时由页面走此数据；默认打真 API。
+ * 仅由页面在 DEV && VITE_TRACK_ASK_MOCK=true 时动态 import；生产产物不含。
  */
-
-/** DEV + 显式 true 才启用本地假数据（默认关，走 POST /api/system/track/ask） */
-export function isTrackAskMockEnabled(
-  env: { DEV?: boolean; VITE_TRACK_ASK_MOCK?: string } = import.meta.env as {
-    DEV?: boolean
-    VITE_TRACK_ASK_MOCK?: string
-  }
-): boolean {
-  return (
-    Boolean(env.DEV) &&
-    String(env.VITE_TRACK_ASK_MOCK ?? '')
-      .trim()
-      .toLowerCase() === 'true'
-  )
-}
-
-export type TrackAskIntent =
-  | 'overview'
-  | 'trend'
-  | 'pages'
-  | 'events'
-  | 'errors'
-  | 'online'
-  | 'vitals'
-  | 'funnel'
-  | 'retention'
-  | 'geo'
-  | 'unsupported'
-
-export type TrackAskResultType = 'metric' | 'series' | 'table' | 'text'
-
-export interface TrackAskReplayItem {
-  sessionId: string
-  appKey: string
-  startTime?: number
-  entryPath?: string
-  hasError?: number
-  durationMs?: number
-}
-
-export interface TrackAskResult {
-  question: string
-  intent: TrackAskIntent
-  params: {
-    days?: number
-    eventName?: string
-    dimType?: string
-    dimKey?: string
-    steps?: string[]
-    windowHours?: number
-    fingerprint?: string
-    routePath?: string
-    limit?: number
-  }
-  source: 'track-analysis'
-  resultType: TrackAskResultType
-  summary: string
-  metrics: Record<string, number | string>
-  series: Array<{ name: string; points: Array<{ x: string | number; y: number }> }>
-  table: Array<Record<string, string | number | null>>
-  raw: Record<string, unknown>
-  replays: TrackAskReplayItem[]
-  replayEmpty: boolean
-  replayDenied: boolean
-  warnings: string[]
-}
+import type { TrackAskIntent, TrackAskReplayItem, TrackAskResult } from './ask-shape'
 
 function inferIntent(q: string): TrackAskIntent {
   const s = q.toLowerCase()
@@ -83,6 +18,24 @@ function inferIntent(q: string): TrackAskIntent {
   if (/趋势|走势|按天|按小时|trend/.test(s)) return 'trend'
   if (/概览|总览|多少人|访问量|overview/.test(s)) return 'overview'
   return 'overview'
+}
+
+/** boot 形趋势行：[{date, pv, uv, sessionCount, eventCount}] */
+function buildBootSeriesRows(days: number, now: number, bump = 0) {
+  const n = Math.min(days, 7)
+  return Array.from({ length: n }, (_, i) => {
+    const d = new Date(now - (n - 1 - i) * 864e5)
+    const y = d.getFullYear()
+    const m = String(d.getMonth() + 1).padStart(2, '0')
+    const day = String(d.getDate()).padStart(2, '0')
+    return {
+      date: `${y}-${m}-${day}`,
+      pv: 80 + i * 17 + bump,
+      uv: 40 + i * 9,
+      sessionCount: 50 + i * 11,
+      eventCount: 120 + i * 23
+    }
+  })
 }
 
 /** 按提问关键词拼一份契约同形假数据（最多 5 条回放） */
@@ -131,12 +84,12 @@ export function buildTrackAskMock(input: {
       intent,
       params: { days },
       source: 'track-analysis',
-      resultType: 'text',
+      resultType: 'unsupported',
       summary: '这个问题还不在埋点问数范围。可以试试问访问量、趋势、Top 页面、错误或在线人数。',
-      metrics: {},
-      series: [],
-      table: [],
-      raw: {},
+      metrics: null,
+      series: null,
+      table: null,
+      raw: null,
       replays: [],
       replayEmpty: true,
       replayDenied: false,
@@ -148,12 +101,7 @@ export function buildTrackAskMock(input: {
   const replayDenied = /无回放权|replay.?denied/i.test(question)
   const replayEmpty = replayDenied ? false : /无回放|replay.?empty/i.test(question)
   const replays = replayDenied || replayEmpty ? [] : baseReplays.slice(0, 5)
-
-  const seriesDays = Array.from({ length: Math.min(days, 7) }, (_, i) => {
-    const d = new Date(now - (Math.min(days, 7) - 1 - i) * 864e5)
-    const label = `${d.getMonth() + 1}-${String(d.getDate()).padStart(2, '0')}`
-    return { x: label, y: 80 + i * 17 + (intent === 'errors' ? i * 3 : 0) }
-  })
+  const seriesRows = buildBootSeriesRows(days, now, intent === 'errors' ? 9 : 0)
 
   if (intent === 'trend' || intent === 'overview') {
     return {
@@ -161,7 +109,7 @@ export function buildTrackAskMock(input: {
       intent,
       params: { days, dimType: 'overview' },
       source: 'track-analysis',
-      resultType: intent === 'trend' ? 'series' : 'metric',
+      resultType: intent === 'trend' ? 'series' : 'metrics',
       summary:
         intent === 'trend'
           ? `近 ${days} 天访问趋势（mock）`
@@ -169,10 +117,10 @@ export function buildTrackAskMock(input: {
       metrics:
         intent === 'overview'
           ? { pv: 12480, uv: 3420, sessions: 5102, avgDurationMs: 186000, bounceRate: 0.37 }
-          : {},
-      series: [{ name: 'PV', points: seriesDays }],
-      table: [],
-      raw: {},
+          : null,
+      series: intent === 'trend' ? seriesRows : null,
+      table: null,
+      raw: intent === 'overview' ? { cards: { pv: 12480, uv: 3420 } } : null,
       replays,
       replayEmpty,
       replayDenied,
@@ -216,10 +164,10 @@ export function buildTrackAskMock(input: {
       source: 'track-analysis',
       resultType: 'table',
       summary: `近 ${days} 天 ${intent} 结果（mock）`,
-      metrics: {},
-      series: [],
+      metrics: null,
+      series: null,
       table,
-      raw: {},
+      raw: null,
       replays,
       replayEmpty,
       replayDenied,
@@ -233,12 +181,12 @@ export function buildTrackAskMock(input: {
       intent,
       params: { days, windowHours: 0.083 },
       source: 'track-analysis',
-      resultType: 'metric',
+      resultType: 'metrics',
       summary: '当前约有 12 人在线（近 5 分钟，mock）',
       metrics: { online: 12, windowSeconds: 300 },
-      series: [],
-      table: [],
-      raw: {},
+      series: null,
+      table: null,
+      raw: null,
       replays,
       replayEmpty,
       replayDenied,
@@ -247,34 +195,74 @@ export function buildTrackAskMock(input: {
   }
 
   if (intent === 'funnel' || intent === 'retention' || intent === 'geo') {
+    if (intent === 'geo') {
+      return {
+        question,
+        intent,
+        params: { days },
+        source: 'track-analysis',
+        resultType: 'raw',
+        summary: `近 ${days} 天地域桶 2 个，带坐标事件 42（mock）`,
+        metrics: null,
+        series: null,
+        table: null,
+        raw: {
+          regions: [
+            { region: '广东', pv: 4200, uv: 1100, eventCount: 8800 },
+            { region: '浙江', pv: 3100, uv: 900, eventCount: 6400 }
+          ],
+          points: [],
+          geoCount: 42
+        },
+        replays,
+        replayEmpty,
+        replayDenied,
+        warnings: []
+      }
+    }
+    if (intent === 'funnel') {
+      return {
+        question,
+        intent,
+        params: { days, steps: ['page_view', 'click', 'submit'], windowHours: 24 },
+        source: 'track-analysis',
+        resultType: 'raw',
+        summary: `漏斗 3 步（窗口 24 小时）（mock）`,
+        metrics: null,
+        series: null,
+        table: null,
+        raw: {
+          steps: [
+            { eventName: 'page_view', count: 1000 },
+            { eventName: 'click', count: 420 },
+            { eventName: 'submit', count: 180 }
+          ],
+          days,
+          windowHours: 24
+        },
+        replays,
+        replayEmpty,
+        replayDenied,
+        warnings: []
+      }
+    }
     return {
       question,
       intent,
-      params: {
-        days,
-        ...(intent === 'funnel' ? { steps: ['page_view', 'click', 'submit'], windowHours: 24 } : {})
-      },
+      params: { days },
       source: 'track-analysis',
-      resultType: intent === 'geo' ? 'table' : 'series',
-      summary: `近 ${days} 天 ${intent}（mock）`,
-      metrics:
-        intent === 'funnel'
-          ? { conversionRate: 0.18 }
-          : intent === 'retention'
-            ? { d1: 0.42, d7: 0.21 }
-            : {},
-      series:
-        intent === 'geo'
-          ? []
-          : [{ name: intent === 'funnel' ? 'stepUsers' : 'retained', points: seriesDays }],
-      table:
-        intent === 'geo'
-          ? [
-              { region: '广东', pv: 4200, uv: 1100 },
-              { region: '浙江', pv: 3100, uv: 900 }
-            ]
-          : [],
-      raw: {},
+      resultType: 'raw',
+      summary: `留存 cohort 3 天（近 ${days} 天窗）（mock）`,
+      metrics: null,
+      series: null,
+      table: null,
+      raw: {
+        days,
+        rows: [
+          { cohortDate: '2026-11-01', cohortSize: 100, retained: { '1': 42, '7': 21 } },
+          { cohortDate: '2026-11-02', cohortSize: 110, retained: { '1': 48, '7': 24 } }
+        ]
+      },
       replays,
       replayEmpty,
       replayDenied,
@@ -287,12 +275,12 @@ export function buildTrackAskMock(input: {
     intent: 'unsupported',
     params: { days },
     source: 'track-analysis',
-    resultType: 'text',
+    resultType: 'unsupported',
     summary: '暂时无法理解这个问题。请换一种问法，例如「近 7 天访问量」。',
-    metrics: {},
-    series: [],
-    table: [],
-    raw: {},
+    metrics: null,
+    series: null,
+    table: null,
+    raw: null,
     replays: [],
     replayEmpty: true,
     replayDenied: false,

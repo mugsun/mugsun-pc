@@ -76,7 +76,7 @@
             </p>
 
             <ElAlert
-              v-if="result.intent === 'unsupported'"
+              v-if="showUnsupported"
               type="info"
               :closable="false"
               :title="$t('pages.track.ask.unsupportedHint')"
@@ -93,7 +93,7 @@
             />
 
             <ElRow
-              v-if="result.resultType === 'metric' && metricEntries.length"
+              v-if="showMetrics && metricEntries.length"
               :gutter="12"
               class="track-ask-metrics"
             >
@@ -105,10 +105,7 @@
               </ElCol>
             </ElRow>
 
-            <div
-              v-if="(result.resultType === 'series' || seriesPoints.length) && seriesPoints.length"
-              class="track-ask-chart"
-            >
+            <div v-if="showSeries" class="track-ask-chart">
               <p class="track-card-title">{{ $t('pages.track.ask.series') }}</p>
               <ArtLineChart
                 :data="chartSeries"
@@ -118,7 +115,7 @@
               />
             </div>
 
-            <div v-if="result.resultType === 'table' && tableRows.length" class="track-ask-table">
+            <div v-if="showTable" class="track-ask-table">
               <p class="track-card-title">{{ $t('pages.track.ask.table') }}</p>
               <ElTable :data="tableRows" size="default" max-height="360">
                 <ElTableColumn
@@ -133,6 +130,26 @@
                   <ElEmpty :description="$t('pages.track.shared.noData')" :image-size="60" />
                 </template>
               </ElTable>
+            </div>
+
+            <div v-if="rawPreview" class="track-ask-raw">
+              <p class="track-card-title">{{ $t('pages.track.ask.raw') }}</p>
+              <ElTable
+                v-if="rawPreview.kind === 'table'"
+                :data="rawPreview.rows"
+                size="default"
+                max-height="360"
+              >
+                <ElTableColumn
+                  v-for="col in rawPreview.cols"
+                  :key="col"
+                  :prop="col"
+                  :label="col"
+                  min-width="120"
+                  show-overflow-tooltip
+                />
+              </ElTable>
+              <pre v-else class="track-ask-raw-json">{{ rawPreview.text }}</pre>
             </div>
           </div>
 
@@ -200,7 +217,14 @@
   import { fetchTrackAsk } from '@/api/track'
   import { hasPerm } from '@/utils/permission'
   import { fmtTrackDuration, fmtTrackTime, useTrackApp } from '@/views/track/shared/useTrackApp'
-  import { buildTrackAskMock, isTrackAskMockEnabled, type TrackAskResult } from '../../ask-mock'
+  import {
+    adaptAskChart,
+    isAskMetricsType,
+    isAskUnsupportedType,
+    isTrackAskMockEnabled,
+    previewAskRaw,
+    type TrackAskResult
+  } from '../../ask-shape'
   import type { LineDataItem } from '@/types/component/chart'
 
   defineOptions({ name: 'TrackAsk' })
@@ -213,7 +237,8 @@
   const canAsk = computed(() => hasPerm('sys:track-ask:list'))
 
   /**
-   * 默认打真 API；仅 DEV 且 VITE_TRACK_ASK_MOCK=true 才走本地同形 mock。
+   * 默认打真 API；仅 DEV 且 VITE_TRACK_ASK_MOCK=true 才动态加载本地同形 mock。
+   * 生产构建 DEV 恒 false，动态 import 分支被消除，mock 不进产物（对齐 captcha）。
    */
   const usingMock = isTrackAskMockEnabled()
 
@@ -223,7 +248,8 @@
   const errorText = ref('')
 
   const metricEntries = computed(() => {
-    const m = result.value?.metrics || {}
+    const m = result.value?.metrics
+    if (!m || typeof m !== 'object') return []
     return Object.keys(m).map((key) => ({ key, value: m[key] }))
   })
 
@@ -233,14 +259,26 @@
     return row ? Object.keys(row) : []
   })
 
-  const seriesPoints = computed(() => result.value?.series?.[0]?.points || [])
-  const chartLabels = computed(() => seriesPoints.value.map((p) => String(p.x)))
-  const chartSeries = computed<LineDataItem[]>(() =>
-    (result.value?.series || []).map((s) => ({
-      name: s.name,
-      data: s.points.map((p) => Number(p.y) || 0)
-    }))
+  const chartAdapted = computed(() => adaptAskChart(result.value?.series))
+  const chartLabels = computed(() => chartAdapted.value.labels)
+  const chartSeries = computed<LineDataItem[]>(() => chartAdapted.value.items)
+
+  const showUnsupported = computed(() =>
+    isAskUnsupportedType(result.value?.resultType, result.value?.intent)
   )
+  const showMetrics = computed(() => isAskMetricsType(result.value?.resultType))
+  const showSeries = computed(() => {
+    const rt = result.value?.resultType
+    return (rt === 'series' || chartLabels.value.length > 0) && chartLabels.value.length > 0
+  })
+  const showTable = computed(
+    () => result.value?.resultType === 'table' && tableRows.value.length > 0
+  )
+  const rawPreview = computed(() => {
+    const r = result.value
+    if (!r || r.resultType !== 'raw') return null
+    return previewAskRaw(r.raw)
+  })
 
   const submit = async (): Promise<void> => {
     if (!canAsk.value) return
@@ -262,6 +300,7 @@
     result.value = null
     try {
       if (usingMock) {
+        const { buildTrackAskMock } = await import('../../ask-mock')
         result.value = buildTrackAskMock({
           appKey: appKey.value,
           question: q,
@@ -379,8 +418,22 @@
     }
 
     .track-ask-chart,
-    .track-ask-table {
+    .track-ask-table,
+    .track-ask-raw {
       margin-top: 12px;
+    }
+
+    .track-ask-raw-json {
+      max-height: 360px;
+      padding: 12px;
+      margin: 0;
+      overflow: auto;
+      font-size: 12px;
+      line-height: 1.5;
+      word-break: break-all;
+      white-space: pre-wrap;
+      background: var(--el-fill-color-light);
+      border-radius: 6px;
     }
   }
 </style>

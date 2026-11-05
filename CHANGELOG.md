@@ -16,6 +16,10 @@
 
 ### 变更
 
+- 埋点：问数据对齐 boot 真出参（resultType/series）
+  - 兼容 metrics/unsupported/raw；趋势行 [{date,pv,uv}]
+  - mock 动态 import；raw 结构化兜底
+
 - 埋点：问数据默认接真 API（合 boot ask 后）
   - `POST /api/system/track/ask`；读 `sys:track-ask:list`
   - DEV 仅 `VITE_TRACK_ASK_MOCK=true` 走本地同形 mock
