@@ -23,7 +23,7 @@
 - 埋点：空间行为页（agg 热力 / points 点选）
   - 路由 `/track/spatial`；读 `sys:track-spatial:list`
   - `GET /api/system/track/spatial`；DEV 仅 `VITE_TRACK_SPATIAL_MOCK=true` mock
-  - 菜单随后端种子；后端 tip 进 main 后可关 mock
+  - 菜单随后端种子；默认关 mock 接真 API
   - 组合 GisSpatialMap；viewport 重拉；点选跳回放/用户
 
 - GIS：GisSpatialMap 空间行为热力/点选（合 boot spatial）
