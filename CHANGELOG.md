@@ -16,6 +16,9 @@
 
 ### 变更
 
+- AI：foreach/parallel 保存校验排除 bodyNodeIds 孤立误拦
+  - 对齐 boot lab：body 无边仅靠引用；waitAll 强制；校验文案 i18n
+
 - AI：应用编排支持 foreach / parallel 控制节点（DEV mock）
   - palette 可拖入；属性面板有序 bodyNodeIds / branches
   - 运行结果展示 iterations[] / branches[]（truncated/partial）

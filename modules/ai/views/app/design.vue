@@ -199,7 +199,7 @@
             <!-- parallel -->
             <template v-if="selected.data.type === 'parallel'">
               <ElFormItem :label="$t('aiAppDesign.waitAll')">
-                <ElSwitch v-model="selected.data.waitAll" />
+                <ElSwitch :model-value="true" disabled />
               </ElFormItem>
               <ElFormItem :label="$t('aiAppDesign.onBranchFailure')">
                 <ElSelect v-model="selected.data.onBranchFailure" style="width: 100%" disabled>
@@ -366,6 +366,7 @@
     bodyCandidateNodes,
     defaultDataForType,
     extractControlOutputs,
+    findLooseFlowNodes,
     isAiFlowControlMockEnabled,
     normalizeControlData,
     syncOrderedIds,
@@ -467,29 +468,11 @@
     }))
   )
 
-  function ensureForeachDefaults(data: Record<string, any>) {
-    if (!Array.isArray(data.bodyNodeIds)) data.bodyNodeIds = []
-    if (data.bodyMode == null) data.bodyMode = 'nodeIds'
-    if (data.itemVar == null || data.itemVar === '') data.itemVar = 'item'
-    if (data.indexVar == null || data.indexVar === '') data.indexVar = 'index'
-    if (data.maxIterations == null) data.maxIterations = 20
-    if (data.timeoutMs == null) data.timeoutMs = 120000
-    if (data.aggregate == null) data.aggregate = 'array'
-    if (data.onItemFailure == null) data.onItemFailure = 'continue'
-    if (data.outputVar == null || data.outputVar === '') data.outputVar = 'foreachResults'
-  }
-
-  function ensureParallelDefaults(data: Record<string, any>) {
-    if (data.waitAll == null) data.waitAll = true
-    if (data.onBranchFailure == null) data.onBranchFailure = 'continue'
-    if (data.maxBranches == null) data.maxBranches = 8
-    if (data.timeoutMs == null) data.timeoutMs = 120000
-    if (!Array.isArray(data.branches) || data.branches.length < 2) {
-      data.branches = [
-        { id: 'b1', label: '', bodyNodeIds: [], outputVar: 'branch_b1' },
-        { id: 'b2', label: '', bodyNodeIds: [], outputVar: 'branch_b2' }
-      ]
-    }
+  /** 与 defaultData/normalize 去重：点选时补默认并强制 waitAll */
+  function ensureControlDefaults(data: Record<string, any>) {
+    const type = String(data?.type || '')
+    if (type !== 'foreach' && type !== 'parallel') return
+    Object.assign(data, normalizeControlData(type, data))
   }
 
   function onBodyNodeIdsChange(next: string[]) {
@@ -506,7 +489,7 @@
 
   function addBranch() {
     if (!selected.value || selected.value.data?.type !== 'parallel') return
-    ensureParallelDefaults(selected.value.data)
+    ensureControlDefaults(selected.value.data)
     const branches = selected.value.data.branches as ParallelBranch[]
     const max = Number(selected.value.data.maxBranches) || 8
     if (branches.length >= max) return
@@ -568,28 +551,30 @@
     ]
   }
 
-  /** 保存前校验（UX-106）：恰好一个开始、一个结束，且没有孤立节点 */
+  /** 保存前校验（UX-106）：恰好一个开始、一个结束；bodyNodeIds 引用不算孤立 */
   function validateFlow(): string | null {
     const label = (n: Node) => displayLabel(n.data?.type, n.data?.label, t) || n.id
     const starts = nodes.value.filter((n) => n.data?.type === 'start')
     const ends = nodes.value.filter((n) => n.data?.type === 'end')
     if (starts.length !== 1) return t('aiAppDesign.needOneStart', { n: starts.length })
     if (ends.length !== 1) return t('aiAppDesign.needOneEnd', { n: ends.length })
-    const noIn = nodes.value.filter(
-      (n) => n.data?.type !== 'start' && !edges.value.some((e) => e.target === n.id)
+    const flowNodes = nodes.value.map((n) => ({ id: n.id, data: n.data as any }))
+    const loose = findLooseFlowNodes(
+      flowNodes,
+      edges.value.map((e) => ({ source: e.source, target: e.target }))
     )
-    const noOut = nodes.value.filter(
-      (n) => n.data?.type !== 'end' && !edges.value.some((e) => e.source === n.id)
-    )
-    const loose = [...new Set([...noIn, ...noOut])]
-    if (loose.length) return t('aiAppDesign.looseNodes', { names: loose.map(label).join(', ') })
+    if (loose.length) {
+      const names = loose.map((n) => label({ id: n.id, data: n.data } as Node)).join(', ')
+      return t('aiAppDesign.looseNodes', { names })
+    }
 
-    const byId = new Map(nodes.value.map((n) => [n.id, { id: n.id, data: n.data as any }]))
-    for (const n of nodes.value) {
-      const err = validateControlNode({ id: n.id, data: n.data as any }, byId)
+    const byId = new Map(flowNodes.map((n) => [n.id, n]))
+    for (const n of flowNodes) {
+      const err = validateControlNode(n, byId)
       if (err) {
+        const detail = t(err.messageKey, err.params ?? {})
         return t('aiAppDesign.controlValidateFailed', {
-          msg: `${label(n)}: ${err.message} (${err.code})`
+          msg: `${label({ id: n.id, data: n.data } as Node)}: ${detail} (${err.code})`
         })
       }
     }
@@ -597,8 +582,9 @@
   }
 
   function onNodeClick({ node }: { node: Node }) {
-    if (node.data?.type === 'foreach') ensureForeachDefaults(node.data)
-    if (node.data?.type === 'parallel') ensureParallelDefaults(node.data)
+    if (node.data?.type === 'foreach' || node.data?.type === 'parallel') {
+      ensureControlDefaults(node.data)
+    }
     selected.value = node
   }
 
@@ -785,10 +771,10 @@
   .flow-layout {
     display: grid;
     flex: 1;
-    grid-template-columns: 180px 1fr 280px;
+    grid-template-columns: minmax(160px, 180px) minmax(280px, 1fr) minmax(260px, 300px);
     gap: 8px;
     min-height: 520px;
-    overflow: hidden;
+    overflow: auto hidden;
     background: var(--el-bg-color);
     border: 1px solid var(--el-border-color);
     border-radius: 8px;

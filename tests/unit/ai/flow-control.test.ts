@@ -14,6 +14,7 @@ import {
   defaultForeachData,
   defaultParallelData,
   extractControlOutputs,
+  findLooseFlowNodes,
   isAiFlowControlMockEnabled,
   normalizeControlData,
   syncOrderedIds,
@@ -82,7 +83,7 @@ describe('AI 流 foreach/parallel 契约', () => {
       byId
     )
     expect(e?.code).toBe(ERR_FOREACH_BODY_INVALID)
-    expect(e?.message).toContain('禁止嵌套')
+    expect(e?.messageKey).toBe('aiAppDesign.errCtrlBodyNest')
   })
 
   it('parallel 至少两支且 body 非空', () => {
@@ -180,6 +181,115 @@ describe('AI 流 foreach/parallel 契约', () => {
       expect(/[\u4e00-\u9fff]/.test(e)).toBe(false)
       expect(tZh(key)).toBe(LEGACY_DEFAULT_LABELS[type])
       expect(displayLabel(type, '', tZh)).toBe(LEGACY_DEFAULT_LABELS[type])
+    }
+  })
+
+  it('lab foreach DSL：body 无边不算孤立，validateControl 通过', () => {
+    // boot lab：start→fe→end + body t1 仅 bodyNodeIds
+    const nodes = [
+      { id: 'start', data: { type: 'start' } },
+      {
+        id: 'fe',
+        data: {
+          type: 'foreach',
+          inputPath: 'items',
+          bodyNodeIds: ['t1'],
+          maxIterations: 20,
+          timeoutMs: 120000
+        }
+      },
+      { id: 'end', data: { type: 'end' } },
+      { id: 't1', data: { type: 'text', label: 'body' } }
+    ]
+    const edges = [
+      { source: 'start', target: 'fe' },
+      { source: 'fe', target: 'end' }
+    ]
+    expect(findLooseFlowNodes(nodes, edges).map((n) => n.id)).toEqual([])
+    const byId = new Map(nodes.map((n) => [n.id, n]))
+    expect(validateControlNode(nodes[1], byId)).toBeNull()
+  })
+
+  it('lab parallel DSL：分支 body 无边不算孤立，validateControl 通过', () => {
+    // boot lab：start→p→join→end + bodies t1/t2
+    const nodes = [
+      { id: 'start', data: { type: 'start' } },
+      {
+        id: 'p',
+        data: {
+          type: 'parallel',
+          waitAll: true,
+          branches: [
+            { id: 'b1', bodyNodeIds: ['t1'], outputVar: 'branch_b1' },
+            { id: 'b2', bodyNodeIds: ['t2'], outputVar: 'branch_b2' }
+          ],
+          maxBranches: 8,
+          timeoutMs: 120000
+        }
+      },
+      { id: 'join', data: { type: 'text', label: 'join' } },
+      { id: 'end', data: { type: 'end' } },
+      { id: 't1', data: { type: 'text', label: 'b1' } },
+      { id: 't2', data: { type: 'text', label: 'b2' } }
+    ]
+    const edges = [
+      { source: 'start', target: 'p' },
+      { source: 'p', target: 'join' },
+      { source: 'join', target: 'end' }
+    ]
+    expect(
+      findLooseFlowNodes(nodes, edges)
+        .map((n) => n.id)
+        .sort()
+    ).toEqual([])
+    const byId = new Map(nodes.map((n) => [n.id, n]))
+    expect(validateControlNode(nodes[1], byId)).toBeNull()
+  })
+
+  it('真正孤立节点仍被 findLooseFlowNodes 检出', () => {
+    const nodes = [
+      { id: 'start', data: { type: 'start' } },
+      { id: 'end', data: { type: 'end' } },
+      { id: 'orphan', data: { type: 'llm' } }
+    ]
+    const edges = [{ source: 'start', target: 'end' }]
+    const loose = findLooseFlowNodes(nodes, edges)
+    expect(loose.map((n) => n.id)).toEqual(['orphan'])
+  })
+
+  it('normalize parallel 强制 waitAll=true', () => {
+    const p = normalizeControlData(TYPE_PARALLEL, {
+      type: TYPE_PARALLEL,
+      waitAll: false,
+      branches: [
+        { id: 'b1', bodyNodeIds: ['a'] },
+        { id: 'b2', bodyNodeIds: ['b'] }
+      ]
+    })
+    expect(p.waitAll).toBe(true)
+  })
+
+  it('校验 messageKey 在 zh/en 均有且 en 无中文', () => {
+    const keys = [
+      'errCtrlMissingInputPath',
+      'errCtrlEmptyBody',
+      'errCtrlBodyMissing',
+      'errCtrlBodyNest',
+      'errCtrlMaxIterations',
+      'errCtrlTimeout',
+      'errCtrlParallelMinBranches',
+      'errCtrlParallelMaxBranches',
+      'errCtrlParallelHardBranches',
+      'errCtrlBranchIdEmpty',
+      'errCtrlBranchIdDup',
+      'errCtrlBranchBodyEmpty'
+    ]
+    for (const k of keys) {
+      const zk = (zh as any).aiAppDesign[k]
+      const ek = (en as any).aiAppDesign[k]
+      expect(typeof zk).toBe('string')
+      expect(typeof ek).toBe('string')
+      expect(/[\u4e00-\u9fff]/.test(ek)).toBe(false)
     }
   })
 })

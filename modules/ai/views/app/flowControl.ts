@@ -127,7 +127,12 @@ export function bodyCandidateNodes(
   })
 }
 
-export type ControlValidateMsg = { code: string; message: string }
+export type ControlValidateMsg = {
+  code: string
+  /** i18n key（aiAppDesign.*），toast 走 t，不硬编码中文 */
+  messageKey: string
+  params?: Record<string, string | number>
+}
 
 function asStringArray(v: unknown): string[] {
   if (!Array.isArray(v)) return []
@@ -145,9 +150,57 @@ function readBranches(data: Record<string, any> | undefined): ParallelBranch[] {
   }))
 }
 
+/** 收集 foreach/parallel 引用的 body 节点 id（画布可无边，不算孤立） */
+export function collectControlBodyNodeIds(nodes: FlowNodeLike[]): Set<string> {
+  const ids = new Set<string>()
+  for (const n of nodes) {
+    const type = (n.data?.type || '').toLowerCase()
+    const data = (n.data || {}) as Record<string, any>
+    if (type === TYPE_FOREACH) {
+      for (const id of asStringArray(data.bodyNodeIds)) ids.add(id)
+    } else if (type === TYPE_PARALLEL) {
+      for (const b of readBranches(data)) {
+        for (const id of b.bodyNodeIds) ids.add(id)
+      }
+    }
+  }
+  return ids
+}
+
+/**
+ * 孤立节点：无入/无出边，且不是 start/end，且不是控制节点 body 引用。
+ * 对齐 boot lab：body 仅靠 bodyNodeIds 挂接、无 edges。
+ */
+export function findLooseFlowNodes(
+  nodes: FlowNodeLike[],
+  edges: Array<{ source: string; target: string }>
+): FlowNodeLike[] {
+  const bodyIds = collectControlBodyNodeIds(nodes)
+  const noIn = nodes.filter(
+    (n) =>
+      (n.data?.type || '').toLowerCase() !== 'start' &&
+      !bodyIds.has(n.id) &&
+      !edges.some((e) => e.target === n.id)
+  )
+  const noOut = nodes.filter(
+    (n) =>
+      (n.data?.type || '').toLowerCase() !== 'end' &&
+      !bodyIds.has(n.id) &&
+      !edges.some((e) => e.source === n.id)
+  )
+  const seen = new Set<string>()
+  const loose: FlowNodeLike[] = []
+  for (const n of [...noIn, ...noOut]) {
+    if (seen.has(n.id)) continue
+    seen.add(n.id)
+    loose.push(n)
+  }
+  return loose
+}
+
 /**
  * 保存前校验 foreach/parallel；返回首个错误（code 对齐 boot）。
- * nodesById 用于检查 body 是否存在、是否嵌套。
+ * messageKey 供界面 i18n；缺 inputPath 与运行时「非数组」共用 AI_FOREACH_INPUT_NOT_ARRAY（boot 同码）。
  */
 export function validateControlNode(
   node: FlowNodeLike,
@@ -158,24 +211,32 @@ export function validateControlNode(
   if (type === TYPE_FOREACH) {
     const inputPath = String(data.inputPath ?? '').trim()
     if (!inputPath) {
-      return { code: ERR_FOREACH_INPUT_NOT_ARRAY, message: 'foreach 缺少 inputPath' }
+      return {
+        code: ERR_FOREACH_INPUT_NOT_ARRAY,
+        messageKey: 'aiAppDesign.errCtrlMissingInputPath'
+      }
     }
     const bodyIds = asStringArray(data.bodyNodeIds)
     if (!bodyIds.length) {
-      return { code: ERR_FOREACH_BODY_INVALID, message: 'foreach bodyNodeIds 不能为空' }
+      return { code: ERR_FOREACH_BODY_INVALID, messageKey: 'aiAppDesign.errCtrlEmptyBody' }
     }
     const nest = checkBodyNoNest(bodyIds, nodesById)
-    if (nest) return { code: ERR_FOREACH_BODY_INVALID, message: nest }
+    if (nest) return { code: ERR_FOREACH_BODY_INVALID, ...nest }
     const maxIter = Number(data.maxIterations)
     if (Number.isFinite(maxIter) && maxIter > FOREACH_HARD_MAX_ITERATIONS) {
       return {
         code: ERR_FOREACH_MAX_ITERATIONS,
-        message: `maxIterations 硬顶 ${FOREACH_HARD_MAX_ITERATIONS}`
+        messageKey: 'aiAppDesign.errCtrlMaxIterations',
+        params: { n: FOREACH_HARD_MAX_ITERATIONS }
       }
     }
     const timeout = Number(data.timeoutMs)
     if (Number.isFinite(timeout) && timeout > MAX_TIMEOUT_MS) {
-      return { code: ERR_FOREACH_TIMEOUT, message: `timeoutMs 硬顶 ${MAX_TIMEOUT_MS}` }
+      return {
+        code: ERR_FOREACH_TIMEOUT,
+        messageKey: 'aiAppDesign.errCtrlTimeout',
+        params: { n: MAX_TIMEOUT_MS }
+      }
     }
     return null
   }
@@ -183,52 +244,73 @@ export function validateControlNode(
     const branches = readBranches(data)
     const maxBranches = clampMaxBranches(Number(data.maxBranches) || 0)
     if (branches.length < 2) {
-      return { code: ERR_PARALLEL_BRANCH_INVALID, message: 'parallel 至少 2 个分支' }
+      return {
+        code: ERR_PARALLEL_BRANCH_INVALID,
+        messageKey: 'aiAppDesign.errCtrlParallelMinBranches'
+      }
     }
     if (branches.length > maxBranches) {
       return {
         code: ERR_PARALLEL_BRANCH_INVALID,
-        message: `parallel 分支数超过上限 ${maxBranches}`
+        messageKey: 'aiAppDesign.errCtrlParallelMaxBranches',
+        params: { n: maxBranches }
       }
     }
     if (branches.length > PARALLEL_HARD_MAX_BRANCHES) {
       return {
         code: ERR_PARALLEL_BRANCH_INVALID,
-        message: `parallel 分支硬顶 ${PARALLEL_HARD_MAX_BRANCHES}`
+        messageKey: 'aiAppDesign.errCtrlParallelHardBranches',
+        params: { n: PARALLEL_HARD_MAX_BRANCHES }
       }
     }
     const seen = new Set<string>()
     for (const b of branches) {
       if (!b.id) {
-        return { code: ERR_PARALLEL_BRANCH_INVALID, message: 'branch.id 不能为空' }
+        return {
+          code: ERR_PARALLEL_BRANCH_INVALID,
+          messageKey: 'aiAppDesign.errCtrlBranchIdEmpty'
+        }
       }
       if (seen.has(b.id)) {
-        return { code: ERR_PARALLEL_BRANCH_INVALID, message: `branch.id 重复: ${b.id}` }
+        return {
+          code: ERR_PARALLEL_BRANCH_INVALID,
+          messageKey: 'aiAppDesign.errCtrlBranchIdDup',
+          params: { id: b.id }
+        }
       }
       seen.add(b.id)
       if (!b.bodyNodeIds.length) {
         return {
           code: ERR_PARALLEL_BRANCH_INVALID,
-          message: `branch bodyNodeIds 不能为空: ${b.id}`
+          messageKey: 'aiAppDesign.errCtrlBranchBodyEmpty',
+          params: { id: b.id }
         }
       }
       const nest = checkBodyNoNest(b.bodyNodeIds, nodesById)
-      if (nest) return { code: ERR_PARALLEL_BRANCH_INVALID, message: nest }
+      if (nest) return { code: ERR_PARALLEL_BRANCH_INVALID, ...nest }
     }
     const timeout = Number(data.timeoutMs)
     if (Number.isFinite(timeout) && timeout > MAX_TIMEOUT_MS) {
-      return { code: ERR_PARALLEL_TIMEOUT, message: `timeoutMs 硬顶 ${MAX_TIMEOUT_MS}` }
+      return {
+        code: ERR_PARALLEL_TIMEOUT,
+        messageKey: 'aiAppDesign.errCtrlTimeout',
+        params: { n: MAX_TIMEOUT_MS }
+      }
     }
     return null
   }
   return null
 }
 
-function checkBodyNoNest(bodyIds: string[], nodesById: Map<string, FlowNodeLike>): string | null {
+function checkBodyNoNest(
+  bodyIds: string[],
+  nodesById: Map<string, FlowNodeLike>
+): Pick<ControlValidateMsg, 'messageKey' | 'params'> | null {
   for (const id of bodyIds) {
     const n = nodesById.get(id)
-    if (!n) return `body 节点不存在: ${id}`
-    if (isControlType(n.data?.type)) return `P0 禁止嵌套 foreach/parallel: ${id}`
+    if (!n) return { messageKey: 'aiAppDesign.errCtrlBodyMissing', params: { id } }
+    if (isControlType(n.data?.type))
+      return { messageKey: 'aiAppDesign.errCtrlBodyNest', params: { id } }
   }
   return null
 }
@@ -258,7 +340,7 @@ export function normalizeControlData(
   }
   if (t === TYPE_PARALLEL) {
     d.type = TYPE_PARALLEL
-    d.waitAll = d.waitAll !== false
+    d.waitAll = true // P0 boot 唯一 waitAll，面板禁用不可关
     d.onBranchFailure = ON_FAIL_CONTINUE
     d.maxBranches = clampMaxBranches(Number(d.maxBranches) || 0)
     d.timeoutMs = clampTimeoutMs(Number(d.timeoutMs) || 0)

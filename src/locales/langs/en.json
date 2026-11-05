@@ -281,7 +281,19 @@
     "errForeachInput": "Foreach nodes need an input path",
     "errForeachBody": "Foreach nodes need at least one body node",
     "errParallelBranches": "Parallel nodes need at least 2 valid branches",
-    "controlValidateFailed": "Control node config error: {msg}"
+    "controlValidateFailed": "Control node config error: {msg}",
+    "errCtrlMissingInputPath": "Enter an input path (inputPath)",
+    "errCtrlEmptyBody": "Select at least one body node",
+    "errCtrlBodyMissing": "Body node not found: {id}",
+    "errCtrlBodyNest": "Nested foreach/parallel is not allowed: {id}",
+    "errCtrlMaxIterations": "Max iterations cannot exceed {n}",
+    "errCtrlTimeout": "Timeout cannot exceed {n} ms",
+    "errCtrlParallelMinBranches": "Parallel needs at least 2 branches",
+    "errCtrlParallelMaxBranches": "Parallel branches cannot exceed {n}",
+    "errCtrlParallelHardBranches": "Parallel branch hard cap is {n}",
+    "errCtrlBranchIdEmpty": "Branch ID is required",
+    "errCtrlBranchIdDup": "Duplicate branch ID: {id}",
+    "errCtrlBranchBodyEmpty": "Branch needs body nodes: {id}"
   },
   "aiGen": {
     "selectModel": "Select a model",

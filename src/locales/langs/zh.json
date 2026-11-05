@@ -281,7 +281,19 @@
     "errForeachInput": "循环节点须填写输入路径",
     "errForeachBody": "循环节点须选择至少一个循环体节点",
     "errParallelBranches": "并行节点至少需要 2 个有效分支",
-    "controlValidateFailed": "控制节点配置有误：{msg}"
+    "controlValidateFailed": "控制节点配置有误：{msg}",
+    "errCtrlMissingInputPath": "请填写输入路径（inputPath）",
+    "errCtrlEmptyBody": "请至少选择一个循环体节点",
+    "errCtrlBodyMissing": "循环体节点不存在：{id}",
+    "errCtrlBodyNest": "禁止嵌套循环/并行：{id}",
+    "errCtrlMaxIterations": "最大迭代不能超过 {n}",
+    "errCtrlTimeout": "超时不能超过 {n} ms",
+    "errCtrlParallelMinBranches": "并行至少需要 2 个分支",
+    "errCtrlParallelMaxBranches": "并行分支数不能超过 {n}",
+    "errCtrlParallelHardBranches": "并行分支硬顶为 {n}",
+    "errCtrlBranchIdEmpty": "分支 ID 不能为空",
+    "errCtrlBranchIdDup": "分支 ID 重复：{id}",
+    "errCtrlBranchBodyEmpty": "分支须选择节点：{id}"
   },
   "aiGen": {
     "selectModel": "选择模型",
