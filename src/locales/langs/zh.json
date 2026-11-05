@@ -4314,7 +4314,7 @@
         "openReplay": "打开回放",
         "unsupportedHint": "这个问题还不在支持范围，请换一种问法",
         "emptyIdle": "输入问题后，这里会显示指标、图表或表格",
-        "mockHint": "当前为本地 mock（接真 API 后自动关闭或设 VITE_TRACK_ASK_MOCK=false）",
+        "mockHint": "当前为本地 mock（仅 DEV 且 VITE_TRACK_ASK_MOCK=true）",
         "intent": "意图",
         "warnings": "提示",
         "entryPath": "入口页",

@@ -287,7 +287,7 @@ export function fetchTrackAppHealth(params: { appKey: string }) {
 }
 
 // ===== 问数据（自然语言 → 埋点分析；与 AI dataset 问数无关） =====
-// 读权限 sys:track-ask:list；后端未合前 404 正常——页面可走本地 mock 自测。
+// 读权限 sys:track-ask:list；默认打真 API。DEV 仅当 VITE_TRACK_ASK_MOCK=true 走本地 mock。
 /** 问数据：入参 appKey + question(≤500) + days?(1..90) */
 export function fetchTrackAsk(data: { appKey: string; question: string; days?: number }) {
   return request.post<any>({

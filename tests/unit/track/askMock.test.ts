@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { buildTrackAskMock } from '../../../modules/track/ask-mock'
+import { buildTrackAskMock, isTrackAskMockEnabled } from '../../../modules/track/ask-mock'
 
 describe('track ask mock shape', () => {
   it('overview 同形且回放 ≤5', () => {
@@ -39,5 +39,21 @@ describe('track ask mock shape', () => {
   it('days 夹紧到 1..90', () => {
     expect(buildTrackAskMock({ appKey: 'ak', question: '概览', days: 0 }).params.days).toBe(1)
     expect(buildTrackAskMock({ appKey: 'ak', question: '概览', days: 999 }).params.days).toBe(90)
+  })
+})
+
+describe('isTrackAskMockEnabled', () => {
+  it('默认 / 未设 / false：不走 mock（打真 API）', () => {
+    expect(isTrackAskMockEnabled({ DEV: true })).toBe(false)
+    expect(isTrackAskMockEnabled({ DEV: true, VITE_TRACK_ASK_MOCK: '' })).toBe(false)
+    expect(isTrackAskMockEnabled({ DEV: true, VITE_TRACK_ASK_MOCK: 'false' })).toBe(false)
+    expect(isTrackAskMockEnabled({ DEV: true, VITE_TRACK_ASK_MOCK: 'FALSE' })).toBe(false)
+    expect(isTrackAskMockEnabled({ DEV: false, VITE_TRACK_ASK_MOCK: 'true' })).toBe(false)
+  })
+
+  it('仅 DEV + true 启用', () => {
+    expect(isTrackAskMockEnabled({ DEV: true, VITE_TRACK_ASK_MOCK: 'true' })).toBe(true)
+    expect(isTrackAskMockEnabled({ DEV: true, VITE_TRACK_ASK_MOCK: 'TRUE' })).toBe(true)
+    expect(isTrackAskMockEnabled({ DEV: true, VITE_TRACK_ASK_MOCK: ' True ' })).toBe(true)
   })
 })

@@ -1,7 +1,23 @@
 /**
  * 埋点「问数据」本地 mock（与 boot POST /api/system/track/ask 出参同形）。
- * 后端未合前 DEV 默认走此数据自测；接真 API 时设 VITE_TRACK_ASK_MOCK=false。
+ * 仅 DEV 且显式 VITE_TRACK_ASK_MOCK=true 时由页面走此数据；默认打真 API。
  */
+
+/** DEV + 显式 true 才启用本地假数据（默认关，走 POST /api/system/track/ask） */
+export function isTrackAskMockEnabled(
+  env: { DEV?: boolean; VITE_TRACK_ASK_MOCK?: string } = import.meta.env as {
+    DEV?: boolean
+    VITE_TRACK_ASK_MOCK?: string
+  }
+): boolean {
+  return (
+    Boolean(env.DEV) &&
+    String(env.VITE_TRACK_ASK_MOCK ?? '')
+      .trim()
+      .toLowerCase() === 'true'
+  )
+}
+
 export type TrackAskIntent =
   | 'overview'
   | 'trend'

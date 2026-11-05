@@ -200,7 +200,7 @@
   import { fetchTrackAsk } from '@/api/track'
   import { hasPerm } from '@/utils/permission'
   import { fmtTrackDuration, fmtTrackTime, useTrackApp } from '@/views/track/shared/useTrackApp'
-  import { buildTrackAskMock, type TrackAskResult } from '../../ask-mock'
+  import { buildTrackAskMock, isTrackAskMockEnabled, type TrackAskResult } from '../../ask-mock'
   import type { LineDataItem } from '@/types/component/chart'
 
   defineOptions({ name: 'TrackAsk' })
@@ -209,14 +209,13 @@
   const router = useRouter()
   const { appOptions, appKey, days, appsLoading } = useTrackApp()
 
-  /** 读：sys:track-ask:list（boot 种子未合前超管 * 可测） */
+  /** 读：sys:track-ask:list（boot V19 种子已合） */
   const canAsk = computed(() => hasPerm('sys:track-ask:list'))
 
   /**
-   * DEV 默认走本地 mock（与契约同形）；接真 API 后设 VITE_TRACK_ASK_MOCK=false，
-   * 或非 DEV 构建一律打真接口。
+   * 默认打真 API；仅 DEV 且 VITE_TRACK_ASK_MOCK=true 才走本地同形 mock。
    */
-  const usingMock = import.meta.env.DEV && import.meta.env.VITE_TRACK_ASK_MOCK !== 'false'
+  const usingMock = isTrackAskMockEnabled()
 
   const question = ref('')
   const loading = ref(false)

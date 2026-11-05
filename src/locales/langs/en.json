@@ -4314,7 +4314,7 @@
         "openReplay": "Open replay",
         "unsupportedHint": "This question is out of scope. Try another phrasing.",
         "emptyIdle": "After you ask, metrics, charts, or tables show up here",
-        "mockHint": "Local mock on (set VITE_TRACK_ASK_MOCK=false when the real API is live)",
+        "mockHint": "Local mock on (DEV only when VITE_TRACK_ASK_MOCK=true)",
         "intent": "Intent",
         "warnings": "Warnings",
         "entryPath": "Entry page",
