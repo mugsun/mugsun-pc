@@ -98,7 +98,7 @@
             v-else-if="result"
             :mode="normalizeSpatialMode(result.mode)"
             :cells="result.cells"
-            :points="result.points"
+            :points="mapPoints"
             :truncated="result.truncated"
             @update:viewport="onViewport"
             @select-point="onSelectPoint"
@@ -148,7 +148,7 @@
   import { ElMessage } from 'element-plus'
   import { fetchTrackEventDefPage, fetchTrackSpatial } from '@/api/track'
   import GisSpatialMap from '@/components/gis/GisSpatialMap.vue'
-  import type { TrackSpatialViewport } from '@/gis/trackSpatial'
+  import type { TrackSpatialPoint, TrackSpatialViewport } from '@/gis/trackSpatial'
   import { hasPerm } from '@/utils/permission'
   import { fmtTrackTime, useTrackApp } from '@/views/track/shared/useTrackApp'
   import {
@@ -158,6 +158,7 @@
     joinCsv,
     normalizeSpatialMode,
     normalizeSpatialResult,
+    normalizeSpatialUserId,
     parsePositiveIntCsv,
     resolveSpatialPointJump,
     zoomToGridPrecision,
@@ -198,6 +199,9 @@
   const autoReloadEnabled = ref(false)
 
   const emptyResult = computed(() => searched.value && isSpatialEmpty(result.value))
+
+  /** GisSpatialMap 入参仍是 gis 的 number|null；页侧已 normalize 成 string，此处断言桥接 */
+  const mapPoints = computed(() => (result.value?.points ?? []) as unknown as TrackSpatialPoint[])
 
   const selectedJump = computed(() => resolveSpatialPointJump(selected.value, canReplay.value))
   const canGoReplay = computed(() => selectedJump.value.kind === 'replay')
@@ -297,8 +301,21 @@
     void loadSpatial({ fromViewport: true })
   }
 
-  const onSelectPoint = (point: TrackSpatialPointShell): void => {
-    selected.value = point
+  const onSelectPoint = (point: TrackSpatialPoint): void => {
+    // 地图回传 gis 类型；页侧再压成原字符串 userId
+    const uid = normalizeSpatialUserId(point.userId)
+    selected.value = {
+      lon: point.lon,
+      lat: point.lat,
+      eventName: point.eventName,
+      ts: point.ts,
+      urlPath: point.urlPath,
+      eventId: point.eventId,
+      sessionId: point.sessionId,
+      distinctId: point.distinctId,
+      converted: point.converted,
+      ...(uid !== undefined ? { userId: uid } : {})
+    }
   }
 
   const goReplay = (): void => {
