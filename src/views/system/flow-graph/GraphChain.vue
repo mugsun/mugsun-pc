@@ -181,13 +181,13 @@
                 v-model="e.key"
                 size="small"
                 class="g-rf"
-                :placeholder="$t('pages.system.flowGraph.aiMapKey')"
+                :placeholder="$t('pages.system.flowGraph.aiOutputMapFrom')"
               />
               <ElInput
                 v-model="e.value"
                 size="small"
                 class="g-rv-wide"
-                :placeholder="$t('pages.system.flowGraph.aiMapValue')"
+                :placeholder="$t('pages.system.flowGraph.aiOutputMapTo')"
               />
               <ElButton
                 link

@@ -3234,9 +3234,11 @@
         "aiFailStay": "Stay on this node",
         "aiFailTransferRole": "Transfer to role: {code}",
         "aiInputMap": "Input map (required; empty OK)",
-        "aiOutputMap": "Output map (target key whitelist)",
+        "aiOutputMap": "Output map (whitelist on target / value)",
         "aiMapKey": "Variable",
         "aiMapValue": "Expr / field",
+        "aiOutputMapFrom": "Source var (from)",
+        "aiOutputMapTo": "Target key (to, e.g. ai_summary / ai_ext_*)",
         "aiAddMap": "+ Mapping",
         "aiPromptHint": "Prompts live in the AI workflow; bind the app and variable maps here only.",
         "errAiFlowId": "AI node \"{name}\" has no app. Pick an enabled workflow or chatflow, then publish again.",
@@ -3244,7 +3246,7 @@
         "errAiOnFailure": "AI onFailure must be rejectLast, stay, or transfer:role:<code>.",
         "errAiMapKey": "This map variable name is not valid. Start with a letter or underscore; use only letters, digits, and underscores.",
         "errAiInputMap": "AI node \"{name}\" is missing the inputMap field. Set inputMap (an empty object means zero injection), then publish again.",
-        "errAiOutputMapKey": "Output target keys may only be ai_summary, ai_pass, ai_reason, ai_run_id, or ai_ext_*. Change them, then publish again."
+        "errAiOutputMapKey": "Output map values (target keys) may only be ai_summary, ai_pass, ai_reason, ai_run_id, or ai_ext_*. Fix the right-hand target key, then publish again."
       },
       "flowTodo": {
         "tabTodo": "My Todo",

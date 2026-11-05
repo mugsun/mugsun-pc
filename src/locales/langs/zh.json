@@ -3234,9 +3234,11 @@
         "aiFailStay": "停在本节点",
         "aiFailTransferRole": "转交角色：{code}",
         "aiInputMap": "入参映射（必填，可空）",
-        "aiOutputMap": "出参映射（目标键白名单）",
+        "aiOutputMap": "出参映射（右侧目标键白名单）",
         "aiMapKey": "变量名",
         "aiMapValue": "表达式/字段",
+        "aiOutputMapFrom": "源变量（from）",
+        "aiOutputMapTo": "目标键（to，如 ai_summary / ai_ext_*）",
         "aiAddMap": "+ 映射",
         "aiPromptHint": "提示词在 AI 工作流侧维护；此处只绑应用与变量映射。",
         "errAiFlowId": "AI 节点「{name}」未选择应用。请选已启用的工作流或对话流后再发布",
@@ -3244,7 +3246,7 @@
         "errAiOnFailure": "AI 失败策略须为 rejectLast、stay 或 transfer:role:<编码>",
         "errAiMapKey": "映射变量名非法。请改成以字母或下划线开头，并且只含字母、数字和下划线后再发布",
         "errAiInputMap": "AI 节点「{name}」缺少入参映射字段。请配置 inputMap（可为空对象表示零注入）后再发布",
-        "errAiOutputMapKey": "出参目标键仅允许 ai_summary、ai_pass、ai_reason、ai_run_id 或 ai_ext_*。请改后再发布"
+        "errAiOutputMapKey": "出参映射值（目标键）仅允许 ai_summary、ai_pass、ai_reason、ai_run_id 或 ai_ext_*。请改右侧目标键后再发布"
       },
       "flowTodo": {
         "tabTodo": "我的待办",

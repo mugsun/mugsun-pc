@@ -60,7 +60,7 @@ describe('流程设计器 AI 节点', () => {
         { key: 'title', value: 'form.title' },
         { key: '', value: '' }
       ],
-      outputMap: [{ key: 'ai_summary', value: 'summary' }],
+      outputMap: [{ key: 'summary', value: 'ai_summary' }],
       onFailure: 'transfer:role:admin'
     })
     expect(validateTree([n])).toBe('')
@@ -70,7 +70,7 @@ describe('流程设计器 AI 节点', () => {
     expect(tree.timeoutMs).toBe(120000)
     expect(tree.onFailure).toBe('transfer:role:admin')
     expect(tree.inputMap).toEqual({ title: 'form.title' })
-    expect(tree.outputMap).toEqual({ ai_summary: 'summary' })
+    expect(tree.outputMap).toEqual({ summary: 'ai_summary' })
     expect(tree.candidates).toBeUndefined()
   })
 
@@ -89,21 +89,27 @@ describe('流程设计器 AI 节点', () => {
     expect(validateTree([n])).toContain('errAiMapKey')
   })
 
-  it('outputMap 目标键白名单', () => {
-    const bad = withRequired(newNode('ai'), {
+  it('outputMap 目标键白名单在 value（to）', () => {
+    const badVal = withRequired(newNode('ai'), {
       outputMap: [{ key: 'summary', value: 'x' }]
     })
-    expect(validateTree([bad])).toContain('errAiOutputMapKey')
+    expect(validateTree([badVal])).toContain('errAiOutputMapKey')
+    const badKeyAsTarget = withRequired(newNode('ai'), {
+      // 旧误把白名单打在 key：此种 from=ai_summary、to=普通名应失败
+      outputMap: [{ key: 'ai_summary', value: 'summary' }]
+    })
+    expect(validateTree([badKeyAsTarget])).toContain('errAiOutputMapKey')
     const okFixed = withRequired(newNode('ai'), {
       outputMap: [
-        { key: 'ai_pass', value: 'pass' },
-        { key: 'ai_reason', value: 'reason' },
-        { key: 'ai_run_id', value: 'rid' }
+        { key: 'pass', value: 'ai_pass' },
+        { key: 'reason', value: 'ai_reason' },
+        { key: 'rid', value: 'ai_run_id' },
+        { key: 'summary', value: 'ai_summary' }
       ]
     })
     expect(validateTree([okFixed])).toBe('')
     const okExt = withRequired(newNode('ai'), {
-      outputMap: [{ key: 'ai_ext_score', value: 'score' }]
+      outputMap: [{ key: 'score', value: 'ai_ext_score' }]
     })
     expect(validateTree([okExt])).toBe('')
   })
@@ -149,6 +155,8 @@ describe('流程设计器 AI 节点', () => {
     expect(zh.pages.system.flowGraph.errAiFlowId).toContain('{name}')
     expect(zh.pages.system.flowGraph.errAiInputMap).toContain('{name}')
     expect(zh.pages.system.flowGraph.errAiOutputMapKey).toContain('ai_ext_')
+    expect(zh.pages.system.flowGraph.errAiOutputMapKey).toMatch(/目标键|映射值/)
+    expect(zh.pages.system.flowGraph.aiOutputMapTo).toMatch(/目标键|ai_summary/)
     expect(en.pages.system.flowGraph.errAiTimeout).toContain('300000')
     expect(zh.pages.system.flowGraph.aiInputMap).toContain('必填')
     expect(zh.pages.system.flowGraph.aiInputMap).toContain('可空')

@@ -105,7 +105,7 @@ const entriesToMap = (entries?: GMapEntry[]): Record<string, string> | undefined
 const ON_FAILURE_OK = (v: string): boolean =>
   v === 'rejectLast' || v === 'stay' || /^transfer:role:[A-Za-z0-9_.-]+$/.test(v)
 
-/** outputMap 目标键白名单：固定写回变量或 ai_ext_* */
+/** outputMap 的 value（to / 写回目标键）白名单：固定写回变量或 ai_ext_* */
 const OUTPUT_TARGET_OK = (k: string): boolean =>
   k === 'ai_summary' ||
   k === 'ai_pass' ||
@@ -179,9 +179,11 @@ export const validateTree = (nodes: GNode[]): string => {
       if (!ON_FAILURE_OK(fail)) return $t('pages.system.flowGraph.errAiOnFailure')
       for (const e of n.outputMap || []) {
         const k = (e.key || '').trim()
-        if (!k && !(e.value || '').trim()) continue
+        const v = (e.value || '').trim()
+        if (!k && !v) continue
+        // key=from 源变量；value=to 写回目标键（白名单）
         if (!k || !FIELD_RE.test(k)) return $t('pages.system.flowGraph.errAiMapKey')
-        if (!OUTPUT_TARGET_OK(k)) return $t('pages.system.flowGraph.errAiOutputMapKey')
+        if (!v || !OUTPUT_TARGET_OK(v)) return $t('pages.system.flowGraph.errAiOutputMapKey')
       }
     } else {
       if (n.type === 'parallel' && n.branches.length < 2)
