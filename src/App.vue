@@ -2,7 +2,7 @@
   <ElConfigProvider
     size="default"
     :locale="locales[language]"
-    :z-index="3000"
+    :z-index="ELEMENT_Z_INDEX"
     :card="{
       shadow: 'never'
     }"
@@ -18,6 +18,7 @@
   import { systemUpgrade } from './utils/sys'
   import { toggleTransition } from './utils/ui/animation'
   import { checkStorageCompatibility } from './utils/storage'
+  import { ELEMENT_Z_INDEX } from './locales/element'
   import { initializeTheme } from './hooks/core/useTheme'
 
   const userStore = useUserStore()
