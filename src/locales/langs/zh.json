@@ -1279,7 +1279,14 @@
         "bindSuccessMessage": "第三方账号绑定成功",
         "loginSuccessMessage": "第三方登录成功",
         "failed": "第三方登录失败",
-        "retry": "请重试"
+        "retry": "请重试",
+        "notInitiated": "这次授权不是在本页面发起的，已忽略",
+        "notInitiatedDetail": "没有绑定任何账号，也没有登录。如果你没有亲自点过「绑定」或「第三方登录」，可能有人发来了诱导链接，关掉本页即可。",
+        "leave": "返回",
+        "confirmBindTitle": "确认绑定第三方账号",
+        "confirmBind": "要把这个 {source} 账号绑定到当前登录的账号吗？绑定后，它可以直接登录当前账号。",
+        "bindCancelled": "已取消绑定",
+        "bindNeedLogin": "登录已失效，没有绑定。请登录后到个人中心重新点「绑定」"
       },
       "privacyPolicy": {
         "title": "隐私政策",

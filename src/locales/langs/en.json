@@ -1279,7 +1279,14 @@
         "bindSuccessMessage": "Third-party account bound successfully",
         "loginSuccessMessage": "Third-party login successful",
         "failed": "Third-party login failed",
-        "retry": "Please try again"
+        "retry": "Please try again",
+        "notInitiated": "This authorization wasn't started on this page and has been ignored",
+        "notInitiatedDetail": "Nothing was bound and no sign-in happened. If you didn't click Bind or third-party sign-in yourself, someone may have sent you a crafted link. Just close this page.",
+        "leave": "Go back",
+        "confirmBindTitle": "Confirm third-party binding",
+        "confirmBind": "Bind this {source} account to the account you're signed in with? Once bound, it can sign in to this account directly.",
+        "bindCancelled": "Binding cancelled",
+        "bindNeedLogin": "Your session has expired, so nothing was bound. Sign in, then click Bind in your profile again."
       },
       "privacyPolicy": {
         "title": "Privacy Policy",

@@ -179,7 +179,8 @@
   import { useUserStore } from '@/store/modules/user'
   import { useSettingStore } from '@/store/modules/setting'
   import { fetchUpdateInfo, fetchUpdatePassword, uploadAvatarFile } from '@/api/system-manage'
-  import { fetchSocialRender, fetchSocialUnbind, fetchSocialSources } from '@/api/auth'
+  import { fetchSocialBindRender, fetchSocialUnbind, fetchSocialSources } from '@/api/auth'
+  import { rememberSocialFlow } from '@/utils/security/socialFlow'
   import { fetchRoleCodeSelect } from '@/api/role'
   import { encryptPassword, isGmEncryptError } from '@/utils/gm'
   import { ElMessage } from 'element-plus'
@@ -387,10 +388,11 @@
     }
   })
 
-  // 绑定第三方账号：取授权地址并跳转，回调页检测到已登录态即执行绑定
+  // 绑定第三方账号：取绑定专用的授权地址，记下本标签页发起的这次绑定再跳转（回调页只认这条记录）
   const bindSocial = async (source: string) => {
     try {
-      const { authorizeUrl } = await fetchSocialRender(source)
+      const { authorizeUrl } = await fetchSocialBindRender(source)
+      rememberSocialFlow('bind', source, authorizeUrl)
       window.location.href = authorizeUrl
     } catch (e: any) {
       ElMessage.error(e?.message || t('pages.system.userCenter.bindFailed'))

@@ -67,9 +67,14 @@ export function fetchSmsLogin(data: { phone: string; code: string }) {
   return request.post<Api.Auth.LoginResponse>({ url: '/api/auth/sms-login', data })
 }
 
-/** 社交登录：获取第三方授权跳转地址（state 落 Redis 防 CSRF） */
+/** 社交登录：获取第三方授权跳转地址（state 落 Redis 防 CSRF，只能用来登录） */
 export function fetchSocialRender(source: string) {
   return request.get<{ authorizeUrl: string }>({ url: `/api/auth/social/render/${source}` })
+}
+
+/** 绑定第三方账号：获取绑定专用的授权跳转地址（要求已登录，state 只认发起绑定的本人） */
+export function fetchSocialBindRender(source: string) {
+  return request.get<{ authorizeUrl: string }>({ url: `/api/auth/social/bind-render/${source}` })
 }
 
 /** 社交登录来源清单：已配置真实源 + mock 是否允许（登录页/个人中心据此渲染，无源整区隐藏） */

@@ -193,6 +193,7 @@
   import { fetchLogin, fetchTwoFactor, fetchSmsCode, fetchSmsLogin } from '@/api/auth'
   import { encryptPassword, isGmEncryptError } from '@/utils/gm'
   import { fetchSocialRender, fetchSocialSources } from '@/api/auth'
+  import { rememberSocialFlow } from '@/utils/security/socialFlow'
   import CaptchaDialog from '@/components/core/captcha/CaptchaDialog.vue'
   import CaptchaConfigError from '@/components/core/captcha/CaptchaConfigError.vue'
   import {
@@ -326,6 +327,7 @@
   const handleSocialLogin = async (source: string) => {
     try {
       const { authorizeUrl } = await fetchSocialRender(source)
+      rememberSocialFlow('login', source, authorizeUrl)
       window.location.href = authorizeUrl
     } catch (e: any) {
       ElMessage.error(e?.message || t('pages.auth.login.socialLoginFailed'))
