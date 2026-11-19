@@ -1432,7 +1432,7 @@
         "otpTip": "Copy it for the user now. They must change it on first sign-in; it cannot be viewed again after closing.",
         "initialPassword": "One-time password",
         "account": "Account",
-        "createWithPasswordSuccess": "Created. Give them the account and the password you set",
+        "createWithPasswordSuccess": "Created. Give them the account and the password you set; they must change it on first sign-in",
         "deleteUser": "Delete User",
         "deleteSelected": "Delete selected",
         "deleteConfirm": "Delete user \"{name}\"? They will not be able to sign in.",
@@ -1478,7 +1478,7 @@
           "email": "Please enter email (for notifications)",
           "phoneForm": "Please enter phone number (displayed masked)",
           "idCard": "Please enter ID number (stored encrypted)",
-          "password": "Leave blank to issue a one-time password (must change on first sign-in)"
+          "password": "Blank = one-time password; must change on first sign-in either way"
         },
         "setLeader": "Set as Manager",
         "unsetLeader": "Unset Manager",

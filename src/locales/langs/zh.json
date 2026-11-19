@@ -1432,7 +1432,7 @@
         "otpTip": "请立刻复制交给对方。对方首次登录须修改口令；关闭后无法再查看。",
         "initialPassword": "一次性口令",
         "account": "账号",
-        "createWithPasswordSuccess": "已创建。请把账号和刚设置的密码交给对方登录",
+        "createWithPasswordSuccess": "已创建。请把账号和刚设置的密码交给对方；首次登录须改密",
         "deleteUser": "删除用户",
         "deleteSelected": "删除所选",
         "deleteConfirm": "确定删除用户「{name}」吗？删除后不能再登录",
@@ -1478,7 +1478,7 @@
           "email": "请输入邮箱（接收通知）",
           "phoneForm": "请输入手机号（展示脱敏）",
           "idCard": "请输入身份证号（加密存储）",
-          "password": "留空则生成一次性口令，首次登录须改密"
+          "password": "留空由系统生成口令；首次登录都须改密"
         },
         "setLeader": "设为主管",
         "unsetLeader": "取消主管",
