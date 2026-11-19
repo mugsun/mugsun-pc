@@ -12,20 +12,21 @@ const WATERMARK = '前端 mock 数据'
 
 fs.mkdirSync(OUT, { recursive: true })
 
-/** 覆盖 seedSession 写入的 user.info，强制改密态 */
-async function seedForceChange(page: Page, uiLang: string, uiTheme: string) {
+/** 覆盖 seedSession 写入的 user.info，强制改密态；传 roles 时连角色一起覆盖 */
+async function seedForceChange(page: Page, uiLang: string, uiTheme: string, roles?: string[]) {
   await seedSession(page, uiLang, uiTheme)
-  await page.addInitScript(() => {
+  await page.addInitScript((seedRoles) => {
     const VERSION = '3.0.2'
     const key = `sys-v${VERSION}-user`
     try {
       const cur = JSON.parse(localStorage.getItem(key) || '{}')
       const info = { ...(cur.info || {}), needChangePassword: true }
+      if (seedRoles) info.roles = seedRoles
       localStorage.setItem(key, JSON.stringify({ ...cur, info }))
     } catch {
       /* ignore */
     }
-  })
+  }, roles)
 }
 
 async function stamp(page: Page) {
@@ -53,13 +54,13 @@ async function stamp(page: Page) {
   }, WATERMARK)
 }
 
-async function mockApis(page: Page, opts: { needChangePassword?: boolean } = {}) {
+async function mockApis(page: Page, opts: { needChangePassword?: boolean; roles?: string[] } = {}) {
   const info = {
     userId: 1,
     userName: 'admin',
     nickName: 'Admin',
     email: 'admin@example.com',
-    roles: ['R_SUPER'],
+    roles: opts.roles ?? ['R_SUPER'],
     buttons: ['*:*:*'],
     needChangePassword: !!opts.needChangePassword,
     watermark: false,
@@ -293,6 +294,17 @@ test.describe('boot81 otp / force-change shots', () => {
       page.locator('.uc-pwd-card').getByRole('button', { name: /保存|Save/ })
     )
     await shot(page, 'b-v2-force-change-zh-390.png')
+  })
+
+  test('b-v3 force-change with a custom role still reaches the password form', async ({ page }) => {
+    // 回归：须改密期间按角色过滤路由的话，持自定义角色的用户会被滤掉整棵 /system，改密页落到 404
+    await mockApis(page, { needChangePassword: true, roles: ['custom_role'] })
+    await seedForceChange(page, 'zh', 'light', ['custom_role'])
+    await page.setViewportSize({ width: 1440, height: 900 })
+    await page.goto('/')
+    await expect(page.getByText('请先修改初始口令')).toBeVisible({ timeout: 30_000 })
+    await expect(page).toHaveURL(/#\/system\/user-center$/)
+    await expectInViewport(page, page.locator('.uc-pwd-card'))
   })
 
   test('c-v2 tenant OTP close confirm both dialogs', async ({ page }) => {

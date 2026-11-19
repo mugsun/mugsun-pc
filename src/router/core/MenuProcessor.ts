@@ -37,6 +37,29 @@ export class MenuProcessor {
   }
 
   /**
+   * 强制改密期间的菜单：只有改密表单所在的那一页，外面套它所属的目录壳。
+   *
+   * 这时后端除改密、登出、身份接口外一律拒绝，菜单接口取不到；照常回退静态路由再按角色过滤，
+   * 持自定义角色的用户会被滤掉整棵 /system，改密页落到 404、改不了密。所以这里不取菜单、不看角色。
+   */
+  getForceChangePasswordMenuList(pagePath: string): AppRouteRecord[] {
+    for (const root of asyncRoutes) {
+      const page = root.children?.find(
+        (child) => this.buildFullPath(child.path || '', root.path || '') === pagePath
+      )
+      if (page) {
+        const shell: AppRouteRecord = {
+          ...root,
+          meta: { ...root.meta, roles: undefined },
+          children: [{ ...page, meta: { ...page.meta, roles: undefined } }]
+        }
+        return this.normalizeMenuPaths([shell])
+      }
+    }
+    return []
+  }
+
+  /**
    * 处理前端控制模式的菜单
    */
   private async processFrontendMenu(): Promise<AppRouteRecord[]> {

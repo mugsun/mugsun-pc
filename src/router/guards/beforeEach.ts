@@ -334,7 +334,10 @@ async function handleDynamicRoutes(
     await fetchUserInfo()
 
     // 2. 获取菜单数据
-    const menuList = await menuProcessor.getMenuList()
+    // 强制改密期间只注册改密页：菜单接口这时必被后端拒绝，回退的静态路由按角色过滤后也可能没有这一页
+    const menuList = needsForceChangePassword(useUserStore())
+      ? menuProcessor.getForceChangePasswordMenuList(FORCE_CHANGE_PASSWORD_PATH)
+      : await menuProcessor.getMenuList()
 
     // 3. 验证菜单数据
     if (!menuProcessor.validateMenuList(menuList)) {
