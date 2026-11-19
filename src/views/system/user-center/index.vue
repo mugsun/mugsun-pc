@@ -446,6 +446,8 @@
   }
 
   .uc-force-pwd-alert {
+    /* 页面是定高的纵向 flex 容器：不写的话内容超高时提示条会被压扁，文字被裁掉 */
+    flex-shrink: 0;
     margin-bottom: 16px;
   }
 

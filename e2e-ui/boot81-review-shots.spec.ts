@@ -307,6 +307,18 @@ test.describe('boot81 otp / force-change shots', () => {
     await expectInViewport(page, page.locator('.uc-pwd-card'))
   })
 
+  test('b-v4 force-change banner keeps its full height on a short window', async ({ page }) => {
+    // 回归：页面是定高的纵向 flex 容器，窗口不够高时提示条曾被压成一条缝，文字被裁掉
+    await mockApis(page, { needChangePassword: true })
+    await seedForceChange(page, 'zh', 'light')
+    await page.setViewportSize({ width: 1280, height: 720 })
+    await page.goto('/#/system/user-center')
+    const banner = page.locator('.uc-force-pwd-alert')
+    await expect(banner).toBeVisible({ timeout: 30_000 })
+    const clipped = await banner.evaluate((el) => el.scrollHeight - el.clientHeight)
+    expect(clipped, '提示条被裁掉的高度（像素）').toBeLessThanOrEqual(1)
+  })
+
   test('c-v2 tenant OTP close confirm both dialogs', async ({ page }) => {
     await mockApis(page, { needChangePassword: false })
     await seedSession(page, 'zh', 'light')
