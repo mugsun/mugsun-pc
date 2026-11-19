@@ -583,11 +583,11 @@ export function fetchFlowDefRemove(ids: (number | string)[]) {
     showSuccessMessage: true
   })
 }
-/** 发起指定流程码实例；可选发起人自选办理人 handlers + 发起业务数据 variable */
+/** 发起指定流程码实例；可选发起业务数据 variable。审批人只按流程设计解析，请求里带 handlers 会被服务端拒绝 */
 export function fetchFlowStartBy(
   flowCode: string,
   businessId: string,
-  param?: { handlers?: string[]; variable?: Record<string, any> }
+  param?: { variable?: Record<string, any> }
 ) {
   return request.post<string>({
     url: `/api/system/flow/start-by/${encodeURIComponent(flowCode)}/${encodeURIComponent(businessId)}`,
