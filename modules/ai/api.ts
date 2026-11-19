@@ -587,7 +587,10 @@ export function fetchAiDatasetPage(params: Record<string, any>) {
   return request.get<any>({ url: '/api/system/ai/dataset/page', params })
 }
 export function fetchAiDatasetDetail(id: AiId, opts?: { showErrorMessage?: boolean }) {
-  return request.get<any>({ url: '/api/system/ai/dataset/detail', params: { id }, ...opts })
+  return request.get<any>({
+    url: `/api/system/ai/dataset/detail/${encodeURIComponent(String(id))}`,
+    ...opts
+  })
 }
 export function fetchSaveAiDataset(data: Record<string, any>) {
   return request.post<any>({
