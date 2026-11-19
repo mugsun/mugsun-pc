@@ -456,13 +456,23 @@ export function fetchSaveAiAppDsl(data: Record<string, any>) {
   const payload = { dsl: data.dsl ?? data.dslJson, dslJson: data.dslJson ?? data.dsl, id }
   return request.post<any>({ url: `/api/system/ai/app/dsl/save?id=${id}`, data: payload })
 }
+/**
+ * 试运行要等整条流程跑完：数据库节点一条查询最长 120 秒，模型节点也要等。
+ * 按默认的 15 秒，页面会先报「网络连接异常」，看不到后端给的结果或原因。
+ * nginx 转发接口最多等 300 秒（docker/nginx/default.conf.template），这里要比它短。
+ */
+export const AI_APP_RUN_TIMEOUT = 280_000
 export function fetchRunAiApp(data: Record<string, any>) {
   const id = data.id
   const input = { ...data }
   delete input.id
   delete input.dsl
   delete input.dslJson
-  return request.post<any>({ url: `/api/system/ai/app/run?id=${id}`, data: input })
+  return request.post<any>({
+    url: `/api/system/ai/app/run?id=${id}`,
+    data: input,
+    timeout: AI_APP_RUN_TIMEOUT
+  })
 }
 export function fetchRunAiAppStream(data: Record<string, any>, handlers: AiSseHandlers) {
   return consumeAiSse('/api/system/ai/app/run/stream', data, handlers)
@@ -649,11 +659,19 @@ export function fetchRemoveAiTerminology(datasetId: AiId, id: AiId) {
 export function fetchSaveDatasetTerms(data: Record<string, any>) {
   return request.post<void>({ url: '/api/system/ai/dataset/terms', data })
 }
+/**
+ * 后端一条查询最长跑 120 秒，连接和收尾另算。页面等得比它久，才能看到后端给的「查询超过 N 秒，已停止」，
+ * 而不是 15 秒一到就报「网络连接异常」。
+ */
+export const AI_DATASET_QUERY_TIMEOUT = 150_000
+/** 提问要先等模型写出查询（后端最长等 120 秒），再执行查询。同样要比 nginx 的 300 秒短 */
+export const AI_DATASET_ASK_TIMEOUT = 280_000
 export function fetchDatasetAsk(data: Record<string, any>) {
   const datasetId = data.datasetId ?? data.id
   return request.post<any>({
     url: '/api/system/ai/dataset/ask',
-    data: { datasetId, question: data.question }
+    data: { datasetId, question: data.question },
+    timeout: AI_DATASET_ASK_TIMEOUT
   })
 }
 /** @deprecated 后端为同步 ask；保留别名避免旧引用断裂 */
@@ -677,7 +695,11 @@ export function fetchDatasetAskStream(data: Record<string, any>, handlers: AiSse
   return new AbortController()
 }
 export function fetchDatasetSqlRerun(data: Record<string, any>) {
-  return request.post<any>({ url: '/api/system/ai/dataset/sql/rerun', data })
+  return request.post<any>({
+    url: '/api/system/ai/dataset/sql/rerun',
+    data,
+    timeout: AI_DATASET_QUERY_TIMEOUT
+  })
 }
 export function fetchDatasetSuggest(id: AiId) {
   return request.get<string[]>({ url: '/api/system/ai/dataset/suggest', params: { id } })
