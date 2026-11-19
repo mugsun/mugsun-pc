@@ -12,8 +12,10 @@
       :data="menuTree"
       node-key="id"
       show-checkbox
+      check-strictly
       default-expand-all
       :props="{ label: 'menuName', children: 'children' }"
+      @check="handleCheck"
     />
     <template #footer>
       <div class="dialog-footer">
@@ -27,6 +29,7 @@
 </template>
 
 <script setup lang="ts">
+  import { computed, nextTick, ref, watch } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { ElMessage } from 'element-plus'
   import { fetchMenuTree } from '@/api/system-manage'
@@ -67,9 +70,30 @@
     }
   )
 
+  // 树不联动：联动模式下回显角色已有的目录 id 会把整棵子树勾上，原样保存就悄悄扩权。
+  // 联动只在用户点击时手动做：勾上带上全部下级和上级；取消带走下级，上级下面没有勾选时一并取消。
+  const handleCheck = (data: { id: number | string }) => {
+    const tree = treeRef.value
+    const node = tree?.getNode(data.id)
+    if (!node) return
+    const checked: boolean = node.checked
+    const setDescendants = (parent: any) => {
+      for (const child of parent.childNodes) {
+        tree.setChecked(child.data.id, checked, false)
+        setDescendants(child)
+      }
+    }
+    setDescendants(node)
+    for (let p = node.parent; p && p.level > 0; p = p.parent) {
+      if (checked) tree.setChecked(p.data.id, true, false)
+      else if (!p.childNodes.some((c: any) => c.checked)) tree.setChecked(p.data.id, false, false)
+      else break
+    }
+  }
+
   const handleSubmit = async () => {
     if (!treeRef.value || !props.roleData?.id) return
-    const menuIds = [...treeRef.value.getCheckedKeys(false), ...treeRef.value.getHalfCheckedKeys()]
+    const menuIds = treeRef.value.getCheckedKeys(false)
     submitting.value = true
     try {
       await grantRole(props.roleData.id, menuIds)
