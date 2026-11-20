@@ -666,6 +666,8 @@ export function fetchSaveDatasetTerms(data: Record<string, any>) {
 export const AI_DATASET_QUERY_TIMEOUT = 150_000
 /** 提问要先等模型写出查询（后端最长等 120 秒），再执行查询。同样要比 nginx 的 300 秒短 */
 export const AI_DATASET_ASK_TIMEOUT = 280_000
+/** 分析、预测各等模型回答一次（后端最长等 120 秒），不执行查询。页面等得比它久，比 nginx 的 300 秒短 */
+export const AI_DATASET_MODEL_TIMEOUT = 150_000
 export function fetchDatasetAsk(data: Record<string, any>) {
   const datasetId = data.datasetId ?? data.id
   return request.post<any>({
@@ -705,10 +707,18 @@ export function fetchDatasetSuggest(id: AiId) {
   return request.get<string[]>({ url: '/api/system/ai/dataset/suggest', params: { id } })
 }
 export function fetchDatasetAnalyze(data: Record<string, any>) {
-  return request.post<any>({ url: '/api/system/ai/dataset/analyze', data })
+  return request.post<any>({
+    url: '/api/system/ai/dataset/analyze',
+    data,
+    timeout: AI_DATASET_MODEL_TIMEOUT
+  })
 }
 export function fetchDatasetPredict(data: Record<string, any>) {
-  return request.post<any>({ url: '/api/system/ai/dataset/predict', data })
+  return request.post<any>({
+    url: '/api/system/ai/dataset/predict',
+    data,
+    timeout: AI_DATASET_MODEL_TIMEOUT
+  })
 }
 export function fetchDatasetSchema(datasourceId: AiId) {
   return request.get<any>({ url: '/api/system/ai/dataset/schema', params: { datasourceId } })

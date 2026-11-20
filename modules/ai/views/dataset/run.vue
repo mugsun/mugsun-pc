@@ -39,10 +39,10 @@
               />
             </ElTable>
             <div v-if="m.role === 'assistant'" class="ops">
-              <ElButton link size="small" @click="analyze(m)">{{
+              <ElButton link size="small" :loading="m.analyzing" @click="analyze(m)">{{
                 $t('aiDatasetRun.analyze')
               }}</ElButton>
-              <ElButton link size="small" @click="predict(m)">{{
+              <ElButton link size="small" :loading="m.predicting" @click="predict(m)">{{
                 $t('aiDatasetRun.predict')
               }}</ElButton>
               <ElButton link size="small" @click="editSql(m)">{{
@@ -128,20 +128,34 @@
       await scroll()
     }
   }
+  // 等模型回答可能要一两分钟：等的时候按钮转圈、不能再点，免得以为没反应又点一次，多花一次模型调用
   async function analyze(m: any) {
-    const r = await fetchDatasetAnalyze({
-      datasetId: datasetId.value,
-      question: m.sql ? analyzeQuestion(m.sql) : question.value
-    })
-    m.content += '\n' + t('aiDatasetRun.analysisPrefix') + ' ' + (r?.analysis || JSON.stringify(r))
+    if (m.analyzing) return
+    m.analyzing = true
+    try {
+      const r = await fetchDatasetAnalyze({
+        datasetId: datasetId.value,
+        question: m.sql ? analyzeQuestion(m.sql) : question.value
+      })
+      m.content +=
+        '\n' + t('aiDatasetRun.analysisPrefix') + ' ' + (r?.analysis || JSON.stringify(r))
+    } finally {
+      m.analyzing = false
+    }
   }
   async function predict(m: any) {
-    const r = await fetchDatasetPredict({
-      datasetId: datasetId.value,
-      question: m.sql ? predictQuestion(m.sql) : question.value
-    })
-    m.content +=
-      '\n' + t('aiDatasetRun.predictionPrefix') + ' ' + (r?.prediction || JSON.stringify(r))
+    if (m.predicting) return
+    m.predicting = true
+    try {
+      const r = await fetchDatasetPredict({
+        datasetId: datasetId.value,
+        question: m.sql ? predictQuestion(m.sql) : question.value
+      })
+      m.content +=
+        '\n' + t('aiDatasetRun.predictionPrefix') + ' ' + (r?.prediction || JSON.stringify(r))
+    } finally {
+      m.predicting = false
+    }
   }
   async function editSql(m: any) {
     const { value } = await ElMessageBox.prompt(t('aiDatasetRun.editSqlPrompt'), 'SQL', {
