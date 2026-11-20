@@ -82,6 +82,13 @@
     margin: 0;
   }
 
+  // 到第一百项，序号是三位数，2em 也放不下了：这样的长列表缩进放宽到 3em。
+  // 单独写一条：不认识 :has() 的旧浏览器只丢掉这一条，上面的规则不受影响。
+  // 用 nth-of-type：编辑器输出的嵌套列表是列表的直接子元素，不算一项
+  ol:has(> li:nth-of-type(n + 100)) {
+    padding-left: 3em;
+  }
+
   ul {
     list-style-type: disc;
   }

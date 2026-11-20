@@ -175,6 +175,34 @@ describe('富文本阅读样式：编辑器输出的各种写法都套得上', (
     expect(parseFloat(value(q(':scope > ol'), 'padding-left'))).toBeGreaterThan(0)
   })
 
+  it('一百项以上的有序列表缩进更宽：三位数的序号 2em 放不下，会被正文区域的左边缘裁掉一截', () => {
+    const items = (count: number): HTMLOListElement => {
+      const list = document.createElement('ol')
+      list.innerHTML = '<li>一项</li>'.repeat(count)
+      return list
+    }
+    const short = items(99)
+    const long = items(100)
+    // 编辑器输出的嵌套列表是列表的直接子元素，不算一项：99 项加一个嵌套列表还是 99 项
+    const nested = items(99)
+    nested.insertBefore(document.createElement('ul'), nested.children[1])
+    view.append(short, long, nested)
+
+    try {
+      const normal = value(q(':scope > ol'), 'padding-left')
+
+      expect(value(short, 'padding-left')).toBe(normal)
+      expect(value(nested, 'padding-left')).toBe(normal)
+      expect(parseFloat(value(long, 'padding-left'))).toBeGreaterThan(parseFloat(normal))
+      // 用 em：序号的宽度跟着字号走
+      expect(value(long, 'padding-left')).toMatch(/^[\d.]+em$/)
+    } finally {
+      short.remove()
+      long.remove()
+      nested.remove()
+    }
+  })
+
   it('待办的勾选框和文字之间有间距', () => {
     const box = q('[data-w-e-type="todo"] > input[type="checkbox"]')
 
