@@ -105,7 +105,11 @@
             show-password
             maxlength="128"
             autocomplete="new-password"
-            :placeholder="$t('pages.system.genDatasource.passwordPlaceholder')"
+            :placeholder="
+              form.id
+                ? $t('pages.system.genDatasource.passwordKeepPlaceholder')
+                : $t('pages.system.genDatasource.passwordPlaceholder')
+            "
           />
         </ElFormItem>
         <ElFormItem :label="$t('pages.system.genDatasource.remark')" prop="remark">
