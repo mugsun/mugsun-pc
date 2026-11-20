@@ -4566,6 +4566,8 @@
     "phModelName": "e.g. DeepSeek-V3-Chat",
     "phProtocolDesc": "Describe what this tool does",
     "phWebhook": "Leave blank to save now; fill in before debugging",
+    "phWebhookKeep": "Leave blank to keep the saved address",
+    "phWebhookSaved": "Saved address: {addr} (middle part hidden)",
     "priceInput": "Input unit price",
     "priceOutput": "Output unit price",
     "protocolDesc": "Protocol description",

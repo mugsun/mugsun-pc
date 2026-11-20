@@ -4566,6 +4566,8 @@
     "phModelName": "如 DeepSeek-V3-Chat",
     "phProtocolDesc": "用来说明这个工具做什么",
     "phWebhook": "留空可以先保存，调试前再填地址",
+    "phWebhookKeep": "留空表示不修改；要换就填完整的新地址",
+    "phWebhookSaved": "已保存的地址：{addr}（中间部分不显示）",
     "priceInput": "输入单价",
     "priceOutput": "输出单价",
     "protocolDesc": "协议描述",

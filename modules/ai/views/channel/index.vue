@@ -56,7 +56,13 @@
           </ElSelect>
         </ElFormItem>
         <ElFormItem label="Webhook">
-          <ElInput v-model="form.webhookUrl" :placeholder="$t('aiForm.phWebhook')" />
+          <ElInput
+            v-model="form.webhookUrl"
+            :placeholder="form.savedWebhook ? $t('aiForm.phWebhookKeep') : $t('aiForm.phWebhook')"
+          />
+          <div v-if="form.savedWebhook" class="field-tip">{{
+            $t('aiForm.phWebhookSaved', { addr: form.savedWebhook })
+          }}</div>
         </ElFormItem>
         <ElFormItem :label="$t('aiForm.boundApp')">
           <ElInput v-model="form.appId" maxlength="64" :placeholder="$t('aiForm.phBoundApp')" />
@@ -76,6 +82,7 @@
   import type { FormInstance } from 'element-plus'
   import { useI18n } from 'vue-i18n'
   import { requiredRule } from '../shared/formRules'
+  import { toChannelForm } from './channelForm'
   import type { ColumnOption } from '@/types/component'
   import { computed, h, onMounted, reactive, ref, nextTick } from 'vue'
   import { ElButton, ElMessageBox } from 'element-plus'
@@ -178,7 +185,7 @@
   }
   function openEdit(row?: any) {
     Object.keys(form).forEach((k) => delete form[k])
-    Object.assign(form, row ? { ...row } : { channelType: 'webhook', status: 1 })
+    Object.assign(form, toChannelForm(row))
     visible.value = true
     nextTick(() => formRef.value?.clearValidate())
   }
@@ -230,5 +237,14 @@
   .ops {
     display: flex;
     flex-wrap: wrap;
+  }
+
+  .field-tip {
+    width: 100%;
+    margin-top: 4px;
+    font-size: 12px;
+    line-height: 1.5;
+    color: var(--el-text-color-secondary);
+    word-break: break-all;
   }
 </style>
