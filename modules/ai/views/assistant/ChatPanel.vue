@@ -170,6 +170,7 @@
   import { useClipboard, useWindowSize } from '@vueuse/core'
   import { ElMessage, ElMessageBox } from 'element-plus'
   import { handleCodeCopy, renderMarkdown } from './renderMarkdown'
+  import { newTraceId } from '../shared/traceId'
   import {
     fetchAiChatRegenerate,
     fetchAiChatReplay,
@@ -443,7 +444,7 @@
   async function stream(assistant: ChatMsg) {
     const msg = messages.value.find((m) => m.uid === assistant.uid) || assistant
     streaming.value = true
-    requestId.value = crypto.randomUUID().replace(/-/g, '')
+    requestId.value = newTraceId()
     msg.requestId = requestId.value
     const started = Date.now()
     const finish = () => {
@@ -467,7 +468,7 @@
   async function regenerate(assistant: ChatMsg, messageId: string | number) {
     const msg = messages.value.find((m) => m.uid === assistant.uid) || assistant
     streaming.value = true
-    requestId.value = crypto.randomUUID().replace(/-/g, '')
+    requestId.value = newTraceId()
     msg.requestId = requestId.value
     const started = Date.now()
     const finish = () => {

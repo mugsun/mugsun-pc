@@ -369,6 +369,7 @@
   import { hasPerm } from '@/utils/permission'
   import { handleCodeCopy, renderMarkdown } from '../renderMarkdown'
   import { displaySessionTitle, newSessionTitle } from '../sessionTitle'
+  import { newTraceId } from '../../shared/traceId'
   import AiDrawerCloseButton from './AiDrawerCloseButton.vue'
   import { SESSION_GROUP_ORDER, sessionGroupOf } from './drawerLayout'
   import {
@@ -750,7 +751,7 @@
     // 拿到响应式代理，后续写入才会触发更新
     const msg = messages.value.find((m) => m.uid === assistant.uid) || assistant
     streaming.value = true
-    requestId.value = crypto.randomUUID().replace(/-/g, '')
+    requestId.value = newTraceId()
     msg.requestId = requestId.value
     const finish = () => {
       msg.pending = false
@@ -773,7 +774,7 @@
   async function regenerate(assistant: ChatMsg, messageId: string | number) {
     const msg = messages.value.find((m) => m.uid === assistant.uid) || assistant
     streaming.value = true
-    requestId.value = crypto.randomUUID().replace(/-/g, '')
+    requestId.value = newTraceId()
     msg.requestId = requestId.value
     const finish = () => {
       msg.pending = false

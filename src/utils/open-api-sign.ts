@@ -1,4 +1,5 @@
 import CryptoJS from 'crypto-js'
+import { newTraceId } from '@/utils/http/traceId'
 
 /** 与后端 OpenApiSignService 一致的 HMAC-SHA256 签名头 */
 export function buildOpenApiSignHeaders(
@@ -9,7 +10,7 @@ export function buildOpenApiSignHeaders(
   clientSecret: string
 ): Record<string, string> {
   const timestamp = String(Date.now())
-  const nonce = crypto.randomUUID().replace(/-/g, '')
+  const nonce = newTraceId()
   const bodyHash = body ? CryptoJS.SHA256(body).toString(CryptoJS.enc.Hex) : ''
   const signBase = [method.toUpperCase(), uri, query || '', timestamp, nonce, bodyHash].join('\n')
   const sign = CryptoJS.HmacSHA256(signBase, clientSecret).toString(CryptoJS.enc.Hex)

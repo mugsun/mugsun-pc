@@ -69,6 +69,20 @@ export default [
       parserOptions: { parser: tseslint.parser }
     }
   },
+  // crypto.randomUUID 只在安全上下文（HTTPS / localhost）里有，内网 HTTP 部署下调用会直接报错
+  {
+    files: ['src/**/*.{js,ts,tsx,vue}', 'modules/**/*.{js,ts,tsx,vue}'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector: "MemberExpression[property.name='randomUUID']",
+          message:
+            '内网 HTTP 部署下没有 crypto.randomUUID，请改用 newTraceId()（@/utils/http/traceId）'
+        }
+      ]
+    }
+  },
   // 忽略文件
   {
     ignores: [
