@@ -140,7 +140,11 @@
               />
             </ElSelect>
           </ElFormItem>
-          <ElFormItem v-if="opKind === 'user'" :label="$t('pages.system.flowTodo.selectUser')">
+          <ElFormItem
+            v-if="opKind === 'user'"
+            :label="$t('pages.system.flowTodo.selectUser')"
+            :error="userLoadError"
+          >
             <ElSelect
               v-model="opForm.handlers"
               multiple
@@ -222,7 +226,8 @@
     fetchFlowOperation,
     fetchFlowCopy,
     fetchFlowBackNodes,
-    fetchFlowHistory
+    fetchFlowHistory,
+    fetchFlowTaskUserSelect
   } from '@/api/system-manage'
   import { useUserSelectSearch } from '@/hooks'
 
@@ -236,9 +241,6 @@
   const todo = ref<any[]>([])
   const copyList = ref<any[]>([])
   const loading = ref(false)
-  // 目标人员远程搜索：成千账号场景不下全量（默认 50 条 + 关键字防抖查询）
-  const { userOptions: users, userSearching, searchUsers, syncSelected } = useUserSelectSearch()
-
   const historyVisible = ref(false)
   const history = ref<any[]>([])
 
@@ -252,6 +254,20 @@
     message: '',
     handlers: [],
     nodeCode: ''
+  })
+
+  // 目标人员远程搜索（默认 50 条 + 关键字防抖查询）：候选人按弹窗对应的那条待办去取，办理人不需要用户管理的权限；
+  // 打开弹窗时才请求，取不到时原因显示在选人框下方
+  const {
+    userOptions: users,
+    userSearching,
+    userLoadError,
+    searchUsers,
+    loadUsers,
+    syncSelected
+  } = useUserSelectSearch({
+    immediate: false,
+    fetcher: (keyword) => fetchFlowTaskUserSelect(opRow.value?.taskId, keyword)
   })
 
   // 动作元数据：kind 决定对话框字段，run 分派 API
@@ -356,6 +372,7 @@
     if (ACTIONS[action]?.kind === 'node') {
       nodes.value = (await fetchFlowBackNodes(row.instanceId)) || []
     }
+    if (ACTIONS[action]?.kind === 'user') void loadUsers()
     opVisible.value = true
   }
 

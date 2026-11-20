@@ -115,4 +115,99 @@ describe('useUserSelectSearch', () => {
     await vi.waitFor(() => expect(result.userSearching.value).toBe(false))
     app.unmount()
   })
+
+  it('默认接口失败：原因进 userLoadError，不留下没人处理的错误', async () => {
+    fetchUserSelect.mockRejectedValue(new Error('没有访问权限'))
+    const { result, app } = withSetup(() => useUserSelectSearch())
+    await vi.waitFor(() => expect(result.userLoadError.value).toBe('没有访问权限'))
+    expect(result.userSearching.value).toBe(false)
+    expect(result.userOptions.value).toEqual([])
+    app.unmount()
+  })
+
+  it('immediate: false 时挂载不请求，loadUsers 才用换上的接口取默认列表', async () => {
+    const fetcher = vi.fn().mockResolvedValue([opt(5, 'li')])
+    const { result, app } = withSetup(() => useUserSelectSearch({ immediate: false, fetcher }))
+    await vi.advanceTimersByTimeAsync(500)
+    expect(fetcher).not.toHaveBeenCalled()
+    expect(fetchUserSelect).not.toHaveBeenCalled()
+
+    await result.loadUsers()
+    expect(fetcher).toHaveBeenCalledWith(undefined)
+    expect(fetchUserSelect).not.toHaveBeenCalled()
+    expect(result.userOptions.value).toEqual([opt(5, 'li')])
+    app.unmount()
+  })
+
+  it('换了接口以后，关键字搜索也走它', async () => {
+    const fetcher = vi.fn().mockResolvedValue([opt(6, 'zhao')])
+    const { result, app } = withSetup(() => useUserSelectSearch({ immediate: false, fetcher }))
+
+    result.searchUsers(' zh ')
+    await vi.advanceTimersByTimeAsync(300)
+    expect(fetcher).toHaveBeenCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledWith('zh')
+    expect(fetchUserSelect).not.toHaveBeenCalled()
+    app.unmount()
+  })
+
+  it('取候选人失败：不抛出，列表只留已选的人；再取成功后原因清空', async () => {
+    const fetcher = vi.fn().mockResolvedValueOnce([opt(1, 'admin'), opt(2, 'li')])
+    const { result, app } = withSetup(() => useUserSelectSearch({ immediate: false, fetcher }))
+    await result.loadUsers()
+    result.syncSelected([2])
+
+    fetcher.mockRejectedValueOnce(new Error('只有这条待办的办理人可以选人'))
+    await expect(result.loadUsers()).resolves.toBeUndefined()
+    expect(result.userLoadError.value).toBe('只有这条待办的办理人可以选人')
+    expect(result.userOptions.value).toEqual([opt(2, 'li')])
+    expect(result.userSearching.value).toBe(false)
+
+    fetcher.mockResolvedValueOnce([opt(3, 'wang')])
+    await result.loadUsers()
+    expect(result.userLoadError.value).toBe('')
+    expect(result.userOptions.value.map((o) => o.value)).toEqual([2, 3])
+    app.unmount()
+  })
+
+  it('失败但接口没给原因时，给一句通用的说法', async () => {
+    const fetcher = vi.fn().mockRejectedValue({})
+    const { result, app } = withSetup(() => useUserSelectSearch({ immediate: false, fetcher }))
+    await result.loadUsers()
+    expect(result.userLoadError.value).toBe('候选人加载失败。请稍后重试')
+    app.unmount()
+  })
+
+  it('先发的请求回来得晚，不盖掉后发的结果', async () => {
+    const resolvers: Array<(v: unknown) => void> = []
+    const fetcher = vi.fn().mockImplementation(
+      () =>
+        new Promise((resolve) => {
+          resolvers.push(resolve)
+        })
+    )
+    const { result, app } = withSetup(() => useUserSelectSearch({ immediate: false, fetcher }))
+    const first = result.loadUsers()
+    const second = result.loadUsers()
+
+    resolvers[1]([opt(2, '后发')])
+    await second
+    resolvers[0]([opt(1, '先发')])
+    await first
+    expect(result.userOptions.value).toEqual([opt(2, '后发')])
+    expect(result.userSearching.value).toBe(false)
+    app.unmount()
+  })
+
+  it('loadUsers 会作废还没发出去的搜索', async () => {
+    const fetcher = vi.fn().mockResolvedValue([])
+    const { result, app } = withSetup(() => useUserSelectSearch({ immediate: false, fetcher }))
+
+    result.searchUsers('abc')
+    await result.loadUsers()
+    await vi.advanceTimersByTimeAsync(300)
+    expect(fetcher).toHaveBeenCalledTimes(1)
+    expect(fetcher).toHaveBeenCalledWith(undefined)
+    app.unmount()
+  })
 })

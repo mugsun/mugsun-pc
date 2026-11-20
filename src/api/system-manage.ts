@@ -662,6 +662,17 @@ export function fetchFlowNextApprovers(taskId: number | string) {
 export function fetchFlowTaskButtons(taskId: number | string) {
   return request.get<string[]>({ url: '/api/system/flow/task-buttons', params: { taskId } })
 }
+/**
+ * 转办、委派、加签、减签、抄送的候选人：只有这条待办的办理人能取，范围是本租户的启用用户，不要求用户管理的权限。
+ * 失败原因由选人框自己显示，这里不弹全局提示。
+ */
+export function fetchFlowTaskUserSelect(taskId: number | string, keyword?: string) {
+  return request.get<Array<{ label: string; value: number | string }>>({
+    url: '/api/system/flow/task/user-select',
+    params: keyword ? { taskId, keyword } : { taskId },
+    showErrorMessage: false
+  })
+}
 export function fetchFlowHandle(
   taskId: number | string,
   message?: string,
