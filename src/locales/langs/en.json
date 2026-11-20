@@ -2731,6 +2731,7 @@
         "colContact": "Contact",
         "colAttach": "Attachment",
         "downloadAttach": "Download attachment",
+        "attachOpenFailed": "Could not open the attachment. It may have been deleted. Refresh the list and try again.",
         "colStatus": "Status",
         "colCreateTime": "Submitted At",
         "colOperation": "Operation",

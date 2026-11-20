@@ -1,4 +1,4 @@
-<!-- 意见反馈：按内容查找，处理状态和删除会说明下一步 -->
+<!-- 意见反馈：按内容查找，点附件看用户传的图，处理状态和删除会说明下一步 -->
 <template>
   <div class="feedback-page art-full-height">
     <ElCard class="art-table-card">
@@ -51,6 +51,24 @@
               width="140"
               show-overflow-tooltip
             />
+            <ElTableColumn :label="$t('pages.system.feedback.colAttach')" width="170">
+              <template #default="{ row }">
+                <ElButton
+                  v-if="row.attachId"
+                  link
+                  type="primary"
+                  class="fb-attach"
+                  :title="row.attachName"
+                  :loading="openingId === row.id"
+                  @click="openAttachment(row)"
+                >
+                  <span class="fb-attach-name">{{
+                    row.attachName || $t('pages.system.feedback.downloadAttach')
+                  }}</span>
+                </ElButton>
+                <span v-else class="fb-attach-none">—</span>
+              </template>
+            </ElTableColumn>
             <ElTableColumn :label="$t('pages.system.feedback.colStatus')" width="100">
               <template #default="{ row }">
                 <ElTag :type="row.status === 1 ? 'success' : 'warning'">
@@ -103,14 +121,27 @@
         </div>
       </div>
     </ElCard>
+    <ElImageViewer
+      v-if="viewerUrl"
+      :url-list="[viewerUrl]"
+      teleported
+      hide-on-click-modal
+      @close="closeViewer"
+    />
   </div>
 </template>
 
 <script setup lang="ts">
-  import { computed, onMounted, ref } from 'vue'
-  import { ElMessage, ElMessageBox } from 'element-plus'
+  import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+  import { ElImageViewer, ElMessage, ElMessageBox } from 'element-plus'
   import { formatTableTime } from '@/utils/date'
-  import { fetchFeedbackPage, fetchFeedbackStatus, fetchRemoveFeedback } from '@/api/feedback'
+  import {
+    downloadFeedbackAttachment,
+    fetchFeedbackAttachment,
+    fetchFeedbackPage,
+    fetchFeedbackStatus,
+    fetchRemoveFeedback
+  } from '@/api/feedback'
   import { useI18n } from 'vue-i18n'
 
   defineOptions({ name: 'Feedback' })
@@ -163,6 +194,47 @@
   const onSelectionChange = (rows: any[]) => {
     selectedRows.value = rows
   }
+
+  // ===== 附件：私有文件，由后端按反馈输出。图片取到字节后在页面里放大看，其他类型保存到本地 =====
+  const IMAGE_EXTS = ['png', 'jpg', 'jpeg', 'gif', 'webp', 'bmp']
+  const openingId = ref<number | string>()
+  const viewerUrl = ref('')
+
+  const isImageName = (name?: string) =>
+    IMAGE_EXTS.includes(
+      String(name || '')
+        .split('.')
+        .pop()!
+        .toLowerCase()
+    )
+
+  const closeViewer = () => {
+    if (viewerUrl.value) URL.revokeObjectURL(viewerUrl.value)
+    viewerUrl.value = ''
+  }
+
+  const openAttachment = async (row: any) => {
+    if (openingId.value !== undefined) return
+    openingId.value = row.id
+    try {
+      if (!isImageName(row.attachName)) {
+        await downloadFeedbackAttachment(row.id, row.attachName)
+        return
+      }
+      const blob = await fetchFeedbackAttachment(row.id)
+      // 出错时后端回的不是图片字节，这种内容不拿来显示
+      if (!(blob instanceof Blob) || !blob.type.startsWith('image/'))
+        throw new Error('not an image')
+      closeViewer()
+      viewerUrl.value = URL.createObjectURL(blob)
+    } catch {
+      ElMessage.error(t('pages.system.feedback.attachOpenFailed'))
+    } finally {
+      openingId.value = undefined
+    }
+  }
+
+  onBeforeUnmount(closeViewer)
 
   const toggleStatus = async (row: any) => {
     await fetchFeedbackStatus(row.id)
@@ -221,6 +293,23 @@
 
   .fb-status {
     width: 140px;
+  }
+
+  .fb-attach {
+    max-width: 100%;
+  }
+
+  .fb-attach-name {
+    display: inline-block;
+    max-width: 130px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    vertical-align: bottom;
+  }
+
+  .fb-attach-none {
+    color: var(--el-text-color-secondary);
   }
 
   .fb-pager {

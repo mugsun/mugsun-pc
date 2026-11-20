@@ -2731,6 +2731,7 @@
         "colContact": "联系方式",
         "colAttach": "附件",
         "downloadAttach": "下载附件",
+        "attachOpenFailed": "附件没有打开。可能已经被删除，请刷新列表后再试",
         "colStatus": "状态",
         "colCreateTime": "提交时间",
         "colOperation": "操作",

@@ -163,7 +163,7 @@ test('W1-补充 注册页隐私政策链接真实可达（此前指向不存在�
   await expect(page.getByRole('heading', { name: '隐私政策' })).toBeVisible()
 })
 
-test('W1-H12 反馈附件可真实下载', async () => {
+test('W1-H12 反馈附件在管理页能打开查看', async () => {
   const content = `W1 附件下载验证反馈 ${Date.now() % 100000}`
   await login(page)
   // 经用户菜单打开意见反馈弹窗
@@ -188,14 +188,14 @@ test('W1-H12 反馈附件可真实下载', async () => {
   expect((await submitResp).status(), '反馈提交须 200').toBe(200)
   await expect(page.getByText('感谢你的反馈').first()).toBeVisible({ timeout: 10_000 })
 
-  // 管理页找到该反馈，点击附件下载（修复前显示「—」）
+  // 管理页找到该反馈，点附件：图片按反馈编号取回来，在页面里放大看（PC-019）
   await page.goto('/#/system/feedback')
   const row = page.getByRole('row', { name: new RegExp(content) })
   await expect(row).toBeVisible({ timeout: 10_000 })
-  const downloadEvent = page.waitForEvent('download', { timeout: 10_000 })
+  const attachResp = page.waitForResponse((r) => r.url().includes('/system/feedback/attachment/'))
   await row.getByRole('button', { name: /w1-shot\.png|下载附件/ }).click()
-  const download = await downloadEvent
-  expect(download.suggestedFilename()).toContain('w1-shot')
+  expect((await attachResp).status(), '反馈附件须 200').toBe(200)
+  await expect(page.locator('.el-image-viewer__canvas img')).toBeVisible({ timeout: 10_000 })
   // 清理测试反馈
   psql(`DELETE FROM sys_feedback WHERE content='${content}';`)
 })

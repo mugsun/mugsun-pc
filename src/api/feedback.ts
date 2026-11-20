@@ -2,11 +2,10 @@ import request from '@/utils/http'
 import { TRACE_HEADER } from '@/utils/http/traceId'
 
 // ------------------------- 意见反馈 -------------------------
-/** 上传附件，返回 SysAttach（id/name/url） */
+/** 上传附件（私有文件，管理员按反馈读），返回 SysAttach（id/name） */
 export function uploadFeedbackFile(file: File) {
   const data = new FormData()
   data.append('file', file)
-  data.append('access', 'public')
   return request.post<any>({ url: '/api/system/file/upload', data })
 }
 
@@ -22,6 +21,27 @@ export function submitFeedback(data: Record<string, any>) {
 /** 后台反馈分页 */
 export function fetchFeedbackPage(params: Record<string, any>) {
   return request.get<any>({ url: '/api/system/feedback/page', params })
+}
+
+const feedbackAttachmentUrl = (id: number | string) => `/api/system/feedback/attachment/${id}`
+
+/**
+ * 取一条反馈的附件内容（带登录信息请求，后端按反馈输出）：图片取到后由页面自己显示。
+ * 页面自己提示失败，所以不弹全局 toast。
+ */
+export function fetchFeedbackAttachment(id: number | string) {
+  return request.request<Blob>({
+    url: feedbackAttachmentUrl(id),
+    responseType: 'blob',
+    skipEnvelope: true,
+    transformResponse: [(d) => d],
+    showErrorMessage: false
+  })
+}
+
+/** 不是图片的反馈附件：保存到本地 */
+export function downloadFeedbackAttachment(id: number | string, filename?: string) {
+  return request.download({ url: feedbackAttachmentUrl(id), filename })
 }
 
 /** 切换处理状态 */

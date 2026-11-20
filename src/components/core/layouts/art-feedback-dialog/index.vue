@@ -66,12 +66,11 @@
     content: '',
     contact: '',
     attachId: null,
-    attachName: '',
-    attachUrl: ''
+    attachName: ''
   })
 
   const reset = () => {
-    Object.assign(form, { content: '', contact: '', attachId: null, attachName: '', attachUrl: '' })
+    Object.assign(form, { content: '', contact: '', attachId: null, attachName: '' })
   }
 
   const open = () => {
@@ -100,7 +99,6 @@
       const attach = await uploadFeedbackFile(uploadFile.raw)
       form.attachId = attach?.id
       form.attachName = attach?.name
-      form.attachUrl = attach?.url
     } catch {
       ElMessage.error(t('components.feedbackDialog.uploadFailed'))
     } finally {
@@ -111,7 +109,6 @@
   const handleRemove = () => {
     form.attachId = null
     form.attachName = ''
-    form.attachUrl = ''
   }
 
   const handleExceed = () => {
