@@ -466,7 +466,7 @@
 </template>
 
 <script setup lang="ts">
-  import { ref, reactive, computed, onMounted, onDeactivated } from 'vue'
+  import { ref, reactive, computed, onMounted, onActivated, onDeactivated } from 'vue'
   import { useI18n } from 'vue-i18n'
   import { ArrowDown } from '@element-plus/icons-vue'
   import { ElMessage, ElMessageBox } from 'element-plus'
@@ -828,6 +828,17 @@
   }
 
   onMounted(() => {
+    load()
+  })
+
+  // 页面会被缓存：发起、办理可能发生在别的页面，切回来时重新取当前页签的列表，不然看到的是离开前的旧数据。
+  // 第一次进入也会触发 onActivated，那一次由 onMounted 取。
+  let shownBefore = false
+  onActivated(() => {
+    if (!shownBefore) {
+      shownBefore = true
+      return
+    }
     load()
   })
 
