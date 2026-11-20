@@ -42,7 +42,7 @@
             <ElTableColumn
               prop="content"
               :label="$t('pages.system.feedback.colContent')"
-              min-width="220"
+              min-width="180"
               show-overflow-tooltip
             />
             <ElTableColumn
@@ -51,7 +51,7 @@
               width="140"
               show-overflow-tooltip
             />
-            <ElTableColumn :label="$t('pages.system.feedback.colAttach')" width="150">
+            <ElTableColumn :label="$t('pages.system.feedback.colAttach')" width="140">
               <template #default="{ row }">
                 <ElButton
                   v-if="row.attachId"
@@ -305,7 +305,7 @@
 
   .fb-attach-name {
     display: inline-block;
-    max-width: 120px;
+    max-width: 110px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;

@@ -1,6 +1,7 @@
 /**
  * 反馈管理页的「附件」列（PC-019）：
  * - 带附件的反馈显示文件名，没带的显示「—」；不点不请求附件；
+ * - 多了一列以后，1280 宽的窗口里「操作」列的按钮仍然完整可见；
  * - 点图片附件：按反馈编号请求 /api/system/feedback/attachment/{id}，取到的图在页面里放大显示；
  * - 取不到（比如文件已删除）时只提示一次原因，不打开空的看图窗口。
  */
@@ -64,6 +65,7 @@ async function openPage(page: Page) {
 }
 
 test('反馈管理：附件列显示文件名，点开在页面里看图', async ({ page, uiLang, uiTheme }) => {
+  await page.setViewportSize({ width: 1280, height: 720 })
   await seedSession(page, uiLang, uiTheme)
   const calls = await mockFeedback(page)
   const row = await openPage(page)
@@ -74,6 +76,10 @@ test('反馈管理：附件列显示文件名，点开在页面里看图', async
     page.locator('.el-table__row').filter({ hasText: WITHOUT.content }).locator('.fb-attach-none')
   ).toHaveText('—')
   expect(calls).toEqual([])
+
+  const actions = row.locator('td').last().getByRole('button')
+  await expect(actions).not.toHaveCount(0)
+  for (const action of await actions.all()) await expect(action).toBeInViewport({ ratio: 1 })
 
   await link.click()
   const img = page.locator('.el-image-viewer__canvas img')
