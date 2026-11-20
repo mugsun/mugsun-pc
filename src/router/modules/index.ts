@@ -17,10 +17,10 @@ const trackRouteMods = import.meta.glob<{ trackRoutes: AppRouteRecord }>(
   '../../../modules/track/routes.ts',
   { eager: true }
 )
-const aiRouteMods = import.meta.glob<{ aiRoutes: AppRouteRecord }>(
-  '../../../modules/ai/routes.ts',
-  { eager: true }
-)
+const aiRouteMods = import.meta.glob<{
+  aiRoutes: AppRouteRecord
+  aiMenuGroupTitles?: Record<string, string>
+}>('../../../modules/ai/routes.ts', { eager: true })
 
 const gisRoutes = Object.values(gisRouteMods)[0]?.gisRoutes
 const trackRoutes = Object.values(trackRouteMods)[0]?.trackRoutes
@@ -35,3 +35,11 @@ export const routeModules: AppRouteRecord[] = [
   openPlatformRoutes,
   saasRoutes
 ]
+
+/**
+ * 只做分组、自己没有页面的菜单目录：全路径 → menus.* 文案键。
+ * 目录不在路由里，后端菜单按路径对齐标题时要从这里取，否则英文界面显示后端的中文名。
+ */
+export const menuGroupTitles: Record<string, string> = {
+  ...(enableAi ? Object.values(aiRouteMods)[0]?.aiMenuGroupTitles : undefined)
+}

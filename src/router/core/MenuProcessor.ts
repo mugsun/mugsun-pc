@@ -12,6 +12,7 @@ import { useUserStore } from '@/store/modules/user'
 import { useAppMode } from '@/hooks/core/useAppMode'
 import { fetchGetMenuList } from '@/api/system-manage'
 import { asyncRoutes } from '../routes/asyncRoutes'
+import { menuGroupTitles } from '../modules'
 import { RoutesAlias } from '../routesAlias'
 import { formatMenuTitle } from '@/utils'
 
@@ -181,6 +182,12 @@ export class MenuProcessor {
       }
     }
     walk(asyncRoutes)
+    // 只做分组的菜单目录不在路由里，标题单独登记（已有同路径路由时以路由为准）
+    for (const [fullPath, title] of Object.entries(menuGroupTitles)) {
+      if (!index.has(fullPath)) {
+        index.set(fullPath, { title })
+      }
+    }
     this._staticRouteIndex = index
     return index
   }

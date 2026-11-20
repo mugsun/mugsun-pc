@@ -1028,7 +1028,11 @@
       "genProduct": "Product description",
       "genMarketing": "Marketing copy",
       "genSvg": "SVG generation",
-      "genLayout": "Auto layout"
+      "genLayout": "Auto layout",
+      "groupApp": "AI Apps",
+      "groupTool": "AI Tools",
+      "groupOps": "AI Ops",
+      "groupGen": "Agents"
     }
   },
   "formRules": {
@@ -1057,7 +1061,7 @@
     "column": {
       "selection": "Select",
       "expand": "Expand",
-      "index": "Index",
+      "index": "#",
       "operation": "Actions"
     },
     "zebra": "Zebra",

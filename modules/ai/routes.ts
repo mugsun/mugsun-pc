@@ -201,3 +201,14 @@ export const aiRoutes: AppRouteRecord = {
     }
   ]
 }
+
+/**
+ * 只做分组、自己没有页面的菜单目录（全路径 → menus.* 文案键）。
+ * 后端菜单表里只有中文名，目录又不在上面的路由里，不登记的话英文界面会露出中文目录名。
+ */
+export const aiMenuGroupTitles: Record<string, string> = {
+  '/ai/app-group': 'menus.ai.groupApp',
+  '/ai/tool-group': 'menus.ai.groupTool',
+  '/ai/ops-group': 'menus.ai.groupOps',
+  '/ai/gen-group': 'menus.ai.groupGen'
+}

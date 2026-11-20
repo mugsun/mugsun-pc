@@ -1028,7 +1028,11 @@
       "genProduct": "产品描述",
       "genMarketing": "营销文案",
       "genSvg": "SVG 生成",
-      "genLayout": "自动排版"
+      "genLayout": "自动排版",
+      "groupApp": "AI 应用",
+      "groupTool": "AI 工具",
+      "groupOps": "AI 运维",
+      "groupGen": "智能体集合"
     }
   },
   "formRules": {
