@@ -110,7 +110,7 @@ $box-radius: calc(var(--custom-radius) / 3 + 2px);
   /* 代码块 */
   .w-e-text-container [data-slate-editor] pre > code {
     padding: 0.6rem 1rem;
-    background-color: var(--art-gray-50);
+    background-color: var(--art-gray-100);
     border-radius: $box-radius;
   }
 

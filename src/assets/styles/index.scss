@@ -21,3 +21,6 @@
 
 // 主题切换圆形扩散动画
 @use './core/theme-animation.scss';
+
+// 富文本阅读样式（v-safe-html 显示的公告、站内信、帮助文档正文）
+@use './core/rich-text-view.scss';

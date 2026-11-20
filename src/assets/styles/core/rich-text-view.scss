@@ -1,0 +1,198 @@
+// 富文本阅读样式：v-safe-html 显示出来的正文都套这一份（指令会给容器加上 .rich-text-view）。
+//
+// 为什么要有：
+// - 编辑器（wangEditor 5）输出的 HTML 不带样式，官方文档要求显示的地方自己补：
+//   https://www.wangeditor.com/v5/content.html 的「自定义样式」，示例见
+//   https://www.wangeditor.com/demo/css/view.css
+// - Tailwind 的 preflight 把标题、列表、表格、图片的默认样式重置了。不补这一份，标题和正文一样大，
+//   列表没有圆点和序号，表格没有边框。
+//
+// 怎么取值：
+// - 对齐作者在编辑器里看到的样子：wangEditor 编辑区自带的样式，加上
+//   src/components/core/forms/art-wang-editor/style.scss 里的覆盖。改那边时记得看这边。
+// - 颜色只用 Element Plus 的主题变量，浅色、深色主题都跟着变，不单独写深色覆盖。
+// - 字号、行高、文字颜色不在这里定，沿用所在窗口的。
+//
+// 这里的规则不放进任何 @layer：preflight 在 @layer base 里，不分层的规则优先于分层的。
+
+.rich-text-view {
+  // 宽表格在窗口里横向滚动，不把窗口撑宽
+  overflow-x: auto;
+  overflow-wrap: break-word;
+
+  h1,
+  h2,
+  h3,
+  h4,
+  h5,
+  h6 {
+    margin: 0.8em 0 0.4em;
+    font-weight: 700;
+    line-height: 1.35;
+  }
+
+  h1 {
+    font-size: 2em;
+  }
+
+  h2 {
+    font-size: 1.5em;
+  }
+
+  h3 {
+    font-size: 1.25em;
+  }
+
+  h4 {
+    font-size: 1.125em;
+  }
+
+  h5 {
+    font-size: 1em;
+  }
+
+  h6 {
+    font-size: 0.875em;
+  }
+
+  p {
+    margin: 15px 0;
+  }
+
+  strong,
+  b {
+    font-weight: 700;
+  }
+
+  a {
+    color: #318ef4;
+    text-decoration: none;
+
+    &:hover,
+    &:focus-visible {
+      text-decoration: underline;
+    }
+  }
+
+  // 缩进用 2em，不用编辑区的每级 20px：序号画在缩进里，20px 放不下两位数的序号，
+  // 在带滚动的容器里会被裁掉
+  ul,
+  ol {
+    padding-left: 2em;
+    margin: 0;
+  }
+
+  ul {
+    list-style-type: disc;
+  }
+
+  ol {
+    list-style-type: decimal;
+  }
+
+  // 编辑器输出的嵌套列表是列表直接套列表；圆点按层级换，和编辑区一致：• ◦ ▪
+  :is(ul, ol) ul {
+    list-style-type: circle;
+  }
+
+  :is(ul, ol) :is(ul, ol) ul {
+    list-style-type: square;
+  }
+
+  li {
+    margin: 5px 0;
+  }
+
+  // 待办：<div data-w-e-type="todo"><input type="checkbox" disabled>文字</div>
+  [data-w-e-type='todo'] {
+    margin: 5px 0;
+  }
+
+  input[type='checkbox'] {
+    margin-right: 0.5em;
+  }
+
+  blockquote {
+    padding: 10px;
+    margin: 10px 0;
+    background-color: var(--el-fill-color-light);
+    border-left: 4px solid var(--el-border-color);
+  }
+
+  table {
+    margin: 10px 0;
+    border-collapse: collapse;
+  }
+
+  th,
+  td {
+    min-width: 30px;
+    padding: 3px 5px;
+    text-align: left;
+    border: 1px solid var(--el-border-color);
+  }
+
+  th {
+    font-weight: 700;
+    text-align: center;
+    background-color: var(--el-fill-color-light);
+  }
+
+  code {
+    padding: 3px;
+    background-color: var(--el-fill-color-light);
+    border-radius: 3px;
+  }
+
+  // 代码块；阅读时不做语法着色
+  pre > code {
+    display: block;
+    padding: 0.6rem 1rem;
+    margin: 0.5em 0;
+    overflow: auto;
+    font-size: 14px;
+    line-height: 1.5;
+    text-indent: 0;
+    tab-size: 4;
+    word-break: normal;
+    white-space: pre;
+    border: 1px solid var(--el-border-color-lighter);
+    border-radius: calc(var(--custom-radius) / 3 + 2px);
+  }
+
+  hr {
+    height: 1px;
+    margin: 20px 0;
+    background-color: var(--el-border-color);
+    border: 0;
+  }
+
+  // preflight 把图片、视频变成了块级元素，段落上设的居中对它们不起作用，这里改回行内
+  img,
+  video {
+    display: inline;
+    max-width: 100%;
+  }
+
+  // 高度一律按比例：作者拖过大小的图片带着固定的宽和高（写在 style 里），窗口比编辑区窄时
+  // 宽度被压到 100%，高度不跟着变就变形了
+  img {
+    height: auto !important;
+  }
+
+  // 视频：<div data-w-e-type="video"><video controls>…</video></div>，编辑区里是居中的
+  [data-w-e-type='video'] {
+    padding: 10px 0;
+    margin: 10px 0 0;
+    text-align: center;
+  }
+
+  // 正文首尾不留空，贴着窗口自己的内边距。放在最后：要盖过上面各类元素自己的外边距
+  > :first-child {
+    margin-top: 0;
+  }
+
+  > :last-child {
+    margin-bottom: 0;
+  }
+}
