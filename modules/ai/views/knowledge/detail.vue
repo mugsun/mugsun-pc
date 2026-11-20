@@ -283,9 +283,26 @@
     kbOverlapMax,
     kbSegmentContentLimit
   } from './kbSegmentLimits'
+  import {
+    kbResegNotice,
+    kbSegmentSavedNotice,
+    kbUploadNotice,
+    kbVectorizeNotice,
+    type KbNotice
+  } from './kbVectorNotice'
 
   defineOptions({ name: 'AiKnowledgeDetail' })
   const { t } = useI18n()
+
+  /** 警告里带着失败原因，字多，多留一会儿 */
+  function showNotice(notice: KbNotice) {
+    if (notice.type === 'warning') {
+      ElMessage.warning({ message: notice.message, duration: 8000, showClose: true })
+    } else {
+      ElMessage.success(notice.message)
+    }
+  }
+
   /** id 不存在或已删除时只显示占位与返回入口（UX-105） */
   const notFound = ref(false)
 
@@ -648,9 +665,7 @@
         })
         uploadPercent.value = 100
       }
-      ElMessage.success(
-        t('aiKbDetail.uploadOk', { n: r?.segmentCount ?? 0, status: r?.vectorStatus || '' })
-      )
+      showNotice(kbUploadNotice(r, t))
       uploadVisible.value = false
       await Promise.all([loadAssets(), loadSegs(), loadVecStats(), loadKb()])
     } catch (e: any) {
@@ -670,7 +685,7 @@
       t('aiKbDetail.reseg')
     )
     const r = await fetchResegmentKbAsset(row.id)
-    ElMessage.success(t('aiKbDetail.resegOk', { n: r?.segmentCount ?? '?' }))
+    showNotice(kbResegNotice(r, t))
     await Promise.all([loadAssets(), loadSegs(), loadVecStats()])
   }
 
@@ -704,9 +719,9 @@
         }
       }
     )
-    await fetchSaveKbSegment({ id: row.id, content: value })
-    ElMessage.success(t('aiKbDetail.savedRevectorized'))
-    await Promise.all([loadSegs(), loadVecStats()])
+    const saved = await fetchSaveKbSegment({ id: row.id, content: value })
+    showNotice(kbSegmentSavedNotice(saved, t))
+    await Promise.all([loadAssets(), loadSegs(), loadVecStats()])
   }
 
   async function toggleSeg(row: any, enabled: boolean) {
@@ -729,15 +744,7 @@
     try {
       const fn = act === 'start' ? fetchKbVectorStart : fetchKbVectorRebuild
       const r = await fn({ knowledgeId: kbId.value })
-      ElMessage.success(
-        act === 'rebuild'
-          ? t('aiKbDetail.rebuildOk', { n: r?.count ?? 0 })
-          : t('aiKbDetail.vecOk', {
-              n: r?.count ?? 0,
-              pending: r?.pending ?? 0,
-              success: r?.success ?? 0
-            })
-      )
+      showNotice(kbVectorizeNotice(act, r, t))
       await Promise.all([loadAssets(), loadSegs(), loadVecStats()])
     } catch (e: any) {
       ElMessage.error(e?.message || t('aiKbDetail.vecFailed'))
@@ -762,6 +769,9 @@
       if (!hitResults.value.length) {
         ElMessage.warning(t('aiKbDetail.noHitTip'))
       }
+    } catch {
+      // 报错（比如知识库已停用）由请求层提示；这里把上一次的结果清掉，免得看起来像这次命中的
+      hitResults.value = []
     } finally {
       hitting.value = false
     }
