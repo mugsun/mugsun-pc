@@ -20,6 +20,8 @@
   - 目录不在路由里，由模块登记「全路径 → 文案键」（`aiMenuGroupTitles`）
   - 序号列英文表头改为 `#`
 
+- 定时任务页：调度服务连不上时不再留下未处理的 Promise 异常
+
 - README 中英文重写：启动命令、页面清单、部署和代码结构
   - `_shots-ai-flow-node/README.md` 改写为 AI 节点界面自查说明
 - AI：foreach/parallel 保存校验排除 bodyNodeIds 孤立误拦

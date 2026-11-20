@@ -274,18 +274,25 @@
   const simpleName = (className: string): string =>
     className ? className.substring(className.lastIndexOf('.') + 1) : '—'
 
+  // loadData / loadProcessors 都是不等结果的调用：请求层已弹出错误提示，这里接住，不再抛成未处理的 Promise
   const loadData = async (): Promise<void> => {
     loading.value = true
     try {
       tableData.value =
         (await fetchJobList(serverId.value || undefined, keyword.value.trim() || undefined)) || []
+    } catch {
+      tableData.value = []
     } finally {
       loading.value = false
     }
   }
 
   const loadProcessors = async (): Promise<void> => {
-    processorOptions.value = (await fetchJobProcessors()) || []
+    try {
+      processorOptions.value = (await fetchJobProcessors()) || []
+    } catch {
+      processorOptions.value = []
+    }
   }
 
   // 注册表与列表并行拉：串行等列表回来再拉处理器，会让"列表还在转就点新建"的用户看到空下拉
