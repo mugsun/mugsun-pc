@@ -16,6 +16,8 @@
 
 ### 变更
 
+- README 中英文重写：启动命令、页面清单、部署和代码结构
+  - `_shots-ai-flow-node/README.md` 改写为 AI 节点界面自查说明
 - AI：foreach/parallel 保存校验排除 bodyNodeIds 孤立误拦
   - 对齐 boot lab：body 无边仅靠引用；waitAll 强制；校验文案 i18n
 

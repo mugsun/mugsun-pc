@@ -1,110 +1,155 @@
-![mugsun-pc](https://raw.githubusercontent.com/mugsun/mugsun-docs/main/public/brand/banners/repos/mugsun-pc-en.png)
-
 # mugsun-pc
 
-[简体中文](./README.md) | English
+[中文](./README.md) | [Docs](https://docs.mugsun.com/en/pc/) | [Changelog](./CHANGELOG.md)
 
-This repository is the mugsun admin console. Menus and button permissions are delivered by [mugsun-boot](https://github.com/mugsun/mugsun-boot). GIS, analytics, and AI capabilities are assembled as optional front-end modules. In development, Vite proxies `/api` to the local boot service.
+[![CI](https://github.com/mugsun/mugsun-pc/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/mugsun/mugsun-pc/actions/workflows/ci.yml) [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](./LICENSE)
 
-[Documentation](https://docs.mugsun.com/en/pc/) · [Getting started](https://docs.mugsun.com/en/guide/getting-started) · [Demo](https://docs.mugsun.com/en/demo)
+The admin console of mugsun, written in Vue 3 and Element Plus. Its backend is [mugsun-boot](https://github.com/mugsun/mugsun-boot).
 
-![Vue](https://img.shields.io/badge/Vue-3.5-4FC08D?logo=vuedotjs&logoColor=white) ![Vite](https://img.shields.io/badge/Vite-7-646CFF?logo=vite&logoColor=white) ![Element%20Plus](https://img.shields.io/badge/Element%20Plus-2.11-409EFF) ![pnpm](https://img.shields.io/badge/pnpm-11.28-F69220?logo=pnpm&logoColor=white) ![License](https://img.shields.io/badge/License-MIT-green.svg)
+The system administration pages are all there. GIS, the analytics dashboards and the AI pages are three optional modules that you can switch off at build time.
 
-## Overview
+The screenshot below is the Tracking > Overview page.
 
-| Item | Detail |
-| --- | --- |
-| Package | `mugsun-pc` |
-| Version | `0.1.0` (see `package.json`) |
-| Runtime | Node.js ≥ 22.13; pnpm ≥ 11.11 (`packageManager` locks `pnpm@11.28.2`) |
-| Stack | Vue 3.5 · Vite 7 · Element Plus 2.11 · Pinia · Vue Router |
-| Backend | [mugsun-boot](https://github.com/mugsun/mugsun-boot) (development default `http://localhost:8080`) |
-| License | [MIT](./LICENSE); UI-base credit in [NOTICE](./NOTICE) |
-| Docs | [docs.mugsun.com/en/pc](https://docs.mugsun.com/en/pc/) |
+![The analytics overview page](https://docs.mugsun.com/readme/track-overview-en.png)
 
-The console does not maintain a separate permission model: sidebar menus, button codes, and user context come from boot APIs such as `/api/auth/info`. Optional modules are gated by build-time environment variables; when disabled, routes and plugins are not registered, and removing the module directory removes the source.
+## Run it
 
-## Deployment
-
-Prerequisites: Node.js ≥ 22.13, pnpm ≥ 11.11; [mugsun-boot](https://github.com/mugsun/mugsun-boot) running on `:8080`. The analytics SDK defaults to the npm package `@mugsun/track-web@0.3.0`; you do **not** need a sibling clone of [mugsun-track](https://github.com/mugsun/mugsun-track).
+You need Node.js 22.13+ and pnpm 11.11+. Start the backend on port 8080 first, as described in [Local development](https://github.com/mugsun/mugsun-boot/blob/main/README_EN.md#local-development) for mugsun-boot.
 
 ```bash
+git clone https://github.com/mugsun/mugsun-pc.git && cd mugsun-pc
 pnpm install
 pnpm dev
 ```
 
-Development URL: http://localhost:3006 (`VITE_PORT`). `/api/**` proxies to `VITE_API_PROXY_URL` in `.env.development` (default `http://localhost:8080`). Login credentials match boot (default `admin` / `123456`).
+Your browser opens <http://localhost:3006>. Sign in as `admin` with the initial password you set when starting the backend.
 
-Optional SDK source linking: clone `mugsun-track` as a sibling, then `pnpm link ../mugsun-track`, or set `@mugsun/track-web=link:../mugsun-track` in `.npmrc` and run `pnpm install`.
+During development, `/api` requests are forwarded to `http://localhost:8080`. To use another address, change `VITE_API_PROXY_URL` in `.env.development`.
 
-Walkthrough: [Documentation · Getting started](https://docs.mugsun.com/en/guide/getting-started).
+The port is `VITE_PORT` in `.env`. If you change it, change `MUGSUN_FRONT_URL` on the backend as well; it is used for CORS and OAuth redirects.
 
-Package:
+If you only want a look, you don't need Node.js. The [Docker commands](https://github.com/mugsun/mugsun-boot/blob/main/README_EN.md#try-it-with-docker) in mugsun-boot start the admin console too.
+
+<details>
+<summary>Working on the tracking SDK source</summary>
+
+The console uses `@mugsun/track-web` from npm by default. To use local source instead, clone [mugsun-track](https://github.com/mugsun/mugsun-track) next to this repository and run:
 
 ```bash
-pnpm build
-# preview: pnpm serve
+pnpm link ../mugsun-track
 ```
 
-## Composition
+Or add `@mugsun/track-web=link:../mugsun-track` to `.npmrc` and run `pnpm install`.
 
-```text
-mugsun-pc/
-  src/                 # shell: router, auth, system views, API client
-  modules/
-    gis/               # optional: layers, scenes, spatial analysis
-    track/             # optional: access management and analytics console (depends on @mugsun/track-web)
-    ai/                # optional: models, chat, knowledge base, MCP admin pages
-```
+</details>
 
-Build-time flags (all enabled by default; set to `false` to disable):
+## Pages
 
-| Variable            | Effect                                                                  |
-| ------------------- | ----------------------------------------------------------------------- |
-| `VITE_ENABLE_GIS`   | Registers GIS routes and aliases; `modules/gis` may be removed when off |
-| `VITE_ENABLE_TRACK` | Registers track routes and SDK plugin; remove `modules/track` when off  |
-| `VITE_ENABLE_AI`    | Registers AI routes and plugin; `modules/ai` may be removed when off    |
-
-Request path: views and hooks call `/api` via axios; Vite proxies to boot in development. The analytics SDK posts to same-origin `/api/track/collect`, which is likewise proxied into boot’s track module.
-
-The UI base derives from [art-design-pro](https://github.com/Daymychen/art-design-pro) (MIT). See [NOTICE](./NOTICE).
-
-## Scope
-
-**Provided**
-
-- Backend-driven menus and system administration pages aligned with boot
-- Optional GIS / analytics console / AI front-end modules with build-time switches
-- Development reverse proxy to a live boot instance (no full replaceable mock layer)
-- Optional: `pnpm link` / workspace override to develop against `@mugsun/track-web` source
-
-**Not provided**
-
-- A backend independent of boot, or a complete replaceable mock service
-- A publicly accessible demo environment (local verification uses boot + this repository; see [Demo](https://docs.mugsun.com/en/demo))
-
-Routes, environment variables, and scripts are defined in the [documentation](https://docs.mugsun.com/en/pc/) and source tree.
-
-## Related projects
-
-Open-source line: `boot` · `core` · `pc` · `track` · [mugsun-docs](https://github.com/mugsun/mugsun-docs).
-
-| Repository | Relationship |
+| Menu | Pages |
 | --- | --- |
-| [mugsun-boot](https://github.com/mugsun/mugsun-boot) | Backend APIs; CORS / OAuth redirect defaults to this console’s development port `3006` |
-| [mugsun-track](https://github.com/mugsun/mugsun-track) | Browser SDK; this repo depends on npm `@mugsun/track-web@0.3.0` by default (optional source link above) |
-| [mugsun-core](https://github.com/mugsun/mugsun-core) | Shared backend kernel; not a direct dependency of this repository |
-| [mugsun-docs](https://github.com/mugsun/mugsun-docs) | Documentation site [docs.mugsun.com](https://docs.mugsun.com/) |
+| System settings | Users, roles and menus; dictionaries, parameters and regions; logs and server monitoring |
+| Workflow | Flow designer, approval center and todo workbench |
+| Low-code | Code generator, dynamic tables and form designer |
+| Tenant operations | Tenants, packages and tenant datasources |
+| Open platform | API keys, OAuth clients and call logs |
+| Tracking (optional) | Overview, funnels and retention; performance, error monitoring and session replay |
+| GIS (optional) | Map, layers and scenes. 2D uses OpenLayers and 3D uses Cesium |
+| AI center (optional) | Models, knowledge bases and conversations |
 
-## Local development
+The interface comes in Chinese and English, with a light and a dark theme. Below is the session replay page.
+
+![The session replay page](https://docs.mugsun.com/readme/track-replay-en.png)
+
+## Switch off optional modules
+
+The three switches are in `.env` and default to `true`:
+
+```ini
+VITE_ENABLE_GIS = true
+VITE_ENABLE_TRACK = true
+VITE_ENABLE_AI = true
+```
+
+Set one to `false` and rebuild. The routes and plugins of that module are no longer registered, and you can delete its directory under `modules/`.
+
+The backend has matching switches, described in [mugsun-boot](https://github.com/mugsun/mugsun-boot/blob/main/README_EN.md#build-only-the-modules-you-need).
+
+## Deploy
 
 ```bash
-pnpm test          # vitest
-pnpm test:e2e      # playwright (see repository config)
-pnpm lint          # eslint
-pnpm gen:api       # generate types from boot OpenAPI (boot must be running)
+docker build -t mugsun/pc:local .
+docker run -d -p 8088:8080 -e MUGSUN_API_UPSTREAM=http://<backend-host>:8080 mugsun/pc:local
 ```
+
+The image runs Nginx as a non-root user. It serves the static files and forwards `/api/xxx` to `/xxx` on the backend.
+
+The backend address is set at runtime with `MUGSUN_API_UPSTREAM`, so one image works in every environment. Other variables and the CSP settings are covered in [Docker deployment](https://docs.mugsun.com/en/pc/deploy-docker).
+
+Without Docker, run `pnpm build`, put `dist/` on any static server and forward `/api` by the same rule.
+
+## Layout
+
+```mermaid
+flowchart LR
+    B["Browser"]
+    V["Vite dev server<br/>:3006"]
+    N["Nginx image<br/>:8080"]
+    BOOT["mugsun-boot<br/>:8080"]
+
+    B -->|"development"| V
+    B -->|"deployed"| N
+    V -->|"/api"| BOOT
+    N -->|"/api"| BOOT
+```
+
+| Directory        | Contents                                                      |
+| ---------------- | ------------------------------------------------------------- |
+| `src/`           | Sign-in, routing and the system administration pages          |
+| `modules/gis/`   | Optional: map, layers and spatial analysis                    |
+| `modules/track/` | Optional: tracking setup and analytics dashboards             |
+| `modules/ai/`    | Optional: pages for models, knowledge bases and conversations |
+| `e2e/` `e2e-ui/` | Playwright tests                                              |
+| `docker/`        | Nginx configuration and Compose files                         |
+
+The frontend stores no permission data. Sidebar menus and button permissions both come from the backend's `/auth/info` endpoint.
+
+The console itself is instrumented with the tracking SDK, [@mugsun/track-web](https://github.com/mugsun/mugsun-track). That is why the overview page above already shows its own traffic.
+
+## Commands
+
+| Command | What it does |
+| --- | --- |
+| `pnpm dev` | Starts the dev server |
+| `pnpm build` | Type-checks and builds into `dist/` |
+| `pnpm test` | Unit tests with Vitest |
+| `pnpm test:ui-check` | UI self-check; needs no backend |
+| `pnpm test:e2e` | End-to-end tests with Playwright |
+| `pnpm lint` | ESLint |
+| `pnpm gen:api` | Generates API types from the backend's OpenAPI spec; the backend must be running |
+
+The UI self-check must pass in CI. What it checks is described in [UI self-check](https://docs.mugsun.com/en/pc/ui-check).
+
+## Current limits
+
+- It only works with mugsun-boot. There is no standalone mock backend.
+- There is no public demo.
+
+## Related repositories
+
+| Repository | What it is |
+| --- | --- |
+| [mugsun-boot](https://github.com/mugsun/mugsun-boot) | The backend. Every API the console calls comes from it |
+| [mugsun-track](https://github.com/mugsun/mugsun-track) | The browser tracking SDK, used here as an npm package |
+| [mugsun-docs](https://github.com/mugsun/mugsun-docs) | Source of the documentation site, [docs.mugsun.com](https://docs.mugsun.com/en/) |
+
+## Credits
+
+The interface is derived from [art-design-pro](https://github.com/Daymychen/art-design-pro) (MIT). The licence notice is in [NOTICE](./NOTICE).
+
+## Contributing
+
+Read the [contributing guide](https://github.com/mugsun/.github/blob/main/CONTRIBUTING_EN.md) before you send a change. Report security issues privately as described in [SECURITY.md](https://github.com/mugsun/.github/blob/main/SECURITY.md). Please do not open a public issue.
 
 ## License
 
-[MIT](./LICENSE) · UI-base credit in [NOTICE](./NOTICE)
+MIT, see [LICENSE](./LICENSE).
