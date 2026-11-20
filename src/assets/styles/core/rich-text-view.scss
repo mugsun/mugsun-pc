@@ -196,3 +196,9 @@
     margin-bottom: 0;
   }
 }
+
+// 正文里一个标签都没有（比如在「发送消息」的文本框里分几行写的站内信）：按纯文字显示，换行和空格
+// 照原样，到边界照常折行。类由 v-safe-html 在净化之后加；带标签的正文不加，仍按 HTML 的规则排
+.rich-text-view--plain {
+  white-space: pre-wrap;
+}

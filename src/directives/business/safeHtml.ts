@@ -13,6 +13,10 @@
  * rel="noopener noreferrer"（新开的页面拿不到 window.opener）；其他 target 一律去掉，没设的链接
  * 照旧在当前页打开。和服务端保存正文时的规则一样（mugsun-boot 的 RichTextSanitizer）。
  *
+ * 纯文字正文：净化之后一个标签都没有（比如在「发送消息」的文本框里分几行写的站内信），容器再加上
+ * rich-text-view--plain，换行和空格照原样显示。只要带了标签就不加，仍按 HTML 的规则排（换行要写 <br>）：
+ * 手写的 HTML 片段里为了排版敲的回车，不能显示成多出来的空行。
+ *
  * ## 使用示例
  * ```vue
  * <div v-safe-html="notice.content"></div>
@@ -24,8 +28,12 @@ import type { App, Directive } from 'vue'
 /** 阅读样式挂在这个类上，见 @styles/core/rich-text-view.scss */
 export const RICH_TEXT_VIEW_CLASS = 'rich-text-view'
 
+/** 正文里一个标签都没有时再加这个类：按纯文字显示，保留换行和空格 */
+export const RICH_TEXT_PLAIN_CLASS = 'rich-text-view--plain'
+
 const mark = (el: HTMLElement): void => {
   el.classList.add(RICH_TEXT_VIEW_CLASS)
+  el.classList.toggle(RICH_TEXT_PLAIN_CLASS, el.firstElementChild === null)
 }
 
 // 单独的实例：下面的钩子只管这个指令，别处直接用 DOMPurify 的地方（AI 对话、代码生成预览）不受影响

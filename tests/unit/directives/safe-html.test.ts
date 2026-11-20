@@ -1,14 +1,19 @@
 import { afterEach, describe, expect, it } from 'vitest'
 import { createApp, h, nextTick, reactive, resolveDirective, withDirectives, type App } from 'vue'
 import DOMPurify from 'dompurify'
-import { RICH_TEXT_VIEW_CLASS, setupSafeHtmlDirective } from '@/directives/business/safeHtml'
+import {
+  RICH_TEXT_PLAIN_CLASS,
+  RICH_TEXT_VIEW_CLASS,
+  setupSafeHtmlDirective
+} from '@/directives/business/safeHtml'
 
 /**
  * v-safe-html：公告、站内信、帮助文档的正文都经它显示。
  * 1. 净化：脚本、事件属性留不下来；
  * 2. 阅读样式：容器带上 rich-text-view（样式见 rich-text-view-style.test.ts），
  *    容器自己的类、之后的更新都不能把它弄丢；
- * 3. 链接的“新窗口打开”：只认 a 上的 target="_blank"，并且一定带 rel="noopener noreferrer"。
+ * 3. 链接的“新窗口打开”：只认 a 上的 target="_blank"，并且一定带 rel="noopener noreferrer"；
+ * 4. 纯文字正文：一个标签都没有时容器带上 rich-text-view--plain（保留换行和空格），带标签的不带。
  */
 type State = { html: unknown; cls?: string }
 
@@ -151,5 +156,61 @@ describe('v-safe-html 链接的“新窗口打开”', () => {
     mount(reactive({ html: LINK }))
 
     expect(DOMPurify.sanitize(LINK)).toBe('<a href="https://example.com/plan">盘点计划</a>')
+  })
+})
+
+describe('v-safe-html 纯文字正文', () => {
+  // 在「发送消息」的文本框里分几行写的站内信：正文里只有文字和换行
+  const PLAIN = '各位同事：\n  1. 周五 18:00 停机维护\n  2. 库存 < 10 的商品请提前补货\n运维组'
+
+  it('一个标签都没有：带上 rich-text-view--plain，文字、换行、空格原样在', () => {
+    const el = mount(reactive({ html: PLAIN }))
+
+    expect(el.classList.contains(RICH_TEXT_PLAIN_CLASS)).toBe(true)
+    expect(el.classList.contains(RICH_TEXT_VIEW_CLASS)).toBe(true)
+    expect(el.textContent).toBe(PLAIN)
+    expect(el.firstElementChild).toBeNull()
+  })
+
+  it.each([
+    ['编辑器写的', '<p>各位同事：</p><p>周五停机维护</p>'],
+    ['手写的 HTML 片段', '各位同事：\n<b>周五</b>停机维护\n<br>运维组']
+  ])('带标签的正文（%s）不带：仍按 HTML 的规则排', (_name, html) => {
+    const el = mount(reactive({ html }))
+
+    expect(el.classList.contains(RICH_TEXT_PLAIN_CLASS)).toBe(false)
+    expect(el.classList.contains(RICH_TEXT_VIEW_CLASS)).toBe(true)
+  })
+
+  it('看的是净化以后剩下的内容：标签全被去掉的也算纯文字', () => {
+    const el = mount(reactive({ html: '第一行\n<script>steal()</script>第二行' }))
+
+    expect(el.textContent).toBe('第一行\n第二行')
+    expect(el.classList.contains(RICH_TEXT_PLAIN_CLASS)).toBe(true)
+  })
+
+  it('正文换了，类跟着换', async () => {
+    const state = reactive<State>({ html: PLAIN })
+    const el = mount(state)
+
+    state.html = '<p>带格式的正文</p>'
+    await nextTick()
+    expect(el.classList.contains(RICH_TEXT_PLAIN_CLASS)).toBe(false)
+
+    state.html = PLAIN
+    await nextTick()
+    expect(el.classList.contains(RICH_TEXT_PLAIN_CLASS)).toBe(true)
+  })
+
+  it('容器自己的类变了（Vue 会整个重写 class），类还在', async () => {
+    const state = reactive<State>({ html: PLAIN, cls: 'is-unread' })
+    const el = mount(state)
+
+    state.cls = 'is-read'
+    await nextTick()
+
+    expect(el.className.split(/\s+/).sort()).toEqual(
+      ['is-read', 'notice-content', RICH_TEXT_VIEW_CLASS, RICH_TEXT_PLAIN_CLASS].sort()
+    )
   })
 })

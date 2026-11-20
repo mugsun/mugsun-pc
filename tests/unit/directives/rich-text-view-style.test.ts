@@ -8,7 +8,8 @@ import { setupSafeHtmlDirective } from '@/directives/business/safeHtml'
 /**
  * 富文本阅读样式（src/assets/styles/core/rich-text-view.scss）：
  * 1. 只管 .rich-text-view 里面，已在全局样式里登记；
- * 2. 编辑器（wangEditor 5）实际输出的各种写法，经 v-safe-html 显示出来后都套得上对应的规则。
+ * 2. 编辑器（wangEditor 5）实际输出的各种写法，经 v-safe-html 显示出来后都套得上对应的规则；
+ * 3. 纯文字正文（容器带 rich-text-view--plain）保留换行和空格。
  *
  * jsdom 不排版，这里查的是“哪条规则落在元素上、声明了什么”；显示出来的样子要在浏览器里看。
  */
@@ -247,5 +248,16 @@ describe('富文本阅读样式：编辑器输出的各种写法都套得上', (
   it('宽表格、长代码在正文区域里横向滚动，长串英文能折行', () => {
     expect(value(view, 'overflow-x')).toBe('auto')
     expect(value(view, 'overflow-wrap')).toBe('break-word')
+  })
+})
+
+describe('富文本阅读样式：纯文字正文', () => {
+  it('带 rich-text-view--plain 的容器保留换行和空格，过长的行照常折行；不带的不受影响', () => {
+    const plain = document.createElement('div')
+    plain.className = 'msg-content rich-text-view rich-text-view--plain'
+
+    // pre-wrap：换行和连续空格都留着，到边界仍然自动折行（pre 不折行，pre-line 会合并空格）
+    expect(value(plain, 'white-space')).toBe('pre-wrap')
+    expect(value(view, 'white-space')).toBe('')
   })
 })
