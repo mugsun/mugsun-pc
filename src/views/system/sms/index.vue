@@ -40,7 +40,7 @@
           <ElTableColumn
             prop="templateId"
             :label="$t('pages.system.sms.colTemplate')"
-            min-width="140"
+            min-width="130"
             show-overflow-tooltip
           />
           <ElTableColumn :label="$t('pages.system.sms.colStatus')" width="90">

@@ -15,7 +15,7 @@
         <ElButton v-perm="'sys:gen-ds:save'" type="primary" @click="openCreate">{{
           $t('pages.system.genDatasource.create')
         }}</ElButton>
-        <ElButton v-perm="'sys:gen-ds:remove'" @click="removeSelected">{{
+        <ElButton v-perm="'sys:gen-ds:remove'" type="danger" plain @click="removeSelected">{{
           $t('pages.system.genDatasource.removeBatch')
         }}</ElButton>
       </div>

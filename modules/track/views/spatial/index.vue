@@ -183,7 +183,8 @@
 
   const mode = ref<TrackSpatialMode>('agg')
   const eventNames = ref<string[]>([])
-  const eventNameOptions = ref<string[]>(['page_view', 'click', 'purchase', 'add_cart'])
+  const DEFAULT_EVENT_NAMES = ['page_view', 'click', 'purchase', 'add_cart']
+  const eventNameOptions = ref<string[]>([...DEFAULT_EVENT_NAMES])
   const funnelId = ref('')
   /** 漏斗步骤号：正整数逗号分隔，对齐 boot parseFunnelSteps（非事件名） */
   const funnelStepsText = ref('')
@@ -217,17 +218,25 @@
     return ''
   })
 
-  void fetchTrackEventDefPage({ pageNum: 1, pageSize: 100 })
-    .then((resp: any) => {
-      const records = resp?.records ?? resp?.data?.records ?? []
-      const names = records.map((r: any) => String(r.eventName || '').trim()).filter(Boolean)
-      if (names.length) {
-        eventNameOptions.value = Array.from(new Set([...eventNameOptions.value, ...names]))
+  /** 事件名候选跟着应用走：接口必须带 appKey，没选应用时不请求；切应用后重拉 */
+  watch(
+    appKey,
+    async (key) => {
+      eventNameOptions.value = [...DEFAULT_EVENT_NAMES]
+      if (!key) return
+      try {
+        const resp: any = await fetchTrackEventDefPage({ appKey: key, pageNum: 1, pageSize: 100 })
+        if (key !== appKey.value) return
+        const names = (resp?.records ?? [])
+          .map((r: any) => String(r.eventName || '').trim())
+          .filter(Boolean)
+        eventNameOptions.value = Array.from(new Set([...DEFAULT_EVENT_NAMES, ...names]))
+      } catch {
+        /* 事件名列表失败不挡主流程 */
       }
-    })
-    .catch(() => {
-      /* 事件名列表失败不挡主流程 */
-    })
+    },
+    { immediate: true }
+  )
 
   const buildQuery = (): TrackSpatialQuery => {
     const q: TrackSpatialQuery = {
@@ -359,21 +368,22 @@
         width: 180px;
       }
 
+      // 宽度按中英文的提示文字 / 最长选项都能完整显示来定（原先 110 / 140 / 120 会把提示文字切掉一半）
       .track-event-names {
-        min-width: 160px;
-        max-width: 220px;
+        min-width: 220px;
+        max-width: 280px;
       }
 
       .track-funnel-id {
-        width: 110px;
+        width: 180px;
       }
 
       .track-funnel-steps {
-        width: 140px;
+        width: 220px;
       }
 
       .track-window-select {
-        width: 120px;
+        width: 220px;
       }
     }
 

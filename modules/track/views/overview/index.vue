@@ -71,17 +71,19 @@
       <ElCol :xs="24" :lg="12">
         <div class="art-card track-chart-card">
           <p class="track-card-title">{{ $t('pages.track.overview.topPages') }}</p>
-          <ElTable :data="topPages" v-loading="loading" size="default" max-height="320">
-            <ElTableColumn type="index" :label="$t('pages.track.shared.index')" width="60" />
+          <!-- 不限高：接口只取前 10 条，整张表放得下；限高会在本来就能滚动的页面里再套一层滚动 -->
+          <ElTable :data="topPages" v-loading="loading" size="default">
+            <!-- 列宽合计 484：1366 宽时表格只有 506，再宽最后一列会被切掉 -->
+            <ElTableColumn type="index" :label="$t('pages.track.shared.index')" width="56" />
             <ElTableColumn
               prop="pagePath"
               :label="$t('pages.track.overview.pagePath')"
-              min-width="200"
+              min-width="160"
               show-overflow-tooltip
             />
-            <ElTableColumn prop="pv" label="PV" width="90" align="right" />
-            <ElTableColumn prop="uv" label="UV" width="90" align="right" />
-            <ElTableColumn :label="$t('pages.track.overview.avgStay')" width="110" align="right">
+            <ElTableColumn prop="pv" label="PV" width="84" align="right" />
+            <ElTableColumn prop="uv" label="UV" width="84" align="right" />
+            <ElTableColumn :label="$t('pages.track.overview.avgStay')" width="100" align="right">
               <template #default="{ row }">{{ fmtAvgStay(row.avgDurationMs) }}</template>
             </ElTableColumn>
             <template #empty
@@ -94,6 +96,7 @@
         <div class="art-card track-chart-card">
           <p class="track-card-title">{{ $t('pages.track.overview.referrerDist') }}</p>
           <ArtRingChart
+            class="track-card-center"
             :data="referrerDist"
             :loading="loading"
             height="240px"
@@ -106,6 +109,7 @@
         <div class="art-card track-chart-card">
           <p class="track-card-title">{{ $t('pages.track.overview.deviceDist') }}</p>
           <ArtRingChart
+            class="track-card-center"
             :data="deviceDist"
             :loading="loading"
             height="240px"
@@ -118,6 +122,7 @@
         <div class="art-card track-chart-card">
           <p class="track-card-title">{{ $t('pages.track.overview.browserTop') }}</p>
           <ArtRingChart
+            class="track-card-center"
             :data="browserTop"
             :loading="loading"
             height="240px"
@@ -167,8 +172,13 @@
               $t('pages.track.overview.geoCount', { n: geoCount })
             }}</span>
           </p>
-          <GisHeatMap v-if="heatState === 'ready'" :points="geoPoints" />
-          <ElEmpty v-else :description="$t(GEO_HEAT_EMPTY_KEY[heatState])" :image-size="72" />
+          <GisHeatMap v-if="heatState === 'ready'" class="track-heat-map" :points="geoPoints" />
+          <ElEmpty
+            v-else
+            class="track-card-center"
+            :description="$t(GEO_HEAT_EMPTY_KEY[heatState])"
+            :image-size="72"
+          />
         </div>
       </ElCol>
     </ElRow>
@@ -386,11 +396,14 @@
 <style lang="scss" scoped>
   .track-overview-page {
     // 指标卡 + 趋势/在线 + Top 页面/分布三行均为自然高度内容（合计约 900px+）：
-    // art-full-height 定高下页面须自备纵向滚动，否则矮视口底部卡片被切断无法到达
-    overflow-y: auto;
+    // art-full-height 定高下页面须自备纵向滚动，否则矮视口底部卡片被切断无法到达。
+    // 横向要明确关掉：ElRow 的 gutter 靠负外边距左右各探出 8px，不关会多出一条没用的横向滚动条
+    overflow: hidden auto;
 
     .el-row {
       flex-shrink: 0;
+      // 窄屏下一行放不下会折成几行，gutter 只管左右间距，上下要自己留，否则卡片贴在一起
+      row-gap: 16px;
     }
 
     .track-toolbar {
@@ -426,20 +439,29 @@
       margin-top: 12px;
     }
 
+    // 1366 宽一行六张时每张只有 170px 左右：图标不能被挤扁，六个字的说明要放得下；
+    // 个别说明还是折行时（英文），同一行卡片等高，不会一高一低
     .track-stat-card {
+      box-sizing: border-box;
       display: flex;
-      gap: 14px;
+      gap: 12px;
       align-items: center;
-      padding: 18px;
+      height: 100%;
+      padding: 16px;
+    }
+
+    .track-stat-body {
+      min-width: 0;
     }
 
     .track-stat-icon {
       display: flex;
+      flex-shrink: 0;
       align-items: center;
       justify-content: center;
-      width: 48px;
-      height: 48px;
-      font-size: 22px;
+      width: 44px;
+      height: 44px;
+      font-size: 20px;
       color: var(--el-color-primary);
       border-radius: 12px;
     }
@@ -454,8 +476,27 @@
       color: var(--el-text-color-secondary);
     }
 
+    // 同一行的卡片等高：内容矮的那张，图表和空状态在卡片里上下居中，热力图撑满，不会一高一低
     .track-chart-card {
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      height: 100%;
       padding: 16px;
+    }
+
+    .track-card-center {
+      margin-top: auto;
+      margin-bottom: auto;
+    }
+
+    .track-heat-map {
+      flex: 1;
+      min-height: 280px;
+
+      :deep(.gis-heat) {
+        height: 100%;
+      }
     }
 
     .track-online-card {

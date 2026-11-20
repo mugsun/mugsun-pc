@@ -13,9 +13,13 @@
         <ElButton v-perm="'sys:tenant-datasource:save'" type="primary" @click="showCreate">{{
           $t('pages.system.tenantDatasource.create')
         }}</ElButton>
-        <ElButton v-perm="'sys:tenant-datasource:remove'" @click="removeSelected">{{
-          $t('pages.system.tenantDatasource.deleteSelected')
-        }}</ElButton>
+        <ElButton
+          v-perm="'sys:tenant-datasource:remove'"
+          type="danger"
+          plain
+          @click="removeSelected"
+          >{{ $t('pages.system.tenantDatasource.deleteSelected') }}</ElButton
+        >
         <ElAlert
           type="info"
           :closable="false"

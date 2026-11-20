@@ -15,7 +15,7 @@
         <ElButton v-perm="'sys:tenant:save'" type="primary" @click="openCreate" v-ripple>{{
           $t('pages.system.tenant.create')
         }}</ElButton>
-        <ElButton v-perm="'sys:tenant:remove'" @click="deleteSelected">{{
+        <ElButton v-perm="'sys:tenant:remove'" type="danger" plain @click="deleteSelected">{{
           $t('pages.system.tenant.deleteSelected')
         }}</ElButton>
       </div>

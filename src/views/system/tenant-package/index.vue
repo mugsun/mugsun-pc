@@ -14,9 +14,13 @@
         <ElButton v-perm="'sys:tenant-package:save'" type="primary" @click="showCreate">{{
           $t('pages.system.tenantPackage.create')
         }}</ElButton>
-        <ElButton v-perm="'sys:tenant-package:remove'" @click="removeSelected">{{
-          $t('pages.system.tenantPackage.deleteSelected')
-        }}</ElButton>
+        <ElButton
+          v-perm="'sys:tenant-package:remove'"
+          type="danger"
+          plain
+          @click="removeSelected"
+          >{{ $t('pages.system.tenantPackage.deleteSelected') }}</ElButton
+        >
       </div>
 
       <!-- 表格为自由增长内容：art-table-card 卡片体是 height:100%+overflow:hidden 裁剪，

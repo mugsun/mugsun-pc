@@ -14,7 +14,7 @@
         <ElButton v-perm="'sys:dept:save'" @click="showDialog('add')" v-ripple>{{
           $t('pages.system.dept.addDept')
         }}</ElButton>
-        <ElButton v-perm="'sys:dept:remove'" @click="deleteSelected" v-ripple>{{
+        <ElButton v-perm="'sys:dept:remove'" type="danger" plain @click="deleteSelected" v-ripple>{{
           $t('pages.system.dept.deleteSelectedBtn')
         }}</ElButton>
       </div>

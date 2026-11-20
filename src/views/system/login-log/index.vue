@@ -206,13 +206,13 @@
         {
           prop: 'os',
           label: t('pages.system.loginLog.os'),
-          minWidth: 80,
+          minWidth: 96,
           showOverflowTooltip: true
         },
         {
           prop: 'status',
           label: t('pages.system.loginLog.result'),
-          width: 64,
+          width: 88,
           // 字典运行时驱动（login_result：1 成功 / 0 失败）
           formatter: (row: any) =>
             h(ArtStatusTag, { code: DICT_CODE.LOGIN_RESULT, value: row.status })

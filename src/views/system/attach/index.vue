@@ -15,9 +15,14 @@
           <ElButton :loading="uploading" @click="triggerUpload" v-ripple>{{
             $t('pages.system.attach.uploadBtn')
           }}</ElButton>
-          <ElButton v-perm="'sys:file:remove'" @click="deleteSelected" v-ripple>{{
-            $t('pages.system.attach.deleteSelectedBtn')
-          }}</ElButton>
+          <ElButton
+            v-perm="'sys:file:remove'"
+            type="danger"
+            plain
+            @click="deleteSelected"
+            v-ripple
+            >{{ $t('pages.system.attach.deleteSelectedBtn') }}</ElButton
+          >
           <input ref="uploadInput" type="file" style="display: none" @change="handleUpload" />
           <ElProgress
             v-if="uploading && directUploading"
@@ -181,7 +186,8 @@
         {
           prop: 'name',
           label: t('pages.system.attach.filenameLabel'),
-          minWidth: 220,
+          // 1366 宽下各列合计要放得进表格（原先 220 时多出 15px，冒出一条横向滚动条）
+          minWidth: 200,
           showOverflowTooltip: true
         },
         { prop: 'ext', label: t('pages.system.attach.extLabel'), width: 90 },

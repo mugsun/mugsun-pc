@@ -37,9 +37,11 @@
     display: inline-flex;
     gap: 6px;
     align-items: center;
+    white-space: nowrap;
 
     &__dot {
       display: inline-block;
+      flex-shrink: 0;
       width: 8px;
       height: 8px;
       border-radius: 50%;

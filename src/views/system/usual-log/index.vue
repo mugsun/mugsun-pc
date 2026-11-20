@@ -10,18 +10,12 @@
     />
     <ElCard class="art-table-card">
       <ArtTableHeader v-model:columns="columnChecks" :loading="loading" @refresh="refreshData" />
-      <ElAlert
-        v-if="!loading && (data as any[]).length === 0"
-        class="usual-log-empty"
-        type="info"
-        :closable="false"
-        :title="$t('pages.system.usualLog.empty')"
-      />
       <ArtTable
         :loading="loading"
         :data="data as any[]"
         :columns="columns"
         :pagination="pagination"
+        :empty-text="$t('pages.system.usualLog.empty')"
         border
         @pagination:size-change="handleSizeChange"
         @pagination:current-change="handleCurrentChange"
@@ -216,9 +210,3 @@
     await fetchData()
   }
 </script>
-
-<style scoped>
-  .usual-log-empty {
-    margin-bottom: 8px;
-  }
-</style>

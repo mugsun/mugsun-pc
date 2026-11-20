@@ -275,6 +275,11 @@
     overflow: auto;
   }
 
+  /* 表单最后一项的下边距和下方的间隔重复：矮屏时正好多出十几像素，冒出一条没用的滚动条 */
+  .ai-gen-settings :deep(.el-form-item:last-child) {
+    margin-bottom: 0;
+  }
+
   .ai-gen-page :deep(.el-card__body) {
     display: flex;
     flex-direction: column;

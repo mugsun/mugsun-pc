@@ -382,6 +382,33 @@ html.dark .el-card {
   margin: -3px 0 0 2px;
 }
 
+// 普通 ElTable 的空状态向 ArtEmptyState 看齐（UX-118）：收件箱图标 + 13px 说明。
+// 已自带空状态组件的（ArtTable、ElEmpty）不加；不支持 :has 的浏览器整条规则失效，退回原样。
+.el-table__empty-text:not(:has(.art-empty-state, .el-empty)) {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: center;
+  width: auto;
+  max-width: 460px;
+  padding: 24px 16px;
+  font-size: 13px;
+  line-height: 1.7;
+  color: var(--el-text-color-secondary);
+
+  &::before {
+    width: 40px;
+    height: 40px;
+    content: '';
+    background-color: var(--el-color-primary);
+    opacity: 0.85;
+    -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4.024 3.783A1 1 0 0 1 5 3h14a1 1 0 0 1 .976.783l2 9Q22 12.89 22 13v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-7a1 1 0 0 1 .024-.217zM5.802 5l-1.555 7H9a3 3 0 1 0 6 0h4.753l-1.555-7zm10.782 9a5.001 5.001 0 0 1-9.168 0H4v5h16v-5z'/%3E%3C/svg%3E")
+      center / contain no-repeat;
+    mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath d='M4.024 3.783A1 1 0 0 1 5 3h14a1 1 0 0 1 .976.783l2 9Q22 12.89 22 13v7a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1v-7a1 1 0 0 1 .024-.217zM5.802 5l-1.555 7H9a3 3 0 1 0 6 0h4.753l-1.555-7zm10.782 9a5.001 5.001 0 0 1-9.168 0H4v5h16v-5z'/%3E%3C/svg%3E")
+      center / contain no-repeat;
+  }
+}
+
 // 去除 el-dropdown 鼠标放上去出现的边框
 .el-tooltip__trigger:focus-visible {
   outline: unset;

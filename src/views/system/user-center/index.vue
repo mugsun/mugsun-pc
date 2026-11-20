@@ -407,13 +407,17 @@
 
 <style scoped>
   /* 个人信息 + 三张表单卡为自由增长内容：art-full-height 定高下页面须自备纵向滚动，
-     否则矮视口下修改密码卡底部被视口切断且无法到达（同 track/funnel 修法） */
+     否则矮视口下修改密码卡底部被视口切断且无法到达（同 track/funnel 修法）。
+     横向要明确关掉：ElRow 的 gutter 靠负外边距左右各探出 8px，不关会多出一条没用的横向滚动条 */
   .user-center-page {
-    overflow-y: auto;
+    overflow: hidden auto;
   }
 
   .user-center-page > .el-row {
     flex-shrink: 0;
+
+    /* 窄屏下左右两栏折成上下两行，gutter 只管左右间距，上下要自己留，否则两张卡片贴在一起 */
+    row-gap: 16px;
   }
 
   .uc-form-card {

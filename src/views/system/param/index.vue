@@ -14,9 +14,14 @@
         <ElButton v-perm="'sys:param:save'" @click="showDialog('add')" v-ripple>{{
           $t('pages.system.param.addParam')
         }}</ElButton>
-        <ElButton v-perm="'sys:param:remove'" @click="deleteSelected" v-ripple>{{
-          $t('pages.system.param.deleteSelectedBtn')
-        }}</ElButton>
+        <ElButton
+          v-perm="'sys:param:remove'"
+          type="danger"
+          plain
+          @click="deleteSelected"
+          v-ripple
+          >{{ $t('pages.system.param.deleteSelectedBtn') }}</ElButton
+        >
       </div>
 
       <ArtTable

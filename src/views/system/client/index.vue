@@ -15,7 +15,7 @@
           <ElButton v-perm="'sys:client:save'" type="primary" @click="openCreate">{{
             $t('pages.system.client.addBtn')
           }}</ElButton>
-          <ElButton v-perm="'sys:client:remove'" @click="removeSelected">{{
+          <ElButton v-perm="'sys:client:remove'" type="danger" plain @click="removeSelected">{{
             $t('pages.system.client.deleteSelected')
           }}</ElButton>
         </div>

@@ -18,87 +18,91 @@
           <div v-if="loading3d" class="gis-loading">{{ $t('pages.gis.load3d') }}</div>
         </div>
 
-        <div class="gis-hud gis-hud-tl">
-          <ElSelect
-            v-model="sceneId"
-            clearable
-            filterable
-            :placeholder="$t('pages.gis.selectScene')"
-            class="gis-scene-select"
-            @change="onSelectScene"
-          >
-            <ElOption v-for="s in scenes" :key="s.id" :label="s.name" :value="s.id!" />
-          </ElSelect>
-          <ElInput
-            v-model="sceneName"
-            :placeholder="$t('pages.gis.sceneNamePlaceholder')"
-            class="gis-name-input"
-          />
-          <ElButton
-            v-perm="'gis:scene:save'"
-            type="primary"
-            size="small"
-            :loading="saving"
-            @click="saveScene"
-          >
-            {{ $t('pages.gis.saveScene') }}
-          </ElButton>
-        </div>
-
-        <div class="gis-hud gis-hud-tc">
-          <ElAutocomplete
-            ref="searchRef"
-            v-model="searchText"
-            class="gis-search"
-            clearable
-            value-key="name"
-            :trigger-on-focus="false"
-            :fetch-suggestions="queryPoi"
-            :placeholder="$t('pages.gis.searchPlaceholder')"
-            @select="onPoiSelect"
-          >
-            <template #default="{ item }">
-              <div class="gis-poi">
-                <div>{{ item.name }}</div>
-                <div class="gis-poi-addr">{{
-                  item.address || `${item.lon.toFixed(4)}, ${item.lat.toFixed(4)}`
-                }}</div>
-              </div>
-            </template>
-          </ElAutocomplete>
-          <ElButton text size="small" @click="gotoOpen = true">{{ $t('pages.gis.goto') }}</ElButton>
-        </div>
-
-        <div class="gis-hud gis-hud-tr">
-          <ElRadioGroup v-model="viewMode" size="small" @change="onViewModeChange">
-            <ElRadioButton value="2d">{{ $t('pages.gis.mode2d') }}</ElRadioButton>
-            <ElRadioButton value="3d">{{ $t('pages.gis.mode3d') }}</ElRadioButton>
-          </ElRadioGroup>
-          <ElSelect v-model="baseProvider" class="gis-provider-select" @change="onBasemapChange">
-            <ElOption
-              v-for="p in readyProviders"
-              :key="p.provider"
-              :label="$t(`pages.gis.provider${cap(p.provider)}`)"
-              :value="p.provider"
+        <div class="gis-hud-top">
+          <div class="gis-hud gis-hud-tl">
+            <ElSelect
+              v-model="sceneId"
+              clearable
+              filterable
+              :placeholder="$t('pages.gis.selectScene')"
+              class="gis-scene-select"
+              @change="onSelectScene"
+            >
+              <ElOption v-for="s in scenes" :key="s.id" :label="s.name" :value="s.id!" />
+            </ElSelect>
+            <ElInput
+              v-model="sceneName"
+              :placeholder="$t('pages.gis.sceneNamePlaceholder')"
+              class="gis-name-input"
             />
-          </ElSelect>
-          <ElSelect v-model="baseStyle" class="gis-style-select" @change="onBasemapChange">
-            <ElOption value="vec" :label="$t('pages.gis.styleVec')" />
-            <ElOption value="img" :label="$t('pages.gis.styleImg')" />
-            <ElOption value="img_label" :label="$t('pages.gis.styleImgLabel')" />
-            <ElOption value="vec_label" :label="$t('pages.gis.styleVecLabel')" />
-          </ElSelect>
-          <ElTag
-            v-if="status.enabled && hasReadyProvider"
-            size="small"
-            class="gis-engine-tag"
-            :type="spatial.postgis ? 'success' : 'warning'"
-            :title="
-              spatial.postgis ? $t('pages.gis.enginePostgisTip') : $t('pages.gis.engineJavaTip')
-            "
-          >
-            {{ spatial.postgis ? $t('pages.gis.enginePostgis') : $t('pages.gis.engineJava') }}
-          </ElTag>
+            <ElButton
+              v-perm="'gis:scene:save'"
+              type="primary"
+              size="small"
+              :loading="saving"
+              @click="saveScene"
+            >
+              {{ $t('pages.gis.saveScene') }}
+            </ElButton>
+          </div>
+
+          <div class="gis-hud gis-hud-tc">
+            <ElAutocomplete
+              ref="searchRef"
+              v-model="searchText"
+              class="gis-search"
+              clearable
+              value-key="name"
+              :trigger-on-focus="false"
+              :fetch-suggestions="queryPoi"
+              :placeholder="$t('pages.gis.searchPlaceholder')"
+              @select="onPoiSelect"
+            >
+              <template #default="{ item }">
+                <div class="gis-poi">
+                  <div>{{ item.name }}</div>
+                  <div class="gis-poi-addr">{{
+                    item.address || `${item.lon.toFixed(4)}, ${item.lat.toFixed(4)}`
+                  }}</div>
+                </div>
+              </template>
+            </ElAutocomplete>
+            <ElButton text size="small" @click="gotoOpen = true">{{
+              $t('pages.gis.goto')
+            }}</ElButton>
+          </div>
+
+          <div class="gis-hud gis-hud-tr">
+            <ElRadioGroup v-model="viewMode" size="small" @change="onViewModeChange">
+              <ElRadioButton value="2d">{{ $t('pages.gis.mode2d') }}</ElRadioButton>
+              <ElRadioButton value="3d">{{ $t('pages.gis.mode3d') }}</ElRadioButton>
+            </ElRadioGroup>
+            <ElSelect v-model="baseProvider" class="gis-provider-select" @change="onBasemapChange">
+              <ElOption
+                v-for="p in readyProviders"
+                :key="p.provider"
+                :label="$t(`pages.gis.provider${cap(p.provider)}`)"
+                :value="p.provider"
+              />
+            </ElSelect>
+            <ElSelect v-model="baseStyle" class="gis-style-select" @change="onBasemapChange">
+              <ElOption value="vec" :label="$t('pages.gis.styleVec')" />
+              <ElOption value="img" :label="$t('pages.gis.styleImg')" />
+              <ElOption value="img_label" :label="$t('pages.gis.styleImgLabel')" />
+              <ElOption value="vec_label" :label="$t('pages.gis.styleVecLabel')" />
+            </ElSelect>
+            <ElTag
+              v-if="status.enabled && hasReadyProvider"
+              size="small"
+              class="gis-engine-tag"
+              :type="spatial.postgis ? 'success' : 'warning'"
+              :title="
+                spatial.postgis ? $t('pages.gis.enginePostgisTip') : $t('pages.gis.engineJavaTip')
+              "
+            >
+              {{ spatial.postgis ? $t('pages.gis.enginePostgis') : $t('pages.gis.engineJava') }}
+            </ElTag>
+          </div>
         </div>
 
         <div class="gis-hud gis-hud-rail">
@@ -1989,21 +1993,35 @@
     box-shadow: var(--el-box-shadow-light);
   }
 
-  .gis-hud-tl {
-    top: 12px;
-    left: 12px;
-  }
-
-  .gis-hud-tc {
-    top: 12px;
-    left: 50%;
-    width: min(360px, calc(100% - 520px));
-    transform: translateX(-50%);
-  }
-
-  .gis-hud-tr {
+  /* 顶部三组工具条排进同一行，中间的搜索条夹在左右两组之间自己伸缩。
+     原先搜索条按「居中 + 固定 360px」摆，1366 宽时会和左右两组叠在一起，「跳转坐标」被盖住点不到。
+     容器本身不接鼠标，空隙处的拖动和点击照常落到地图上 */
+  .gis-hud-top {
+    position: absolute;
     top: 12px;
     right: 12px;
+    left: 12px;
+    z-index: 5;
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+    justify-content: space-between;
+    pointer-events: none;
+  }
+
+  .gis-hud-top > .gis-hud {
+    position: static;
+    flex-shrink: 0;
+    pointer-events: auto;
+  }
+
+  .gis-hud-top > .gis-hud-tc {
+    flex: 0 1 360px;
+    min-width: 0;
+  }
+
+  .gis-hud-tc > .el-button {
+    flex-shrink: 0;
   }
 
   .gis-hud-rail {
@@ -2122,6 +2140,11 @@
   .gis-style-select {
     flex-shrink: 0;
     width: 108px;
+  }
+
+  /* 「自定义瓦片」五个字在 108px 里显示不全 */
+  .gis-provider-select {
+    width: 124px;
   }
 
   .gis-engine-tag {
@@ -2470,13 +2493,21 @@
 
   /* 窄屏：顶部三组工具条改为整行堆叠，二维/三维始终在最左；底部提示改为横条（UX-115） */
   @media (width <= 768px) {
+    /* 堆叠时三组各自按固定位置摆：取消同行容器，让它们直接相对地图定位 */
+    .gis-hud-top {
+      display: contents;
+    }
+
+    .gis-hud-top > .gis-hud {
+      position: absolute;
+    }
+
     .gis-hud-tr,
     .gis-hud-tl,
     .gis-hud-tc {
       right: 12px;
       left: 12px;
       width: auto;
-      transform: none;
     }
 
     .gis-hud-tr {

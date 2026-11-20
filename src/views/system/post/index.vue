@@ -15,9 +15,14 @@
           <ElButton v-perm="'sys:post:save'" @click="showDialog('add')" v-ripple>{{
             $t('pages.system.post.addPost')
           }}</ElButton>
-          <ElButton v-perm="'sys:post:remove'" @click="deleteSelected" v-ripple>{{
-            $t('pages.system.post.deleteSelectedBtn')
-          }}</ElButton>
+          <ElButton
+            v-perm="'sys:post:remove'"
+            type="danger"
+            plain
+            @click="deleteSelected"
+            v-ripple
+            >{{ $t('pages.system.post.deleteSelectedBtn') }}</ElButton
+          >
         </template>
       </ArtTableHeader>
 

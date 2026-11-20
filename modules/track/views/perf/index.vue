@@ -38,8 +38,9 @@
             <ElTag :type="m.tagType" size="small" effect="light">{{ m.levelText }}</ElTag>
           </div>
           <div class="track-metric-value" :class="`is-${m.level}`">{{ m.p75Text }}</div>
+          <div class="track-metric-sub">{{ m.name }}</div>
           <div class="track-metric-sub"
-            >{{ m.name }} · P75 · {{ $t('pages.track.perf.sampleN', { count: m.count }) }}</div
+            >P75 · {{ $t('pages.track.perf.sampleN', { count: m.count }) }}</div
           >
         </div>
       </ElCol>
@@ -170,6 +171,8 @@
 
   type MetricMeta = (typeof METRICS)[number]
   type Level = 'good' | 'ni' | 'poor'
+  /** 卡片和明细行的档位：没有样本时单独一档，不能算成「良好」 */
+  type RowLevel = Level | 'none'
 
   const rawVitals = ref<any[]>([])
   const loading = ref(false)
@@ -186,22 +189,24 @@
   const fmtValue = (meta: MetricMeta, v: number): string =>
     meta.cls ? v.toFixed(3) : `${Math.round(v)}ms`
 
-  const LEVEL_TEXT: Record<Level, string> = {
+  const LEVEL_TEXT: Record<RowLevel, string> = {
     good: t('pages.track.perf.levelGood'),
     ni: t('pages.track.perf.levelNi'),
-    poor: t('pages.track.perf.levelPoor')
+    poor: t('pages.track.perf.levelPoor'),
+    none: t('pages.track.shared.noData')
   }
-  const LEVEL_TAG: Record<Level, 'success' | 'warning' | 'danger'> = {
+  const LEVEL_TAG: Record<RowLevel, 'success' | 'warning' | 'danger' | 'info'> = {
     good: 'success',
     ni: 'warning',
-    poor: 'danger'
+    poor: 'danger',
+    none: 'info'
   }
 
   const detailRows = computed(() =>
     METRICS.map((meta) => {
       const row = rawVitals.value.find((r) => r.metric === meta.key)
-      // 该指标无样本：全部显示占位，不误导为「0ms 良好」
-      if (!row) {
+      // 该指标无样本：数值显示占位，档位单列为「暂无数据」，不误导为「0ms 良好」
+      if (!row || Number(row.count ?? 0) <= 0) {
         return {
           key: meta.key,
           label: meta.label,
@@ -211,11 +216,12 @@
           p50Text: '-',
           p75Text: '-',
           p95Text: '-',
-          level: 'good' as Level
+          level: 'none' as RowLevel,
+          p95Level: 'none' as RowLevel
         }
       }
       const p75 = rawValue(meta, row.p75)
-      const level = levelOf(meta, p75)
+      const level: RowLevel = levelOf(meta, p75)
       return {
         key: meta.key,
         label: meta.label,
@@ -226,7 +232,7 @@
         p75Text: fmtValue(meta, p75),
         p95Text: fmtValue(meta, rawValue(meta, row.p95)),
         level,
-        p95Level: levelOf(meta, rawValue(meta, row.p95))
+        p95Level: levelOf(meta, rawValue(meta, row.p95)) as RowLevel
       }
     })
   )
@@ -262,11 +268,14 @@
 <style lang="scss" scoped>
   .track-perf-page {
     // 指标卡行 + 分位明细卡为自然高度内容：视口偏矮时明细卡被全局
-    // .art-table-card .el-card__body 的 overflow:hidden 横切，页面须自备纵向滚动
-    overflow-y: auto;
+    // .art-table-card .el-card__body 的 overflow:hidden 横切，页面须自备纵向滚动。
+    // 横向要明确关掉：ElRow 的 gutter 靠负外边距左右各探出 8px，不关会多出一条没用的横向滚动条
+    overflow: hidden auto;
 
     .el-row {
       flex-shrink: 0;
+      // 窄屏下指标卡会折成几行，gutter 只管左右间距，上下要自己留，否则卡片贴在一起
+      row-gap: 16px;
     }
 
     .track-toolbar {
@@ -291,7 +300,10 @@
       font-weight: 500;
     }
 
+    // 同一行六张等高：阈值说明那张有 6 行，比指标卡高
     .track-metric-card {
+      box-sizing: border-box;
+      height: 100%;
       padding: 16px;
 
       .track-metric-head {
@@ -321,15 +333,22 @@
         &.is-poor {
           color: var(--el-color-danger);
         }
+
+        &.is-none {
+          color: var(--el-text-color-placeholder);
+        }
       }
 
+      // 指标全称和「P75 · 样本数」各占一行：1366 宽时卡片只有 170px 左右，挤在一行会被截断
       .track-metric-sub {
         margin-top: 6px;
-        overflow: hidden;
         font-size: 12px;
+        line-height: 18px;
         color: var(--el-text-color-secondary);
-        text-overflow: ellipsis;
-        white-space: nowrap;
+
+        & + .track-metric-sub {
+          margin-top: 0;
+        }
       }
     }
 

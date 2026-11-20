@@ -13,9 +13,14 @@
           <ElButton v-perm="'sys:notice:manage'" @click="showDialog('add')" v-ripple>{{
             $t('pages.system.notice.addBtn')
           }}</ElButton>
-          <ElButton v-perm="'sys:notice:manage'" @click="deleteSelected" v-ripple>{{
-            $t('pages.system.notice.deleteSelectedBtn')
-          }}</ElButton>
+          <ElButton
+            v-perm="'sys:notice:manage'"
+            type="danger"
+            plain
+            @click="deleteSelected"
+            v-ripple
+            >{{ $t('pages.system.notice.deleteSelectedBtn') }}</ElButton
+          >
         </template>
       </ArtTableHeader>
 

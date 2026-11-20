@@ -18,7 +18,7 @@
         <ElButton v-perm="'sys:job-server:sync'" @click="syncAll">{{
           $t('pages.system.jobServer.syncAll')
         }}</ElButton>
-        <ElButton v-perm="'sys:job-server:remove'" @click="removeSelected">{{
+        <ElButton v-perm="'sys:job-server:remove'" type="danger" plain @click="removeSelected">{{
           $t('pages.system.jobServer.removeBatch')
         }}</ElButton>
       </div>
