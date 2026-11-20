@@ -51,7 +51,7 @@
               width="140"
               show-overflow-tooltip
             />
-            <ElTableColumn :label="$t('pages.system.feedback.colAttach')" width="170">
+            <ElTableColumn :label="$t('pages.system.feedback.colAttach')" width="150">
               <template #default="{ row }">
                 <ElButton
                   v-if="row.attachId"
@@ -83,7 +83,11 @@
             <ElTableColumn :label="$t('pages.system.feedback.colCreateTime')" width="170">
               <template #default="{ row }">{{ formatTableTime(row.createTime) }}</template>
             </ElTableColumn>
-            <ElTableColumn :label="$t('pages.system.feedback.colOperation')" width="180">
+            <ElTableColumn
+              :label="$t('pages.system.feedback.colOperation')"
+              width="180"
+              fixed="right"
+            >
               <template #default="{ row }">
                 <ElButton
                   v-perm="'sys:feedback:manage'"
@@ -301,7 +305,7 @@
 
   .fb-attach-name {
     display: inline-block;
-    max-width: 130px;
+    max-width: 120px;
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
