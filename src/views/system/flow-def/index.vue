@@ -334,6 +334,7 @@
   import { fetchFormPage, fetchFormByKey } from '@/api/form'
   import { ElMessage } from 'element-plus'
   import { formatTableTime } from '@/utils/date'
+  import { isNoAnswerYet } from '@/utils/http/error'
 
   defineOptions({ name: 'FlowDef' })
 
@@ -481,6 +482,10 @@
         await fetchFlowStartBy(startCtx.flowCode, startBusinessId.value, { variable })
       }
       ElMessage.success(t('pages.system.flowDef.msgStarted'))
+      startVisible.value = false
+    } catch (e) {
+      if (!isNoAnswerYet(e)) throw e
+      // 服务端还没答复、多半还在处理（提示已经给过）：关掉窗口，免得留着表单让人再点一次
       startVisible.value = false
     } finally {
       starting.value = false

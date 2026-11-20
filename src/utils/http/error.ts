@@ -71,6 +71,8 @@ export class HttpError extends Error {
   public readonly bizCode?: number
   /** 防重复提交拦截：相同变更请求在途时被前端拦下，请求没有发出 */
   public readonly isDuplicateSubmit: boolean
+  /** 请求发出去了，等到超时也没有收到答复（和断网、连不上不同：服务端可能还在处理） */
+  public readonly timedOut: boolean
   /**
    * 已向用户提示过（toast）。埋点 SDK 在 skipHandledErrors 为 true 时据此（及 name==='HttpError'）
    * 跳过 $error 上报；管理台本身不再拦截，是否跳过由 SDK 开关决定。
@@ -88,6 +90,7 @@ export class HttpError extends Error {
       errorKind?: HttpErrorKind
       bizCode?: number
       duplicateSubmit?: boolean
+      timedOut?: boolean
     }
   ) {
     super(message)
@@ -101,11 +104,20 @@ export class HttpError extends Error {
     this.errorKind = options?.errorKind ?? 'http'
     this.bizCode = options?.bizCode
     this.isDuplicateSubmit = options?.duplicateSubmit ?? false
+    this.timedOut = options?.timedOut ?? false
   }
 
   /** 是否网络异常（无响应） */
   public get isNetworkError(): boolean {
     return this.errorKind === 'network'
+  }
+
+  /**
+   * 请求已经发出，但还没有等到服务端的答复：自己等到了超时，或者中间的网关先等不及返回了 504。
+   * 这时服务端多半还在处理，不能当成失败让人再提交一次。
+   */
+  public get noAnswerYet(): boolean {
+    return this.timedOut || (this.errorKind === 'http' && this.code === ApiStatus.gatewayTimeout)
   }
 
   public toLogData(): ErrorLogData & { error_kind: HttpErrorKind; biz_code?: number } {
@@ -144,6 +156,14 @@ const getErrorMessage = (status: number): string => {
   return $t(errorMap[status] || 'httpMsg.internalServerError')
 }
 
+/** axios 的超时：默认报 ECONNABORTED（和「请求被中止」同一个码，靠文案区分），开了 clarifyTimeoutError 时报 ETIMEDOUT */
+function isTimeout(error: AxiosError<ErrorResponse>): boolean {
+  return (
+    error.code === 'ETIMEDOUT' ||
+    (error.code === 'ECONNABORTED' && /timeout/i.test(error.message || ''))
+  )
+}
+
 /**
  * 处理错误
  * @param error 错误对象
@@ -167,7 +187,8 @@ export function handleError(error: AxiosError<ErrorResponse>): never {
     throw new HttpError($t('httpMsg.networkError'), ApiStatus.network, {
       url: requestConfig?.url,
       method: requestConfig?.method?.toUpperCase(),
-      errorKind: 'network'
+      errorKind: 'network',
+      timedOut: isTimeout(error)
     })
   }
 
@@ -202,6 +223,17 @@ export function showError(error: HttpError, showMessage: boolean = true): void {
 }
 
 /**
+ * 请求还没有等到答复时的提示：按警告显示调用方给的说明，不说成失败
+ * @param error 错误对象（{@link HttpError.noAnswerYet} 为 true）
+ * @param message 告诉用户去哪里确认结果的说明
+ */
+export function showNoAnswerYet(error: HttpError, message: string): void {
+  ElMessage.warning(message)
+  error.handled = true
+  console.warn('[HTTP No Answer Yet]', error.toLogData())
+}
+
+/**
  * 显示成功消息
  * @param message 成功消息
  * @param showMessage 是否显示消息
@@ -228,3 +260,7 @@ export const isDuplicateSubmitError = (error: unknown): error is HttpError =>
 /** 是否网络异常（无响应）的 HttpError */
 export const isNetworkError = (error: unknown): error is HttpError =>
   error instanceof HttpError && error.errorKind === 'network'
+
+/** 请求已发出但还没有等到答复（超时 / 网关 504）的 HttpError：服务端可能还在处理 */
+export const isNoAnswerYet = (error: unknown): error is HttpError =>
+  error instanceof HttpError && error.noAnswerYet

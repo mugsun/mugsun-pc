@@ -20,7 +20,7 @@ import axios, { AxiosRequestConfig, AxiosResponse, InternalAxiosRequestConfig } 
 import { ElLoading } from 'element-plus'
 import { useUserStore } from '@/store/modules/user'
 import { ApiStatus } from './status'
-import { HttpError, handleError, showError, showSuccess } from './error'
+import { HttpError, handleError, showError, showNoAnswerYet, showSuccess } from './error'
 import { reportApiError } from './api-error-report'
 import i18n, { $t } from '@/locales'
 import { unref } from 'vue'
@@ -50,6 +50,11 @@ interface ExtendedAxiosRequestConfig extends AxiosRequestConfig {
   showSuccessMessage?: boolean
   /** R 信封校验旁路：true 时响应拦截器跳过 code 校验、request 原样返回响应体（actuator 等裸 JSON 端点用） */
   skipEnvelope?: boolean
+  /**
+   * 请求发出后还没有等到答复（等到超时，或网关先返回 504）时，改用这句话按警告提示，不弹「网络异常」：
+   * 服务端多半还在处理，说成失败会让人再提交一次。调用方用 isNoAnswerYet(error) 判断后自己收尾（关窗口、刷新列表）。
+   */
+  noAnswerYetMessage?: string
 }
 
 /** 下载配置：filename 为解析不到 Content-Disposition 时的兜底文件名 */
@@ -261,7 +266,11 @@ async function request<T = any>(config: ExtendedAxiosRequestConfig): Promise<T> 
         return Promise.reject(error)
       }
       if (error instanceof HttpError && error.code !== ApiStatus.unauthorized) {
-        showError(error, config.showErrorMessage !== false)
+        if (config.noAnswerYetMessage && error.noAnswerYet) {
+          showNoAnswerYet(error, config.noAnswerYetMessage)
+        } else {
+          showError(error, config.showErrorMessage !== false)
+        }
       }
       return Promise.reject(error)
     } finally {

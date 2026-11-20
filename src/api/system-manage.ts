@@ -1,5 +1,6 @@
 import request from '@/utils/http'
 import { TRACE_HEADER } from '@/utils/http/traceId'
+import { $t } from '@/locales'
 import { AppRouteRecord } from '@/types/router'
 
 // 用户域 → @/api/user，角色域 → @/api/role，字典域 → @/api/dict（均 openapi 生成类型，无 any）
@@ -544,13 +545,24 @@ export function fetchFlowDeploy() {
 export function fetchFlowStart(businessId: string) {
   return request.post<string>({ url: `/api/system/flow/start/${encodeURIComponent(businessId)}` })
 }
+/**
+ * 发起、办理的等待时间。流程里下一个节点是 AI 预审时，服务端要等模型答完才答复：一个 AI 节点默认等 120 秒、最长 300 秒
+ * （AiApprovalConstants）。比 nginx 转发接口的等待上限（300 秒）略短，这样等不到时是页面自己先停下来。
+ */
+export const FLOW_ACTION_TIMEOUT = 290_000
+
 export function fetchLeaveStart(data: {
   businessId: string
   startTime: string
   endTime: string
   reason: string
 }) {
-  return request.post<string>({ url: '/api/system/flow/leave/start', data })
+  return request.post<string>({
+    url: '/api/system/flow/leave/start',
+    data,
+    timeout: FLOW_ACTION_TIMEOUT,
+    noAnswerYetMessage: $t('pages.system.flowDef.msgStartNoAnswer')
+  })
 }
 /** 图形设计部署：结构化设计生成 warm-flow 定义并发布 */
 export function fetchFlowDesign(data: Record<string, any>) {
@@ -591,7 +603,9 @@ export function fetchFlowStartBy(
 ) {
   return request.post<string>({
     url: `/api/system/flow/start-by/${encodeURIComponent(flowCode)}/${encodeURIComponent(businessId)}`,
-    data: param ?? {}
+    data: param ?? {},
+    timeout: FLOW_ACTION_TIMEOUT,
+    noAnswerYetMessage: $t('pages.system.flowDef.msgStartNoAnswer')
   })
 }
 /** 发起表单：流程发起节点绑定表单（发起页填业务数据） */
@@ -680,7 +694,9 @@ export function fetchFlowHandle(
 ) {
   return request.post<string>({
     url: `/api/system/flow/task/handle/${taskId}`,
-    data: { message, variable }
+    data: { message, variable },
+    timeout: FLOW_ACTION_TIMEOUT,
+    noAnswerYetMessage: $t('pages.system.flowCenter.msgHandleNoAnswer')
   })
 }
 /** 退回上一步（修正后语义：退回而非终止作废） */

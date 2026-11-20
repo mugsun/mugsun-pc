@@ -497,6 +497,7 @@
     fetchFlowTaskUserSelect
   } from '@/api/system-manage'
   import { useUserSelectSearch } from '@/hooks'
+  import { isNoAnswerYet } from '@/utils/http/error'
 
   defineOptions({ name: 'FlowCenter' })
 
@@ -652,6 +653,11 @@
     try {
       await fetchFlowHandle(current.value.taskId, opinion.value, variable)
       ElMessage.success(t('pages.system.flowCenter.approved'))
+      detailVisible.value = false
+      load()
+    } catch (e) {
+      if (!isNoAnswerYet(e)) throw e
+      // 服务端还没答复、多半还在处理（提示已经给过）：关掉窗口，免得留着表单让人再点一次
       detailVisible.value = false
       load()
     } finally {

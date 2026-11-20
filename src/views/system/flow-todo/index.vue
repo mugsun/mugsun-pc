@@ -230,6 +230,7 @@
     fetchFlowTaskUserSelect
   } from '@/api/system-manage'
   import { useUserSelectSearch } from '@/hooks'
+  import { isNoAnswerYet } from '@/utils/http/error'
 
   defineOptions({ name: 'FlowTodo' })
 
@@ -391,6 +392,12 @@
       await ACTIONS[opAction.value].run(opRow.value)
       const serverToast = opKind.value === 'user'
       if (!serverToast) ElMessage.success(t('pages.system.flowTodo.msgSuccess'))
+      opVisible.value = false
+      loadTodo()
+    } catch (e) {
+      // 只有「通过」会等很久（后面可能是 AI 预审），也只有它带着「还没答复」的专门提示
+      if (opAction.value !== 'pass' || !isNoAnswerYet(e)) throw e
+      // 服务端还没答复、多半还在处理（提示已经给过）：关掉窗口，免得留着表单让人再点一次
       opVisible.value = false
       loadTodo()
     } finally {
