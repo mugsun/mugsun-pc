@@ -1123,7 +1123,10 @@
     "wangEditor": {
       "placeholder": "Type something...",
       "uploadSuccess": "Image uploaded",
-      "uploadFailed": "Image upload failed"
+      "uploadFailed": "Image upload failed",
+      "imageTypeInvalid": "Only png, jpg, gif and webp images can be inserted. Please choose another one",
+      "imageTooLarge": "The image must not exceed {size}. Please compress it and try again",
+      "imageEmpty": "This image is empty. Please choose another one"
     },
     "klineChart": {
       "time": "Time",

@@ -1123,7 +1123,10 @@
     "wangEditor": {
       "placeholder": "请输入内容...",
       "uploadSuccess": "图片上传成功",
-      "uploadFailed": "图片上传失败"
+      "uploadFailed": "图片上传失败",
+      "imageTypeInvalid": "只能插入 png、jpg、gif、webp 图片，请换一张",
+      "imageTooLarge": "图片不能超过 {size}，请压缩后再上传",
+      "imageEmpty": "这张图片是空的，请换一张"
     },
     "klineChart": {
       "time": "时间",

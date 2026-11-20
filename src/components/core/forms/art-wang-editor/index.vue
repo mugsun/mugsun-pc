@@ -21,21 +21,23 @@
   import '@wangeditor/editor/dist/css/style.css'
   import { onBeforeUnmount, onMounted, shallowRef, computed } from 'vue'
   import { Editor, Toolbar } from '@wangeditor/editor-for-vue'
-  import { useUserStore } from '@/store/modules/user'
   import { useI18n } from 'vue-i18n'
   import { $t } from '@/locales'
   import EmojiText from '@/utils/ui/emojo'
   import { IDomEditor, IToolbarConfig, IEditorConfig } from '@wangeditor/editor'
   import { ElMessage } from 'element-plus'
-  import request from '@/utils/http'
+  import { uploadRichTextImage } from '@/api/attach'
+  import {
+    EDITOR_IMAGE_ACCEPT,
+    createEditorImageUploader,
+    editorImageLimit,
+    formatEditorImageLimit,
+    withoutVideoUpload
+  } from './image-upload'
 
   defineOptions({ name: 'ArtWangEditor' })
 
   const { t } = useI18n()
-
-  type InsertFnType = (url: string, alt: string, href: string) => void
-
-  const { VITE_API_URL } = import.meta.env
 
   // Props 定义
   interface Props {
@@ -53,11 +55,8 @@
     placeholder?: string
     /** 上传配置 */
     uploadConfig?: {
+      /** 单张图片上限（字节），默认 5MB；只能调小，后端不收更大的 */
       maxFileSize?: number
-      maxNumberOfFiles?: number
-      server?: string
-      // 是否开启自定义上传
-      isCustomUpload?: boolean
     }
   }
 
@@ -65,34 +64,50 @@
     height: '500px',
     mode: 'default',
     placeholder: $t('components.wangEditor.placeholder'),
-    excludeKeys: () => ['fontFamily'],
-    isCustomUpload: false
+    excludeKeys: () => ['fontFamily']
   })
 
   const modelValue = defineModel<string>({ required: true })
 
   // 编辑器实例
   const editorRef = shallowRef<IDomEditor>()
-  const userStore = useUserStore()
 
-  // 常量配置
-  const DEFAULT_UPLOAD_CONFIG = {
-    maxFileSize: 3 * 1024 * 1024, // 3MB
-    maxNumberOfFiles: 10,
-    fieldName: 'file',
-    allowedFileTypes: ['image/*']
-  } as const
+  // 上传还没结束编辑器就销毁了（关弹窗、离开页面）时取不到：销毁后再动进度条或插入图片会抛异常
+  const liveEditor = () => {
+    const editor = editorRef.value
+    return editor && !editor.isDestroyed ? editor : undefined
+  }
 
-  // 计算属性：上传服务器地址
-  const uploadServer = computed(
-    () => props.uploadConfig?.server || `${VITE_API_URL}/api/common/upload/wangeditor`
-  )
+  const imageMaxBytes = editorImageLimit(props.uploadConfig?.maxFileSize)
 
-  // 合并上传配置
-  const mergedUploadConfig = computed(() => ({
-    ...DEFAULT_UPLOAD_CONFIG,
-    ...props.uploadConfig
-  }))
+  // 图片上传：选文件、粘贴、拖拽都走这里。请求失败的提示由请求封装弹出，这里不再重复提示
+  const uploadImage = createEditorImageUploader({
+    maxBytes: imageMaxBytes,
+    // 上传中最多显示到 99，结束时再到 100：进度条到 100 以后编辑器会自己收起
+    upload: (file) =>
+      uploadRichTextImage(file, (percent) => liveEditor()?.showProgressBar(Math.min(percent, 99))),
+    canInsert: () => !!liveEditor(),
+    onRejected(reason) {
+      const message = {
+        type: t('components.wangEditor.imageTypeInvalid'),
+        empty: t('components.wangEditor.imageEmpty'),
+        size: t('components.wangEditor.imageTooLarge', {
+          size: formatEditorImageLimit(imageMaxBytes)
+        })
+      }[reason]
+      ElMessage.warning({ message, grouping: true })
+    },
+    onInserted() {
+      ElMessage.success({
+        message: `${t('components.wangEditor.uploadSuccess')} ${EmojiText[200]}`,
+        grouping: true
+      })
+    },
+    onMissingUrl() {
+      ElMessage.error(`${t('components.wangEditor.uploadFailed')} ${EmojiText[500]}`)
+    },
+    onSettled: () => liveEditor()?.showProgressBar(100)
+  })
 
   // 工具栏配置
   const toolbarConfig = computed((): Partial<IToolbarConfig> => {
@@ -108,10 +123,8 @@
       config.insertKeys = props.insertKeys
     }
 
-    // 排除工具
-    if (props.excludeKeys && props.excludeKeys.length > 0) {
-      config.excludeKeys = props.excludeKeys
-    }
+    // 排除工具：没有视频上传接口，「上传视频」总是去掉（「插入视频」填地址的方式还在）
+    config.excludeKeys = withoutVideoUpload(props.excludeKeys)
 
     return config
   })
@@ -121,55 +134,8 @@
     placeholder: props.placeholder,
     MENU_CONF: {
       uploadImage: {
-        fieldName: mergedUploadConfig.value.fieldName,
-        maxFileSize: mergedUploadConfig.value.maxFileSize,
-        maxNumberOfFiles: mergedUploadConfig.value.maxNumberOfFiles,
-        allowedFileTypes: mergedUploadConfig.value.allowedFileTypes,
-        server: uploadServer.value,
-        headers: {
-          Authorization: userStore.accessToken
-        },
-        onSuccess() {
-          ElMessage.success(`${t('components.wangEditor.uploadSuccess')} ${EmojiText[200]}`)
-        },
-        onError(file: File, err: any, res: any) {
-          console.error('图片上传失败:', err, res)
-          ElMessage.error(`${t('components.wangEditor.uploadFailed')} ${EmojiText[500]}`)
-        }
-      }
-    }
-  }
-
-  // 自定义上传
-  if (props.uploadConfig?.isCustomUpload && props.uploadConfig?.server && editorConfig.MENU_CONF) {
-    editorConfig.MENU_CONF.uploadImage.customUpload = async (
-      file: File,
-      insertFn: InsertFnType
-    ) => {
-      try {
-        const formData = new FormData()
-        formData.append(mergedUploadConfig.value.fieldName, file)
-
-        const response = await request.post<{ url: string; alt: string; href: string }>({
-          url: props.uploadConfig?.server,
-          data: formData,
-          headers: {
-            'Content-Type': 'multipart/form-data',
-            Authorization: userStore.accessToken
-          }
-        })
-
-        const { url, alt, href } = response
-
-        if (!url) {
-          throw new Error('上传失败，请检查服务端配置')
-        }
-
-        insertFn(url, alt, href)
-        ElMessage.success(`${t('components.wangEditor.uploadSuccess')} ${EmojiText[200]}`)
-      } catch (error) {
-        console.error('图片上传失败:', error)
-        ElMessage.error(`${t('components.wangEditor.uploadFailed')} ${EmojiText[500]}`)
+        allowedFileTypes: EDITOR_IMAGE_ACCEPT,
+        customUpload: uploadImage
       }
     }
   }
