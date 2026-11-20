@@ -426,6 +426,7 @@
     "titleFallback": "知识库 #{id}",
     "minScore": "最低分",
     "segHint": "共 {n} 段 · 编辑后会自动重新向量化",
+    "segCount": "共 {n} 段",
     "picked": "已选：{name}（{n} 字）",
     "uploadOk": "上传成功，分段 {n}，向量状态 {status}",
     "resegConfirm": "对「{name}」重新分段并向量化？",

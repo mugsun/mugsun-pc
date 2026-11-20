@@ -72,7 +72,9 @@
               />
             </ElSelect>
             <ElButton @click="() => loadSegs()">{{ $t('aiKbDetail.refresh') }}</ElButton>
-            <span class="hint">{{ $t('aiKbDetail.segHint', { n: segTotal }) }}</span>
+            <span class="hint">{{
+              $t(canEditSeg ? 'aiKbDetail.segHint' : 'aiKbDetail.segCount', { n: segTotal })
+            }}</span>
           </div>
           <ArtTable
             :loading="segLoading"
@@ -248,7 +250,6 @@
     ElMessage,
     ElMessageBox,
     ElProgress,
-    ElSwitch,
     ElTag,
     type UploadFile,
     type UploadInstance,
@@ -271,6 +272,7 @@
     fetchUploadKbAssetFile
   } from '../../api'
   import { assetNeedsPoll, checkKbUploadFile, kbUploadAcceptAttr } from './kbUploadFile'
+  import { KB_SEGMENT_EDIT_PERM, kbSegmentColumns } from './kbSegmentColumns'
 
   defineOptions({ name: 'AiKnowledgeDetail' })
   const { t } = useI18n()
@@ -282,6 +284,7 @@
   const kb = ref<any>(null)
   const tab = ref('asset')
   const canUpload = computed(() => hasPerm('ai:kb-asset:upload'))
+  const canEditSeg = computed(() => hasPerm(KB_SEGMENT_EDIT_PERM))
 
   const assetLoading = ref(false)
   const assets = ref<any[]>([])
@@ -384,43 +387,15 @@
     total: segTotal.value
   }))
 
-  const segCols = computed<ColumnOption[]>(() => [
-    { prop: 'seq', label: '#', width: 60 },
-    { prop: 'content', label: t('aiKbDetail.content'), minWidth: 280, showOverflowTooltip: true },
-    { prop: 'tokenCount', label: 'Tokens', width: 90 },
-    {
-      prop: 'vectorStatus',
-      label: t('aiKbDetail.colVector'),
-      width: 100,
-      formatter: (row: any) => {
-        const tag = statusTag(row.vectorStatus)
-        return h(ElTag, { type: tag.type, size: 'small' }, () => tag.label)
-      }
-    },
-    {
-      prop: 'enabled',
-      label: t('aiKbDetail.enabled'),
-      width: 100,
-      formatter: (row: any) =>
-        h(ElSwitch, {
-          modelValue: row.enabled === 1,
-          'onUpdate:modelValue': (v: string | number | boolean) => {
-            const on = v === true || v === 1 || v === '1'
-            void toggleSeg(row, on)
-          },
-          size: 'small'
-        })
-    },
-    {
-      prop: 'operation',
-      label: t('aiKbDetail.colActions'),
-      width: 100,
-      formatter: (row: any) =>
-        h(ElButton, { link: true, size: 'small', onClick: () => editSeg(row) }, () =>
-          t('aiKbDetail.edit')
-        )
-    }
-  ])
+  const segCols = computed<ColumnOption[]>(() =>
+    kbSegmentColumns({
+      t,
+      canEdit: canEditSeg.value,
+      statusTag,
+      onToggle: (row, on) => void toggleSeg(row, on),
+      onEdit: (row) => editSeg(row)
+    })
+  )
 
   const vecLoading = ref(false)
   const vecActing = ref('')

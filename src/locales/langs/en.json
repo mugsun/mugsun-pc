@@ -426,6 +426,7 @@
     "titleFallback": "Knowledge base #{id}",
     "minScore": "Min score",
     "segHint": "{n} segments · edits are re-vectorized automatically",
+    "segCount": "{n} segments",
     "picked": "Selected: {name} ({n} characters)",
     "uploadOk": "Uploaded: {n} segments, vector status {status}",
     "resegConfirm": "Re-segment and re-vectorize “{name}”?",
