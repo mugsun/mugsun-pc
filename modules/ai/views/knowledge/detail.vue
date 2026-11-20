@@ -209,8 +209,8 @@
         <ElFormItem :label="$t('aiKbDetail.segLengthLabel')">
           <ElInputNumber
             v-model="uploadForm.segmentLength"
-            :min="100"
-            :max="4000"
+            :min="KB_SEGMENT_LENGTH_MIN"
+            :max="KB_SEGMENT_LENGTH_MAX"
             :disabled="uploading"
           />
         </ElFormItem>
@@ -218,9 +218,12 @@
           <ElInputNumber
             v-model="uploadForm.segmentOverlap"
             :min="0"
-            :max="500"
+            :max="overlapMax"
             :disabled="uploading"
           />
+          <span class="hint overlap-hint">{{
+            $t('aiKbDetail.overlapHint', { max: overlapMax })
+          }}</span>
         </ElFormItem>
         <ElFormItem v-if="uploading" :label="$t('aiKbDetail.colProgress')">
           <ElProgress :percentage="uploadPercent" :stroke-width="14" />
@@ -273,6 +276,13 @@
   } from '../../api'
   import { assetNeedsPoll, checkKbUploadFile, kbUploadAcceptAttr } from './kbUploadFile'
   import { KB_SEGMENT_EDIT_PERM, kbSegmentColumns } from './kbSegmentColumns'
+  import {
+    KB_SEGMENT_LENGTH_MAX,
+    KB_SEGMENT_LENGTH_MIN,
+    checkKbSegmentContent,
+    kbOverlapMax,
+    kbSegmentContentLimit
+  } from './kbSegmentLimits'
 
   defineOptions({ name: 'AiKnowledgeDetail' })
   const { t } = useI18n()
@@ -417,6 +427,11 @@
     segmentType: 'paragraph',
     segmentLength: 800,
     segmentOverlap: 80
+  })
+  const overlapMax = computed(() => kbOverlapMax(uploadForm.segmentLength))
+  // 分段长度调小后，已经填好的重叠跟着收到新的上限内
+  watch(overlapMax, (max) => {
+    if (uploadForm.segmentOverlap > max) uploadForm.segmentOverlap = max
   })
 
   function formatScore(v: unknown) {
@@ -675,7 +690,18 @@
       {
         inputValue: row.content,
         inputType: 'textarea',
-        customClass: 'kb-seg-edit'
+        customClass: 'kb-seg-edit',
+        inputValidator: (text: string) => {
+          const problem = checkKbSegmentContent(text, row.content)
+          if (problem === 'empty') return t('aiKbDetail.segContentEmpty')
+          if (problem === 'tooLong') {
+            return t('aiKbDetail.segContentTooLong', {
+              max: kbSegmentContentLimit(row.content),
+              n: (text || '').trim().length
+            })
+          }
+          return true
+        }
       }
     )
     await fetchSaveKbSegment({ id: row.id, content: value })
@@ -798,6 +824,10 @@
   .hint {
     font-size: 12px;
     color: var(--el-text-color-secondary);
+  }
+
+  .overlap-hint {
+    margin-left: 12px;
   }
 
   .vec-stats {
