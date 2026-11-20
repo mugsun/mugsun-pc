@@ -174,7 +174,11 @@
           <ElInput v-model="form.command" type="textarea" :rows="3" />
         </ElFormItem>
         <ElFormItem label="API Key"
-          ><ElInput v-model="form.apiKey" type="password" show-password
+          ><ElInput
+            v-model="form.apiKey"
+            type="password"
+            show-password
+            :placeholder="form.id ? $t('aiForm.phKeepUnchanged') : ''"
         /></ElFormItem>
         <ElFormItem :label="$t('aiForm.envVars')"
           ><ElInput

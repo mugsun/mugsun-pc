@@ -136,7 +136,12 @@
           />
         </ElFormItem>
         <ElFormItem label="Secret Key">
-          <ElInput v-model="form.secretKey" type="password" show-password />
+          <ElInput
+            v-model="form.secretKey"
+            type="password"
+            show-password
+            :placeholder="form.id ? $t('aiForm.phKeepUnchanged') : ''"
+          />
         </ElFormItem>
         <ElFormItem
           v-if="form.modelType === 'embedding'"

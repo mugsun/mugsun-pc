@@ -166,7 +166,7 @@
       {
         validator: (_rule, value, callback) => {
           if (!form.id && (!value || !String(value).trim())) {
-            callback(new Error(t('pages.system.genDatasource.passwordPlaceholder')))
+            callback(new Error(t('pages.system.genDatasource.passwordRequired')))
           } else {
             callback()
           }
