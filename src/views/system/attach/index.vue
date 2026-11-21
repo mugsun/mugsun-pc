@@ -50,7 +50,7 @@
 </template>
 
 <script setup lang="ts">
-  import { h, ref, watch, onBeforeUnmount } from 'vue'
+  import { computed, h, ref, watch, onBeforeUnmount } from 'vue'
   import ArtSearchBar from '@/components/core/forms/art-search-bar/index.vue'
   import { useTable } from '@/hooks/core/useTable'
   import { fetchAttachPage } from '@/api/attach'
@@ -292,7 +292,11 @@
     directUploading.value = false
     uploadPercent.value = 0
     try {
-      const sign = await fetchPresignedPut({ filename: file.name, access: 'private' })
+      const sign = await fetchPresignedPut({
+        filename: file.name,
+        size: file.size,
+        access: 'private'
+      })
       if (sign?.supported && sign.uploadUrl && sign.ticket) {
         directUploading.value = true
         try {

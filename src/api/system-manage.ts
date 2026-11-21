@@ -236,8 +236,11 @@ export interface PresignedPutResult {
   ticket?: string
   expiresIn?: number
 }
-/** 两段式直传·签发 PUT 预签名（一次性 ticket 凭证） */
-export function fetchPresignedPut(data: { filename: string; access?: string }) {
+/**
+ * 两段式直传·签发 PUT 预签名（一次性 ticket 凭证）。
+ * size 必填：后端把文件大小绑进签名，没带会直接拒绝，当前存储不支持直传时也一样。
+ */
+export function fetchPresignedPut(data: { filename: string; size: number; access?: string }) {
   return request.post<PresignedPutResult>({ url: '/api/system/file/presigned-put', data })
 }
 /** 两段式直传·回填登记（ticket 一次性，size 客户端上报展示值） */
