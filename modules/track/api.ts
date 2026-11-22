@@ -1,4 +1,5 @@
 import request from '@/utils/http'
+import type { TrackJourneyQuery } from './journey-shape'
 import type { TrackSpatialQuery, TrackSpatialResult } from './spatial-shape'
 
 // ===== 埋点分析 =====
@@ -207,6 +208,17 @@ export function fetchTrackFunnel(params: Record<string, any>) {
  */
 export function fetchTrackRetention(params: Record<string, any>) {
   return request.get<any>({ url: '/api/system/track/retention', params })
+}
+
+// ===== 访问路径 =====
+/**
+ * 访问路径：选一个页面当起点，看这些会话下一步去了哪、有多少没有再往下走。
+ * {total, steps: [{page, sessions}], next: [{page, sessions}], ended, others}——按会话算，步骤之间要紧挨着；
+ * steps 是 JSON 数组字符串（见 journey-shape.ts），最多 5 步；days ≤30。读权限 sys:track-journey:list。
+ * 返回值用 normalizeJourneyResult 规整后再用。
+ */
+export function fetchTrackJourney(params: TrackJourneyQuery) {
+  return request.get<unknown>({ url: '/api/system/track/journey', params })
 }
 
 // ===== 回放会话事件（G105） =====

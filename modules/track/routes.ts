@@ -141,6 +141,17 @@ export const trackRoutes: AppRouteRecord = {
       }
     },
     {
+      path: 'journey',
+      name: 'TrackJourney',
+      component: '/track/journey',
+      meta: {
+        title: 'menus.track.journey',
+        icon: 'ri:route-line',
+        keepAlive: true,
+        roles: ['R_SUPER', 'R_ADMIN']
+      }
+    },
+    {
       path: 'app',
       name: 'TrackApp',
       component: '/track/app',
