@@ -11,7 +11,11 @@ export function fetchTrackOverview(params: Record<string, any>) {
 export function fetchTrackTrend(params: Record<string, any>) {
   return request.get<any[]>({ url: '/api/system/track/trend', params })
 }
-/** Top 页面（pagePath/pv/uv/avgDurationMs） */
+/**
+ * 页面排行。type 不传是访问最多的页面（pagePath/pv/uv/avgDurationMs）；
+ * entry 入口页（pagePath/sessions/bounces/bounceRate）；exit 退出页（pagePath/sessions/pv/exitRate）。
+ * 入口页、退出页的 days 只支持 1 到 30，两个比率是 0 到 1 的小数
+ */
 export function fetchTrackPages(params: Record<string, any>) {
   return request.get<any[]>({ url: '/api/system/track/pages', params })
 }

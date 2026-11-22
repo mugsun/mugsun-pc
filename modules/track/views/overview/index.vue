@@ -1,4 +1,4 @@
-<!-- 埋点概览：指标卡 + 趋势 + Top 页面 + 来源/设备/浏览器分布 + 当前在线（5s 轮询） -->
+<!-- 埋点概览：指标卡 + 趋势 + 页面排行（访问最多 / 入口页 / 退出页）+ 来源/设备/浏览器分布 + 当前在线（5s 轮询） -->
 <template>
   <div class="track-overview-page art-full-height">
     <!-- 工具栏：应用选择（5 页共享选中态）+ 统计天数 + 刷新 -->
@@ -66,26 +66,79 @@
       </ElCol>
     </ElRow>
 
-    <!-- Top 页面 + 来源/设备/浏览器分布 -->
+    <!-- 页面排行 + 来源/设备/浏览器分布 -->
     <ElRow :gutter="16" class="track-row">
       <ElCol :xs="24" :lg="12">
         <div class="art-card track-chart-card">
-          <p class="track-card-title">{{ $t('pages.track.overview.topPages') }}</p>
+          <div class="track-card-head">
+            <p class="track-card-title">{{ $t('pages.track.overview.pageRank') }}</p>
+            <ElRadioGroup v-model="pageRankType" size="small" data-testid="track-page-rank-type">
+              <ElRadioButton v-for="k in PAGE_RANK_TYPES" :key="k" :value="k">{{
+                $t(PAGE_RANK_LABEL_KEY[k])
+              }}</ElRadioButton>
+            </ElRadioGroup>
+          </div>
+          <p class="track-card-hint" data-testid="track-page-rank-hint">{{
+            $t(PAGE_RANK_HINT_KEY[pageRankShown])
+          }}</p>
           <!-- 不限高：接口只取前 10 条，整张表放得下；限高会在本来就能滚动的页面里再套一层滚动 -->
-          <ElTable :data="topPages" v-loading="loading" size="default">
+          <!-- 三种排行的列不一样：换排行时整张表重建（:key），只换其中几列的话列的顺序会乱 -->
+          <ElTable
+            :key="pageRankShown"
+            :data="topPages"
+            v-loading="loading || pagesLoading"
+            size="default"
+            data-testid="track-page-rank-table"
+          >
             <!-- 列宽合计 484：1366 宽时表格只有 506，再宽最后一列会被切掉 -->
             <ElTableColumn type="index" :label="$t('pages.track.shared.index')" width="56" />
             <ElTableColumn
               prop="pagePath"
               :label="$t('pages.track.overview.pagePath')"
-              min-width="160"
+              :min-width="pageRankShown === 'top' ? 160 : 150"
               show-overflow-tooltip
             />
-            <ElTableColumn prop="pv" label="PV" width="84" align="right" />
-            <ElTableColumn prop="uv" label="UV" width="84" align="right" />
-            <ElTableColumn :label="$t('pages.track.overview.avgStay')" width="100" align="right">
-              <template #default="{ row }">{{ fmtAvgStay(row.avgDurationMs) }}</template>
-            </ElTableColumn>
+            <template v-if="pageRankShown === 'top'">
+              <ElTableColumn prop="pv" label="PV" width="84" align="right" />
+              <ElTableColumn prop="uv" label="UV" width="84" align="right" />
+              <ElTableColumn :label="$t('pages.track.overview.avgStay')" width="100" align="right">
+                <template #default="{ row }">{{ fmtAvgStay(row.avgDurationMs) }}</template>
+              </ElTableColumn>
+            </template>
+            <!-- 入口页、退出页的比率列比「平均停留」宽 10（英文表头「Bounce rate」要放得下），页面路径列相应窄 10 -->
+            <template v-else-if="pageRankShown === 'entry'">
+              <ElTableColumn
+                prop="sessions"
+                :label="$t('pages.track.overview.entrySessions')"
+                width="84"
+                align="right"
+              />
+              <ElTableColumn
+                prop="bounces"
+                :label="$t('pages.track.overview.bounces')"
+                width="84"
+                align="right"
+              />
+              <ElTableColumn
+                :label="$t('pages.track.overview.bounceRate')"
+                width="110"
+                align="right"
+              >
+                <template #default="{ row }">{{ fmtPageRate(row.bounceRate) }}</template>
+              </ElTableColumn>
+            </template>
+            <template v-else>
+              <ElTableColumn
+                prop="sessions"
+                :label="$t('pages.track.overview.exitSessions')"
+                width="84"
+                align="right"
+              />
+              <ElTableColumn prop="pv" label="PV" width="84" align="right" />
+              <ElTableColumn :label="$t('pages.track.overview.exitRate')" width="110" align="right">
+                <template #default="{ row }">{{ fmtPageRate(row.exitRate) }}</template>
+              </ElTableColumn>
+            </template>
             <template #empty
               ><ElEmpty :description="$t('pages.track.shared.noData')" :image-size="60"
             /></template>
@@ -199,6 +252,14 @@
   import { useI18n } from 'vue-i18n'
   import { fmtTrackClock, fmtTrackDuration, useTrackApp } from '@/views/track/shared/useTrackApp'
   import { fmtAvgSessionDuration, fmtBounceRate } from '@/views/track/shared/settledCards'
+  import {
+    PAGE_RANK_HINT_KEY,
+    PAGE_RANK_LABEL_KEY,
+    PAGE_RANK_TYPES,
+    fmtPageRate,
+    pageRankParam,
+    type PageRankType
+  } from '@/views/track/shared/pageRank'
   import { useChartOps } from '@/hooks/core/useChart'
   import type { LineDataItem, PieDataItem } from '@/types/component/chart'
   import {
@@ -217,7 +278,7 @@
 
   const { appOptions, appKey, days, appsLoading } = useTrackApp()
 
-  /** Top 页面「平均停留」统一秒级 1 位小数（同列可比，>1s 为主场景；不再 ms/s 混排） */
+  /** 页面排行「平均停留」统一秒级 1 位小数（同列可比，>1s 为主场景；不再 ms/s 混排） */
   const fmtAvgStay = (ms?: number | null): string => {
     if (ms === undefined || ms === null || Number.isNaN(Number(ms))) return '-'
     return `${(Number(ms) / 1000).toFixed(1)}s`
@@ -320,8 +381,39 @@
     trendSeries.value = series
   }
 
-  // ===== Top 页面 =====
+  // ===== 页面排行（访问最多 / 入口页 / 退出页） =====
   const topPages = ref<any[]>([])
+  /** 选中的排行 */
+  const pageRankType = ref<PageRankType>('top')
+  /** 表格里正在显示的排行：数据回来以后才跟着换，免得列已经换了、行还是上一种排行的 */
+  const pageRankShown = ref<PageRankType>('top')
+  const pagesLoading = ref(false)
+  let pagesSeq = 0
+
+  /** 取页面排行。请求失败时请求层已经弹出提示语，这里只把表格清空，不连累页面上别的卡片 */
+  const loadPages = async (): Promise<void> => {
+    if (!appKey.value) return
+    const seq = ++pagesSeq
+    const type = pageRankType.value
+    pagesLoading.value = true
+    let rows: any[] = []
+    try {
+      rows =
+        (await fetchTrackPages({
+          appKey: appKey.value,
+          days: days.value,
+          limit: 10,
+          ...pageRankParam(type)
+        })) ?? []
+    } catch {
+      rows = []
+    }
+    // 后发的请求已经在路上（连着切换排行、换应用或天数）：这次的结果不要了
+    if (seq !== pagesSeq) return
+    topPages.value = rows
+    pageRankShown.value = type
+    pagesLoading.value = false
+  }
 
   // ===== 当前在线（5s 轮询） =====
   const online = ref(0)
@@ -361,10 +453,10 @@
     if (!appKey.value) return
     loading.value = true
     try {
-      const [ov, trendRows, pageRows, geo] = await Promise.all([
+      const [ov, trendRows, , geo] = await Promise.all([
         fetchTrackOverview({ appKey: appKey.value, days: days.value }),
         fetchTrackTrend({ appKey: appKey.value, days: days.value, dimType: 'overview' }),
-        fetchTrackPages({ appKey: appKey.value, days: days.value, limit: 10 }),
+        loadPages(),
         fetchTrackGeo({ appKey: appKey.value, days: days.value }).catch(() => null)
       ])
       Object.assign(cards, {
@@ -380,7 +472,6 @@
       deviceDist.value = ov?.deviceDist ?? []
       browserTop.value = ov?.browserTop ?? []
       applyTrend(trendRows ?? [])
-      topPages.value = pageRows ?? []
       regions.value = geo?.regions ?? []
       geoPoints.value = geo?.points ?? []
       geoCount.value = geo?.geoCount ?? 0
@@ -390,12 +481,13 @@
   }
 
   watch([appKey, days], loadAll, { immediate: true })
+  watch(pageRankType, loadPages)
   watch(appKey, loadOnline, { immediate: true })
 </script>
 
 <style lang="scss" scoped>
   .track-overview-page {
-    // 指标卡 + 趋势/在线 + Top 页面/分布三行均为自然高度内容（合计约 900px+）：
+    // 指标卡 + 趋势/在线 + 页面排行/分布三行均为自然高度内容（合计约 900px+）：
     // art-full-height 定高下页面须自备纵向滚动，否则矮视口底部卡片被切断无法到达。
     // 横向要明确关掉：ElRow 的 gutter 靠负外边距左右各探出 8px，不关会多出一条没用的横向滚动条
     overflow: hidden auto;
@@ -426,6 +518,21 @@
     .track-card-title {
       font-size: 16px;
       font-weight: 500;
+    }
+
+    // 标题和右边的切换按钮排成一行；卡片窄到放不下时按钮折到下一行
+    .track-card-head {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px 12px;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .track-card-hint {
+      margin: 6px 0 8px;
+      font-size: 12px;
+      color: var(--el-text-color-secondary);
     }
 
     .track-geo-count {
